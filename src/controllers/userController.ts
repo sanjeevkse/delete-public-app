@@ -1,0 +1,160 @@
+import type { Request, Response } from "express";
+import { Op } from "sequelize";
+
+import { AppEvent, emitEvent } from "../events/eventBus";
+import { ApiError } from "../middlewares/errorHandler";
+import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import User from "../models/User";
+import UserProfile from "../models/UserProfile";
+import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
+import { buildProfileAttributes } from "../services/userProfileService";
+import asyncHandler from "../utils/asyncHandler";
+
+export const listUsers = asyncHandler(async (req: Request, res: Response) => {
+  const page = Number.parseInt((req.query.page as string) ?? "1", 10);
+  const limit = Number.parseInt((req.query.limit as string) ?? "25", 10);
+  const offset = (page - 1) * limit;
+  const search = (req.query.search as string) ?? "";
+
+  const { rows, count } = await User.findAndCountAll({
+    where: search
+      ? {
+          [Op.or]: [
+            { contactNumber: { [Op.like]: `%${search}%` } },
+            { fullName: { [Op.like]: `%${search}%` } },
+            { email: { [Op.like]: `%${search}%` } }
+          ]
+        }
+      : undefined,
+    include: [
+      { model: UserProfile, as: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ],
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]]
+  });
+
+  res.json({
+    data: rows,
+    meta: {
+      total: count,
+      page,
+      pages: Math.ceil(count / limit)
+    }
+  });
+});
+
+export const createUser = asyncHandler(async (req: Request, res: Response) => {
+  const { contactNumber, email, fullName, status = 1, profile, roleIds: roleIdsInput } = req.body;
+  if (!contactNumber) {
+    throw new ApiError("contactNumber is required", 400);
+  }
+
+  const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
+
+  const user = await User.create({
+    contactNumber,
+    email,
+    fullName,
+    status
+  });
+
+  if (profile) {
+    const profileAttributes = buildProfileAttributes(profile);
+    if (Object.keys(profileAttributes).length > 0) {
+      await UserProfile.create({
+        userId: user.id,
+        ...profileAttributes
+      });
+    }
+  }
+
+  const resolvedRoleIds = await resolveRoleIdsOrDefault(parsedRoleIds);
+  await setUserRoles(user.id, resolvedRoleIds);
+
+  const actorId = (req as AuthenticatedRequest).user?.id;
+  emitEvent(AppEvent.USER_CREATED, { userId: user.id, actorId: actorId ?? user.id });
+
+  const created = await User.findByPk(user.id, {
+    include: [
+      { model: UserProfile, as: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  res.status(201).json(created);
+});
+
+export const getUser = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.findByPk(req.params.id, {
+    include: [
+      { model: UserProfile, as: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  res.json(user);
+});
+
+export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.findByPk(req.params.id, {
+    include: [
+      { model: UserProfile, as: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const { profile, roleIds: roleIdsInput, ...userUpdates } = req.body;
+  const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
+
+  await user.update(userUpdates);
+
+  if (profile) {
+    const profileAttributes = buildProfileAttributes(profile, user.profile ?? undefined);
+    if (Object.keys(profileAttributes).length > 0) {
+      if (user.profile) {
+        await user.profile.update(profileAttributes);
+      } else {
+        await UserProfile.create({ userId: user.id, ...profileAttributes });
+      }
+    }
+  }
+
+  if (roleIdsInput !== undefined) {
+    const resolvedRoleIds = await resolveRoleIdsOrDefault(parsedRoleIds);
+    await setUserRoles(user.id, resolvedRoleIds);
+  }
+
+  const actorId = (req as AuthenticatedRequest).user?.id;
+  emitEvent(AppEvent.USER_UPDATED, { userId: user.id, actorId: actorId ?? user.id });
+
+  const updated = await User.findByPk(user.id, {
+    include: [
+      { model: UserProfile, as: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  res.json(updated);
+});
+
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.findByPk(req.params.id);
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  await user.update({ status: 0 });
+
+  res.status(204).send();
+});
