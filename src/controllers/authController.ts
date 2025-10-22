@@ -49,7 +49,10 @@ const upsertUserProfile = async (userId: number, profileInput?: Record<string, u
   }
 };
 
-const verifyOtpForUser = async (user: User, otp?: string | null): Promise<void> => {
+const verifyOtpForContactNumber = async (
+  contactNumber: string,
+  otp?: string | null
+): Promise<void> => {
   if (!otp) {
     return;
   }
@@ -59,14 +62,20 @@ const verifyOtpForUser = async (user: User, otp?: string | null): Promise<void> 
   if (otp === MASTER_OTP) {
     await UserOtp.update(
       { status: 0, consumedAt: now },
-      { where: { userId: user.id, purpose: UserOtpPurpose.LOGIN, status: 1 } }
+      {
+        where: {
+          contactNumber,
+          purpose: UserOtpPurpose.LOGIN,
+          status: 1
+        }
+      }
     );
     return;
   }
 
   const otpRecord = await UserOtp.findOne({
     where: {
-      userId: user.id,
+      contactNumber,
       purpose: UserOtpPurpose.LOGIN,
       status: 1,
       consumedAt: null,
@@ -104,33 +113,53 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
 
   const user = await findUserByContactNumber(contactNumber);
 
-  if (!user) {
-    throw new ApiError("User not found", 404);
-  }
+  const now = new Date();
+  const existingOtp = await UserOtp.findOne({
+    where: {
+      contactNumber,
+      purpose: UserOtpPurpose.LOGIN,
+      status: 1,
+      consumedAt: null,
+      expiresAt: { [Op.gt]: now }
+    },
+    order: [["createdAt", "DESC"]]
+  });
 
-  if (user.status !== 1) {
-    throw new ApiError("Account is inactive", 403);
+  let attemptsAllowance = 3;
+
+  if (existingOtp) {
+    const nextAllowance = Math.max((existingOtp.attemptsLeft ?? 0) - 1, 0);
+
+    if (nextAllowance <= 0) {
+      await existingOtp.update({ status: 0, attemptsLeft: 0 });
+      throw new ApiError("OTP resend limit reached", 429);
+    }
+
+    attemptsAllowance = nextAllowance;
+    await existingOtp.update({ status: 0, attemptsLeft: nextAllowance });
   }
 
   await UserOtp.update(
     { status: 0 },
-    { where: { userId: user.id, purpose: UserOtpPurpose.LOGIN, status: 1 } }
+    { where: { contactNumber, purpose: UserOtpPurpose.LOGIN, status: 1 } }
   );
 
   const otp = generateNumericOtp();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
   await UserOtp.create({
-    userId: user.id,
+    contactNumber,
     purpose: UserOtpPurpose.LOGIN,
     otpPlain: otp,
     expiresAt,
-    attemptsLeft: 3
+    attemptsLeft: attemptsAllowance
   });
 
   res.json({
     message: "OTP generated successfully",
-    otp
+    otp,
+    userExists: Boolean(user),
+    attemptsLeft: attemptsAllowance
   });
 });
 
@@ -139,6 +168,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     contactNumber,
     fullName,
     email,
+    otp,
     instagramId,
     alternateMobileNumber,
     address,
@@ -147,6 +177,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     contactNumber?: string;
     fullName?: string;
     email?: string;
+    otp?: string;
     instagramId?: string;
     alternateMobileNumber?: string;
     address?: string;
@@ -155,6 +186,10 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   if (!contactNumber) {
     throw new ApiError("contactNumber is required", 400);
+  }
+
+  if (!otp) {
+    throw new ApiError("otp is required", 400);
   }
 
   const existingByContact = await User.findOne({ where: { contactNumber } });
@@ -168,6 +203,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError("email already registered", 409);
     }
   }
+
+  await verifyOtpForContactNumber(contactNumber, otp);
 
   const user = await User.create({
     contactNumber,
@@ -210,7 +247,14 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
+  const token = generateAccessToken({
+    userId: user.id,
+    roles: accessProfile.roles,
+    permissions: ["*"] // accessProfile.permissions
+  });
+
   res.status(201).json({
+    token,
     user: createdUser,
     access: accessProfile
   });
@@ -240,7 +284,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Account is inactive", 403);
   }
 
-  await verifyOtpForUser(user, otp);
+  await verifyOtpForContactNumber(user.contactNumber, otp);
 
   const now = new Date();
   await user.update({ lastLoginAt: now });

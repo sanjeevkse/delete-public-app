@@ -103,8 +103,3 @@ export const assignRoleToUser = asyncHandler(async (req: Request, res: Response)
 
   res.status(200).json(updatedUser);
 });
-
-export const listPermissions = asyncHandler(async (_req: Request, res: Response) => {
-  const permissions = await MetaPermission.findAll();
-  res.json(permissions);
-});

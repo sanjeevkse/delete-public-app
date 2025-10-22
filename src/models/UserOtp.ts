@@ -3,20 +3,18 @@ import {
   DataTypes,
   InferAttributes,
   InferCreationAttributes,
-  Model,
-  NonAttribute
+  Model
 } from "sequelize";
 
 import sequelize from "../config/database";
 import { UserOtpPurpose } from "../types/enums";
-import type User from "./User";
 
 class UserOtp extends Model<
   InferAttributes<UserOtp>,
   InferCreationAttributes<UserOtp>
 > {
   declare id: CreationOptional<number>;
-  declare userId: number;
+  declare contactNumber: string;
   declare purpose: UserOtpPurpose;
   declare otpPlain: string;
   declare expiresAt: Date;
@@ -27,7 +25,6 @@ class UserOtp extends Model<
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
-  declare user?: NonAttribute<User>;
 }
 
 UserOtp.init(
@@ -37,9 +34,9 @@ UserOtp.init(
       autoIncrement: true,
       primaryKey: true
     },
-    userId: {
-      field: "user_id",
-      type: DataTypes.BIGINT.UNSIGNED,
+    contactNumber: {
+      field: "contact_number",
+      type: DataTypes.STRING(45),
       allowNull: false
     },
     purpose: {

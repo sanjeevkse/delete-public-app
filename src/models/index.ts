@@ -55,9 +55,6 @@ const establishAssociations = (): void => {
   User.hasOne(UserProfile, { foreignKey: "userId", as: "profile" });
   UserProfile.belongsTo(User, { foreignKey: "userId", as: "user" });
 
-  User.hasMany(UserOtp, { foreignKey: "userId", as: "otps" });
-  UserOtp.belongsTo(User, { foreignKey: "userId", as: "user" });
-
   User.hasMany(UserToken, { foreignKey: "userId", as: "tokens" });
   UserToken.belongsTo(User, { foreignKey: "userId", as: "user" });
 

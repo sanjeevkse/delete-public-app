@@ -15,22 +15,27 @@ import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 
 const router = Router();
 
-router.get("/events", authenticate(), authorizePermissions("*"), listEvents);
-router.get("/events/:id", authenticate(), authorizePermissions("*"), getEvent);
+router.get("/events", authenticate(), authorizePermissions("events:list"), listEvents);
+router.get("/events/:id", authenticate(), authorizePermissions("events:view"), getEvent);
 router.get(
   "/events/:id/registrations",
   authenticate(),
-  authorizePermissions("*"),
+  authorizePermissions("events:view"),
   listEventRegistrations
 );
-router.post("/events", authenticate(), authorizePermissions("*"), createEvent);
-router.put("/events/:id", authenticate(), authorizePermissions("*"), updateEvent);
-router.delete("/events/:id", authenticate(), authorizePermissions("*"), deleteEvent);
-router.post("/events/:id/register", authenticate(), authorizePermissions("*"), registerForEvent);
+router.post("/events", authenticate(), authorizePermissions("events:create"), createEvent);
+router.put("/events/:id", authenticate(), authorizePermissions("events:update"), updateEvent);
+router.delete("/events/:id", authenticate(), authorizePermissions("events:delete"), deleteEvent);
+router.post(
+  "/events/:id/register",
+  authenticate(),
+  authorizePermissions("events:view"),
+  registerForEvent
+);
 router.post(
   "/events/:id/unregister",
   authenticate(),
-  authorizePermissions("*"),
+  authorizePermissions("events:view"),
   unregisterFromEvent
 );
 

@@ -14,15 +14,12 @@ import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 
 const router = Router();
 
-router.get("/posts", authenticate(), authorizePermissions("*"), listPosts);
-router.get("/posts/:id", authenticate(), authorizePermissions("*"), getPost);
-
-router.get("/my-posts", authenticate(), authorizePermissions("*"), listMyPosts);
-
-router.post("/posts", authenticate(), authorizePermissions("*"), createPost);
-router.put("/posts/:id", authenticate(), authorizePermissions("*"), updatePost);
-router.delete("/posts/:id", authenticate(), authorizePermissions("*"), deletePost);
-
-router.post("/posts/:id/reactions", authenticate(), authorizePermissions("*"), reactToPost);
+router.get("/posts", authenticate(), authorizePermissions("posts:list"), listPosts);
+router.get("/posts/:id", authenticate(), authorizePermissions("posts:view"), getPost);
+router.get("/my-posts", authenticate(), authorizePermissions("posts:view"), listMyPosts);
+router.post("/posts", authenticate(), authorizePermissions("posts:create"), createPost);
+router.put("/posts/:id", authenticate(), authorizePermissions("posts:update"), updatePost);
+router.delete("/posts/:id", authenticate(), authorizePermissions("posts:delete"), deletePost);
+router.post("/posts/:id/reactions", authenticate(), authorizePermissions("posts:view"), reactToPost);
 
 export default router;
