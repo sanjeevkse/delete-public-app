@@ -1,0 +1,109 @@
+name: Deploy to Droplet (root + PM2)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node for CI build
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install deps & build
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            echo "Lockfile found → npm ci"
+            npm ci
+          else
+            echo "No lockfile → npm install"
+            npm install
+          fi
+      
+          # Run build only if it exists
+          node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1)" \
+            && npm run build || echo "No build script, skipping."
+
+      - name: Create release.tgz (stable, no concurrent changes)
+        run: |
+          rm -rf _package
+          mkdir -p _package
+      
+          # Copy only what you want to deploy
+          rsync -a \
+            --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "node_modules" \
+            ./ _package/
+      
+          # If your build creates artifacts (e.g., dist/), they’re already in the tree.
+          # Now archive the staged copy
+          tar -C _package -czf release.tgz .
+
+      - name: Upload artifact to droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ vars.SSH_PRIVATE_KEY }}
+          port: ${{ vars.SSH_PORT }}
+          source: "release.tgz"
+          target: "/tmp"
+
+      - name: Remote deploy (extract, npm ci --omit=dev, PM2 reload)
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          APP_DIR: ${{ vars.DEPLOY_PATH }}
+          SHA: ${{ github.sha }}
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ vars.SSH_PRIVATE_KEY }}
+          port: ${{ vars.SSH_PORT }}
+          script_stop: true
+          envs: APP_DIR,SHA
+          script: |
+            set -e
+            mkdir -p "$APP_DIR"/releases "$APP_DIR"/shared/logs
+            RELEASE_DIR="$APP_DIR/releases/$SHA"
+            mkdir -p "$RELEASE_DIR"
+            tar -xzf /tmp/release.tgz -C "$RELEASE_DIR"
+            rm -f /tmp/release.tgz
+            if [ -n "${{ vars.ENV_FILE }}" ]; then
+              printf "%s" "${{ vars.ENV_FILE }}" > "$RELEASE_DIR/.env"
+            fi
+            cd "$RELEASE_DIR"
+            if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+              npm ci --omit=dev
+            else
+              npm install --omit=dev
+            fi
+            if [ ! -f ecosystem.config.js ]; then
+              echo "ecosystem.config.js missing" >&2
+              exit 1
+            fi
+            ln -sfn "$RELEASE_DIR" "$APP_DIR/current"
+            # Start or reload with port 3100 (ensure your app reads PORT from env)
+            PORT=3100 pm2 startOrReload "$APP_DIR/current/ecosystem.config.js" --env production
+            pm2 save
+      - name: PM2 status (debug)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ vars.SSH_PRIVATE_KEY }}
+          port: ${{ vars.SSH_PORT }}
+          script: pm2 status
