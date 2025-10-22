@@ -20,7 +20,7 @@ jobs:
 
       - name: Push mirror to Repo2
         env:
-          REPO2_TOKEN: ${{ secrets.REPO2_TOKEN }}
+          REPO2_TOKEN: ${{ vars.REPO2_TOKEN }}
           REPO2_URL:   https://github.com/Rabasa2025/public-app-node.git
         run: |
           set -e
