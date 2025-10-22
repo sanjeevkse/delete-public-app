@@ -22,16 +22,31 @@ jobs:
           git config user.name "Repo1 → Repo2 Mirror Bot"
           git config user.email "actions@users.noreply.github.com"
 
+      - name: Check access to Repo2 (clear fail if no access)
+        env:
+          REPO2_TOKEN: ${{ secrets.REPO2_TOKEN }}
+        run: |
+          set -e
+          AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0)"
+          # List refs without exposing the token in logs
+          git -c "http.https://github.com/.extraheader=Authorization: Basic ${AUTH}" \
+            ls-remote --heads https://github.com/Rabasa2025/public-app-node.git >/dev/null
+          echo "✅ Access to Repo2 confirmed."
+      
       - name: Push mirror to Repo2 (all branches & tags)
         env:
-          REPO2_URL: ${{ vars.REPO2_URL }}
-          REPO2_TOKEN: ${{ vars.REPO2_TOKEN }}
+          REPO2_TOKEN: ${{ secrets.REPO2_TOKEN }}
         run: |
-          # Embed token in Repo2 URL
-          AUTHED_URL="${REPO2_URL/https:\/\//https:\/\/${REPO2_TOKEN}@}"
+          set -e
+          git config user.name "Repo1 → Repo2 Mirror Bot"
+          git config user.email "actions@users.noreply.github.com"
+      
+          AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0)"
+      
+          # Add remote without token in URL
+          git remote add mirror https://github.com/Rabasa2025/public-app-node.git
+      
+          # Push with Authorization header (no token in URL)
+          git -c "http.https://github.com/.extraheader=Authorization: Basic ${AUTH}" \
+            push --mirror --prune mirror
 
-          # Add mirror remote
-          git remote add mirror "$AUTHED_URL"
-
-          # Push everything (branches + tags), prune deleted, force as true mirror
-          git push --mirror --prune mirror
