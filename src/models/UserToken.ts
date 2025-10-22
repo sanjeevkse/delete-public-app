@@ -8,6 +8,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import { UserTokenPlatform } from "../types/enums";
 import type User from "./User";
 
 class UserToken extends Model<
@@ -19,7 +20,7 @@ class UserToken extends Model<
   declare token: string;
   declare deviceLabel: CreationOptional<string | null>;
   declare deviceFingerprint: CreationOptional<string | null>;
-  declare platform: CreationOptional<"IOS" | "ANDROID" | "WEB" | "OTHER">;
+  declare platform: CreationOptional<UserTokenPlatform | null>;
   declare userAgent: CreationOptional<string | null>;
   declare ipAddress: CreationOptional<string | null>;
   declare lastUsedAt: CreationOptional<Date | null>;
@@ -60,9 +61,14 @@ UserToken.init(
       allowNull: true
     },
     platform: {
-      type: DataTypes.ENUM("IOS", "ANDROID", "WEB", "OTHER"),
+      type: DataTypes.ENUM(
+        UserTokenPlatform.IOS,
+        UserTokenPlatform.ANDROID,
+        UserTokenPlatform.WEB,
+        UserTokenPlatform.OTHER
+      ),
       allowNull: true,
-      defaultValue: "ANDROID"
+      defaultValue: UserTokenPlatform.ANDROID
     },
     userAgent: {
       field: "user_agent",

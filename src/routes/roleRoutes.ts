@@ -7,13 +7,14 @@ import {
   listRoles,
   updateRole
 } from "../controllers/roleController";
+import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 
 const router = Router();
 
-router.get("/", listRoles);
-router.post("/", createRole);
-router.get("/permissions", listPermissions);
-router.put("/:id", updateRole);
-router.delete("/:id", deleteRole);
+router.get("/", authorizePermissions("*"), listRoles);
+router.post("/", authorizePermissions("*"), createRole);
+router.get("/permissions", authorizePermissions("*"), listPermissions);
+router.put("/:id", authorizePermissions("*"), updateRole);
+router.delete("/:id", authorizePermissions("*"), deleteRole);
 
 export default router;

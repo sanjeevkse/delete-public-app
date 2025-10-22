@@ -11,6 +11,7 @@ import type Post from "./Post";
 import type User from "./User";
 
 import sequelize from "../config/database";
+import { PostReactionType } from "../types/enums";
 
 class PostReaction extends Model<
   InferAttributes<PostReaction>,
@@ -19,7 +20,7 @@ class PostReaction extends Model<
   declare id: CreationOptional<number>;
   declare postId: number;
   declare userId: number;
-  declare reaction: "LIKE" | "DISLIKE";
+  declare reaction: PostReactionType;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -47,7 +48,7 @@ PostReaction.init(
       allowNull: false
     },
     reaction: {
-      type: DataTypes.ENUM("LIKE", "DISLIKE"),
+      type: DataTypes.ENUM(PostReactionType.LIKE, PostReactionType.DISLIKE),
       allowNull: false
     },
     status: {

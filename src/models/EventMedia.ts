@@ -10,6 +10,7 @@ import {
 import type Event from "./Event";
 
 import sequelize from "../config/database";
+import { EventMediaType } from "../types/enums";
 
 class EventMedia extends Model<
   InferAttributes<EventMedia>,
@@ -17,7 +18,7 @@ class EventMedia extends Model<
 > {
   declare id: CreationOptional<number>;
   declare eventId: number;
-  declare mediaType: "PHOTO" | "VIDEO";
+  declare mediaType: EventMediaType;
   declare mediaUrl: string;
   declare thumbnailUrl: CreationOptional<string | null>;
   declare mimeType: CreationOptional<string | null>;
@@ -46,7 +47,7 @@ EventMedia.init(
     },
     mediaType: {
       field: "media_type",
-      type: DataTypes.ENUM("PHOTO", "VIDEO"),
+      type: DataTypes.ENUM(EventMediaType.PHOTO, EventMediaType.VIDEO),
       allowNull: false
     },
     mediaUrl: {

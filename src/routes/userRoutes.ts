@@ -8,15 +8,16 @@ import {
   updateUser
 } from "../controllers/userController";
 import { assignRoleToUser } from "../controllers/roleController";
+import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 
 const router = Router();
 
-router.post("/", createUser);
+router.post("/", authorizePermissions("*"), createUser);
 
-router.get("/", listUsers);
-router.get("/:id", getUser);
-router.put("/:id", updateUser);
-router.delete("/:id", deleteUser);
-router.post("/:userId/roles", assignRoleToUser);
+router.get("/", authorizePermissions("*"), listUsers);
+router.get("/:id", authorizePermissions("*"), getUser);
+router.put("/:id", authorizePermissions("*"), updateUser);
+router.delete("/:id", authorizePermissions("*"), deleteUser);
+router.post("/:userId/roles", authorizePermissions("*"), assignRoleToUser);
 
 export default router;

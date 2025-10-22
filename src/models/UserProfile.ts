@@ -8,6 +8,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import { UserProfileGender } from "../types/enums";
 import type User from "./User";
 
 class UserProfile extends Model<
@@ -20,7 +21,7 @@ class UserProfile extends Model<
   declare alernativeContactNumber: CreationOptional<string | null>;
   declare bio: CreationOptional<string | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
-  declare gender: CreationOptional<"MALE" | "FEMALE" | "NON_BINARY" | "OTHER" | "PREFER_NOT" | null>;
+  declare gender: CreationOptional<UserProfileGender | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
   declare fullAddress: CreationOptional<string | null>;
@@ -78,7 +79,13 @@ UserProfile.init(
       allowNull: true
     },
     gender: {
-      type: DataTypes.ENUM("MALE", "FEMALE", "NON_BINARY", "OTHER", "PREFER_NOT"),
+      type: DataTypes.ENUM(
+        UserProfileGender.MALE,
+        UserProfileGender.FEMALE,
+        UserProfileGender.NON_BINARY,
+        UserProfileGender.OTHER,
+        UserProfileGender.PREFER_NOT
+      ),
       allowNull: true
     },
     occupation: {

@@ -10,7 +10,12 @@
       "name": "Health Check",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
         "url": {
           "raw": "{{baseUrl}}/api/health",
           "host": ["{{baseUrl}}"],
@@ -86,6 +91,774 @@
             },
             "description": "Verifies the OTP (or the master OTP) for the supplied mobile number and returns a JWT alongside the caller's role/permission access profile."
           }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "List Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
+              "query": [
+                {
+                  "key": "tags",
+                  "value": "community",
+                  "description": "Optional: filter posts containing the tag substring."
+                },
+                {
+                  "key": "latitude",
+                  "value": "27.7172",
+                  "description": "Optional: exact match latitude filter."
+                },
+                {
+                  "key": "longitude",
+                  "value": "85.3240",
+                  "description": "Optional: exact match longitude filter."
+                },
+                {
+                  "key": "search",
+                  "value": "cleanup",
+                  "description": "Optional: search term applied to the post description."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional: page number (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional: page size up to 100 (defaults to 20)."
+                }
+              ]
+            },
+            "description": "Lists active posts in reverse chronological order with optional tag and location filters. Reaction counts and active images are embedded in each record."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  if (first && first.id) {",
+                  "    pm.collectionVariables.set(\"postId\", first.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Post",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
+            },
+            "description": "Retrieves a single active post by id including images, author, and aggregated reaction counts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Post id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "my-posts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional: page number (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional: page size up to 100 (defaults to 20)."
+                }
+              ]
+            },
+            "description": "Lists only the authenticated creator's active posts with pagination."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Community clean-up drive\",\n  \"tags\": [\"community\", \"cleanup\"],\n  \"latitude\": 27.7172,\n  \"longitude\": 85.3240,\n  \"images\": [\n    {\n      \"imageUrl\": \"https://example.com/before.jpg\",\n      \"caption\": \"Before\"\n    },\n    {\n      \"imageUrl\": \"https://example.com/after.jpg\",\n      \"caption\": \"After\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
+            },
+            "description": "Creates a new post for the authenticated user. Tags may be sent as an array or comma-delimited string; images are optional."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "var postId = jsonData && (jsonData.id || (jsonData.data && jsonData.data.id));",
+                  "if (postId) {",
+                  "  pm.collectionVariables.set(\"postId\", postId);",
+                  "}",
+                  "pm.test(\"Post ID stored\", function () {",
+                  "  pm.expect(pm.collectionVariables.get(\"postId\")).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Community clean-up drive update\",\n  \"tags\": \"cleanup,community\",\n  \"latitude\": 27.7172,\n  \"longitude\": 85.3240,\n  \"images\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
+            },
+            "description": "Updates a post. Only the original creator or an admin can modify it. Provide an empty images array to clear existing images."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "if (jsonData && jsonData.id) {",
+                  "  pm.collectionVariables.set(\"postId\", jsonData.id);",
+                  "}",
+                  "pm.test(\"Response includes post id\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
+            },
+            "description": "Soft deletes a post. Only the creator or an admin may perform this action."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "React To Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reaction\": \"LIKE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reactions"]
+            },
+            "description": "Adds or updates the caller's reaction (LIKE or DISLIKE) for the post and returns the updated reaction counts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Counts present\", function () {",
+                  "  pm.expect(jsonData && jsonData.counts && jsonData.counts.likesCount).to.not.be.undefined;",
+                  "  pm.expect(jsonData && jsonData.counts && jsonData.counts.dislikesCount).to.not.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"],
+              "query": [
+                {
+                  "key": "title",
+                  "value": "cleanup",
+                  "description": "Optional: filter by event title."
+                },
+                {
+                  "key": "place",
+                  "value": "central",
+                  "description": "Optional: filter by place substring."
+                },
+                {
+                  "key": "startDateFrom",
+                  "value": "2024-01-01",
+                  "description": "Optional: start date lower bound (YYYY-MM-DD)."
+                },
+                {
+                  "key": "startDateTo",
+                  "value": "2024-12-31",
+                  "description": "Optional: start date upper bound (YYYY-MM-DD)."
+                },
+                {
+                  "key": "search",
+                  "value": "community",
+                  "description": "Optional: search term applied to title or description."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional: page number (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional: page size up to 100 (defaults to 20)."
+                }
+              ]
+            },
+            "description": "Lists active events with pagination and optional filters for title, place, or date range."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  if (first && first.id) {",
+                  "    pm.collectionVariables.set(\"eventId\", first.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Event",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}"]
+            },
+            "description": "Retrieves a single active event along with its media and registration count."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Event id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Community Cleanup Drive\",\n  \"description\": \"Neighborhood volunteers gather for a cleanup.\",\n  \"place\": \"Central Park\",\n  \"googleMapLink\": \"https://maps.google.com/?q=Central+Park\",\n  \"startDate\": \"2024-12-01\",\n  \"startTime\": \"09:00\",\n  \"endDate\": \"2024-12-01\",\n  \"endTime\": \"12:00\",\n  \"media\": [\n    {\n      \"mediaType\": \"PHOTO\",\n      \"mediaUrl\": \"https://example.com/event-photo.jpg\",\n      \"thumbnailUrl\": \"https://example.com/event-photo-thumb.jpg\",\n      \"mimeType\": \"image/jpeg\",\n      \"positionNumber\": 1,\n      \"caption\": \"Overview of the venue\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"]
+            },
+            "description": "Creates a new event with optional media attachments. Dates must be provided in YYYY-MM-DD format and times in HH:mm."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "var eventId = jsonData && (jsonData.id || (jsonData.data && jsonData.data.id));",
+                  "if (eventId) {",
+                  "  pm.collectionVariables.set(\"eventId\", eventId);",
+                  "}",
+                  "pm.test(\"Event ID stored\", function () {",
+                  "  pm.expect(pm.collectionVariables.get(\"eventId\")).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated agenda with additional workshops.\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"14:00\",\n  \"media\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}"]
+            },
+            "description": "Updates event details. Provide an empty media array to clear existing media, or omit the field to leave media unchanged."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "if (jsonData && jsonData.id) {",
+                  "  pm.collectionVariables.set(\"eventId\", jsonData.id);",
+                  "}",
+                  "pm.test(\"Event id present\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}"]
+            },
+            "description": "Soft deletes an event and its media/registrations."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register For Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "register"]
+            },
+            "description": "Registers the authenticated user for the selected event, reactivating any soft-deleted registration."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Registration object present\", function () {",
+                  "  pm.expect(jsonData && jsonData.registration).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unregister From Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Unable to attend\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/unregister",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "unregister"]
+            },
+            "description": "Soft-unregisters the authenticated user from the event. Optionally include a reason."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Event Registrations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "registrations"],
+              "query": [
+                {
+                  "key": "includeUnregistered",
+                  "value": "false",
+                  "description": "Optional: set to true to include inactive (status 0) registrations."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional pagination page (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional page size up to 100 (defaults to 20)."
+                }
+              ]
+            },
+            "description": "Lists registrations for a specific event, including registrant profile details. Use includeUnregistered=true to include soft-unregistered entries."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "pm.test(\"includeUnregistered flag echoes request\", function () {",
+                  "  pm.expect(jsonData && jsonData.includeUnregistered).to.eql(false);",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  pm.test(\"Registration has user details\", function () {",
+                  "    pm.expect(first && first.user && first.user.id).to.exist;",
+                  "    pm.expect(first.user).to.have.property(\"fullName\");",
+                  "    pm.expect(first.user).to.have.property(\"email\");",
+                  "    pm.expect(first.user).to.have.property(\"contactNumber\");",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

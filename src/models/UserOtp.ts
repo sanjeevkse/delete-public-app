@@ -8,6 +8,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import { UserOtpPurpose } from "../types/enums";
 import type User from "./User";
 
 class UserOtp extends Model<
@@ -16,7 +17,7 @@ class UserOtp extends Model<
 > {
   declare id: CreationOptional<number>;
   declare userId: number;
-  declare purpose: "LOGIN" | "2FA" | "PASSWORD_RESET";
+  declare purpose: UserOtpPurpose;
   declare otpPlain: string;
   declare expiresAt: Date;
   declare attemptsLeft: CreationOptional<number>;
@@ -42,9 +43,13 @@ UserOtp.init(
       allowNull: false
     },
     purpose: {
-      type: DataTypes.ENUM("LOGIN", "2FA", "PASSWORD_RESET"),
+      type: DataTypes.ENUM(
+        UserOtpPurpose.LOGIN,
+        UserOtpPurpose.TWO_FACTOR,
+        UserOtpPurpose.PASSWORD_RESET
+      ),
       allowNull: false,
-      defaultValue: "LOGIN"
+      defaultValue: UserOtpPurpose.LOGIN
     },
     otpPlain: {
       field: "otp_plain",

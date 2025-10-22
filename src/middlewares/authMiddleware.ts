@@ -35,3 +35,11 @@ export const authenticate =
       throw new ApiError("Invalid or expired token", 401);
     }
   };
+
+export const requireAuthenticatedUser = (req: AuthenticatedRequest) => {
+  if (!req.user) {
+    throw new ApiError("Authentication required", 401);
+  }
+
+  return req.user;
+};

@@ -35,9 +35,24 @@ export const authorizePermissions =
     const normalizedPermissions = permissions.map(normalize);
     const normalizedAllowed = allowedPermissions.map(normalize);
 
-    const hasPermission = normalizedAllowed.some((permission) =>
-      normalizedPermissions.includes(permission)
-    );
+    const hasWildcardPermission = normalizedPermissions.includes("*");
+
+    const hasPermission =
+      hasWildcardPermission ||
+      normalizedAllowed.some((permission) => {
+        if (normalizedPermissions.includes(permission)) {
+          return true;
+        }
+
+        const [module] = permission.split(":");
+        if (!module) {
+          return false;
+        }
+
+        const moduleWildcard = `${module}:*`;
+        return normalizedPermissions.includes(moduleWildcard);
+      });
+
     if (!hasPermission) {
       throw new ApiError("Forbidden", 403);
     }
