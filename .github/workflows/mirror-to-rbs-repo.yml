@@ -1,0 +1,48 @@
+name: Mirror to repo2
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history (no persisted creds)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false   # <-- prevents auto Authorization header
+
+      - name: Push mirror to Repo2
+        env:
+          REPO2_TOKEN: ${{ secrets.REPO2_TOKEN }}
+          REPO2_URL:   https://github.com/Rabasa2025/public-app-node.git
+        run: |
+          set -e
+
+          # safety: clear any leftover headers (if any)
+          git config --global --unset-all http.https://github.com/.extraheader || true
+          git config --global --unset-all http.${REPO2_URL}.extraheader || true
+
+          # Set identity
+          git config user.name  "Repo1 → Repo2 Mirror Bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          # Build Basic auth header just for REPO2_URL
+          AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0 2>/dev/null || printf "x-access-token:${REPO2_TOKEN}" | base64)"
+
+          # Quick access check (clear error if PAT can't see the private repo)
+          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
+              ls-remote --heads "${REPO2_URL}" >/dev/null
+
+          # Add remote without embedding secrets in the URL
+          git remote add mirror "${REPO2_URL}"
+
+          # Mirror push with the same scoped header (no duplicate auth)
+          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
+              push --mirror --prune mirror
