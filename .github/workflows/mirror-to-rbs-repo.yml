@@ -2,8 +2,8 @@ name: Mirror to repo2
 
 on:
   push:
-    branches: ["**"]   # or ["main"] if you only want main
-  workflow_dispatch:    # allow manual triggering
+    branches: ["**"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,41 +12,37 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout full history
+      - name: Checkout full history (no persisted creds)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Need full history and tags
+          fetch-depth: 0
+          persist-credentials: false   # <-- prevents auto Authorization header
 
-      - name: Set up git identity
-        run: |
-          git config user.name "Repo1 → Repo2 Mirror Bot"
-          git config user.email "actions@users.noreply.github.com"
-
-      - name: Check access to Repo2 (clear fail if no access)
+      - name: Push mirror to Repo2
         env:
           REPO2_TOKEN: ${{ secrets.REPO2_TOKEN }}
+          REPO2_URL:   https://github.com/Rabasa2025/public-app-node.git
         run: |
           set -e
-          AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0)"
-          # List refs without exposing the token in logs
-          git -c "http.https://github.com/.extraheader=Authorization: Basic ${AUTH}" \
-            ls-remote --heads https://github.com/Rabasa2025/public-app-node.git >/dev/null
-          echo "✅ Access to Repo2 confirmed."
-      
-      - name: Push mirror to Repo2 (all branches & tags)
-        env:
-          REPO2_TOKEN: ${{ secrets.REPO2_TOKEN }}
-        run: |
-          set -e
-          git config user.name "Repo1 → Repo2 Mirror Bot"
-          git config user.email "actions@users.noreply.github.com"
-      
-          AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0)"
-      
-          # Add remote without token in URL
-          git remote add mirror https://github.com/Rabasa2025/public-app-node.git
-      
-          # Push with Authorization header (no token in URL)
-          git -c "http.https://github.com/.extraheader=Authorization: Basic ${AUTH}" \
-            push --mirror --prune mirror
 
+          # safety: clear any leftover headers (if any)
+          git config --global --unset-all http.https://github.com/.extraheader || true
+          git config --global --unset-all http.${REPO2_URL}.extraheader || true
+
+          # Set identity
+          git config user.name  "Repo1 → Repo2 Mirror Bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          # Build Basic auth header just for REPO2_URL
+          AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0 2>/dev/null || printf "x-access-token:${REPO2_TOKEN}" | base64)"
+
+          # Quick access check (clear error if PAT can't see the private repo)
+          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
+              ls-remote --heads "${REPO2_URL}" >/dev/null
+
+          # Add remote without embedding secrets in the URL
+          git remote add mirror "${REPO2_URL}"
+
+          # Mirror push with the same scoped header (no duplicate auth)
+          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
+              push --mirror --prune mirror
