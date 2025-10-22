@@ -9,11 +9,11 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "lint": "eslint . --ext .ts",
-    "migrate": "sequelize db:migrate",
-    "migrate:undo": "sequelize db:migrate:undo",
-    "migrate:redo": "sequelize db:migrate:undo && sequelize db:migrate",
-    "seed": "sequelize db:seed:all",
-    "seed:undo": "sequelize db:seed:undo:all"
+    "migratessss": "sequelize db:migrate",
+    "migratessss:undo": "sequelize db:migrate:undo",
+    "migratessss:redo": "sequelize db:migrate:undo && sequelize db:migrate",
+    "seedssss": "sequelize db:seed:all",
+    "seedssss:undo": "sequelize db:seed:undo:all"
   },
   "keywords": [
     "express",
