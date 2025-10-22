@@ -1,0 +1,37 @@
+name: Mirror to repo2
+
+on:
+  push:
+    branches: ["**"]   # or ["main"] if you only want main
+  workflow_dispatch:    # allow manual triggering
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Need full history and tags
+
+      - name: Set up git identity
+        run: |
+          git config user.name "Repo1 → Repo2 Mirror Bot"
+          git config user.email "actions@users.noreply.github.com"
+
+      - name: Push mirror to Repo2 (all branches & tags)
+        env:
+          REPO2_URL: ${{ vars.REPO2_URL }}
+          REPO2_TOKEN: ${{ vars.REPO2_TOKEN }}
+        run: |
+          # Embed token in Repo2 URL
+          AUTHED_URL="${REPO2_URL/https:\/\//https:\/\/${REPO2_TOKEN}@}"
+
+          # Add mirror remote
+          git remote add mirror "$AUTHED_URL"
+
+          # Push everything (branches + tags), prune deleted, force as true mirror
+          git push --mirror --prune mirror
