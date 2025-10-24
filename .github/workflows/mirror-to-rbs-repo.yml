@@ -33,8 +33,9 @@ jobs:
       - name: Create one commit with generic identity
         working-directory: _snapshot
         run: |
+          rm -rf .git
           git init
-          git checkout main
+          git checkout -M main
           git config user.name  "Sync Bot"
           git config user.email "sync@example.invalid"
           git add -A
