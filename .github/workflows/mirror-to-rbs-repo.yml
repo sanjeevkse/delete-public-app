@@ -2,7 +2,7 @@ name: Publish anonymized history to repo2
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main"]   # change if needed
   workflow_dispatch:
 
 permissions:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout full history
+      - name: Checkout full history (no persisted creds)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -24,16 +24,21 @@ jobs:
           python3 -m pip install --user git-filter-repo
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Rewrite authors/committers/messages
+      - name: Rewrite authors/committers/messages (keep commit graph)
         run: |
-          git config user.name  "Temp Runner"
+          git config user.name  "Rabasadhu"
           git config user.email "runner@example.invalid"
       
           python3 -m pip install --user git-filter-repo
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       
           git filter-repo --force \
-            --commit-callback 'c.author_name=b"Sync Bot"; c.author_email=b"sync@example.invalid"; c.committer_name=b"Sync Bot"; c.committer_email=b"sync@example.invalid"; c.message=b"update\n"'
+            --commit-callback 'commit.author_name=b"Sync Bot"; commit.author_email=b"sync@example.invalid"; commit.committer_name=b"Sync Bot"; commit.committer_email=b"sync@example.invalid"; commit.message=b"update\n"'
+
+
+      - name: Clear any leftover default auth headers (safety)
+        run: |
+          git config --global --unset-all http.https://github.com/.extraheader || true
 
       - name: Push rewritten history to repo2 (force)
         env:
