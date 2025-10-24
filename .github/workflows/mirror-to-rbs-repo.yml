@@ -23,10 +23,10 @@ jobs:
           rm -rf _snapshot
           mkdir -p _snapshot
           # Copy the *files you want* in repo2. Add/remove excludes as needed.
-          #  --exclude ".git" \
           #  --exclude ".github" \
           rsync -a \
             --delete \
+            --exclude ".git" \
             --exclude "node_modules" \
             ./ _snapshot/
 
