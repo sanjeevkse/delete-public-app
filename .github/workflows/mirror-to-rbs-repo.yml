@@ -33,13 +33,20 @@ jobs:
       - name: Create one commit with generic identity
         working-directory: _snapshot
         run: |
+          # start clean
           rm -rf .git
+          
+          # init and force branch to 'main' (independent of default 'master')
           git init
-          git checkout -M main
+          git branch -M main
+          
+          # identity for the snapshot commit
           git config user.name  "Sync Bot"
           git config user.email "sync@example.invalid"
+          
+          # stage and commit (allow empty so the step never fails)
           git add -A
-          git commit -m "update"  # <-- no source details
+          git commit -m "update [skip ci]" --allow-empty
 
       - name: Push snapshot to repo2 (overwrite)
         env:
