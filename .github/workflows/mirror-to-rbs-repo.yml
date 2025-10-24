@@ -1,60 +1,43 @@
-name: Publish anonymized snapshot to repo2
+name: Publish anonymized history to repo2
 
 on:
   push:
-    branches: ["main"]   # set as needed
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  publish-snapshot:
+  anonymize-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout source (no persisted creds)
+      - name: Checkout full history
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Stage files for snapshot
+      - name: Install git-filter-repo
         run: |
-          rm -rf _snapshot
-          mkdir -p _snapshot
-          # Copy the *files you want* in repo2. Add/remove excludes as needed.
-          #  --exclude ".github" \
-          rsync -a \
-            --delete \
-            --exclude ".git" \
-            --exclude "node_modules" \
-            ./ _snapshot/
+          python3 -m pip install --user git-filter-repo
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Create one commit with generic identity
-        working-directory: _snapshot
+      - name: Rewrite authors/committers/messages
         run: |
-          # start clean
-          rm -rf .git
-          
-          # init and force branch to 'main' (independent of default 'master')
-          git init
-          git branch -M main
-          
-          # identity for the snapshot commit
-          git config user.name  "Sync Bot"
-          git config user.email "sync@example.invalid"
-          
-          # stage and commit (allow empty so the step never fails)
-          git add -A
-          git commit -m "update [skip ci]" --allow-empty
+          git config user.name  "Temp Runner"
+          git config user.email "runner@example.invalid"
 
-      - name: Push snapshot to repo2 (overwrite)
+          git filter-repo --force \
+            --commit-callback 'c.author_name = b"Sync Bot" c.author_email = b"sync@example.invalid" c.committer_name = b"Sync Bot" c.committer_email = b"sync@example.invalid" c.message = b"update\n"'
+
+      - name: Push rewritten history to repo2 (force)
         env:
           REPO2_URL:   https://github.com/Rabasa2025/public-app-node.git
           REPO2_TOKEN: ${{ vars.REPO2_TOKEN }}
         run: |
           set -e
           AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0 2>/dev/null || printf "x-access-token:${REPO2_TOKEN}" | base64)"
-          git -C _snapshot \
-            -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
-            push --force "${REPO2_URL}" main:main
+          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
+              push --force "${REPO2_URL}" main:main
