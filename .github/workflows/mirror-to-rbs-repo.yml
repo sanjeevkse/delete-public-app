@@ -1,48 +1,52 @@
-name: Mirror to repo2
+name: Publish anonymized snapshot to repo2
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main"]   # set as needed
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  mirror:
+  publish-snapshot:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout full history (no persisted creds)
+      - name: Checkout source (no persisted creds)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false   # <-- prevents auto Authorization header
+          persist-credentials: false
 
-      - name: Push mirror to Repo2
+      - name: Stage files for snapshot
+        run: |
+          rm -rf _snapshot
+          mkdir -p _snapshot
+          # Copy the *files you want* in repo2. Add/remove excludes as needed.
+          #  --exclude ".git" \
+          #  --exclude ".github" \
+          rsync -a \
+            --delete \
+            --exclude "node_modules" \
+            ./ _snapshot/
+
+      - name: Create one commit with generic identity
+        working-directory: _snapshot
+        run: |
+          git init
+          git checkout -b main
+          git config user.name  "Sync Bot"
+          git config user.email "sync@example.invalid"
+          git add -A
+          git commit -m "update"  # <-- no source details
+
+      - name: Push snapshot to repo2 (overwrite)
         env:
-          REPO2_TOKEN: ${{ vars.REPO2_TOKEN }}
           REPO2_URL:   https://github.com/Rabasa2025/public-app-node.git
+          REPO2_TOKEN: ${{ vars.REPO2_TOKEN }}
         run: |
           set -e
-
-          # safety: clear any leftover headers (if any)
-          git config --global --unset-all http.https://github.com/.extraheader || true
-          git config --global --unset-all http.${REPO2_URL}.extraheader || true
-
-          # Set identity
-          git config user.name  "Repo1 → Repo2 Mirror Bot"
-          git config user.email "actions@users.noreply.github.com"
-
-          # Build Basic auth header just for REPO2_URL
           AUTH="$(printf "x-access-token:${REPO2_TOKEN}" | base64 -w0 2>/dev/null || printf "x-access-token:${REPO2_TOKEN}" | base64)"
-
-          # Quick access check (clear error if PAT can't see the private repo)
-          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
-              ls-remote --heads "${REPO2_URL}" >/dev/null
-
-          # Add remote without embedding secrets in the URL
-          git remote add mirror "${REPO2_URL}"
-
-          # Mirror push with the same scoped header (no duplicate auth)
-          git -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
-              push --mirror --prune mirror
+          git -C _snapshot \
+            -c "http.${REPO2_URL}.extraheader=Authorization: Basic ${AUTH}" \
+            push --force "${REPO2_URL}" main:main
