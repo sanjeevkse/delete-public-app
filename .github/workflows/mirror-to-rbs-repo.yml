@@ -28,9 +28,12 @@ jobs:
         run: |
           git config user.name  "Temp Runner"
           git config user.email "runner@example.invalid"
-
+      
+          python3 -m pip install --user git-filter-repo
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      
           git filter-repo --force \
-            --commit-callback 'c.author_name = b"Sync Bot" c.author_email = b"sync@example.invalid" c.committer_name = b"Sync Bot" c.committer_email = b"sync@example.invalid" c.message = b"update\n"'
+            --commit-callback 'c.author_name=b"Sync Bot"; c.author_email=b"sync@example.invalid"; c.committer_name=b"Sync Bot"; c.committer_email=b"sync@example.invalid"; c.message=b"update\n"'
 
       - name: Push rewritten history to repo2 (force)
         env:
