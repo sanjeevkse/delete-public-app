@@ -286,9 +286,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   await verifyOtpForContactNumber(user.contactNumber, otp);
 
-  const now = new Date();
-  await user.update({ lastLoginAt: now });
-
   emitEvent(AppEvent.USER_LOGGED_IN, { userId: user.id });
 
   const accessProfile = await getUserAccessProfile(user.id);

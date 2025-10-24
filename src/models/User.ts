@@ -22,7 +22,6 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
-  declare lastLoginAt: CreationOptional<Date | null>;
   declare profile?: NonAttribute<UserProfile>;
   declare roles?: NonAttribute<MetaUserRole[]>;
 }
@@ -76,11 +75,6 @@ User.init(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
-    },
-    lastLoginAt: {
-      field: "last_login_at",
-      type: DataTypes.DATE,
-      allowNull: true
     }
   },
   {
