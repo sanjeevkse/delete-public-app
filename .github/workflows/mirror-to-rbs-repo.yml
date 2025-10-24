@@ -34,7 +34,7 @@ jobs:
         working-directory: _snapshot
         run: |
           git init
-          git checkout -b main
+          git checkout main
           git config user.name  "Sync Bot"
           git config user.email "sync@example.invalid"
           git add -A
