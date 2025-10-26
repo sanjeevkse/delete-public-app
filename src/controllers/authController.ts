@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, Response, Express } from "express";
 import { Op } from "sequelize";
 
 import env from "../config/env";
@@ -7,6 +7,7 @@ import { AppEvent, emitEvent } from "../events/eventBus";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
+import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import MetaPermissionGroup from "../models/MetaPermissionGroup";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
@@ -324,7 +325,8 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     "access",
     "token",
     "userExists",
-    "otp"
+    "otp",
+    "profileImageUrl"
   ]);
   Object.entries(payload).forEach(([key, value]) => {
     if (!userFieldKeys.has(key) && !ignoredKeys.has(key)) {
@@ -338,6 +340,9 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
 
   if ("wardName" in profileInput) {
     delete profileInput["wardName"];
+  }
+  if ("profileImageUrl" in profileInput) {
+    delete profileInput["profileImageUrl"];
   }
 
   if (Object.keys(profileInput).length > 0) {
@@ -355,6 +360,51 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
+
+  res.json({
+    user: updatedUser
+  });
+});
+
+export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
+  const uploadedFiles = Array.isArray(req.files)
+    ? (req.files as Express.Multer.File[])
+    : undefined;
+  const uploadedFile =
+    uploadedFiles && uploadedFiles.length > 0
+      ? uploadedFiles[0]
+      : req.file
+      ? (req.file as Express.Multer.File)
+      : undefined;
+
+  if (!uploadedFile) {
+    throw new ApiError("profileImage file is required", 400);
+  }
+
+  const profileImageUrl = buildPublicUploadPath(uploadedFile.path);
+
+  const [profile] = await UserProfile.findOrCreate({
+    where: { userId },
+    defaults: { userId }
+  });
+
+  await profile.update({
+    profileImageUrl,
+    updatedBy: userId
+  });
+
+  const updatedUser = await User.findByPk(userId, {
+    include: [
+      { association: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  if (!updatedUser) {
+    throw new ApiError("User not found", 404);
+  }
 
   res.json({
     user: updatedUser

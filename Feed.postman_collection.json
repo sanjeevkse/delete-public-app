@@ -86,7 +86,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"profileImageUrl\": \"https://example.com/avatar.png\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
+              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile",
@@ -94,6 +94,38 @@
               "path": ["api", "auth", "profile"]
             },
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
+          }
+        },
+        {
+          "name": "Update Profile Image",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profileImage",
+                  "type": "file",
+                  "src": "/path/to/local/avatar.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile/image",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile", "image"]
+            },
+            "description": "Uploads a new avatar for the authenticated user. Submit a single profileImage file (JPEG/PNG/WEBP/HEIC). The response returns the updated user record."
           }
         },
         {
@@ -296,7 +328,7 @@
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "multipart/form-data"
               },
               {
                 "key": "Authorization",
@@ -304,15 +336,56 @@
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"description\": \"Community clean-up drive\",\n  \"tags\": [\"community\", \"cleanup\"],\n  \"latitude\": 27.7172,\n  \"longitude\": 85.3240,\n  \"images\": [\n    {\n      \"imageUrl\": \"https://example.com/before.jpg\",\n      \"caption\": \"Before\"\n    },\n    {\n      \"imageUrl\": \"https://example.com/after.jpg\",\n      \"caption\": \"After\"\n    }\n  ]\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "description",
+                  "value": "Community clean-up drive",
+                  "type": "text"
+                },
+                {
+                  "key": "tags",
+                  "value": "community,cleanup",
+                  "type": "text"
+                },
+                {
+                  "key": "latitude",
+                  "value": "27.7172",
+                  "type": "text"
+                },
+                {
+                  "key": "longitude",
+                  "value": "85.3240",
+                  "type": "text"
+                },
+                {
+                  "key": "captions",
+                  "value": "Before",
+                  "type": "text"
+                },
+                {
+                  "key": "captions",
+                  "value": "After",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "/path/to/local/before.jpg"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "/path/to/local/after.jpg"
+                }
+              ]
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts"]
             },
-            "description": "Creates a new post for the authenticated user. Tags may be sent as an array or comma-delimited string; images are optional."
+            "description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `images` files (JPEG/PNG/WEBP/HEIC) and matching `captions` fields. Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
           },
           "event": [
             {
@@ -357,14 +430,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Community clean-up drive update\",\n  \"tags\": \"cleanup,community\",\n  \"latitude\": 27.7172,\n  \"longitude\": 85.3240,\n  \"images\": []\n}"
+              "raw": "{\n  \"description\": \"Community clean-up drive update\",\n  \"tags\": \"cleanup,community\",\n  \"latitude\": 27.7172,\n  \"longitude\": 85.3240\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts", "{{postId}}"]
             },
-            "description": "Updates a post. Only the original creator or an admin can modify it. Provide an empty images array to clear existing images."
+            "description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated image endpoints."
           },
           "event": [
             {
@@ -386,6 +459,105 @@
                   "}",
                   "pm.test(\"Response includes post id\", function () {",
                   "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Post Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "captions",
+                  "value": "Day one progress",
+                  "type": "text"
+                },
+                {
+                  "key": "captions",
+                  "value": "Day two progress",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "/path/to/local/day-one.jpg"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "/path/to/local/day-two.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "images"]
+            },
+            "description": "Appends one or more images to an existing post. Provide uploads via `images` file fields and optional matching `captions` entries."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Post Images",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageIds\": [123, 456]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "images"]
+            },
+            "description": "Soft deletes one or more images from a post by marking them inactive. Pass the image IDs to remove."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
                   "});"
                 ]
               }

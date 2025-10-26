@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
+import path from "path";
 import type { Dialect } from "sequelize";
 
 dotenv.config();
+
+const defaultUploadDir = process.env.UPLOADS_BASE_DIR ?? path.resolve(process.cwd(), "uploads");
+const uploadsPublicPath = process.env.UPLOADS_PUBLIC_PATH ?? "/uploads";
 
 const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
@@ -22,6 +26,12 @@ const env = {
     user: process.env.DB_USER ?? "root",
     password: process.env.DB_PASSWORD ?? "",
     dialect: (process.env.DB_DIALECT ?? "mysql") as Dialect
+  },
+  uploads: {
+    baseDir: defaultUploadDir,
+    publicPath: uploadsPublicPath.replace(/\/$/, ""),
+    maxImageSizeBytes: Number.parseInt(process.env.UPLOADS_MAX_IMAGE_SIZE ?? `${5 * 1024 * 1024}`, 10),
+    maxVideoSizeBytes: Number.parseInt(process.env.UPLOADS_MAX_VIDEO_SIZE ?? `${50 * 1024 * 1024}`, 10)
   }
 };
 

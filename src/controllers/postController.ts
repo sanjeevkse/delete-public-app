@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, Response, Express } from "express";
 import type { FindAttributeOptions, Transaction, WhereOptions } from "sequelize";
 import { Op } from "sequelize";
 
@@ -7,6 +7,7 @@ import sequelize from "../config/database";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
+import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import Post from "../models/Post";
 import PostImage from "../models/PostImage";
 import PostReaction from "../models/PostReaction";
@@ -137,16 +138,58 @@ const parseOptionalNumber = (value: unknown, field: string): number | undefined 
   return numberValue;
 };
 
-const normalizeImagesInput = (imagesInput: unknown): NormalizedImageInput[] | null => {
+const normalizeCaptionsInput = (captionsInput: unknown, count: number): Array<string | null> => {
+  if (captionsInput === undefined || captionsInput === null) {
+    return Array(count).fill(null);
+  }
+
+  let values: unknown[] = [];
+
+  if (Array.isArray(captionsInput)) {
+    values = captionsInput;
+  } else if (typeof captionsInput === "string") {
+    try {
+      const parsed = JSON.parse(captionsInput);
+      values = Array.isArray(parsed) ? parsed : [captionsInput];
+    } catch {
+      values = [captionsInput];
+    }
+  }
+
+  return Array.from({ length: count }, (_, index) => {
+    const raw = values[index];
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    return null;
+  });
+};
+
+const parseLegacyImagesInput = (imagesInput: unknown): NormalizedImageInput[] | null => {
   if (imagesInput === undefined) {
     return null;
   }
 
-  if (!Array.isArray(imagesInput)) {
+  let arrayInput: unknown[];
+
+  if (typeof imagesInput === "string") {
+    try {
+      const parsed = JSON.parse(imagesInput);
+      if (!Array.isArray(parsed)) {
+        throw new Error("Expected array");
+      }
+      arrayInput = parsed;
+    } catch {
+      throw new ApiError("images must be a JSON array", 400);
+    }
+  } else if (Array.isArray(imagesInput)) {
+    arrayInput = imagesInput;
+  } else {
     throw new ApiError("images must be an array", 400);
   }
 
-  const normalized = imagesInput
+  const normalized = arrayInput
     .map((item) => {
       if (!item || typeof item !== "object") {
         return null;
@@ -169,6 +212,24 @@ const normalizeImagesInput = (imagesInput: unknown): NormalizedImageInput[] | nu
     .filter((value): value is NormalizedImageInput => value !== null);
 
   return normalized;
+};
+
+const normalizeImagesInput = (
+  files: Express.Multer.File[] | undefined,
+  imagesInput: unknown,
+  captionsInput: unknown
+): NormalizedImageInput[] | null => {
+  const uploadedFiles = Array.isArray(files) ? files : [];
+
+  if (uploadedFiles.length > 0) {
+    const captions = normalizeCaptionsInput(captionsInput, uploadedFiles.length);
+    return uploadedFiles.map((file, index) => ({
+      imageUrl: buildPublicUploadPath(file.path),
+      caption: captions[index] ?? null
+    }));
+  }
+
+  return parseLegacyImagesInput(imagesInput);
 };
 
 const fetchPostById = async (id: number) => {
@@ -209,7 +270,10 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
   const tags = normalizeTagsInput(req.body?.tags);
-  const images = normalizeImagesInput(req.body?.images);
+  const uploadedFiles = Array.isArray(req.files)
+    ? (req.files as Express.Multer.File[])
+    : undefined;
+  const images = normalizeImagesInput(uploadedFiles, req.body?.images, req.body?.captions);
 
   const createdPostId = await sequelize.transaction(async (transaction) => {
     const post = await Post.create(
@@ -366,30 +430,8 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   updates.updatedBy = userId;
 
-  const images = normalizeImagesInput(req.body?.images);
-
   await sequelize.transaction(async (transaction) => {
     await post.update(updates, { transaction });
-
-    if (images !== null) {
-      await PostImage.update(
-        { status: 0, updatedBy: userId },
-        { where: { postId: post.id }, transaction }
-      );
-      if (images.length > 0) {
-        await PostImage.bulkCreate(
-          images.map((image) => ({
-            postId: post.id,
-            imageUrl: image.imageUrl,
-            caption: image.caption,
-            status: 1,
-            createdBy: post.createdBy ?? userId,
-            updatedBy: userId
-          })),
-          { transaction }
-        );
-      }
-    }
   });
 
   const updated = await fetchPostById(post.id);
@@ -426,6 +468,96 @@ export const deletePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   });
 
   res.status(204).send();
+});
+
+export const addPostImages = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
+
+  const postId = Number.parseInt(req.params.id, 10);
+  if (Number.isNaN(postId)) {
+    throw new ApiError("Invalid post id", 400);
+  }
+
+  const post = await Post.findOne({ where: { id: postId, status: 1 } });
+  if (!post) {
+    throw new ApiError("Post not found", 404);
+  }
+
+  if (post.userId !== userId && !isAdmin(roles)) {
+    throw new ApiError("Forbidden", 403);
+  }
+
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
+  const images = normalizeImagesInput(uploadedFiles, req.body?.images, req.body?.captions);
+
+  if (!images || images.length === 0) {
+    throw new ApiError("At least one image is required", 400);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    await PostImage.bulkCreate(
+      images.map((image) => ({
+        postId: post.id,
+        imageUrl: image.imageUrl,
+        caption: image.caption,
+        status: 1,
+        createdBy: post.createdBy ?? userId,
+        updatedBy: userId
+      })),
+      { transaction }
+    );
+  });
+
+  const updated = await fetchPostById(post.id);
+  res.status(201).json(updated);
+});
+
+export const removePostImages = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
+
+  const postId = Number.parseInt(req.params.id, 10);
+  if (Number.isNaN(postId)) {
+    throw new ApiError("Invalid post id", 400);
+  }
+
+  const post = await Post.findOne({ where: { id: postId, status: 1 } });
+  if (!post) {
+    throw new ApiError("Post not found", 404);
+  }
+
+  if (post.userId !== userId && !isAdmin(roles)) {
+    throw new ApiError("Forbidden", 403);
+  }
+
+  const imageIdsInput = req.body?.imageIds ?? req.body?.ids;
+  if (!Array.isArray(imageIdsInput) || imageIdsInput.length === 0) {
+    throw new ApiError("imageIds must be a non-empty array", 400);
+  }
+
+  const imageIds = imageIdsInput
+    .map((value) => Number.parseInt(String(value), 10))
+    .filter((value) => Number.isInteger(value) && value > 0);
+
+  if (imageIds.length === 0) {
+    throw new ApiError("imageIds must contain valid numeric identifiers", 400);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    await PostImage.update(
+      { status: 0, updatedBy: userId },
+      {
+        where: {
+          id: { [Op.in]: imageIds },
+          postId: post.id,
+          status: 1
+        },
+        transaction
+      }
+    );
+  });
+
+  const updated = await fetchPostById(post.id);
+  res.json(updated);
 });
 
 export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

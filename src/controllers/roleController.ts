@@ -6,11 +6,7 @@ import RolePermission from "../models/RolePermission";
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
-import {
-  parseRoleIdsInput,
-  resolveRoleIdsOrDefault,
-  setUserRoles
-} from "../services/rbacService";
+import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
   const roles = await MetaUserRole.findAll({
@@ -21,7 +17,7 @@ export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
 });
 
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
-  const { dispName, description, status = 1, metaUserRoleId, permissions = [] } = req.body;
+  const { dispName, description, status = 1, permissions = [] } = req.body;
   if (!dispName) {
     throw new ApiError("dispName is required", 400);
   }
@@ -29,8 +25,7 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
   const role = await MetaUserRole.create({
     dispName,
     description,
-    status,
-    metaUserRoleId
+    status
   });
 
   if (Array.isArray(permissions) && permissions.length > 0) {

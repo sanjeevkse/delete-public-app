@@ -11,7 +11,6 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "dateOfBirth",
   "gender",
   "occupation",
-  "profileImageUrl",
   "fullAddress",
   "addressLine1",
   "addressLine2",
