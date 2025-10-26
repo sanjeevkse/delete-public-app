@@ -4,6 +4,8 @@ import { Op } from "sequelize";
 import env from "../config/env";
 import { PUBLIC_ROLE_NAME } from "../config/rbac";
 import { AppEvent, emitEvent } from "../events/eventBus";
+import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
@@ -111,8 +113,6 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("contactNumber is required", 400);
   }
 
-  const user = await findUserByContactNumber(contactNumber);
-
   const now = new Date();
   const existingOtp = await UserOtp.findOne({
     where: {
@@ -158,105 +158,7 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
   res.json({
     message: "OTP generated successfully",
     otp,
-    userExists: Boolean(user),
     attemptsLeft: attemptsAllowance
-  });
-});
-
-export const register = asyncHandler(async (req: Request, res: Response) => {
-  const {
-    contactNumber,
-    fullName,
-    email,
-    otp,
-    instagramId,
-    alternateMobileNumber,
-    address,
-    wardName
-  } = req.body as {
-    contactNumber?: string;
-    fullName?: string;
-    email?: string;
-    otp?: string;
-    instagramId?: string;
-    alternateMobileNumber?: string;
-    address?: string;
-    wardName?: string;
-  };
-
-  if (!contactNumber) {
-    throw new ApiError("contactNumber is required", 400);
-  }
-
-  if (!otp) {
-    throw new ApiError("otp is required", 400);
-  }
-
-  const existingByContact = await User.findOne({ where: { contactNumber } });
-  if (existingByContact) {
-    throw new ApiError("contactNumber already registered", 409);
-  }
-
-  if (email) {
-    const existingByEmail = await User.findOne({ where: { email } });
-    if (existingByEmail) {
-      throw new ApiError("email already registered", 409);
-    }
-  }
-
-  await verifyOtpForContactNumber(contactNumber, otp);
-
-  const user = await User.create({
-    contactNumber,
-    email: email ?? null,
-    fullName: fullName ?? null,
-    status: 1
-  });
-
-  await ensureDefaultRole(user.id);
-
-  const profilePayload: Record<string, unknown> = {};
-  if (fullName) {
-    profilePayload.displayName = fullName;
-  }
-  if (alternateMobileNumber) {
-    profilePayload.alternateMobileNumber = alternateMobileNumber;
-  }
-  if (address) {
-    profilePayload.address = address;
-  }
-  if (wardName) {
-    profilePayload.wardName = wardName;
-  }
-  if (instagramId) {
-    profilePayload.instagramId = instagramId;
-  }
-
-  if (Object.keys(profilePayload).length > 0) {
-    await upsertUserProfile(user.id, profilePayload);
-  }
-
-  emitEvent(AppEvent.USER_CREATED, { userId: user.id });
-
-  const accessProfile = await getUserAccessProfile(user.id);
-
-  const createdUser = await User.findByPk(user.id, {
-    include: [
-      { association: "profile" },
-      { association: "roles", include: [{ association: "permissions" }] }
-    ]
-  });
-
-  const token = generateAccessToken({
-    userId: user.id,
-    roles: accessProfile.roles,
-    permissions: ["*"] // accessProfile.permissions
-  });
-
-  res.status(201).json({
-    token,
-    user: createdUser,
-    access: accessProfile
   });
 });
 
@@ -274,17 +176,29 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("otp is required", 400);
   }
 
-  const user = await findUserByContactNumber(contactNumber);
+  await verifyOtpForContactNumber(contactNumber, otp);
+
+  let user = await findUserByContactNumber(contactNumber);
+  let userExists = Boolean(user);
 
   if (!user) {
-    throw new ApiError("User not found", 404);
-  }
-
-  if (user.status !== 1) {
+    user = await User.create({
+      contactNumber,
+      status: 1
+    });
+    await user.update({
+      createdBy: user.id,
+      updatedBy: user.id
+    });
+    await ensureDefaultRole(user.id);
+    emitEvent(AppEvent.USER_CREATED, { userId: user.id });
+  } else if (user.status !== 1) {
     throw new ApiError("Account is inactive", 403);
   }
 
-  await verifyOtpForContactNumber(user.contactNumber, otp);
+  if (!user) {
+    throw new ApiError("Unable to resolve user", 500);
+  }
 
   emitEvent(AppEvent.USER_LOGGED_IN, { userId: user.id });
 
@@ -303,9 +217,148 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
+  const profileExists = Boolean(sanitizedUser?.profile);
+  const resolvedUserExists = userExists && profileExists;
+
   res.json({
+    userExists: resolvedUserExists,
     token,
     user: sanitizedUser,
     access: accessProfile
   });
 });
+
+export const updateProfile = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id: userId } = requireAuthenticatedUser(req);
+
+    const payload = req.body as Record<string, unknown>;
+    if (!payload || typeof payload !== "object") {
+      throw new ApiError("Request body must be an object", 400);
+    }
+
+    const user = await User.findByPk(userId, {
+      include: [{ association: "profile" }]
+    });
+
+    if (!user) {
+      throw new ApiError("User not found", 404);
+    }
+
+    const userUpdates: Record<string, unknown> = {};
+    let normalizedFullName: string | null | undefined;
+
+    if ("email" in payload) {
+      const emailValue = payload.email;
+      let normalizedEmail: string | null;
+
+      if (
+        emailValue === null ||
+        emailValue === undefined ||
+        (typeof emailValue === "string" && emailValue.trim() === "")
+      ) {
+        normalizedEmail = null;
+      } else if (typeof emailValue === "string") {
+        normalizedEmail = emailValue.trim();
+      } else {
+        throw new ApiError("email must be a string", 400);
+      }
+
+      if (normalizedEmail) {
+        const existingByEmail = await User.findOne({
+          where: { email: normalizedEmail },
+          attributes: ["id"]
+        });
+        if (existingByEmail && existingByEmail.id !== userId) {
+          throw new ApiError("email already registered", 409);
+        }
+      }
+
+      userUpdates.email = normalizedEmail;
+    }
+
+    if ("fullName" in payload) {
+      const fullNameValue = payload.fullName;
+
+      if (
+        fullNameValue === null ||
+        fullNameValue === undefined ||
+        (typeof fullNameValue === "string" && fullNameValue.trim() === "")
+      ) {
+        normalizedFullName = null;
+      } else if (typeof fullNameValue === "string") {
+        normalizedFullName = fullNameValue.trim();
+      } else {
+        throw new ApiError("fullName must be a string", 400);
+      }
+
+      userUpdates.fullName = normalizedFullName;
+    }
+
+    userUpdates.updatedBy = userId;
+
+    if (Object.keys(userUpdates).length > 0) {
+      await user.update(userUpdates);
+    }
+
+    const profileInput: Record<string, unknown> = {};
+    const nestedProfile = payload.profile;
+
+    if (nestedProfile && typeof nestedProfile === "object") {
+      Object.assign(profileInput, nestedProfile as Record<string, unknown>);
+    }
+
+    const userFieldKeys = new Set([
+      "contactNumber",
+      "email",
+      "fullName",
+      "status",
+      "createdBy",
+      "updatedBy",
+      "id"
+    ]);
+    const ignoredKeys = new Set([
+      "profile",
+      "roles",
+      "roleIds",
+      "permissions",
+      "access",
+      "token",
+      "userExists",
+      "otp"
+    ]);
+    Object.entries(payload).forEach(([key, value]) => {
+      if (!userFieldKeys.has(key) && !ignoredKeys.has(key)) {
+        profileInput[key] = value;
+      }
+    });
+
+    if (normalizedFullName !== undefined && profileInput["displayName"] === undefined) {
+      profileInput["displayName"] = normalizedFullName;
+    }
+
+    if ("wardName" in profileInput) {
+      delete profileInput["wardName"];
+    }
+
+    if (Object.keys(profileInput).length > 0) {
+      await upsertUserProfile(user.id, profileInput);
+    }
+
+    await UserProfile.findOrCreate({
+      where: { userId: user.id },
+      defaults: { userId: user.id }
+    });
+
+    const updatedUser = await User.findByPk(user.id, {
+      include: [
+        { association: "profile" },
+        { association: "roles", include: [{ association: "permissions" }] }
+      ]
+    });
+
+    res.json({
+      user: updatedUser
+    });
+  }
+);

@@ -32,34 +32,6 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"+15551234567\",\n  \"otp\": \"{{otpCode}}\",\n  \"fullName\": \"Demo User\",\n  \"email\": \"demo@example.com\",\n  \"instagramId\": \"demo.insta\",\n  \"alternateMobileNumber\": \"+15559870000\",\n  \"address\": \"221B Baker Street\",\n  \"wardName\": \"Ward 5\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
-            },
-            "description": "Verifies the supplied OTP against the mobile number, creates a new public user, assigns the default role, and returns both the user profile and access token. Request a fresh OTP first via the Request OTP endpoint."
-          }
-        },
-        {
           "name": "Request OTP",
           "request": {
             "method": "POST",
@@ -84,7 +56,7 @@
                 "request-otp"
               ]
             },
-            "description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes userExists and attemptsLeft flags; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
+            "description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
           }
         },
         {
@@ -112,7 +84,39 @@
                 "login"
               ]
             },
-            "description": "Verifies the OTP (or the master OTP) for the supplied mobile number and returns a JWT alongside the caller's role/permission access profile."
+            "description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"profileImageUrl\": \"https://example.com/avatar.png\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
+            },
+            "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
           }
         }
       ]
@@ -1198,7 +1202,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Administrative role\"\n}"
+              "raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Administrative role\",\n  \"permissions\": [\n    101,\n    102\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
@@ -1210,7 +1214,8 @@
                 "admin",
                 "roles"
               ]
-            }
+            },
+            "description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
           }
         },
         {
@@ -1253,7 +1258,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Updated role description\"\n}"
+              "raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Updated role description\",\n  \"permissions\": [\n    201,\n    202\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
@@ -1266,7 +1271,8 @@
                 "roles",
                 "{{roleId}}"
               ]
-            }
+            },
+            "description": "Replaces the role details along with its numeric permission IDs."
           }
         },
         {
