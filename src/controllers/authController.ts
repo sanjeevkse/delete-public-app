@@ -369,15 +369,13 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
 export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 
-  const uploadedFiles = Array.isArray(req.files)
-    ? (req.files as Express.Multer.File[])
-    : undefined;
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
   const uploadedFile =
     uploadedFiles && uploadedFiles.length > 0
       ? uploadedFiles[0]
       : req.file
-      ? (req.file as Express.Multer.File)
-      : undefined;
+        ? (req.file as Express.Multer.File)
+        : undefined;
 
   if (!uploadedFile) {
     throw new ApiError("profileImage file is required", 400);

@@ -30,8 +30,14 @@ const env = {
   uploads: {
     baseDir: defaultUploadDir,
     publicPath: uploadsPublicPath.replace(/\/$/, ""),
-    maxImageSizeBytes: Number.parseInt(process.env.UPLOADS_MAX_IMAGE_SIZE ?? `${5 * 1024 * 1024}`, 10),
-    maxVideoSizeBytes: Number.parseInt(process.env.UPLOADS_MAX_VIDEO_SIZE ?? `${50 * 1024 * 1024}`, 10)
+    maxImageSizeBytes: Number.parseInt(
+      process.env.UPLOADS_MAX_IMAGE_SIZE ?? `${5 * 1024 * 1024}`,
+      10
+    ),
+    maxVideoSizeBytes: Number.parseInt(
+      process.env.UPLOADS_MAX_VIDEO_SIZE ?? `${50 * 1024 * 1024}`,
+      10
+    )
   }
 };
 

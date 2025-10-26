@@ -270,9 +270,7 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
   const tags = normalizeTagsInput(req.body?.tags);
-  const uploadedFiles = Array.isArray(req.files)
-    ? (req.files as Express.Multer.File[])
-    : undefined;
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
   const images = normalizeImagesInput(uploadedFiles, req.body?.images, req.body?.captions);
 
   const createdPostId = await sequelize.transaction(async (transaction) => {

@@ -27,12 +27,7 @@ router.post(
   postImagesUpload,
   createPost
 );
-router.put(
-  "/posts/:id",
-  authenticate(),
-  authorizePermissions("posts:update"),
-  updatePost
-);
+router.put("/posts/:id", authenticate(), authorizePermissions("posts:update"), updatePost);
 router.delete("/posts/:id", authenticate(), authorizePermissions("posts:delete"), deletePost);
 router.post(
   "/posts/:id/reactions",
