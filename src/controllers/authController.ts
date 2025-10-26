@@ -119,7 +119,6 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
     where: {
       contactNumber,
       purpose: UserOtpPurpose.LOGIN,
-      status: 1,
       consumedAt: null,
       expiresAt: { [Op.gt]: now }
     },
