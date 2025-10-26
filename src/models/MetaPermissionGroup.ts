@@ -7,37 +7,34 @@ import {
   NonAttribute
 } from "sequelize";
 
-import type MetaPermissionGroup from "./MetaPermissionGroup";
-import type MetaUserRole from "./MetaUserRole";
-
 import sequelize from "../config/database";
+import type MetaPermission from "./MetaPermission";
 
-class MetaPermission extends Model<
-  InferAttributes<MetaPermission>,
-  InferCreationAttributes<MetaPermission>
+class MetaPermissionGroup extends Model<
+  InferAttributes<MetaPermissionGroup>,
+  InferCreationAttributes<MetaPermissionGroup>
 > {
   declare id: CreationOptional<number>;
-  declare dispName: string;
+  declare label: string;
   declare description: CreationOptional<string | null>;
-  declare permissionGroupId: number;
+  declare action: string;
+  declare actionUrl: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
-  declare group?: NonAttribute<MetaPermissionGroup>;
-  declare roles?: NonAttribute<MetaUserRole[]>;
+  declare permissions?: NonAttribute<MetaPermission[]>;
 }
 
-MetaPermission.init(
+MetaPermissionGroup.init(
   {
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
     },
-    dispName: {
-      field: "disp_name",
+    label: {
       type: DataTypes.STRING(150),
       allowNull: false
     },
@@ -45,10 +42,15 @@ MetaPermission.init(
       type: DataTypes.STRING(255),
       allowNull: true
     },
-    permissionGroupId: {
-      field: "permission_group_id",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false
+    action: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      unique: true
+    },
+    actionUrl: {
+      field: "action_url",
+      type: DataTypes.STRING(500),
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,
@@ -80,10 +82,10 @@ MetaPermission.init(
   },
   {
     sequelize,
-    tableName: "tbl_meta_permission",
-    modelName: "MetaPermission",
+    tableName: "tbl_meta_permission_group",
+    modelName: "MetaPermissionGroup",
     timestamps: false
   }
 );
 
-export default MetaPermission;
+export default MetaPermissionGroup;

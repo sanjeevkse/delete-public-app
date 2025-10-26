@@ -3,6 +3,7 @@ import Event from "./Event";
 import EventMedia from "./EventMedia";
 import EventRegistration from "./EventRegistration";
 import MetaPermission from "./MetaPermission";
+import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaUserRole from "./MetaUserRole";
 import Post from "./Post";
 import PostImage from "./PostImage";
@@ -37,6 +38,14 @@ const establishAssociations = (): void => {
     foreignKey: "permissionId",
     otherKey: "roleId",
     as: "roles"
+  });
+  MetaPermission.belongsTo(MetaPermissionGroup, {
+    foreignKey: "permissionGroupId",
+    as: "group"
+  });
+  MetaPermissionGroup.hasMany(MetaPermission, {
+    foreignKey: "permissionGroupId",
+    as: "permissions"
   });
   RolePermission.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
   RolePermission.belongsTo(MetaPermission, { foreignKey: "permissionId", as: "permission" });
@@ -82,6 +91,7 @@ export {
   EventMedia,
   EventRegistration,
   MetaPermission,
+  MetaPermissionGroup,
   MetaUserRole,
   Post,
   PostImage,

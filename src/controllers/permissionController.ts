@@ -4,7 +4,8 @@ import MetaPermission from "../models/MetaPermission";
 import asyncHandler from "../utils/asyncHandler";
 
 export const listPermissions = asyncHandler(async (_req: Request, res: Response) => {
-  const permissions = await MetaPermission.findAll();
+  const permissions = await MetaPermission.findAll({
+    include: [{ association: "group" }]
+  });
   res.json(permissions);
 });
-

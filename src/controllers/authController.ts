@@ -7,6 +7,7 @@ import { AppEvent, emitEvent } from "../events/eventBus";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
+import MetaPermissionGroup from "../models/MetaPermissionGroup";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
 import UserProfile from "../models/UserProfile";
@@ -362,3 +363,58 @@ export const updateProfile = asyncHandler(
     });
   }
 );
+
+export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
+  const accessProfile = await getUserAccessProfile(userId);
+  const permissionSet = new Set(accessProfile.permissions ?? []);
+
+  const groups = await MetaPermissionGroup.findAll({
+    include: [{ association: "permissions" }],
+    order: [["label", "ASC"]]
+  });
+
+  const groupWildcards = new Set(
+    Array.from(permissionSet).filter((permission) => typeof permission === "string" && permission.endsWith(":*"))
+  );
+
+  const serializedGroups = permissionSet.has("*")
+    ? groups.map((group) => {
+        const payload = group.toJSON() as {
+          permissions?: Array<{ dispName: string }>;
+        };
+        if (Array.isArray(payload.permissions)) {
+          payload.permissions = [...payload.permissions].sort((a, b) =>
+            a.dispName.localeCompare(b.dispName)
+          );
+        }
+        return payload;
+      })
+    : groups
+        .map((group) => {
+          const payload = group.toJSON() as {
+            action?: string;
+            permissions?: Array<{ dispName: string }>;
+          };
+          const hasGroupWildcard = payload.action ? groupWildcards.has(payload.action) : false;
+          const availablePermissions = Array.isArray(payload.permissions) ? payload.permissions : [];
+          const visiblePermissions = hasGroupWildcard
+            ? availablePermissions
+            : availablePermissions.filter((permission) => permissionSet.has(permission.dispName));
+
+          if (visiblePermissions.length === 0) {
+            return null;
+          }
+
+          payload.permissions = [...visiblePermissions].sort((a, b) =>
+            a.dispName.localeCompare(b.dispName)
+          );
+          return payload;
+        })
+        .filter((groupPayload): groupPayload is Record<string, unknown> => Boolean(groupPayload));
+
+  res.json({
+    groups: serializedGroups
+  });
+});

@@ -22,7 +22,8 @@ module.exports = {
         unique: true
       },
       full_name: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -30,10 +31,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -44,9 +47,6 @@ module.exports = {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-      },
-      last_login_at: {
-        type: DataTypes.DATE
       }
     });
 
@@ -67,52 +67,68 @@ module.exports = {
         onDelete: "CASCADE"
       },
       display_name: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       alernative_contact_number: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       bio: {
-        type: DataTypes.TEXT
+        type: DataTypes.TEXT,
+        allowNull: true
       },
       date_of_birth: {
-        type: DataTypes.DATEONLY
+        type: DataTypes.DATEONLY,
+        allowNull: true
       },
       gender: {
-        type: DataTypes.ENUM("MALE", "FEMALE", "NON_BINARY", "OTHER", "PREFER_NOT")
+        type: DataTypes.ENUM("MALE", "FEMALE", "NON_BINARY", "OTHER", "PREFER_NOT"),
+        allowNull: true
       },
       occupation: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       profile_image_url: {
-        type: DataTypes.STRING(500)
+        type: DataTypes.STRING(500),
+        allowNull: true
       },
       full_address: {
-        type: DataTypes.TEXT
+        type: DataTypes.TEXT,
+        allowNull: true
       },
       address_line1: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       address_line2: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       city: {
-        type: DataTypes.STRING(120)
+        type: DataTypes.STRING(120),
+        allowNull: true
       },
       state: {
-        type: DataTypes.STRING(120)
+        type: DataTypes.STRING(120),
+        allowNull: true
       },
       postal_code: {
-        type: DataTypes.STRING(20)
+        type: DataTypes.STRING(20),
+        allowNull: true
       },
       country: {
-        type: DataTypes.STRING(120)
+        type: DataTypes.STRING(120),
+        allowNull: true
       },
       ward_number_id: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       booth_number_number_id: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       is_registration_agreed: {
         type: DataTypes.TINYINT,
@@ -120,16 +136,20 @@ module.exports = {
         defaultValue: 0
       },
       latitude: {
-        type: DataTypes.DECIMAL(10, 8)
+        type: DataTypes.DECIMAL(10, 8),
+        allowNull: true
       },
       longitude: {
-        type: DataTypes.DECIMAL(11, 8)
+        type: DataTypes.DECIMAL(11, 8),
+        allowNull: true
       },
       social_links_json: {
-        type: DataTypes.JSON
+        type: DataTypes.JSON,
+        allowNull: true
       },
       preferences_json: {
-        type: DataTypes.JSON
+        type: DataTypes.JSON,
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -137,10 +157,60 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+      }
+    });
+
+    await queryInterface.createTable("tbl_meta_permission_group", {
+      id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        autoIncrement: true,
+        primaryKey: true
+      },
+      label: {
+        type: DataTypes.STRING(150),
+        allowNull: false
+      },
+      description: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+      },
+      action: {
+        type: DataTypes.STRING(150),
+        allowNull: false,
+        unique: true
+      },
+      action_url: {
+        type: DataTypes.STRING(500),
+        allowNull: true
+      },
+      status: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1
+      },
+      created_by: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
+      },
+      updated_by: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -165,7 +235,17 @@ module.exports = {
         allowNull: false
       },
       description: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
+      },
+      permission_group_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: false,
+        references: {
+          model: "tbl_meta_permission_group",
+          key: "id"
+        },
+        onDelete: "CASCADE"
       },
       status: {
         type: DataTypes.TINYINT,
@@ -173,10 +253,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -201,7 +283,8 @@ module.exports = {
         allowNull: false
       },
       description: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -209,10 +292,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -251,10 +336,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -298,10 +385,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -364,10 +453,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -405,13 +496,16 @@ module.exports = {
         allowNull: false
       },
       thumbnail_url: {
-        type: DataTypes.STRING(500)
+        type: DataTypes.STRING(500),
+        allowNull: true
       },
       mime_type: {
-        type: DataTypes.STRING(100)
+        type: DataTypes.STRING(100),
+        allowNull: true
       },
       duration_second: {
-        type: DataTypes.INTEGER.UNSIGNED
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: true
       },
       position_number: {
         type: DataTypes.INTEGER.UNSIGNED,
@@ -419,7 +513,8 @@ module.exports = {
         defaultValue: 1
       },
       caption: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -427,10 +522,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -474,16 +571,20 @@ module.exports = {
         defaultValue: 1
       },
       deregister_reason: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       deregistered_at: {
-        type: DataTypes.DATE
+        type: DataTypes.DATE,
+        allowNull: true
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -517,13 +618,16 @@ module.exports = {
         allowNull: false
       },
       tags: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       latitude: {
-        type: DataTypes.DECIMAL(10, 8)
+        type: DataTypes.DECIMAL(10, 8),
+        allowNull: true
       },
       longitude: {
-        type: DataTypes.DECIMAL(11, 8)
+        type: DataTypes.DECIMAL(11, 8),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -531,10 +635,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -568,7 +674,8 @@ module.exports = {
         allowNull: false
       },
       caption: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -576,10 +683,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -627,10 +736,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -650,14 +761,9 @@ module.exports = {
         autoIncrement: true,
         primaryKey: true
       },
-      user_id: {
-        type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
-        references: {
-          model: "tbl_user",
-          key: "id"
-        },
-        onDelete: "CASCADE"
+      contact_number: {
+        type: DataTypes.STRING(45),
+        allowNull: false
       },
       purpose: {
         type: DataTypes.ENUM("LOGIN", "2FA", "PASSWORD_RESET"),
@@ -678,7 +784,8 @@ module.exports = {
         defaultValue: 3
       },
       consumed_at: {
-        type: DataTypes.DATE
+        type: DataTypes.DATE,
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -686,10 +793,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -723,29 +832,37 @@ module.exports = {
         allowNull: false
       },
       device_label: {
-        type: DataTypes.STRING(100)
+        type: DataTypes.STRING(100),
+        allowNull: true
       },
       device_fingerprint: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       platform: {
         type: DataTypes.ENUM("IOS", "ANDROID", "WEB", "OTHER"),
+        allowNull: true,
         defaultValue: "ANDROID"
       },
       user_agent: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       ip_address: {
-        type: DataTypes.STRING(45)
+        type: DataTypes.STRING(45),
+        allowNull: true
       },
       last_used_at: {
-        type: DataTypes.DATE
+        type: DataTypes.DATE,
+        allowNull: true
       },
       revoked_at: {
-        type: DataTypes.DATE
+        type: DataTypes.DATE,
+        allowNull: true
       },
       revoke_reason: {
-        type: DataTypes.STRING(191)
+        type: DataTypes.STRING(191),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -753,10 +870,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -789,13 +908,16 @@ module.exports = {
         allowNull: false
       },
       metadata_json: {
-        type: DataTypes.JSON
+        type: DataTypes.JSON,
+        allowNull: true
       },
       ip_address: {
-        type: DataTypes.STRING(45)
+        type: DataTypes.STRING(45),
+        allowNull: true
       },
       user_agent: {
-        type: DataTypes.STRING(255)
+        type: DataTypes.STRING(255),
+        allowNull: true
       },
       status: {
         type: DataTypes.TINYINT,
@@ -803,10 +925,12 @@ module.exports = {
         defaultValue: 1
       },
       created_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       updated_by: {
-        type: DataTypes.BIGINT.UNSIGNED
+        type: DataTypes.BIGINT.UNSIGNED,
+        allowNull: true
       },
       created_at: {
         type: DataTypes.DATE,
@@ -823,19 +947,33 @@ module.exports = {
     await queryInterface.addIndex("tbl_audit_log", ["user_id"], { name: "idx_audit_user" });
     await queryInterface.addIndex("tbl_audit_log", ["action"], { name: "idx_audit_action" });
     await queryInterface.addIndex("tbl_event_media", ["event_id"], { name: "idx_event_media_event" });
-    await queryInterface.addIndex("tbl_event_registration", ["event_id"], { name: "idx_event_registration_event" });
-    await queryInterface.addIndex("tbl_event_registration", ["user_id"], { name: "idx_event_registration_user" });
+    await queryInterface.addIndex("tbl_event_registration", ["event_id"], {
+      name: "idx_event_registration_event"
+    });
+    await queryInterface.addIndex("tbl_event_registration", ["user_id"], {
+      name: "idx_event_registration_user"
+    });
     await queryInterface.addIndex("tbl_post", ["user_id"], { name: "idx_post_user" });
     await queryInterface.addIndex("tbl_post_image", ["post_id"], { name: "idx_post_image_post" });
-    await queryInterface.addIndex("tbl_post_reaction", ["post_id"], { name: "idx_post_reaction_post" });
-    await queryInterface.addIndex("tbl_post_reaction", ["user_id"], { name: "idx_post_reaction_user" });
+    await queryInterface.addIndex("tbl_post_reaction", ["post_id"], {
+      name: "idx_post_reaction_post"
+    });
+    await queryInterface.addIndex("tbl_post_reaction", ["user_id"], {
+      name: "idx_post_reaction_user"
+    });
     await queryInterface.addIndex("tbl_user_profile", ["user_id"], { name: "idx_user_profile_user" });
     await queryInterface.addIndex("tbl_user_token", ["user_id"], { name: "idx_user_token_user" });
-    await queryInterface.addIndex("tbl_user_otp", ["user_id"], { name: "idx_user_otp_user" });
+    await queryInterface.addIndex("tbl_user_otp", ["contact_number"], {
+      name: "idx_user_otp_contact"
+    });
+    await queryInterface.addIndex("tbl_meta_permission", ["permission_group_id"], {
+      name: "idx_permission_group_id"
+    });
   },
 
   down: async (queryInterface) => {
-    await queryInterface.removeIndex("tbl_user_otp", "idx_user_otp_user");
+    await queryInterface.removeIndex("tbl_meta_permission", "idx_permission_group_id");
+    await queryInterface.removeIndex("tbl_user_otp", "idx_user_otp_contact");
     await queryInterface.removeIndex("tbl_user_token", "idx_user_token_user");
     await queryInterface.removeIndex("tbl_user_profile", "idx_user_profile_user");
     await queryInterface.removeIndex("tbl_post_reaction", "idx_post_reaction_user");
@@ -861,6 +999,7 @@ module.exports = {
     await queryInterface.dropTable("tbl_xref_user_role");
     await queryInterface.dropTable("tbl_meta_user_role");
     await queryInterface.dropTable("tbl_meta_permission");
+    await queryInterface.dropTable("tbl_meta_permission_group");
     await queryInterface.dropTable("tbl_user_profile");
     await queryInterface.dropTable("tbl_user");
   }
