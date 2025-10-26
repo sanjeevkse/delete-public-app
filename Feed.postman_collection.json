@@ -18,13 +18,8 @@
         ],
         "url": {
           "raw": "{{baseUrl}}/api/health",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "health"
-          ]
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
         }
       }
     },
@@ -47,14 +42,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/request-otp",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "request-otp"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "request-otp"]
             },
             "description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
           }
@@ -75,14 +64,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
             },
             "description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
           }
@@ -103,18 +86,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"profileImageUrl\": \"https://example.com/avatar.png\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
+              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"profileImageUrl\": \"https://example.com/avatar.png\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "profile"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
             },
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
           }
@@ -131,14 +108,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/sidebar",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "sidebar"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sidebar"]
             },
             "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups."
           }
@@ -160,13 +131,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "tags",
@@ -243,14 +209,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
             },
             "description": "Retrieves a single active post by id including images, author, and aggregated reaction counts."
           },
@@ -289,13 +249,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "my-posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "my-posts"],
               "query": [
                 {
                   "key": "page",
@@ -354,13 +309,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
             },
             "description": "Creates a new post for the authenticated user. Tags may be sent as an array or comma-delimited string; images are optional."
           },
@@ -411,14 +361,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
             },
             "description": "Updates a post. Only the original creator or an admin can modify it. Provide an empty images array to clear existing images."
           },
@@ -460,14 +404,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
             },
             "description": "Soft deletes a post. Only the creator or an admin may perform this action."
           },
@@ -505,15 +443,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reactions"]
             },
             "description": "Adds or updates the caller's reaction (LIKE or DISLIKE) for the post and returns the updated reaction counts."
           },
@@ -558,13 +489,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"],
               "query": [
                 {
                   "key": "title",
@@ -646,14 +572,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}"]
             },
             "description": "Retrieves a single active event along with its media and registration count."
           },
@@ -700,13 +620,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"]
             },
             "description": "Creates a new event with optional media attachments. Dates must be provided in YYYY-MM-DD format and times in HH:mm."
           },
@@ -757,14 +672,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}"]
             },
             "description": "Updates event details. Provide an empty media array to clear existing media, or omit the field to leave media unchanged."
           },
@@ -806,14 +715,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}"]
             },
             "description": "Soft deletes an event and its media/registrations."
           },
@@ -843,15 +746,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}",
-                "register"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "register"]
             },
             "description": "Registers the authenticated user for the selected event, reactivating any soft-deleted registration."
           },
@@ -898,15 +794,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/unregister",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}",
-                "unregister"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "unregister"]
             },
             "description": "Soft-unregisters the authenticated user from the event. Optionally include a reason."
           },
@@ -936,15 +825,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}",
-                "registrations"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "registrations"],
               "query": [
                 {
                   "key": "includeUnregistered",
@@ -1025,14 +907,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"]
             }
           }
         },
@@ -1048,14 +924,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
               "query": [
                 {
                   "key": "page",
@@ -1081,15 +951,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users",
-                "{{userId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}"]
             }
           }
         },
@@ -1113,15 +976,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users",
-                "{{userId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}"]
             }
           }
         },
@@ -1137,15 +993,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users",
-                "{{userId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}"]
             }
           }
         },
@@ -1169,16 +1018,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users",
-                "{{userId}}",
-                "roles"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "roles"]
             }
           }
         }
@@ -1199,14 +1040,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "roles"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "roles"]
             }
           }
         },
@@ -1230,14 +1065,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "roles"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "roles"]
             },
             "description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
           }
@@ -1254,14 +1083,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permissions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "permissions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "permissions"]
             },
             "description": "Lists every permission record (including wildcards such as posts:*). Requires the admin.permissions:list grant."
           }
@@ -1286,15 +1109,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "roles",
-                "{{roleId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "roles", "{{roleId}}"]
             },
             "description": "Replaces the role details along with its numeric permission IDs."
           }
@@ -1311,15 +1127,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "roles",
-                "{{roleId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "roles", "{{roleId}}"]
             }
           }
         }

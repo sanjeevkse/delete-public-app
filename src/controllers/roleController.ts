@@ -6,11 +6,7 @@ import RolePermission from "../models/RolePermission";
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
-import {
-  parseRoleIdsInput,
-  resolveRoleIdsOrDefault,
-  setUserRoles
-} from "../services/rbacService";
+import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
   const roles = await MetaUserRole.findAll({

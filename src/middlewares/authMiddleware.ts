@@ -12,7 +12,8 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export const authenticate =
-  () => (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+  () =>
+  (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     const header = req.headers.authorization;
     if (!header) {
       throw new ApiError("Authorization header missing", 401);

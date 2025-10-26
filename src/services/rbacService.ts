@@ -93,9 +93,7 @@ export const setUserRoles = async (
   });
 };
 
-export const ensurePermissionsLoaded = async (
-  roles: MetaUserRole[]
-): Promise<MetaUserRole[]> => {
+export const ensurePermissionsLoaded = async (roles: MetaUserRole[]): Promise<MetaUserRole[]> => {
   const resolvedRoles = await Promise.all(
     roles.map(async (role) => {
       if (role.permissions) {

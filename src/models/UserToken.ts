@@ -11,10 +11,7 @@ import sequelize from "../config/database";
 import { UserTokenPlatform } from "../types/enums";
 import type User from "./User";
 
-class UserToken extends Model<
-  InferAttributes<UserToken>,
-  InferCreationAttributes<UserToken>
-> {
+class UserToken extends Model<InferAttributes<UserToken>, InferCreationAttributes<UserToken>> {
   declare id: CreationOptional<number>;
   declare userId: number;
   declare token: string;

@@ -53,9 +53,6 @@ module.exports = {
 
   down: async (queryInterface) => {
     const roleNames = ROLE_CATALOG.map((role) => role.name);
-    await queryInterface.bulkDelete(
-      "tbl_meta_user_role",
-      { disp_name: roleNames }
-    );
+    await queryInterface.bulkDelete("tbl_meta_user_role", { disp_name: roleNames });
   }
 };

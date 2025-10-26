@@ -12,10 +12,7 @@ import type User from "./User";
 
 import sequelize from "../config/database";
 
-class UserRole extends Model<
-  InferAttributes<UserRole>,
-  InferCreationAttributes<UserRole>
-> {
+class UserRole extends Model<InferAttributes<UserRole>, InferCreationAttributes<UserRole>> {
   declare userId: number;
   declare roleId: number;
   declare status: CreationOptional<number>;

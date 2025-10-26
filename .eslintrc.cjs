@@ -11,18 +11,7 @@ module.exports = {
   extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:import/recommended"],
   ignorePatterns: ["dist", "node_modules"],
   rules: {
-    "import/order": [
-      "error",
-      {
-        "newlines-between": "always",
-        groups: [
-          ["builtin", "external"],
-          ["internal"],
-          ["parent", "sibling", "index"],
-          ["object", "type"]
-        ]
-      }
-    ],
+    "import/order": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {

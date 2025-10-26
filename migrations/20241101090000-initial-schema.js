@@ -126,7 +126,7 @@ module.exports = {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: true
       },
-      booth_number_number_id: {
+      booth_number_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: true
       },
@@ -946,7 +946,9 @@ module.exports = {
 
     await queryInterface.addIndex("tbl_audit_log", ["user_id"], { name: "idx_audit_user" });
     await queryInterface.addIndex("tbl_audit_log", ["action"], { name: "idx_audit_action" });
-    await queryInterface.addIndex("tbl_event_media", ["event_id"], { name: "idx_event_media_event" });
+    await queryInterface.addIndex("tbl_event_media", ["event_id"], {
+      name: "idx_event_media_event"
+    });
     await queryInterface.addIndex("tbl_event_registration", ["event_id"], {
       name: "idx_event_registration_event"
     });
@@ -961,7 +963,9 @@ module.exports = {
     await queryInterface.addIndex("tbl_post_reaction", ["user_id"], {
       name: "idx_post_reaction_user"
     });
-    await queryInterface.addIndex("tbl_user_profile", ["user_id"], { name: "idx_user_profile_user" });
+    await queryInterface.addIndex("tbl_user_profile", ["user_id"], {
+      name: "idx_user_profile_user"
+    });
     await queryInterface.addIndex("tbl_user_token", ["user_id"], { name: "idx_user_token_user" });
     await queryInterface.addIndex("tbl_user_otp", ["contact_number"], {
       name: "idx_user_otp_contact"

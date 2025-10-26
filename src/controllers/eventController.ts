@@ -127,7 +127,7 @@ const parseOptionalDateOnly = (value: unknown, field: string): string | undefine
   return value;
 };
 
-const parseOptionalTime = (value: unknown, field: string): string | undefined => {
+const _parseOptionalTime = (value: unknown, field: string): string | undefined => {
   if (value === undefined || value === null || value === "") {
     return undefined;
   }
@@ -215,8 +215,7 @@ const normalizeMediaInput = (mediaInput: unknown): NormalizedMediaInput[] | null
 
       const normalizedDuration = parseOptionalNumber(durationSecond, "durationSecond");
 
-      const normalizedPosition =
-        parseOptionalNumber(positionNumber, "positionNumber") ?? index + 1;
+      const normalizedPosition = parseOptionalNumber(positionNumber, "positionNumber") ?? index + 1;
 
       const normalizedCaption =
         typeof caption === "string" && caption.trim().length > 0 ? caption.trim() : null;
@@ -344,15 +343,12 @@ export const listEvents = asyncHandler(async (req: Request, res: Response) => {
 
   const searchTerm = (req.query.search as string | undefined)?.trim();
   if (searchTerm) {
-    Object.assign(
-      where,
-      {
-        [Op.or]: [
-          { title: { [Op.like]: `%${searchTerm}%` } },
-          { description: { [Op.like]: `%${searchTerm}%` } }
-        ]
-      } as WhereOptions
-    );
+    Object.assign(where, {
+      [Op.or]: [
+        { title: { [Op.like]: `%${searchTerm}%` } },
+        { description: { [Op.like]: `%${searchTerm}%` } }
+      ]
+    } as WhereOptions);
   }
 
   if (startDateFrom || startDateTo) {

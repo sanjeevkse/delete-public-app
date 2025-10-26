@@ -18,10 +18,6 @@ router.get("/", authorizePermissions("users:list"), listUsers);
 router.get("/:id", authorizePermissions("users:view"), getUser);
 router.put("/:id", authorizePermissions("users:update"), updateUser);
 router.delete("/:id", authorizePermissions("users:delete"), deleteUser);
-router.post(
-  "/:userId/roles",
-  authorizePermissions("users:update"),
-  assignRoleToUser
-);
+router.post("/:userId/roles", authorizePermissions("users:update"), assignRoleToUser);
 
 export default router;

@@ -20,7 +20,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "postalCode",
   "country",
   "wardNumberId",
-  "boothNumberNumberId",
+  "boothNumberId",
   "isRegistrationAgreed",
   "latitude",
   "longitude",

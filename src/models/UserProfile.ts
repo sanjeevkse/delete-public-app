@@ -32,7 +32,7 @@ class UserProfile extends Model<
   declare postalCode: CreationOptional<string | null>;
   declare country: CreationOptional<string | null>;
   declare wardNumberId: CreationOptional<number | null>;
-  declare boothNumberNumberId: CreationOptional<number | null>;
+  declare boothNumberId: CreationOptional<number | null>;
   declare isRegistrationAgreed: CreationOptional<number>;
   declare latitude: CreationOptional<number | null>;
   declare longitude: CreationOptional<number | null>;
@@ -134,8 +134,8 @@ UserProfile.init(
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },
-    boothNumberNumberId: {
-      field: "booth_number_number_id",
+    boothNumberId: {
+      field: "booth_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },

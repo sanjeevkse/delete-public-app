@@ -20,6 +20,11 @@ router.get("/my-posts", authenticate(), authorizePermissions("posts:view"), list
 router.post("/posts", authenticate(), authorizePermissions("posts:create"), createPost);
 router.put("/posts/:id", authenticate(), authorizePermissions("posts:update"), updatePost);
 router.delete("/posts/:id", authenticate(), authorizePermissions("posts:delete"), deletePost);
-router.post("/posts/:id/reactions", authenticate(), authorizePermissions("posts:view"), reactToPost);
+router.post(
+  "/posts/:id/reactions",
+  authenticate(),
+  authorizePermissions("posts:view"),
+  reactToPost
+);
 
 export default router;

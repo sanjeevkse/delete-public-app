@@ -11,10 +11,7 @@ import type Post from "./Post";
 
 import sequelize from "../config/database";
 
-class PostImage extends Model<
-  InferAttributes<PostImage>,
-  InferCreationAttributes<PostImage>
-> {
+class PostImage extends Model<InferAttributes<PostImage>, InferCreationAttributes<PostImage>> {
   declare id: CreationOptional<number>;
   declare postId: number;
   declare imageUrl: string;

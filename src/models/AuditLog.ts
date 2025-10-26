@@ -10,10 +10,7 @@ import {
 import sequelize from "../config/database";
 import type User from "./User";
 
-class AuditLog extends Model<
-  InferAttributes<AuditLog>,
-  InferCreationAttributes<AuditLog>
-> {
+class AuditLog extends Model<InferAttributes<AuditLog>, InferCreationAttributes<AuditLog>> {
   declare id: CreationOptional<number>;
   declare userId: number | null;
   declare action: string;

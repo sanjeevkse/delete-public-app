@@ -9,10 +9,7 @@ import {
 import sequelize from "../config/database";
 import { UserOtpPurpose } from "../types/enums";
 
-class UserOtp extends Model<
-  InferAttributes<UserOtp>,
-  InferCreationAttributes<UserOtp>
-> {
+class UserOtp extends Model<InferAttributes<UserOtp>, InferCreationAttributes<UserOtp>> {
   declare id: CreationOptional<number>;
   declare contactNumber: string;
   declare purpose: UserOtpPurpose;

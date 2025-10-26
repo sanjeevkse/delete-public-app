@@ -8,4 +8,3 @@ const router = Router();
 router.get("/", authorizePermissions("permissions:list"), listPermissions);
 
 export default router;
-

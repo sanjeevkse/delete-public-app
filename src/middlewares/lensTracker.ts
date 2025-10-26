@@ -49,22 +49,24 @@ export const setupLens = (app: Express): void => {
   }
 };
 
-export const lensMiddleware = () => (req: Request, res: Response, next: NextFunction): void => {
-  if (lensInstance?.middleware) {
-    try {
-      return lensInstance.middleware(req, res, next);
-    } catch (error) {
-      logger.warn({ err: error }, "Lens.js middleware threw an error");
+export const lensMiddleware =
+  () =>
+  (req: Request, res: Response, next: NextFunction): void => {
+    if (lensInstance?.middleware) {
+      try {
+        return lensInstance.middleware(req, res, next);
+      } catch (error) {
+        logger.warn({ err: error }, "Lens.js middleware threw an error");
+      }
     }
-  }
 
-  if (lensInstance?.track) {
-    try {
-      lensInstance.track(req, res);
-    } catch (error) {
-      logger.warn({ err: error }, "Lens.js track call failed");
+    if (lensInstance?.track) {
+      try {
+        lensInstance.track(req, res);
+      } catch (error) {
+        logger.warn({ err: error }, "Lens.js track call failed");
+      }
     }
-  }
 
-  next();
-};
+    next();
+  };

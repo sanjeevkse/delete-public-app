@@ -180,7 +180,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   await verifyOtpForContactNumber(contactNumber, otp);
 
   let user = await findUserByContactNumber(contactNumber);
-  let userExists = Boolean(user);
+  const userExists = Boolean(user);
 
   if (!user) {
     user = await User.create({
@@ -229,140 +229,138 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const updateProfile = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id: userId } = requireAuthenticatedUser(req);
+export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
 
-    const payload = req.body as Record<string, unknown>;
-    if (!payload || typeof payload !== "object") {
-      throw new ApiError("Request body must be an object", 400);
-    }
-
-    const user = await User.findByPk(userId, {
-      include: [{ association: "profile" }]
-    });
-
-    if (!user) {
-      throw new ApiError("User not found", 404);
-    }
-
-    const userUpdates: Record<string, unknown> = {};
-    let normalizedFullName: string | null | undefined;
-
-    if ("email" in payload) {
-      const emailValue = payload.email;
-      let normalizedEmail: string | null;
-
-      if (
-        emailValue === null ||
-        emailValue === undefined ||
-        (typeof emailValue === "string" && emailValue.trim() === "")
-      ) {
-        normalizedEmail = null;
-      } else if (typeof emailValue === "string") {
-        normalizedEmail = emailValue.trim();
-      } else {
-        throw new ApiError("email must be a string", 400);
-      }
-
-      if (normalizedEmail) {
-        const existingByEmail = await User.findOne({
-          where: { email: normalizedEmail },
-          attributes: ["id"]
-        });
-        if (existingByEmail && existingByEmail.id !== userId) {
-          throw new ApiError("email already registered", 409);
-        }
-      }
-
-      userUpdates.email = normalizedEmail;
-    }
-
-    if ("fullName" in payload) {
-      const fullNameValue = payload.fullName;
-
-      if (
-        fullNameValue === null ||
-        fullNameValue === undefined ||
-        (typeof fullNameValue === "string" && fullNameValue.trim() === "")
-      ) {
-        normalizedFullName = null;
-      } else if (typeof fullNameValue === "string") {
-        normalizedFullName = fullNameValue.trim();
-      } else {
-        throw new ApiError("fullName must be a string", 400);
-      }
-
-      userUpdates.fullName = normalizedFullName;
-    }
-
-    userUpdates.updatedBy = userId;
-
-    if (Object.keys(userUpdates).length > 0) {
-      await user.update(userUpdates);
-    }
-
-    const profileInput: Record<string, unknown> = {};
-    const nestedProfile = payload.profile;
-
-    if (nestedProfile && typeof nestedProfile === "object") {
-      Object.assign(profileInput, nestedProfile as Record<string, unknown>);
-    }
-
-    const userFieldKeys = new Set([
-      "contactNumber",
-      "email",
-      "fullName",
-      "status",
-      "createdBy",
-      "updatedBy",
-      "id"
-    ]);
-    const ignoredKeys = new Set([
-      "profile",
-      "roles",
-      "roleIds",
-      "permissions",
-      "access",
-      "token",
-      "userExists",
-      "otp"
-    ]);
-    Object.entries(payload).forEach(([key, value]) => {
-      if (!userFieldKeys.has(key) && !ignoredKeys.has(key)) {
-        profileInput[key] = value;
-      }
-    });
-
-    if (normalizedFullName !== undefined && profileInput["displayName"] === undefined) {
-      profileInput["displayName"] = normalizedFullName;
-    }
-
-    if ("wardName" in profileInput) {
-      delete profileInput["wardName"];
-    }
-
-    if (Object.keys(profileInput).length > 0) {
-      await upsertUserProfile(user.id, profileInput);
-    }
-
-    await UserProfile.findOrCreate({
-      where: { userId: user.id },
-      defaults: { userId: user.id }
-    });
-
-    const updatedUser = await User.findByPk(user.id, {
-      include: [
-        { association: "profile" },
-        { association: "roles", include: [{ association: "permissions" }] }
-      ]
-    });
-
-    res.json({
-      user: updatedUser
-    });
+  const payload = req.body as Record<string, unknown>;
+  if (!payload || typeof payload !== "object") {
+    throw new ApiError("Request body must be an object", 400);
   }
-);
+
+  const user = await User.findByPk(userId, {
+    include: [{ association: "profile" }]
+  });
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const userUpdates: Record<string, unknown> = {};
+  let normalizedFullName: string | null | undefined;
+
+  if ("email" in payload) {
+    const emailValue = payload.email;
+    let normalizedEmail: string | null;
+
+    if (
+      emailValue === null ||
+      emailValue === undefined ||
+      (typeof emailValue === "string" && emailValue.trim() === "")
+    ) {
+      normalizedEmail = null;
+    } else if (typeof emailValue === "string") {
+      normalizedEmail = emailValue.trim();
+    } else {
+      throw new ApiError("email must be a string", 400);
+    }
+
+    if (normalizedEmail) {
+      const existingByEmail = await User.findOne({
+        where: { email: normalizedEmail },
+        attributes: ["id"]
+      });
+      if (existingByEmail && existingByEmail.id !== userId) {
+        throw new ApiError("email already registered", 409);
+      }
+    }
+
+    userUpdates.email = normalizedEmail;
+  }
+
+  if ("fullName" in payload) {
+    const fullNameValue = payload.fullName;
+
+    if (
+      fullNameValue === null ||
+      fullNameValue === undefined ||
+      (typeof fullNameValue === "string" && fullNameValue.trim() === "")
+    ) {
+      normalizedFullName = null;
+    } else if (typeof fullNameValue === "string") {
+      normalizedFullName = fullNameValue.trim();
+    } else {
+      throw new ApiError("fullName must be a string", 400);
+    }
+
+    userUpdates.fullName = normalizedFullName;
+  }
+
+  userUpdates.updatedBy = userId;
+
+  if (Object.keys(userUpdates).length > 0) {
+    await user.update(userUpdates);
+  }
+
+  const profileInput: Record<string, unknown> = {};
+  const nestedProfile = payload.profile;
+
+  if (nestedProfile && typeof nestedProfile === "object") {
+    Object.assign(profileInput, nestedProfile as Record<string, unknown>);
+  }
+
+  const userFieldKeys = new Set([
+    "contactNumber",
+    "email",
+    "fullName",
+    "status",
+    "createdBy",
+    "updatedBy",
+    "id"
+  ]);
+  const ignoredKeys = new Set([
+    "profile",
+    "roles",
+    "roleIds",
+    "permissions",
+    "access",
+    "token",
+    "userExists",
+    "otp"
+  ]);
+  Object.entries(payload).forEach(([key, value]) => {
+    if (!userFieldKeys.has(key) && !ignoredKeys.has(key)) {
+      profileInput[key] = value;
+    }
+  });
+
+  if (normalizedFullName !== undefined && profileInput["displayName"] === undefined) {
+    profileInput["displayName"] = normalizedFullName;
+  }
+
+  if ("wardName" in profileInput) {
+    delete profileInput["wardName"];
+  }
+
+  if (Object.keys(profileInput).length > 0) {
+    await upsertUserProfile(user.id, profileInput);
+  }
+
+  await UserProfile.findOrCreate({
+    where: { userId: user.id },
+    defaults: { userId: user.id }
+  });
+
+  const updatedUser = await User.findByPk(user.id, {
+    include: [
+      { association: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  res.json({
+    user: updatedUser
+  });
+});
 
 export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
@@ -376,7 +374,9 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   });
 
   const groupWildcards = new Set(
-    Array.from(permissionSet).filter((permission) => typeof permission === "string" && permission.endsWith(":*"))
+    Array.from(permissionSet).filter(
+      (permission) => typeof permission === "string" && permission.endsWith(":*")
+    )
   );
 
   const serializedGroups = permissionSet.has("*")
@@ -398,7 +398,9 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
             permissions?: Array<{ dispName: string }>;
           };
           const hasGroupWildcard = payload.action ? groupWildcards.has(payload.action) : false;
-          const availablePermissions = Array.isArray(payload.permissions) ? payload.permissions : [];
+          const availablePermissions = Array.isArray(payload.permissions)
+            ? payload.permissions
+            : [];
           const visiblePermissions = hasGroupWildcard
             ? availablePermissions
             : availablePermissions.filter((permission) => permissionSet.has(permission.dispName));

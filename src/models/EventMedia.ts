@@ -12,10 +12,7 @@ import type Event from "./Event";
 import sequelize from "../config/database";
 import { EventMediaType } from "../types/enums";
 
-class EventMedia extends Model<
-  InferAttributes<EventMedia>,
-  InferCreationAttributes<EventMedia>
-> {
+class EventMedia extends Model<InferAttributes<EventMedia>, InferCreationAttributes<EventMedia>> {
   declare id: CreationOptional<number>;
   declare eventId: number;
   declare mediaType: EventMediaType;

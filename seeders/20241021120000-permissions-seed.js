@@ -133,11 +133,7 @@ module.exports = {
         { transaction }
       );
 
-      await queryInterface.bulkInsert(
-        "tbl_meta_permission_group",
-        groupRows,
-        { transaction }
-      );
+      await queryInterface.bulkInsert("tbl_meta_permission_group", groupRows, { transaction });
 
       const groupRecords = await queryInterface.sequelize.query(
         `
@@ -167,11 +163,7 @@ module.exports = {
 
       const permissionRows = buildPermissionRows(Sequelize, groupIdLookup);
 
-      await queryInterface.bulkInsert(
-        "tbl_meta_permission",
-        permissionRows,
-        { transaction }
-      );
+      await queryInterface.bulkInsert("tbl_meta_permission", permissionRows, { transaction });
 
       const [adminRole] = await queryInterface.sequelize.query(
         `
@@ -238,14 +230,12 @@ module.exports = {
   down: async (queryInterface, Sequelize) => {
     const { Op } = Sequelize;
 
-    await queryInterface.bulkDelete(
-      "tbl_meta_permission",
-      { disp_name: { [Op.in]: PERMISSION_NAMES } }
-    );
+    await queryInterface.bulkDelete("tbl_meta_permission", {
+      disp_name: { [Op.in]: PERMISSION_NAMES }
+    });
 
-    await queryInterface.bulkDelete(
-      "tbl_meta_permission_group",
-      { action: { [Op.in]: GROUP_ACTIONS } }
-    );
+    await queryInterface.bulkDelete("tbl_meta_permission_group", {
+      action: { [Op.in]: GROUP_ACTIONS }
+    });
   }
 };
