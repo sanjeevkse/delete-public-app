@@ -17,6 +17,7 @@ class MetaUserRole extends Model<
   InferCreationAttributes<MetaUserRole>
 > {
   declare id: CreationOptional<number>;
+  declare metaUserRoleId: CreationOptional<number | null>;
   declare dispName: string;
   declare description: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
@@ -34,6 +35,11 @@ MetaUserRole.init(
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
+    },
+    metaUserRoleId: {
+      field: "meta_user_role_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     dispName: {
       field: "disp_name",

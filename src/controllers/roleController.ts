@@ -6,7 +6,11 @@ import RolePermission from "../models/RolePermission";
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
-import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
+import {
+  parseRoleIdsInput,
+  resolveRoleIdsOrDefault,
+  setUserRoles
+} from "../services/rbacService";
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
   const roles = await MetaUserRole.findAll({
@@ -17,12 +21,17 @@ export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
 });
 
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
-  const { dispName, description, status = 1, permissions = [] } = req.body;
+  const { dispName, description, status = 1, metaUserRoleId, permissions = [] } = req.body;
   if (!dispName) {
     throw new ApiError("dispName is required", 400);
   }
 
-  const role = await MetaUserRole.create({ dispName, description, status });
+  const role = await MetaUserRole.create({
+    dispName,
+    description,
+    status,
+    metaUserRoleId
+  });
 
   if (Array.isArray(permissions) && permissions.length > 0) {
     const payload = permissions.map((permissionId: number) => ({
@@ -79,7 +88,9 @@ export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
 
 export const assignRoleToUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findByPk(req.params.userId);
-  if (!user) throw new ApiError("User not found", 404);
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
 
   const { roleIds, roleId } = req.body;
   const normalizedInput =
