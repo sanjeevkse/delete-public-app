@@ -4,7 +4,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   Model,
-  NonAttribute
+  NonAttribute,
 } from "sequelize";
 
 import type MetaPermission from "./MetaPermission";
@@ -17,6 +17,7 @@ class MetaUserRole extends Model<
   InferCreationAttributes<MetaUserRole>
 > {
   declare id: CreationOptional<number>;
+  declare metaUserRoleId: CreationOptional<number | null>;
   declare dispName: string;
   declare description: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
@@ -33,50 +34,55 @@ MetaUserRole.init(
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
-      primaryKey: true
+      primaryKey: true,
+    },
+    metaUserRoleId: {
+      field: "meta_user_role_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
     },
     dispName: {
       field: "disp_name",
       type: DataTypes.STRING(100),
-      allowNull: false
+      allowNull: false,
     },
     description: {
       type: DataTypes.STRING(255),
-      allowNull: true
+      allowNull: true,
     },
     status: {
       type: DataTypes.TINYINT,
       allowNull: false,
-      defaultValue: 1
+      defaultValue: 1,
     },
     createdBy: {
       field: "created_by",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      allowNull: true,
     },
     updatedBy: {
       field: "updated_by",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      allowNull: true,
     },
     createdAt: {
       field: "created_at",
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
+      defaultValue: DataTypes.NOW,
     },
     updatedAt: {
       field: "updated_at",
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: DataTypes.NOW
-    }
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize,
     tableName: "tbl_meta_user_role",
     modelName: "MetaUserRole",
-    timestamps: false
+    timestamps: false,
   }
 );
 
