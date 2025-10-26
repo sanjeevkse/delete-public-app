@@ -82,8 +82,8 @@ jobs:
             mkdir -p "$RELEASE_DIR"
             tar -xzf /tmp/release.tgz -C "$RELEASE_DIR"
             rm -f /tmp/release.tgz
-            if [ -n "${{ vars.ENV_FILE }}" ]; then
-              printf "%s" "${{ vars.ENV_FILE }}" > "$RELEASE_DIR/.env"
+            if [ -n "${{ secrets.ENV_FILE }}" ]; then
+              printf "%s" "${{ secrets.ENV_FILE }}" > "$RELEASE_DIR/.env"
             fi
             cd "$RELEASE_DIR"
             if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
