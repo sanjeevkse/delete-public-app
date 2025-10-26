@@ -1,0 +1,811 @@
+{
+	"info": {
+		"_postman_id": "96b8a842-bc82-423c-b3f6-f10cdff27c00",
+		"name": "Event Creation Flow",
+		"description": "Complete flow for authentication and event creation with comprehensive failure state handling",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "1182352"
+	},
+	"item": [
+		{
+			"name": "Auth Flow",
+			"item": [
+				{
+					"name": "1. Request OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has OTP\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('otp');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('attemptsLeft');",
+									"    ",
+									"    // Save OTP for login step",
+									"    pm.collectionVariables.set(\"otp\", jsonData.otp);",
+									"    console.log(\"OTP received:\", jsonData.otp);",
+									"});",
+									"",
+									"pm.test(\"Message indicates success\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('OTP generated successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactNumber\": \"{{contactNumber}}\"\n}"
+						},
+						"url": "{{baseUrl}}/auth/request-otp",
+						"description": "Request OTP for the provided contact number"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Login with OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData).to.have.property('access');",
+									"    ",
+									"    // Save token for authenticated requests",
+									"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+									"    ",
+									"    // Save user ID",
+									"    pm.collectionVariables.set(\"userId\", jsonData.user.id);",
+									"    ",
+									"    console.log(\"Authentication successful. Token saved.\");",
+									"    console.log(\"User ID:\", jsonData.user.id);",
+									"});",
+									"",
+									"pm.test(\"Token is not empty\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.be.a('string').and.not.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactNumber\": \"{{contactNumber}}\",\n  \"otp\": \"{{otp}}\"\n}"
+						},
+						"url": "{{baseUrl}}/auth/login",
+						"description": "Login with OTP and receive authentication token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event Creation - Success",
+			"item": [
+				{
+					"name": "3. Create Event - Success",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Event created successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('description');",
+									"    pm.expect(jsonData).to.have.property('place');",
+									"    pm.expect(jsonData).to.have.property('startDate');",
+									"    pm.expect(jsonData).to.have.property('endDate');",
+									"    ",
+									"    // Save event ID for future operations",
+									"    pm.collectionVariables.set(\"eventId\", jsonData.id);",
+									"    ",
+									"    console.log(\"Event created with ID:\", jsonData.id);",
+									"});",
+									"",
+									"pm.test(\"Event has registration count\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('registrationsCount');",
+									"});",
+									"",
+									"pm.test(\"Event has media array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('media');",
+									"    pm.expect(jsonData.media).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Community Cleanup Drive 2025\",\n  \"description\": \"Join us for a community cleanup drive in Rajajinagar. Let's make our neighborhood clean and green! Volunteers will be provided with gloves and bags. Refreshments will be served.\",\n  \"place\": \"Rajajinagar Park, Bangalore\",\n  \"googleMapLink\": \"https://maps.google.com/?q=12.9916,77.5571\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\",\n  \"media\": [\n    {\n      \"mediaType\": \"photo\",\n      \"mediaUrl\": \"https://example.com/event-banner.jpg\",\n      \"thumbnailUrl\": \"https://example.com/event-banner-thumb.jpg\",\n      \"mimeType\": \"image/jpeg\",\n      \"positionNumber\": 1,\n      \"caption\": \"Event Banner\"\n    },\n    {\n      \"mediaType\": \"video\",\n      \"mediaUrl\": \"https://example.com/event-promo.mp4\",\n      \"thumbnailUrl\": \"https://example.com/event-promo-thumb.jpg\",\n      \"mimeType\": \"video/mp4\",\n      \"durationSecond\": 45,\n      \"positionNumber\": 2,\n      \"caption\": \"Event Promo Video\"\n    }\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Create a new event with all required fields and media"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Created Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Event details retrieved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData.id).to.equal(pm.collectionVariables.get('eventId'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/events/{{eventId}}",
+						"description": "Retrieve the created event details"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event Creation - Failure States",
+			"item": [
+				{
+					"name": "5. Create Event - No Auth Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Error indicates missing authentication\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"This should fail\",\n  \"description\": \"No auth token\",\n  \"place\": \"Somewhere\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Attempt to create event without authentication token"
+					},
+					"response": []
+				},
+				{
+					"name": "6. Create Event - Missing Title",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates missing title\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('title');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Event without title\",\n  \"place\": \"Rajajinagar\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event without title"
+					},
+					"response": []
+				},
+				{
+					"name": "7. Create Event - Missing Description",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates missing description\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('description');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"place\": \"Rajajinagar\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event without description"
+					},
+					"response": []
+				},
+				{
+					"name": "8. Create Event - Missing Place",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates missing place\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('place');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"description\": \"Event description\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event without place"
+					},
+					"response": []
+				},
+				{
+					"name": "9. Create Event - Missing Google Map Link",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates missing googleMapLink\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('googleMapLink');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"description\": \"Event description\",\n  \"place\": \"Rajajinagar\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event without Google Map link"
+					},
+					"response": []
+				},
+				{
+					"name": "10. Create Event - Invalid Start Date Format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates invalid date format\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('startDate');",
+									"    pm.expect(jsonData.message).to.include('YYYY-MM-DD');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"description\": \"Event description\",\n  \"place\": \"Rajajinagar\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"15-11-2025\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event with invalid date format (DD-MM-YYYY instead of YYYY-MM-DD)"
+					},
+					"response": []
+				},
+				{
+					"name": "11. Create Event - Invalid Start Time Format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates invalid time format\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('startTime');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"description\": \"Event description\",\n  \"place\": \"Rajajinagar\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"8:00 AM\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event with invalid time format"
+					},
+					"response": []
+				},
+				{
+					"name": "12. Create Event - Missing End Date",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates missing endDate\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('endDate');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"description\": \"Event description\",\n  \"place\": \"Rajajinagar\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endTime\": \"12:00:00\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event without end date"
+					},
+					"response": []
+				},
+				{
+					"name": "13. Create Event - Invalid Media Format",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error message indicates media format issue\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.include('media');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Event Title\",\n  \"description\": \"Event description\",\n  \"place\": \"Rajajinagar\",\n  \"googleMapLink\": \"https://maps.google.com\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\",\n  \"media\": \"not-an-array\"\n}"
+						},
+						"url": "{{baseUrl}}/events",
+						"description": "Failure: Create event with media not as an array"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Additional Event Operations",
+			"item": [
+				{
+					"name": "14. List All Events",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains events array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Response has pagination metadata\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.meta).to.have.property('total');",
+									"    pm.expect(jsonData.meta).to.have.property('page');",
+									"    pm.expect(jsonData.meta).to.have.property('pages');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/events?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"events"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "List all events with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "15. Register for Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Registration successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/events/{{eventId}}/register",
+						"description": "Register for the created event"
+					},
+					"response": []
+				},
+				{
+					"name": "16. Get Event Registrations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Registrations list retrieved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/events/{{eventId}}/registrations",
+						"description": "Get list of users registered for the event"
+					},
+					"response": []
+				},
+				{
+					"name": "17. Unregister from Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Unregistration successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/events/{{eventId}}/unregister",
+						"description": "Unregister from the event"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://public.nammarajajinagar.com"
+		},
+		{
+			"key": "contactNumber",
+			"value": "",
+			"description": {
+				"content": "Enter your mobile number here when running the collection",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "otp",
+			"value": ""
+		},
+		{
+			"key": "authToken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "eventId",
+			"value": ""
+		}
+	]
+}
