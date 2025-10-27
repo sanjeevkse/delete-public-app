@@ -45,7 +45,10 @@ const validateEventMediaFiles = (files: Express.Multer.File[]) => {
   }
 
   if (files.length > EVENT_MEDIA_MAX_FILE_COUNT) {
-    throw new ApiError(`An event can include at most ${EVENT_MEDIA_MAX_FILE_COUNT} media files`, 400);
+    throw new ApiError(
+      `An event can include at most ${EVENT_MEDIA_MAX_FILE_COUNT} media files`,
+      400
+    );
   }
 
   if (imageCount > MAX_EVENT_IMAGE_COUNT) {

@@ -881,14 +881,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Updated agenda with additional workshops.\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"14:00\",\n  \"media\": []\n}"
+              "raw": "{\n  \"description\": \"Updated agenda with additional workshops.\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"14:00\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "events", "{{eventId}}"]
             },
-            "description": "Updates event details. Provide an empty media array to clear existing media, or omit the field to leave media unchanged."
+            "description": "Updates event details. Media updates must be handled using the dedicated media endpoints."
           },
           "event": [
             {

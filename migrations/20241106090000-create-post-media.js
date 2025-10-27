@@ -70,18 +70,14 @@ module.exports = {
       updated_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal(
-          "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-        )
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
       }
     });
 
     await queryInterface.addIndex("tbl_post_media", ["post_id", "status"]);
     await queryInterface.addIndex("tbl_post_media", ["post_id", "media_type"]);
 
-    await queryInterface.sequelize
-      .query("DROP TABLE IF EXISTS `tbl_post_image`;")
-      .catch(() => {});
+    await queryInterface.sequelize.query("DROP TABLE IF EXISTS `tbl_post_image`;").catch(() => {});
   },
 
   down: async (queryInterface, Sequelize) => {
@@ -133,9 +129,7 @@ module.exports = {
       updated_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal(
-          "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-        )
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
       }
     });
 

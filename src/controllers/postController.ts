@@ -25,9 +25,7 @@ type NormalizedPostMediaInput = {
   caption: string | null;
 };
 
-const resolveTableName = (
-  model: typeof PostReaction | typeof PostMedia | typeof Post
-): string => {
+const resolveTableName = (model: typeof PostReaction | typeof PostMedia | typeof Post): string => {
   const raw = model.getTableName();
   return typeof raw === "string" ? raw : raw.tableName;
 };
@@ -172,7 +170,10 @@ const parseOptionalNumber = (value: unknown, field: string): number | undefined 
   return numberValue;
 };
 
-const parseSortDirection = (value: unknown, defaultDirection: "ASC" | "DESC" = "DESC"): "ASC" | "DESC" => {
+const parseSortDirection = (
+  value: unknown,
+  defaultDirection: "ASC" | "DESC" = "DESC"
+): "ASC" | "DESC" => {
   if (typeof value !== "string") {
     return defaultDirection;
   }
@@ -227,8 +228,8 @@ const parseLegacyMediaInput = (mediaInput: unknown): NormalizedPostMediaInput[] 
         typeof mediaUrl === "string" && mediaUrl.trim().length > 0
           ? mediaUrl.trim()
           : typeof imageUrl === "string" && imageUrl.trim().length > 0
-          ? imageUrl.trim()
-          : null;
+            ? imageUrl.trim()
+            : null;
 
       if (!resolvedUrl) {
         return null;
@@ -253,8 +254,7 @@ const parseLegacyMediaInput = (mediaInput: unknown): NormalizedPostMediaInput[] 
         typeof mimeType === "string" && mimeType.trim().length > 0 ? mimeType.trim() : null;
 
       const normalizedDuration = parseOptionalNumber(durationSecond, "durationSecond") ?? null;
-      const normalizedPosition =
-        parseOptionalNumber(positionNumber, "positionNumber") ?? index + 1;
+      const normalizedPosition = parseOptionalNumber(positionNumber, "positionNumber") ?? index + 1;
 
       const normalizedCaption =
         typeof caption === "string" && caption.trim().length > 0 ? caption.trim() : null;

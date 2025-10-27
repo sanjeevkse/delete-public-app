@@ -169,7 +169,10 @@ const parseBooleanQuery = (value: unknown, defaultValue = false): boolean => {
   return defaultValue;
 };
 
-const parseSortDirection = (value: unknown, defaultDirection: "ASC" | "DESC" = "ASC"): "ASC" | "DESC" => {
+const parseSortDirection = (
+  value: unknown,
+  defaultDirection: "ASC" | "DESC" = "ASC"
+): "ASC" | "DESC" => {
   if (typeof value !== "string") {
     return defaultDirection;
   }
@@ -686,17 +689,11 @@ export const addEventMedia = asyncHandler(async (req: AuthenticatedRequest, res:
   const newVideoCount = media.filter((item) => item.mediaType === MediaType.VIDEO).length;
 
   if (existingImageCount + newImageCount > MAX_EVENT_IMAGE_COUNT) {
-    throw new ApiError(
-      `An event can include at most ${MAX_EVENT_IMAGE_COUNT} images`,
-      400
-    );
+    throw new ApiError(`An event can include at most ${MAX_EVENT_IMAGE_COUNT} images`, 400);
   }
 
   if (existingVideoCount + newVideoCount > MAX_EVENT_VIDEO_COUNT) {
-    throw new ApiError(
-      `An event can include at most ${MAX_EVENT_VIDEO_COUNT} video`,
-      400
-    );
+    throw new ApiError(`An event can include at most ${MAX_EVENT_VIDEO_COUNT} video`, 400);
   }
 
   const startingPosition = Number.isFinite(existingMaxPositionRaw ?? NaN)

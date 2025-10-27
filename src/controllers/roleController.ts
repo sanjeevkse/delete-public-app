@@ -118,10 +118,7 @@ export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Respo
     throw new ApiError("Invalid user id", 400);
   }
 
-  const [role, user] = await Promise.all([
-    MetaUserRole.findByPk(roleId),
-    User.findByPk(userId)
-  ]);
+  const [role, user] = await Promise.all([MetaUserRole.findByPk(roleId), User.findByPk(userId)]);
 
   if (!role) {
     throw new ApiError("Role not found", 404);
