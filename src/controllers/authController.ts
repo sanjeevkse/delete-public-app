@@ -17,6 +17,7 @@ import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessToken, generateNumericOtp } from "../utils/auth";
 import { UserOtpPurpose } from "../types/enums";
+import { sendSuccess, sendBadRequest } from "../utils/apiResponse";
 
 const MASTER_OTP = env.auth.masterOtp;
 const OTP_EXPIRY_MINUTES = env.auth.otpExpiryMinutes;
@@ -156,11 +157,14 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
     attemptsLeft: attemptsAllowance
   });
 
-  res.json({
-    message: "OTP generated successfully",
-    otp,
-    attemptsLeft: attemptsAllowance
-  });
+  return sendSuccess(
+    res,
+    {
+      otp,
+      attemptsLeft: attemptsAllowance
+    },
+    "OTP generated successfully"
+  );
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
@@ -221,12 +225,16 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const profileExists = Boolean(sanitizedUser?.profile);
   const resolvedUserExists = userExists && profileExists;
 
-  res.json({
-    userExists: resolvedUserExists,
-    token,
-    user: sanitizedUser,
-    access: accessProfile
-  });
+  return sendSuccess(
+    res,
+    {
+      userExists: resolvedUserExists,
+      token,
+      user: sanitizedUser,
+      access: accessProfile
+    },
+    "Login successful"
+  );
 });
 
 export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -361,9 +369,7 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     ]
   });
 
-  res.json({
-    user: updatedUser
-  });
+  return sendSuccess(res, { user: updatedUser }, "Profile updated successfully");
 });
 
 export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -404,9 +410,7 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
     throw new ApiError("User not found", 404);
   }
 
-  res.json({
-    user: updatedUser
-  });
+  return sendSuccess(res, { user: updatedUser }, "Profile image updated successfully");
 });
 
 export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -463,7 +467,5 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
         })
         .filter((groupPayload): groupPayload is Record<string, unknown> => Boolean(groupPayload));
 
-  res.json({
-    groups: serializedGroups
-  });
+  return sendSuccess(res, { groups: serializedGroups }, "Sidebar data retrieved successfully");
 });

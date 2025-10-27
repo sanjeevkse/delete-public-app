@@ -5,12 +5,18 @@ import logger from "../utils/logger";
 // Custom error interface to carry HTTP status codes.
 interface HttpError extends Error {
   status?: number;
+  code?: string;
+  details?: any;
 }
 
 export const notFoundHandler = (req: Request, res: Response): void => {
   res.status(404).json({
-    message: "Resource not found",
-    path: req.originalUrl
+    success: false,
+    error: {
+      code: "NOT_FOUND",
+      message: "Resource not found",
+      details: { path: req.originalUrl }
+    }
   });
 };
 
@@ -27,16 +33,39 @@ export const errorHandler = (
     logger.warn({ err }, "Handled application error");
   }
 
+  // Map status codes to error codes
+  const errorCodeMap: Record<number, string> = {
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+    422: "VALIDATION_ERROR",
+    500: "INTERNAL_ERROR",
+    503: "SERVICE_UNAVAILABLE"
+  };
+
+  const errorCode = err.code || errorCodeMap[statusCode] || "UNKNOWN_ERROR";
+
   res.status(statusCode).json({
-    message: err.message ?? "Internal Server Error"
+    success: false,
+    error: {
+      code: errorCode,
+      message: err.message ?? "Internal Server Error",
+      ...(err.details && { details: err.details })
+    }
   });
 };
 
 export class ApiError extends Error {
   status: number;
+  code?: string;
+  details?: any;
 
-  constructor(message: string, status = 400) {
+  constructor(message: string, status = 400, code?: string, details?: any) {
     super(message);
     this.status = status;
+    this.code = code;
+    this.details = details;
   }
 }

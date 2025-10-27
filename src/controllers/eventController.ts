@@ -14,6 +14,18 @@ import EventMedia from "../models/EventMedia";
 import EventRegistration from "../models/EventRegistration";
 import { MediaType } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
+import {
+  sendSuccess,
+  sendCreated,
+  sendNoContent,
+  sendNotFound,
+  sendBadRequest,
+  sendForbidden,
+  sendConflict,
+  sendSuccessWithPagination,
+  parsePaginationParams,
+  calculatePagination
+} from "../utils/apiResponse";
 
 type NormalizedMediaInput = {
   mediaType: MediaType;
@@ -381,18 +393,18 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   });
 
   const created = await fetchEventById(createdEventId);
-  res.status(201).json(created);
+  return sendCreated(res, created, "Event created successfully");
 });
 
 export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
-    throw new ApiError("Invalid event id", 400);
+    return sendBadRequest(res, "Invalid event id");
   }
 
   const eventRecord = await fetchEventById(id);
   if (!eventRecord) {
-    throw new ApiError("Event not found", 404);
+    return sendNotFound(res, "Event not found", "event");
   }
 
   const event = eventRecord.get({ plain: true });
@@ -412,10 +424,14 @@ export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Resp
     isRegistered = Boolean(registration);
   }
 
-  res.json({
-    ...event,
-    isRegistered
-  });
+  return sendSuccess(
+    res,
+    {
+      ...event,
+      isRegistered
+    },
+    "Event retrieved successfully"
+  );
 });
 
 export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -492,10 +508,9 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     isRegistered: currentUserId ? registeredEventIds.has(event.id) : false
   }));
 
-  res.json({
-    data,
-    meta: computePaginationMeta(count, page, limit)
-  });
+  const pagination = calculatePagination(count, page, limit);
+
+  return sendSuccessWithPagination(res, data, pagination, "Events retrieved successfully");
 });
 
 export const listEventRegistrations = asyncHandler(
@@ -554,11 +569,17 @@ export const listEventRegistrations = asyncHandler(
         : null
     }));
 
-    res.json({
-      data,
-      meta: computePaginationMeta(count, page, limit),
-      includeUnregistered
-    });
+    const pagination = calculatePagination(count, page, limit);
+
+    return sendSuccess(
+      res,
+      {
+        registrations: data,
+        includeUnregistered,
+        pagination
+      },
+      "Event registrations retrieved successfully"
+    );
   }
 );
 
@@ -646,7 +667,7 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   });
 
   const updated = await fetchEventById(event.id);
-  res.json(updated);
+  return sendSuccess(res, updated, "Event updated successfully");
 });
 
 export const addEventMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -720,7 +741,7 @@ export const addEventMedia = asyncHandler(async (req: AuthenticatedRequest, res:
   });
 
   const updated = await fetchEventById(event.id);
-  res.status(201).json(updated);
+  return sendCreated(res, updated, "Media added to event successfully");
 });
 
 export const removeEventMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -768,7 +789,7 @@ export const removeEventMedia = asyncHandler(async (req: AuthenticatedRequest, r
   });
 
   const updated = await fetchEventById(event.id);
-  res.json(updated);
+  return sendSuccess(res, updated, "Media removed from event successfully");
 });
 
 export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -776,16 +797,16 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
-    throw new ApiError("Invalid event id", 400);
+    return sendBadRequest(res, "Invalid event id");
   }
 
   const event = await Event.findOne({ where: { id, status: 1 } });
   if (!event) {
-    throw new ApiError("Event not found", 404);
+    return sendNotFound(res, "Event not found", "event");
   }
 
   if (event.createdBy !== null && event.createdBy !== userId && !isAdmin(roles)) {
-    throw new ApiError("Forbidden", 403);
+    return sendForbidden(res, "You don't have permission to delete this event");
   }
 
   await sequelize.transaction(async (transaction) => {
@@ -800,7 +821,7 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
     );
   });
 
-  res.status(204).send();
+  return sendNoContent(res);
 });
 
 export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -808,16 +829,16 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
 
   const eventId = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(eventId)) {
-    throw new ApiError("Invalid event id", 400);
+    return sendBadRequest(res, "Invalid event id");
   }
 
   const event = await Event.findOne({ where: { id: eventId, status: 1 } });
   if (!event) {
-    throw new ApiError("Event not found", 404);
+    return sendNotFound(res, "Event not found", "event");
   }
 
   if (!isWithinEventWindow(event)) {
-    throw new ApiError("Event registration is only allowed during the event window", 400);
+    return sendBadRequest(res, "Event registration is only allowed during the event window");
   }
 
   const existingRegistration = await EventRegistration.findOne({
@@ -826,10 +847,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
 
   if (existingRegistration) {
     if (existingRegistration.status === 1) {
-      return res.json({
-        message: "Already registered",
-        registration: existingRegistration
-      });
+      return sendConflict(res, "Already registered for this event");
     }
 
     await existingRegistration.update({
@@ -839,10 +857,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
       updatedBy: userId
     });
 
-    return res.json({
-      message: "Registration reactivated",
-      registration: existingRegistration
-    });
+    return sendSuccess(res, { registration: existingRegistration }, "Registration reactivated");
   }
 
   const registration = await EventRegistration.create({
@@ -853,10 +868,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     updatedBy: userId
   });
 
-  res.status(201).json({
-    message: "Registered successfully",
-    registration
-  });
+  return sendCreated(res, { registration }, "Registered successfully");
 });
 
 export const unregisterFromEvent = asyncHandler(
@@ -865,16 +877,16 @@ export const unregisterFromEvent = asyncHandler(
 
     const eventId = Number.parseInt(req.params.id, 10);
     if (Number.isNaN(eventId)) {
-      throw new ApiError("Invalid event id", 400);
+      return sendBadRequest(res, "Invalid event id");
     }
 
     const event = await Event.findOne({ where: { id: eventId, status: 1 } });
     if (!event) {
-      throw new ApiError("Event not found", 404);
+      return sendNotFound(res, "Event not found", "event");
     }
 
     if (!isWithinEventWindow(event)) {
-      throw new ApiError("Event unregistration is only allowed during the event window", 400);
+      return sendBadRequest(res, "Event unregistration is only allowed during the event window");
     }
 
     const registration = await EventRegistration.findOne({
@@ -886,7 +898,7 @@ export const unregisterFromEvent = asyncHandler(
     });
 
     if (!registration) {
-      throw new ApiError("Active registration not found", 404);
+      return sendNotFound(res, "Active registration not found");
     }
 
     const { reason } = req.body as { reason?: string };
@@ -899,8 +911,6 @@ export const unregisterFromEvent = asyncHandler(
       updatedBy: userId
     });
 
-    res.json({
-      message: "Unregistered successfully"
-    });
+    return sendSuccess(res, {}, "Unregistered successfully");
   }
 );
