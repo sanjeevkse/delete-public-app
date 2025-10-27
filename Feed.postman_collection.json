@@ -18,8 +18,13 @@
         ],
         "url": {
           "raw": "{{baseUrl}}/api/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
         }
       }
     },
@@ -42,8 +47,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/request-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "request-otp"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "request-otp"
+              ]
             },
             "description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
           }
@@ -64,8 +75,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
           }
@@ -90,8 +107,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
           }
@@ -122,8 +145,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile/image",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile", "image"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile",
+                "image"
+              ]
             },
             "description": "Uploads a new avatar for the authenticated user. Submit a single profileImage file (JPEG/PNG/WEBP/HEIC). The response returns the updated user record."
           }
@@ -140,8 +170,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/sidebar",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "sidebar"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "sidebar"
+              ]
             },
             "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups."
           }
@@ -163,8 +199,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20&sort=DESC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
               "query": [
                 {
                   "key": "tags",
@@ -246,8 +287,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Retrieves a single active post by id including media, author, and aggregated reaction counts."
           },
@@ -286,8 +333,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "my-posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "my-posts"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -377,8 +429,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
             },
             "description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 images + 1 video at 5MB each). Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
           },
@@ -429,8 +486,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated media endpoints."
           },
@@ -491,8 +554,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "media"
+              ]
             },
             "description": "Appends additional media to an existing post. Provide uploads via `media` file fields while respecting the 4 image / 1 video limit."
           },
@@ -530,8 +600,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "media"
+              ]
             },
             "description": "Soft deletes one or more media items from a post by marking them inactive. Pass the media IDs to remove."
           },
@@ -561,8 +638,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Soft deletes a post. Only the creator or an admin may perform this action."
           },
@@ -600,8 +683,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "reactions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "reactions"
+              ]
             },
             "description": "Adds or updates the caller's reaction for the post. Use LIKE or DISLIKE to react, or NO_REACTION to clear an existing reaction. Returns the updated reaction counts."
           },
@@ -646,8 +736,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ],
               "query": [
                 {
                   "key": "title",
@@ -734,8 +829,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Retrieves a single active event along with its media and registration count."
           },
@@ -833,8 +934,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ]
             },
             "description": "Creates a new event for the authenticated user. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
           },
@@ -885,8 +991,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Updates event details. Media updates must be handled using the dedicated media endpoints."
           },
@@ -938,8 +1050,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "media"
+              ]
             },
             "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
           },
@@ -992,8 +1111,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "media"
+              ]
             },
             "description": "Soft-deletes one or more media items from an event. Provide mediaIds from the add media response."
           },
@@ -1037,8 +1163,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Soft deletes an event and its media/registrations."
           },
@@ -1068,8 +1200,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "register"
+              ]
             },
             "description": "Registers the authenticated user for the selected event, reactivating any soft-deleted registration."
           },
@@ -1116,8 +1255,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/unregister",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "unregister"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "unregister"
+              ]
             },
             "description": "Soft-unregisters the authenticated user from the event. Optionally include a reason."
           },
@@ -1147,8 +1293,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "registrations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "registrations"
+              ],
               "query": [
                 {
                   "key": "includeUnregistered",
@@ -1229,8 +1382,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
             }
           }
         },
@@ -1246,8 +1405,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -1273,8 +1438,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         },
@@ -1298,8 +1470,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         },
@@ -1315,8 +1494,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         },
@@ -1340,8 +1526,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "roles"
+              ]
             }
           }
         },
@@ -1357,8 +1551,17 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Detaches the specified role from the user. If all roles are removed, the default public role is restored automatically."
           }
@@ -1380,8 +1583,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ]
             }
           }
         },
@@ -1405,8 +1614,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ]
             },
             "description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
           }
@@ -1423,8 +1638,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permissions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permissions"
+              ]
             },
             "description": "Lists every permission record (including wildcards such as posts:*). Requires the admin.permissions:list grant."
           }
@@ -1449,8 +1670,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Replaces the role details along with its numeric permission IDs."
           }
@@ -1467,9 +1695,239 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "Create Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"john.doe@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ]
+            },
+            "description": "Create a new member with full name, contact number, and email"
+          }
+        },
+        {
+          "name": "List Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/members?page=1&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page (default: 25, max: 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by name, contact, or email",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all members with pagination and optional search"
+          }
+        },
+        {
+          "name": "Search Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/members?search=John&page=1&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "John",
+                  "description": "Search keyword"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Search members by full name, contact number, or email"
+          }
+        },
+        {
+          "name": "Get Member by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Member ID"
+                }
+              ]
+            },
+            "description": "Get a single member by ID"
+          }
+        },
+        {
+          "name": "Update Member",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe Updated\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"john.doe.updated@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/members/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Member ID"
+                }
+              ]
+            },
+            "description": "Update member details (all fields are optional)"
+          }
+        },
+        {
+          "name": "Update Member - Partial",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe Partially Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/members/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Member ID"
+                }
+              ]
+            },
+            "description": "Update only specific fields of a member"
+          }
+        },
+        {
+          "name": "Delete Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/members/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Member ID"
+                }
+              ]
+            },
+            "description": "Delete a member by ID"
           }
         }
       ]
@@ -1506,6 +1964,10 @@
     },
     {
       "key": "otpCode",
+      "value": ""
+    },
+    {
+      "key": "memberId",
       "value": ""
     }
   ]

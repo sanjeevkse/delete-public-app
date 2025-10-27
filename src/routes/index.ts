@@ -4,6 +4,7 @@ import adminRoutes from "./adminRoutes";
 import authRoutes from "./authRoutes";
 import postRoutes from "./postRoutes";
 import eventRoutes from "./eventRoutes";
+import memberRoutes from "./memberRoutes";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.get("/health", (_req, res) => {
 
 router.use("/", postRoutes);
 router.use("/", eventRoutes);
+router.use("/", memberRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;
