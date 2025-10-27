@@ -2914,6 +2914,426 @@
           }
         }
       ]
+    },
+    {
+      "name": "Business Types",
+      "item": [
+        {
+          "name": "Create Business Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Retail\",\n  \"description\": \"Retail business\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/business-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types"
+              ]
+            },
+            "description": "Create a new business type"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Business Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/business-types?page=1&limit=10&search=&status=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all business types"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Business Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/business-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessTypeId}}"
+                }
+              ]
+            },
+            "description": "Get business type by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Business Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Wholesale\",\n  \"description\": \"Wholesale business\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/business-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessTypeId}}"
+                }
+              ]
+            },
+            "description": "Update business type"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Business Type Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/business-types/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessTypeId}}"
+                }
+              ]
+            },
+            "description": "Toggle business type status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Business Type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/business-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessTypeId}}"
+                }
+              ]
+            },
+            "description": "Delete business type"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Businesses",
+      "item": [
+        {
+          "name": "Create Business",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"ABC Retail Store\",\n  \"businessTypeId\": 1,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcretail.com\",\n  \"totalEmployees\": 50,\n  \"turnoverYearly\": 5000000.00,\n  \"fullAddress\": \"123 Main Street, City, State - 400001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/businesses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ]
+            },
+            "description": "Create a new business"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Businesses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": "1"
+                },
+                {
+                  "key": "businessTypeId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get all businesses"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Business by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/businesses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessId}}"
+                }
+              ]
+            },
+            "description": "Get business by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Business",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"ABC Wholesale Store\",\n  \"businessTypeId\": 2,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcwholesale.com\",\n  \"totalEmployees\": 75,\n  \"turnoverYearly\": 7500000.00,\n  \"fullAddress\": \"456 Business Park, City, State - 400002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/businesses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessId}}"
+                }
+              ]
+            },
+            "description": "Update business"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Business Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/businesses/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessId}}"
+                }
+              ]
+            },
+            "description": "Toggle business status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Business",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/businesses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{businessId}}"
+                }
+              ]
+            },
+            "description": "Delete business"
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
@@ -2967,6 +3387,14 @@
     },
     {
       "key": "familyMemberId",
+      "value": ""
+    },
+    {
+      "key": "businessTypeId",
+      "value": ""
+    },
+    {
+      "key": "businessId",
       "value": ""
     }
   ]
