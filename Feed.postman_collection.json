@@ -1931,6 +1931,218 @@
           }
         }
       ]
+    },
+    {
+      "name": "Community Types",
+      "item": [
+        {
+          "name": "Create Community Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Sports Club\",\n  \"description\": \"Community for sports enthusiasts\",\n  \"status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types"]
+            },
+            "description": "Create a new community type with display name, description, and status"
+          }
+        },
+        {
+          "name": "List Community Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types?page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page (default: 25, max: 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by display name or description",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status (1=active, 0=inactive)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all community types with pagination and optional search/status filters"
+          }
+        },
+        {
+          "name": "Search Community Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types?search=Sports&status=1&page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Sports",
+                  "description": "Search keyword"
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Filter by status"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "25"
+                }
+              ]
+            },
+            "description": "Search community types by display name or description with status filter"
+          }
+        },
+        {
+          "name": "Get Community Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Community Type ID"
+                }
+              ]
+            },
+            "description": "Get a single community type by ID"
+          }
+        },
+        {
+          "name": "Update Community Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Sports Club Updated\",\n  \"description\": \"Updated description for sports community\",\n  \"status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Community Type ID"
+                }
+              ]
+            },
+            "description": "Update community type details (all fields are optional)"
+          }
+        },
+        {
+          "name": "Toggle Community Type Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Community Type ID"
+                }
+              ]
+            },
+            "description": "Toggle community type status (1=active, 0=inactive)"
+          }
+        },
+        {
+          "name": "Delete Community Type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/community-types/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community-types", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Community Type ID"
+                }
+              ]
+            },
+            "description": "Delete a community type by ID"
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -1968,6 +2180,10 @@
     },
     {
       "key": "memberId",
+      "value": ""
+    },
+    {
+      "key": "communityTypeId",
       "value": ""
     }
   ]
