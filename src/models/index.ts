@@ -1,7 +1,10 @@
 import AuditLog from "./AuditLog";
+import Community from "./Community";
 import Event from "./Event";
 import EventMedia from "./EventMedia";
 import EventRegistration from "./EventRegistration";
+import Member from "./Member";
+import MetaCommunityType from "./MetaCommunityType";
 import MetaPermission from "./MetaPermission";
 import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaUserRole from "./MetaUserRole";
@@ -18,6 +21,9 @@ import UserToken from "./UserToken";
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(AuditLog, { foreignKey: "userId", as: "auditLogs" });
+
+  Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
+  MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });
 
   Event.hasMany(EventMedia, { foreignKey: "eventId", as: "media" });
   EventMedia.belongsTo(Event, { foreignKey: "eventId", as: "event" });
@@ -87,9 +93,12 @@ establishAssociations();
 
 export {
   AuditLog,
+  Community,
   Event,
   EventMedia,
   EventRegistration,
+  Member,
+  MetaCommunityType,
   MetaPermission,
   MetaPermissionGroup,
   MetaUserRole,
