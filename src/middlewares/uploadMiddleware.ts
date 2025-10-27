@@ -18,6 +18,7 @@ export type UploadOptions = {
   assetType: string;
   allowedMimeTypes: string[];
   maxFileSizeBytes: number;
+  validateFiles?: (files: Express.Multer.File[], req: AuthenticatedRequest) => void;
 };
 
 const sanitizeFileName = (originalName: string): string => {
@@ -66,6 +67,16 @@ export const createFileUploadMiddleware = (options: UploadOptions): RequestHandl
     middleware(req as any, res as any, (err: any) => {
       if (err) {
         return next(err);
+      }
+      if (options.validateFiles) {
+        try {
+          const files = Array.isArray((req as any).files)
+            ? ((req as any).files as Express.Multer.File[])
+            : [];
+          options.validateFiles(files, req as AuthenticatedRequest);
+        } catch (validationError) {
+          return next(validationError as Error);
+        }
       }
       next();
     });

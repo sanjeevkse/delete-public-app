@@ -6,7 +6,7 @@ import MetaPermission from "./MetaPermission";
 import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaUserRole from "./MetaUserRole";
 import Post from "./Post";
-import PostImage from "./PostImage";
+import PostMedia from "./PostMedia";
 import PostReaction from "./PostReaction";
 import RolePermission from "./RolePermission";
 import User from "./User";
@@ -53,8 +53,8 @@ const establishAssociations = (): void => {
   Post.belongsTo(User, { foreignKey: "userId", as: "author" });
   User.hasMany(Post, { foreignKey: "userId", as: "posts" });
 
-  Post.hasMany(PostImage, { foreignKey: "postId", as: "images" });
-  PostImage.belongsTo(Post, { foreignKey: "postId", as: "post" });
+  Post.hasMany(PostMedia, { foreignKey: "postId", as: "media" });
+  PostMedia.belongsTo(Post, { foreignKey: "postId", as: "post" });
 
   Post.hasMany(PostReaction, { foreignKey: "postId", as: "reactions" });
   PostReaction.belongsTo(Post, { foreignKey: "postId", as: "post" });
@@ -94,7 +94,7 @@ export {
   MetaPermissionGroup,
   MetaUserRole,
   Post,
-  PostImage,
+  PostMedia,
   PostReaction,
   RolePermission,
   User,

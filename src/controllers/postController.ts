@@ -1,5 +1,5 @@
 import type { Request, Response, Express } from "express";
-import type { FindAttributeOptions, Transaction, WhereOptions } from "sequelize";
+import type { FindAttributeOptions, ProjectionAlias, Transaction, WhereOptions } from "sequelize";
 import { Op } from "sequelize";
 
 import { ADMIN_ROLE_NAME } from "../config/rbac";
@@ -8,18 +8,26 @@ import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
+import { MAX_POST_IMAGE_COUNT, MAX_POST_VIDEO_COUNT } from "../middlewares/postUploadMiddleware";
 import Post from "../models/Post";
-import PostImage from "../models/PostImage";
+import PostMedia from "../models/PostMedia";
 import PostReaction from "../models/PostReaction";
-import { PostReactionType } from "../types/enums";
+import { MediaType, PostReactionType } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
 
-type NormalizedImageInput = {
-  imageUrl: string;
+type NormalizedPostMediaInput = {
+  mediaType: MediaType;
+  mediaUrl: string;
+  thumbnailUrl: string | null;
+  mimeType: string | null;
+  durationSecond: number | null;
+  positionNumber: number;
   caption: string | null;
 };
 
-const resolveTableName = (model: typeof PostReaction | typeof PostImage | typeof Post): string => {
+const resolveTableName = (
+  model: typeof PostReaction | typeof PostMedia | typeof Post
+): string => {
   const raw = model.getTableName();
   return typeof raw === "string" ? raw : raw.tableName;
 };
@@ -46,16 +54,42 @@ const attributesWithReactionCounts: FindAttributeOptions = {
   include: reactionCountAttributes
 };
 
+const authorAttributes: Array<string | ProjectionAlias> = [
+  "id",
+  "fullName",
+  "contactNumber",
+  "email",
+  [sequelize.literal("`author->profile`.`profile_image_url`"), "profilePhoto"] as ProjectionAlias
+];
+
 const basePostInclude = [
   {
-    association: "images",
-    attributes: ["id", "imageUrl", "caption", "createdAt"],
+    association: "media",
+    attributes: [
+      "id",
+      "mediaType",
+      "mediaUrl",
+      "thumbnailUrl",
+      "mimeType",
+      "durationSecond",
+      "positionNumber",
+      "caption",
+      "createdAt"
+    ],
     where: { status: 1 },
     required: false
   },
   {
     association: "author",
-    attributes: ["id", "fullName", "contactNumber", "email"]
+    attributes: authorAttributes,
+    include: [
+      {
+        association: "profile",
+        attributes: [],
+        required: false
+      }
+    ],
+    required: false
   }
 ];
 
@@ -138,98 +172,131 @@ const parseOptionalNumber = (value: unknown, field: string): number | undefined 
   return numberValue;
 };
 
-const normalizeCaptionsInput = (captionsInput: unknown, count: number): Array<string | null> => {
-  if (captionsInput === undefined || captionsInput === null) {
-    return Array(count).fill(null);
+const parseSortDirection = (value: unknown, defaultDirection: "ASC" | "DESC" = "DESC"): "ASC" | "DESC" => {
+  if (typeof value !== "string") {
+    return defaultDirection;
   }
-
-  let values: unknown[] = [];
-
-  if (Array.isArray(captionsInput)) {
-    values = captionsInput;
-  } else if (typeof captionsInput === "string") {
-    try {
-      const parsed = JSON.parse(captionsInput);
-      values = Array.isArray(parsed) ? parsed : [captionsInput];
-    } catch {
-      values = [captionsInput];
-    }
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "ASC" || normalized === "DESC") {
+    return normalized;
   }
-
-  return Array.from({ length: count }, (_, index) => {
-    const raw = values[index];
-    if (typeof raw === "string") {
-      const trimmed = raw.trim();
-      return trimmed.length > 0 ? trimmed : null;
-    }
-    return null;
-  });
+  return defaultDirection;
 };
 
-const parseLegacyImagesInput = (imagesInput: unknown): NormalizedImageInput[] | null => {
-  if (imagesInput === undefined) {
+const parseLegacyMediaInput = (mediaInput: unknown): NormalizedPostMediaInput[] | null => {
+  if (mediaInput === undefined || mediaInput === null) {
     return null;
   }
 
   let arrayInput: unknown[];
 
-  if (typeof imagesInput === "string") {
+  if (typeof mediaInput === "string") {
     try {
-      const parsed = JSON.parse(imagesInput);
+      const parsed = JSON.parse(mediaInput);
       if (!Array.isArray(parsed)) {
         throw new Error("Expected array");
       }
       arrayInput = parsed;
     } catch {
-      throw new ApiError("images must be a JSON array", 400);
+      throw new ApiError("media must be a JSON array", 400);
     }
-  } else if (Array.isArray(imagesInput)) {
-    arrayInput = imagesInput;
+  } else if (Array.isArray(mediaInput)) {
+    arrayInput = mediaInput;
   } else {
-    throw new ApiError("images must be an array", 400);
+    throw new ApiError("media must be an array", 400);
   }
 
   const normalized = arrayInput
-    .map((item) => {
+    .map((item, index) => {
       if (!item || typeof item !== "object") {
         return null;
       }
 
-      const { imageUrl, caption } = item as {
-        imageUrl?: unknown;
-        caption?: unknown;
-      };
+      const {
+        mediaType,
+        mediaUrl,
+        imageUrl,
+        thumbnailUrl,
+        mimeType,
+        durationSecond,
+        positionNumber,
+        caption
+      } = item as Record<string, unknown>;
 
-      if (typeof imageUrl !== "string" || imageUrl.trim().length === 0) {
+      const resolvedUrl =
+        typeof mediaUrl === "string" && mediaUrl.trim().length > 0
+          ? mediaUrl.trim()
+          : typeof imageUrl === "string" && imageUrl.trim().length > 0
+          ? imageUrl.trim()
+          : null;
+
+      if (!resolvedUrl) {
         return null;
       }
 
+      const normalizedType =
+        typeof mediaType === "string" && mediaType.trim().length > 0
+          ? (mediaType.trim().toUpperCase() as MediaType)
+          : MediaType.PHOTO;
+
+      const safeType =
+        normalizedType === MediaType.PHOTO || normalizedType === MediaType.VIDEO
+          ? normalizedType
+          : MediaType.PHOTO;
+
+      const normalizedThumbnail =
+        typeof thumbnailUrl === "string" && thumbnailUrl.trim().length > 0
+          ? thumbnailUrl.trim()
+          : null;
+
+      const normalizedMime =
+        typeof mimeType === "string" && mimeType.trim().length > 0 ? mimeType.trim() : null;
+
+      const normalizedDuration = parseOptionalNumber(durationSecond, "durationSecond") ?? null;
+      const normalizedPosition =
+        parseOptionalNumber(positionNumber, "positionNumber") ?? index + 1;
+
+      const normalizedCaption =
+        typeof caption === "string" && caption.trim().length > 0 ? caption.trim() : null;
+
       return {
-        imageUrl: imageUrl.trim(),
-        caption: typeof caption === "string" && caption.trim().length > 0 ? caption.trim() : null
-      };
+        mediaType: safeType,
+        mediaUrl: resolvedUrl,
+        thumbnailUrl: normalizedThumbnail,
+        mimeType: normalizedMime,
+        durationSecond: normalizedDuration,
+        positionNumber: normalizedPosition,
+        caption: normalizedCaption
+      } as NormalizedPostMediaInput;
     })
-    .filter((value): value is NormalizedImageInput => value !== null);
+    .filter((value): value is NormalizedPostMediaInput => value !== null);
 
   return normalized;
 };
 
-const normalizeImagesInput = (
+const normalizePostMediaInput = (
   files: Express.Multer.File[] | undefined,
-  imagesInput: unknown,
-  captionsInput: unknown
-): NormalizedImageInput[] | null => {
+  mediaInput: unknown
+): NormalizedPostMediaInput[] | null => {
   const uploadedFiles = Array.isArray(files) ? files : [];
 
   if (uploadedFiles.length > 0) {
-    const captions = normalizeCaptionsInput(captionsInput, uploadedFiles.length);
-    return uploadedFiles.map((file, index) => ({
-      imageUrl: buildPublicUploadPath(file.path),
-      caption: captions[index] ?? null
-    }));
+    return uploadedFiles.map((file, index) => {
+      const isPhoto = file.mimetype.startsWith("image/");
+      const mediaType = isPhoto ? MediaType.PHOTO : MediaType.VIDEO;
+      return {
+        mediaType,
+        mediaUrl: buildPublicUploadPath(file.path),
+        thumbnailUrl: null,
+        mimeType: file.mimetype,
+        durationSecond: null,
+        positionNumber: index + 1,
+        caption: null
+      } as NormalizedPostMediaInput;
+    });
   }
 
-  return parseLegacyImagesInput(imagesInput);
+  return parseLegacyMediaInput(mediaInput);
 };
 
 const fetchPostById = async (id: number) => {
@@ -271,7 +338,7 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
   const tags = normalizeTagsInput(req.body?.tags);
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
-  const images = normalizeImagesInput(uploadedFiles, req.body?.images, req.body?.captions);
+  const media = normalizePostMediaInput(uploadedFiles, req.body?.media ?? req.body?.images);
 
   const createdPostId = await sequelize.transaction(async (transaction) => {
     const post = await Post.create(
@@ -288,12 +355,17 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
       { transaction }
     );
 
-    if (images && images.length > 0) {
-      await PostImage.bulkCreate(
-        images.map((image) => ({
+    if (media && media.length > 0) {
+      await PostMedia.bulkCreate(
+        media.map((item) => ({
           postId: post.id,
-          imageUrl: image.imageUrl,
-          caption: image.caption,
+          mediaType: item.mediaType,
+          mediaUrl: item.mediaUrl,
+          thumbnailUrl: item.thumbnailUrl,
+          mimeType: item.mimeType,
+          durationSecond: item.durationSecond,
+          positionNumber: item.positionNumber,
+          caption: item.caption,
           status: 1,
           createdBy: userId,
           updatedBy: userId
@@ -327,6 +399,7 @@ export const getPost = asyncHandler(async (req: Request, res: Response) => {
 
 export const listPosts = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePagination(req);
+  const sortDirection = parseSortDirection(req.query.sort);
 
   const where: WhereOptions = {
     status: 1
@@ -356,7 +429,7 @@ export const listPosts = asyncHandler(async (req: Request, res: Response) => {
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: [["createdAt", sortDirection]],
     attributes: buildListAttributes(),
     include: basePostInclude,
     distinct: true
@@ -371,6 +444,7 @@ export const listPosts = asyncHandler(async (req: Request, res: Response) => {
 export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
   const { page, limit, offset } = parsePagination(req);
+  const sortDirection = parseSortDirection(req.query.sort);
 
   const { rows, count } = await Post.findAndCountAll({
     where: {
@@ -379,7 +453,7 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
     },
     limit,
     offset,
-    order: [["createdAt", "DESC"]],
+    order: [["createdAt", sortDirection]],
     attributes: buildListAttributes(),
     include: basePostInclude,
     distinct: true
@@ -455,7 +529,7 @@ export const deletePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   await sequelize.transaction(async (transaction) => {
     await post.update({ status: 0, updatedBy: userId }, { transaction });
-    await PostImage.update(
+    await PostMedia.update(
       { status: 0, updatedBy: userId },
       { where: { postId: post.id }, transaction }
     );
@@ -468,7 +542,7 @@ export const deletePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   res.status(204).send();
 });
 
-export const addPostImages = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const addPostMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId, roles } = requireAuthenticatedUser(req);
 
   const postId = Number.parseInt(req.params.id, 10);
@@ -486,18 +560,50 @@ export const addPostImages = asyncHandler(async (req: AuthenticatedRequest, res:
   }
 
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
-  const images = normalizeImagesInput(uploadedFiles, req.body?.images, req.body?.captions);
+  const media = normalizePostMediaInput(uploadedFiles, req.body?.media ?? req.body?.images);
 
-  if (!images || images.length === 0) {
-    throw new ApiError("At least one image is required", 400);
+  if (!media || media.length === 0) {
+    throw new ApiError("At least one media file is required", 400);
   }
 
+  const [existingImageCount, existingVideoCount, existingMaxPositionRaw] = await Promise.all([
+    PostMedia.count({
+      where: { postId, status: 1, mediaType: MediaType.PHOTO }
+    }),
+    PostMedia.count({
+      where: { postId, status: 1, mediaType: MediaType.VIDEO }
+    }),
+    PostMedia.max("positionNumber", {
+      where: { postId, status: 1 }
+    }) as Promise<number | null>
+  ]);
+
+  const newImageCount = media.filter((item) => item.mediaType === MediaType.PHOTO).length;
+  const newVideoCount = media.filter((item) => item.mediaType === MediaType.VIDEO).length;
+
+  if (existingImageCount + newImageCount > MAX_POST_IMAGE_COUNT) {
+    throw new ApiError(`A post can include at most ${MAX_POST_IMAGE_COUNT} images`, 400);
+  }
+
+  if (existingVideoCount + newVideoCount > MAX_POST_VIDEO_COUNT) {
+    throw new ApiError(`A post can include at most ${MAX_POST_VIDEO_COUNT} video`, 400);
+  }
+
+  const startingPosition = Number.isFinite(existingMaxPositionRaw ?? NaN)
+    ? (existingMaxPositionRaw as number)
+    : 0;
+
   await sequelize.transaction(async (transaction) => {
-    await PostImage.bulkCreate(
-      images.map((image) => ({
+    await PostMedia.bulkCreate(
+      media.map((item, index) => ({
         postId: post.id,
-        imageUrl: image.imageUrl,
-        caption: image.caption,
+        mediaType: item.mediaType,
+        mediaUrl: item.mediaUrl,
+        thumbnailUrl: item.thumbnailUrl,
+        mimeType: item.mimeType,
+        durationSecond: item.durationSecond,
+        positionNumber: startingPosition + index + 1,
+        caption: item.caption,
         status: 1,
         createdBy: post.createdBy ?? userId,
         updatedBy: userId
@@ -510,7 +616,7 @@ export const addPostImages = asyncHandler(async (req: AuthenticatedRequest, res:
   res.status(201).json(updated);
 });
 
-export const removePostImages = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const removePostMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId, roles } = requireAuthenticatedUser(req);
 
   const postId = Number.parseInt(req.params.id, 10);
@@ -527,25 +633,25 @@ export const removePostImages = asyncHandler(async (req: AuthenticatedRequest, r
     throw new ApiError("Forbidden", 403);
   }
 
-  const imageIdsInput = req.body?.imageIds ?? req.body?.ids;
-  if (!Array.isArray(imageIdsInput) || imageIdsInput.length === 0) {
-    throw new ApiError("imageIds must be a non-empty array", 400);
+  const mediaIdsInput = req.body?.mediaIds ?? req.body?.ids ?? req.body?.imageIds;
+  if (!Array.isArray(mediaIdsInput) || mediaIdsInput.length === 0) {
+    throw new ApiError("mediaIds must be a non-empty array", 400);
   }
 
-  const imageIds = imageIdsInput
+  const mediaIds = mediaIdsInput
     .map((value) => Number.parseInt(String(value), 10))
     .filter((value) => Number.isInteger(value) && value > 0);
 
-  if (imageIds.length === 0) {
-    throw new ApiError("imageIds must contain valid numeric identifiers", 400);
+  if (mediaIds.length === 0) {
+    throw new ApiError("mediaIds must contain valid numeric identifiers", 400);
   }
 
   await sequelize.transaction(async (transaction) => {
-    await PostImage.update(
+    await PostMedia.update(
       { status: 0, updatedBy: userId },
       {
         where: {
-          id: { [Op.in]: imageIds },
+          id: { [Op.in]: mediaIds },
           postId: post.id,
           status: 1
         },
@@ -571,12 +677,15 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
     throw new ApiError("reaction is required", 400);
   }
 
-  const normalizedReaction = reactionInput.toUpperCase() as PostReactionType;
+  const normalizedReaction = reactionInput.toUpperCase();
+  const isNoReaction = normalizedReaction === "NO_REACTION";
+
   if (
+    !isNoReaction &&
     normalizedReaction !== PostReactionType.LIKE &&
     normalizedReaction !== PostReactionType.DISLIKE
   ) {
-    throw new ApiError("reaction must be LIKE or DISLIKE", 400);
+    throw new ApiError("reaction must be LIKE, DISLIKE, or NO_REACTION", 400);
   }
 
   await sequelize.transaction(async (transaction: Transaction) => {
@@ -609,9 +718,19 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
       );
     }
 
-    if (primaryReaction) {
+    if (isNoReaction) {
+      if (primaryReaction && primaryReaction.status === 1) {
+        await primaryReaction.update(
+          {
+            status: 0,
+            updatedBy: userId
+          },
+          { transaction }
+        );
+      }
+    } else if (primaryReaction) {
       const updatePayload: Record<string, unknown> = {
-        reaction: normalizedReaction,
+        reaction: normalizedReaction as PostReactionType,
         status: 1,
         updatedBy: userId
       };
@@ -626,7 +745,7 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
         {
           postId: id,
           userId,
-          reaction: normalizedReaction,
+          reaction: normalizedReaction as PostReactionType,
           status: 1,
           createdBy: userId,
           updatedBy: userId
@@ -639,8 +758,8 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
   const counts = await getReactionCounts(id);
 
   res.json({
-    message: "Reaction recorded",
-    reaction: normalizedReaction,
+    message: isNoReaction ? "Reaction removed" : "Reaction recorded",
+    reaction: isNoReaction ? null : normalizedReaction,
     counts
   });
 });

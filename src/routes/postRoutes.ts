@@ -6,14 +6,14 @@ import {
   getPost,
   listMyPosts,
   listPosts,
-  addPostImages,
-  removePostImages,
+  addPostMedia,
+  removePostMedia,
   reactToPost,
   updatePost
 } from "../controllers/postController";
 import { authenticate } from "../middlewares/authMiddleware";
 import { authorizePermissions } from "../middlewares/authorizationMiddleware";
-import { postImagesUpload } from "../middlewares/postUploadMiddleware";
+import { postMediaUpload } from "../middlewares/postUploadMiddleware";
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.post(
   "/posts",
   authenticate(),
   authorizePermissions("posts:create"),
-  postImagesUpload,
+  postMediaUpload,
   createPost
 );
 router.put("/posts/:id", authenticate(), authorizePermissions("posts:update"), updatePost);
@@ -36,17 +36,17 @@ router.post(
   reactToPost
 );
 router.post(
-  "/posts/:id/images",
+  "/posts/:id/media",
   authenticate(),
   authorizePermissions("posts:update"),
-  postImagesUpload,
-  addPostImages
+  postMediaUpload,
+  addPostMedia
 );
 router.delete(
-  "/posts/:id/images",
+  "/posts/:id/media",
   authenticate(),
   authorizePermissions("posts:update"),
-  removePostImages
+  removePostMedia
 );
 
 export default router;

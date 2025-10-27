@@ -170,10 +170,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Test post created from Postman - Beautiful sunset at the park!\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"tags\": [\"sunset\", \"nature\", \"bangalore\"],\n  \"images\": [\n    {\n      \"imageUrl\": \"https://example.com/image1.jpg\",\n      \"caption\": \"Beautiful sunset view\"\n    },\n    {\n      \"imageUrl\": \"https://example.com/image2.jpg\",\n      \"caption\": \"Evening colors\"\n    }\n  ]\n}"
+              "raw": "{\n  \"description\": \"Test post created from Postman - Beautiful sunset at the park!\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"tags\": [\"sunset\", \"nature\", \"bangalore\"],\n  \"media\": [\n    {\n      \"mediaType\": \"PHOTO\",\n      \"mediaUrl\": \"https://example.com/image1.jpg\"\n    },\n    {\n      \"mediaType\": \"VIDEO\",\n      \"mediaUrl\": \"https://example.com/video.mp4\",\n      \"thumbnailUrl\": \"https://example.com/video-thumb.jpg\",\n      \"durationSecond\": 42\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/posts",
-            "description": "Create a new post with description, location, tags, and images"
+            "description": "Create a new post with description, location, tags, and media entries (photos or videos)."
           },
           "response": []
         },
@@ -418,7 +418,7 @@
           "response": []
         },
         {
-          "name": "10. Create Post - Invalid Images Format",
+          "name": "10. Create Post - Invalid Media Format",
           "event": [
             {
               "listen": "test",
@@ -428,9 +428,9 @@
                   "    pm.response.to.have.status(400);",
                   "});",
                   "",
-                  "pm.test(\"Error message indicates images format issue\", function () {",
+                  "pm.test(\"Error message indicates media format issue\", function () {",
                   "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.message).to.include('images');",
+                  "    pm.expect(jsonData.message).to.include('media');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -451,10 +451,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Invalid images format\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"images\": \"not-an-array\"\n}"
+              "raw": "{\n  \"description\": \"Invalid media format\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"media\": \"not-an-array\"\n}"
             },
             "url": "{{baseUrl}}/posts",
-            "description": "Failure: Create post with images not as an array"
+            "description": "Failure: Create post with media not provided as an array"
           },
           "response": []
         },

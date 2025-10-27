@@ -161,17 +161,64 @@
             "method": "POST",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
                 "key": "Authorization",
                 "value": "Bearer {{authToken}}"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Community Cleanup Drive 2025\",\n  \"description\": \"Join us for a community cleanup drive in Rajajinagar. Let's make our neighborhood clean and green! Volunteers will be provided with gloves and bags. Refreshments will be served.\",\n  \"place\": \"Rajajinagar Park, Bangalore\",\n  \"googleMapLink\": \"https://maps.google.com/?q=12.9916,77.5571\",\n  \"startDate\": \"2025-11-15\",\n  \"startTime\": \"08:00:00\",\n  \"endDate\": \"2025-11-15\",\n  \"endTime\": \"12:00:00\",\n  \"media\": [\n    {\n      \"mediaType\": \"photo\",\n      \"mediaUrl\": \"https://example.com/event-banner.jpg\",\n      \"thumbnailUrl\": \"https://example.com/event-banner-thumb.jpg\",\n      \"mimeType\": \"image/jpeg\",\n      \"positionNumber\": 1,\n      \"caption\": \"Event Banner\"\n    },\n    {\n      \"mediaType\": \"video\",\n      \"mediaUrl\": \"https://example.com/event-promo.mp4\",\n      \"thumbnailUrl\": \"https://example.com/event-promo-thumb.jpg\",\n      \"mimeType\": \"video/mp4\",\n      \"durationSecond\": 45,\n      \"positionNumber\": 2,\n      \"caption\": \"Event Promo Video\"\n    }\n  ]\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Community Cleanup Drive 2025",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Join us for a community cleanup drive in Rajajinagar. Let's make our neighborhood clean and green! Volunteers will be provided with gloves and bags. Refreshments will be served.",
+                  "type": "text"
+                },
+                {
+                  "key": "place",
+                  "value": "Rajajinagar Park, Bangalore",
+                  "type": "text"
+                },
+                {
+                  "key": "googleMapLink",
+                  "value": "https://maps.google.com/?q=12.9916,77.5571",
+                  "type": "text"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-11-15",
+                  "type": "text"
+                },
+                {
+                  "key": "startTime",
+                  "value": "08:00:00",
+                  "type": "text"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-11-15",
+                  "type": "text"
+                },
+                {
+                  "key": "endTime",
+                  "value": "12:00:00",
+                  "type": "text"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-banner.jpg"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-promo.mp4"
+                }
+              ]
             },
             "url": "{{baseUrl}}/events",
             "description": "Create a new event with all required fields and media"
@@ -652,7 +699,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 200\", function () {",
+                  "pm.test(\"Status code is 201\", function () {",
                   "    pm.response.to.have.status(201);",
                   "});",
                   "",
@@ -681,7 +728,112 @@
           "response": []
         },
         {
-          "name": "16. Get Event Registrations",
+          "name": "16. Add Event Media (Multipart)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Media added successfully\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('media');",
+                  "    pm.expect(jsonData.media).to.be.an('array');",
+                  "    ",
+                  "    if (jsonData.media.length > 0) {",
+                  "        var lastMedia = jsonData.media[jsonData.media.length - 1];",
+                  "        pm.collectionVariables.set(\"eventMediaId\", lastMedia.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-image.jpg"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-video.mp4"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/events/{{eventId}}/media",
+            "description": "Upload additional media to an existing event (max 4 images + 1 video, 5MB each)"
+          },
+          "response": []
+        },
+        {
+          "name": "17. Remove Event Media",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const mediaId = pm.collectionVariables.get(\"eventMediaId\");",
+                  "pm.test(\"Media id from previous step is available\", function () {",
+                  "    pm.expect(mediaId, \"eventMediaId\").to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Media removed from event\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('media');",
+                  "    if (jsonData.media) {",
+                  "        var removedId = Number(mediaId);",
+                  "        var stillExists = jsonData.media.some(function (item) { return item.id === removedId; });",
+                  "        pm.expect(stillExists, \"Removed media should not exist\").to.be.false;",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mediaIds\": [{{eventMediaId}}]\n}"
+            },
+            "url": "{{baseUrl}}/events/{{eventId}}/media",
+            "description": "Remove one or more media items from an event"
+          },
+          "response": []
+        },
+        {
+          "name": "18. Get Event Registrations",
           "event": [
             {
               "listen": "test",
@@ -717,7 +869,7 @@
           "response": []
         },
         {
-          "name": "17. Unregister from Event",
+          "name": "19. Unregister from Event",
           "event": [
             {
               "listen": "test",
@@ -797,6 +949,10 @@
     },
     {
       "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "eventMediaId",
       "value": ""
     }
   ]

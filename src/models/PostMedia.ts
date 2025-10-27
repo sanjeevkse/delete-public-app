@@ -7,14 +7,19 @@ import {
   NonAttribute
 } from "sequelize";
 
+import sequelize from "../config/database";
+import { MediaType } from "../types/enums";
 import type Post from "./Post";
 
-import sequelize from "../config/database";
-
-class PostImage extends Model<InferAttributes<PostImage>, InferCreationAttributes<PostImage>> {
+class PostMedia extends Model<InferAttributes<PostMedia>, InferCreationAttributes<PostMedia>> {
   declare id: CreationOptional<number>;
   declare postId: number;
-  declare imageUrl: string;
+  declare mediaType: MediaType;
+  declare mediaUrl: string;
+  declare thumbnailUrl: CreationOptional<string | null>;
+  declare mimeType: CreationOptional<string | null>;
+  declare durationSecond: CreationOptional<number | null>;
+  declare positionNumber: CreationOptional<number>;
   declare caption: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
@@ -24,7 +29,7 @@ class PostImage extends Model<InferAttributes<PostImage>, InferCreationAttribute
   declare post?: NonAttribute<Post>;
 }
 
-PostImage.init(
+PostMedia.init(
   {
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
@@ -36,10 +41,36 @@ PostImage.init(
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false
     },
-    imageUrl: {
-      field: "image_url",
+    mediaType: {
+      field: "media_type",
+      type: DataTypes.ENUM(MediaType.PHOTO, MediaType.VIDEO),
+      allowNull: false
+    },
+    mediaUrl: {
+      field: "media_url",
       type: DataTypes.STRING(500),
       allowNull: false
+    },
+    thumbnailUrl: {
+      field: "thumbnail_url",
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    mimeType: {
+      field: "mime_type",
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    durationSecond: {
+      field: "duration_second",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    positionNumber: {
+      field: "position_number",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 1
     },
     caption: {
       type: DataTypes.STRING(255),
@@ -75,12 +106,12 @@ PostImage.init(
   },
   {
     sequelize,
-    tableName: "tbl_post_image",
-    modelName: "PostImage",
+    tableName: "tbl_post_media",
+    modelName: "PostMedia",
     timestamps: false
   }
 );
 
-export default PostImage;
-export type PostImageAttributes = InferAttributes<PostImage>;
-export type PostImageCreationAttributes = InferCreationAttributes<PostImage>;
+export default PostMedia;
+export type PostMediaAttributes = InferAttributes<PostMedia>;
+export type PostMediaCreationAttributes = InferCreationAttributes<PostMedia>;

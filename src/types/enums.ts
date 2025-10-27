@@ -1,4 +1,4 @@
-export enum EventMediaType {
+export enum MediaType {
   PHOTO = "PHOTO",
   VIDEO = "VIDEO"
 }

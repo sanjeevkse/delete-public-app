@@ -6,6 +6,7 @@ import RolePermission from "../models/RolePermission";
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
+import UserRole from "../models/UserRole";
 import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
@@ -97,6 +98,58 @@ export const assignRoleToUser = asyncHandler(async (req: Request, res: Response)
   await setUserRoles(user.id, resolvedRoleIds);
 
   const updatedUser = await User.findByPk(user.id, {
+    include: [
+      { association: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  res.status(200).json(updatedUser);
+});
+
+export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Response) => {
+  const roleId = Number.parseInt(req.params.roleId, 10);
+  if (!Number.isInteger(roleId) || roleId <= 0) {
+    throw new ApiError("Invalid role id", 400);
+  }
+
+  const userId = Number.parseInt(req.params.userId, 10);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new ApiError("Invalid user id", 400);
+  }
+
+  const [role, user] = await Promise.all([
+    MetaUserRole.findByPk(roleId),
+    User.findByPk(userId)
+  ]);
+
+  if (!role) {
+    throw new ApiError("Role not found", 404);
+  }
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const existingAssignment = await UserRole.findOne({ where: { userId, roleId } });
+  if (!existingAssignment) {
+    throw new ApiError("Role is not assigned to the user", 404);
+  }
+
+  await existingAssignment.destroy();
+
+  const remainingAssignments = await UserRole.findAll({ where: { userId } });
+  if (remainingAssignments.length === 0) {
+    const defaultRoleIds = await resolveRoleIdsOrDefault(null);
+    const defaultRoleId = defaultRoleIds[0];
+    await UserRole.create({
+      userId,
+      roleId: defaultRoleId,
+      status: 1
+    });
+  }
+
+  const updatedUser = await User.findByPk(userId, {
     include: [
       { association: "profile" },
       { association: "roles", include: [{ association: "permissions" }] }

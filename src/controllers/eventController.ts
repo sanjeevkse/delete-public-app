@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { Request, Response, Express } from "express";
 import type { FindAttributeOptions, WhereOptions } from "sequelize";
 import { Op } from "sequelize";
 
@@ -7,14 +7,16 @@ import sequelize from "../config/database";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
+import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
+import { MAX_EVENT_IMAGE_COUNT, MAX_EVENT_VIDEO_COUNT } from "../middlewares/eventUploadMiddleware";
 import Event from "../models/Event";
 import EventMedia from "../models/EventMedia";
 import EventRegistration from "../models/EventRegistration";
-import { EventMediaType } from "../types/enums";
+import { MediaType } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
 
 type NormalizedMediaInput = {
-  mediaType: EventMediaType;
+  mediaType: MediaType;
   mediaUrl: string;
   thumbnailUrl: string | null;
   mimeType: string | null;
@@ -167,37 +169,85 @@ const parseBooleanQuery = (value: unknown, defaultValue = false): boolean => {
   return defaultValue;
 };
 
-const normalizeMediaInput = (mediaInput: unknown): NormalizedMediaInput[] | null => {
-  if (mediaInput === undefined) {
+const parseSortDirection = (value: unknown, defaultDirection: "ASC" | "DESC" = "ASC"): "ASC" | "DESC" => {
+  if (typeof value !== "string") {
+    return defaultDirection;
+  }
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "ASC" || normalized === "DESC") {
+    return normalized;
+  }
+  return defaultDirection;
+};
+
+const isWithinEventWindow = (event: Event): boolean => {
+  const startDate = event.startDate instanceof Date ? event.startDate : new Date(event.startDate);
+  const endDate = event.endDate instanceof Date ? event.endDate : new Date(event.endDate);
+
+  const now = new Date();
+
+  const startDateTime = new Date(startDate);
+  const endDateTime = new Date(endDate);
+
+  if (event.startTime) {
+    const [hours, minutes, seconds] = event.startTime.split(":").map((value) => Number(value));
+    startDateTime.setHours(hours ?? 0, minutes ?? 0, seconds ?? 0, 0);
+  } else {
+    startDateTime.setHours(0, 0, 0, 0);
+  }
+
+  if (event.endTime) {
+    const [hours, minutes, seconds] = event.endTime.split(":").map((value) => Number(value));
+    endDateTime.setHours(hours ?? 23, minutes ?? 59, seconds ?? 59, 999);
+  } else {
+    endDateTime.setHours(23, 59, 59, 999);
+  }
+
+  return now >= startDateTime && now <= endDateTime;
+};
+
+const parseLegacyMediaInput = (mediaInput: unknown): NormalizedMediaInput[] | null => {
+  if (mediaInput === undefined || mediaInput === null) {
     return null;
   }
 
-  if (!Array.isArray(mediaInput)) {
+  let arrayInput: unknown[];
+
+  if (typeof mediaInput === "string") {
+    const trimmed = mediaInput.trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (!Array.isArray(parsed)) {
+        throw new Error("Expected array");
+      }
+      arrayInput = parsed;
+    } catch {
+      throw new ApiError("media must be an array", 400);
+    }
+  } else if (Array.isArray(mediaInput)) {
+    arrayInput = mediaInput;
+  } else {
     throw new ApiError("media must be an array", 400);
   }
 
-  const normalized = mediaInput
+  const normalized = arrayInput
     .map((item, index) => {
       if (!item || typeof item !== "object") {
         return null;
       }
 
-      const {
-        mediaType,
-        mediaUrl,
-        thumbnailUrl,
-        mimeType,
-        durationSecond,
-        positionNumber,
-        caption
-      } = item as Record<string, unknown>;
+      const { mediaType, mediaUrl, thumbnailUrl, mimeType, durationSecond, positionNumber } =
+        item as Record<string, unknown>;
 
       if (typeof mediaType !== "string") {
         return null;
       }
 
-      const upperType = mediaType.toUpperCase() as EventMediaType;
-      if (upperType !== EventMediaType.PHOTO && upperType !== EventMediaType.VIDEO) {
+      const upperType = mediaType.toUpperCase() as MediaType;
+      if (upperType !== MediaType.PHOTO && upperType !== MediaType.VIDEO) {
         return null;
       }
 
@@ -217,9 +267,6 @@ const normalizeMediaInput = (mediaInput: unknown): NormalizedMediaInput[] | null
 
       const normalizedPosition = parseOptionalNumber(positionNumber, "positionNumber") ?? index + 1;
 
-      const normalizedCaption =
-        typeof caption === "string" && caption.trim().length > 0 ? caption.trim() : null;
-
       return {
         mediaType: upperType,
         mediaUrl: mediaUrl.trim(),
@@ -227,12 +274,38 @@ const normalizeMediaInput = (mediaInput: unknown): NormalizedMediaInput[] | null
         mimeType: normalizedMime,
         durationSecond: normalizedDuration,
         positionNumber: normalizedPosition,
-        caption: normalizedCaption
-      };
+        caption: null
+      } as NormalizedMediaInput;
     })
     .filter((value): value is NormalizedMediaInput => value !== null);
 
   return normalized;
+};
+
+const normalizeMediaInput = (
+  files: Express.Multer.File[] | undefined,
+  mediaInput: unknown
+): NormalizedMediaInput[] | null => {
+  const uploadedFiles = Array.isArray(files) ? files : [];
+
+  if (uploadedFiles.length > 0) {
+    return uploadedFiles.map((file, index) => {
+      const isPhoto = file.mimetype.startsWith("image/");
+      const mediaType = isPhoto ? MediaType.PHOTO : MediaType.VIDEO;
+
+      return {
+        mediaType,
+        mediaUrl: buildPublicUploadPath(file.path),
+        thumbnailUrl: null,
+        mimeType: file.mimetype,
+        durationSecond: null,
+        positionNumber: index + 1,
+        caption: null
+      } as NormalizedMediaInput;
+    });
+  }
+
+  return parseLegacyMediaInput(mediaInput);
 };
 
 const computePaginationMeta = (total: number, page: number, limit: number) => ({
@@ -261,7 +334,8 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const endDate = parseRequiredDateOnly(req.body?.endDate, "endDate");
   const endTime = parseRequiredTime(req.body?.endTime, "endTime");
 
-  const media = normalizeMediaInput(req.body?.media);
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
+  const media = normalizeMediaInput(uploadedFiles, req.body?.media);
 
   const createdEventId = await sequelize.transaction(async (transaction) => {
     const event = await Event.create(
@@ -307,22 +381,44 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   res.status(201).json(created);
 });
 
-export const getEvent = asyncHandler(async (req: Request, res: Response) => {
+export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
     throw new ApiError("Invalid event id", 400);
   }
 
-  const event = await fetchEventById(id);
-  if (!event) {
+  const eventRecord = await fetchEventById(id);
+  if (!eventRecord) {
     throw new ApiError("Event not found", 404);
   }
 
-  res.json(event);
+  const event = eventRecord.get({ plain: true });
+
+  let isRegistered = false;
+  const currentUserId = req.user?.id ?? null;
+
+  if (currentUserId) {
+    const registration = await EventRegistration.findOne({
+      attributes: ["id"],
+      where: {
+        eventId: id,
+        userId: currentUserId,
+        status: 1
+      }
+    });
+    isRegistered = Boolean(registration);
+  }
+
+  res.json({
+    ...event,
+    isRegistered
+  });
 });
 
-export const listEvents = asyncHandler(async (req: Request, res: Response) => {
+export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { page, limit, offset } = parsePagination(req);
+  const currentUserId = req.user?.id ?? null;
+  const sortDirection = parseSortDirection(req.query.sort, "ASC");
 
   const where: WhereOptions = {
     status: 1
@@ -365,14 +461,36 @@ export const listEvents = asyncHandler(async (req: Request, res: Response) => {
     attributes: attributesWithCounts,
     include: baseEventInclude,
     order: [
-      ["startDate", "ASC"],
-      ["startTime", "ASC"]
+      ["startDate", sortDirection],
+      ["startTime", sortDirection]
     ],
     distinct: true
   });
 
+  const plainEvents = rows.map((event) => event.get({ plain: true }));
+
+  let registeredEventIds: Set<number> = new Set();
+
+  if (currentUserId && plainEvents.length > 0) {
+    const eventIds = plainEvents.map((event) => event.id);
+    const registrations = await EventRegistration.findAll({
+      attributes: ["eventId"],
+      where: {
+        eventId: { [Op.in]: eventIds },
+        userId: currentUserId,
+        status: 1
+      }
+    });
+    registeredEventIds = new Set(registrations.map((registration) => registration.eventId));
+  }
+
+  const data = plainEvents.map((event) => ({
+    ...event,
+    isRegistered: currentUserId ? registeredEventIds.has(event.id) : false
+  }));
+
   res.json({
-    data: rows,
+    data,
     meta: computePaginationMeta(count, page, limit)
   });
 });
@@ -489,7 +607,8 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   updates.updatedBy = userId;
 
-  const media = normalizeMediaInput(req.body?.media);
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
+  const media = normalizeMediaInput(uploadedFiles, req.body?.media);
 
   await sequelize.transaction(async (transaction) => {
     if (Object.keys(updates).length > 0) {
@@ -521,6 +640,134 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
         );
       }
     }
+  });
+
+  const updated = await fetchEventById(event.id);
+  res.json(updated);
+});
+
+export const addEventMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles = [] } = requireAuthenticatedUser(req);
+
+  const eventId = Number.parseInt(req.params.id, 10);
+  if (Number.isNaN(eventId)) {
+    throw new ApiError("Invalid event id", 400);
+  }
+
+  const event = await Event.findOne({ where: { id: eventId, status: 1 } });
+  if (!event) {
+    throw new ApiError("Event not found", 404);
+  }
+
+  if (event.createdBy !== null && event.createdBy !== userId && !isAdmin(roles)) {
+    throw new ApiError("Forbidden", 403);
+  }
+
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
+  const media = normalizeMediaInput(uploadedFiles, req.body?.media);
+
+  if (!media || media.length === 0) {
+    throw new ApiError("At least one media file is required", 400);
+  }
+
+  const [existingImageCount, existingVideoCount, existingMaxPositionRaw] = await Promise.all([
+    EventMedia.count({
+      where: { eventId, status: 1, mediaType: MediaType.PHOTO }
+    }),
+    EventMedia.count({
+      where: { eventId, status: 1, mediaType: MediaType.VIDEO }
+    }),
+    EventMedia.max("positionNumber", {
+      where: { eventId, status: 1 }
+    }) as Promise<number | null>
+  ]);
+
+  const newImageCount = media.filter((item) => item.mediaType === MediaType.PHOTO).length;
+  const newVideoCount = media.filter((item) => item.mediaType === MediaType.VIDEO).length;
+
+  if (existingImageCount + newImageCount > MAX_EVENT_IMAGE_COUNT) {
+    throw new ApiError(
+      `An event can include at most ${MAX_EVENT_IMAGE_COUNT} images`,
+      400
+    );
+  }
+
+  if (existingVideoCount + newVideoCount > MAX_EVENT_VIDEO_COUNT) {
+    throw new ApiError(
+      `An event can include at most ${MAX_EVENT_VIDEO_COUNT} video`,
+      400
+    );
+  }
+
+  const startingPosition = Number.isFinite(existingMaxPositionRaw ?? NaN)
+    ? (existingMaxPositionRaw as number)
+    : 0;
+
+  await sequelize.transaction(async (transaction) => {
+    await EventMedia.bulkCreate(
+      media.map((item, index) => ({
+        eventId: event.id,
+        mediaType: item.mediaType,
+        mediaUrl: item.mediaUrl,
+        thumbnailUrl: item.thumbnailUrl,
+        mimeType: item.mimeType,
+        durationSecond: item.durationSecond,
+        positionNumber: startingPosition + index + 1,
+        caption: item.caption,
+        status: 1,
+        createdBy: event.createdBy ?? userId,
+        updatedBy: userId
+      })),
+      { transaction }
+    );
+  });
+
+  const updated = await fetchEventById(event.id);
+  res.status(201).json(updated);
+});
+
+export const removeEventMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles = [] } = requireAuthenticatedUser(req);
+
+  const eventId = Number.parseInt(req.params.id, 10);
+  if (Number.isNaN(eventId)) {
+    throw new ApiError("Invalid event id", 400);
+  }
+
+  const event = await Event.findOne({ where: { id: eventId, status: 1 } });
+  if (!event) {
+    throw new ApiError("Event not found", 404);
+  }
+
+  if (event.createdBy !== null && event.createdBy !== userId && !isAdmin(roles)) {
+    throw new ApiError("Forbidden", 403);
+  }
+
+  const mediaIdsInput = req.body?.mediaIds ?? req.body?.ids;
+  if (!Array.isArray(mediaIdsInput) || mediaIdsInput.length === 0) {
+    throw new ApiError("mediaIds must be a non-empty array", 400);
+  }
+
+  const mediaIds = mediaIdsInput
+    .map((value) => Number.parseInt(String(value), 10))
+    .filter((value) => Number.isInteger(value) && value > 0);
+
+  if (mediaIds.length === 0) {
+    throw new ApiError("mediaIds must contain valid numeric identifiers", 400);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    await EventMedia.update(
+      { status: 0, updatedBy: userId },
+      {
+        where: {
+          id: { [Op.in]: mediaIds },
+          eventId: event.id,
+          status: 1
+        },
+        transaction
+      }
+    );
   });
 
   const updated = await fetchEventById(event.id);
@@ -570,6 +817,10 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   const event = await Event.findOne({ where: { id: eventId, status: 1 } });
   if (!event) {
     throw new ApiError("Event not found", 404);
+  }
+
+  if (!isWithinEventWindow(event)) {
+    throw new ApiError("Event registration is only allowed during the event window", 400);
   }
 
   const existingRegistration = await EventRegistration.findOne({
@@ -623,6 +874,10 @@ export const unregisterFromEvent = asyncHandler(
     const event = await Event.findOne({ where: { id: eventId, status: 1 } });
     if (!event) {
       throw new ApiError("Event not found", 404);
+    }
+
+    if (!isWithinEventWindow(event)) {
+      throw new ApiError("Event unregistration is only allowed during the event window", 400);
     }
 
     const registration = await EventRegistration.findOne({

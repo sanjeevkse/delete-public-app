@@ -8,10 +8,13 @@ import {
   listEventRegistrations,
   registerForEvent,
   unregisterFromEvent,
-  updateEvent
+  updateEvent,
+  addEventMedia,
+  removeEventMedia
 } from "../controllers/eventController";
 import { authenticate } from "../middlewares/authMiddleware";
 import { authorizePermissions } from "../middlewares/authorizationMiddleware";
+import { eventMediaUpload } from "../middlewares/eventUploadMiddleware";
 
 const router = Router();
 
@@ -23,8 +26,33 @@ router.get(
   authorizePermissions("events:view"),
   listEventRegistrations
 );
-router.post("/events", authenticate(), authorizePermissions("events:create"), createEvent);
-router.put("/events/:id", authenticate(), authorizePermissions("events:update"), updateEvent);
+router.post(
+  "/events",
+  authenticate(),
+  authorizePermissions("events:create"),
+  eventMediaUpload,
+  createEvent
+);
+router.put(
+  "/events/:id",
+  authenticate(),
+  authorizePermissions("events:update"),
+  eventMediaUpload,
+  updateEvent
+);
+router.post(
+  "/events/:id/media",
+  authenticate(),
+  authorizePermissions("events:update"),
+  eventMediaUpload,
+  addEventMedia
+);
+router.delete(
+  "/events/:id/media",
+  authenticate(),
+  authorizePermissions("events:update"),
+  removeEventMedia
+);
 router.delete("/events/:id", authenticate(), authorizePermissions("events:delete"), deleteEvent);
 router.post(
   "/events/:id/register",

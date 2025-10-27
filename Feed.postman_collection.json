@@ -162,7 +162,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20",
+              "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20&sort=DESC",
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts"],
               "query": [
@@ -195,10 +195,15 @@
                   "key": "limit",
                   "value": "20",
                   "description": "Optional: page size up to 100 (defaults to 20)."
+                },
+                {
+                  "key": "sort",
+                  "value": "DESC",
+                  "description": "Optional: sort direction for creation date (ASC or DESC, defaults to DESC)."
                 }
               ]
             },
-            "description": "Lists active posts in reverse chronological order with optional tag and location filters. Reaction counts and active images are embedded in each record."
+            "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
           },
           "event": [
             {
@@ -244,7 +249,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts", "{{postId}}"]
             },
-            "description": "Retrieves a single active post by id including images, author, and aggregated reaction counts."
+            "description": "Retrieves a single active post by id including media, author, and aggregated reaction counts."
           },
           "event": [
             {
@@ -359,24 +364,14 @@
                   "type": "text"
                 },
                 {
-                  "key": "captions",
-                  "value": "Before",
-                  "type": "text"
-                },
-                {
-                  "key": "captions",
-                  "value": "After",
-                  "type": "text"
-                },
-                {
-                  "key": "images",
+                  "key": "media",
                   "type": "file",
                   "src": "/path/to/local/before.jpg"
                 },
                 {
-                  "key": "images",
+                  "key": "media",
                   "type": "file",
-                  "src": "/path/to/local/after.jpg"
+                  "src": "/path/to/local/after.mp4"
                 }
               ]
             },
@@ -385,7 +380,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts"]
             },
-            "description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `images` files (JPEG/PNG/WEBP/HEIC) and matching `captions` fields. Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
+            "description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 images + 1 video at 5MB each). Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
           },
           "event": [
             {
@@ -437,7 +432,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts", "{{postId}}"]
             },
-            "description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated image endpoints."
+            "description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated media endpoints."
           },
           "event": [
             {
@@ -466,7 +461,7 @@
           ]
         },
         {
-          "name": "Add Post Images",
+          "name": "Add Post Media",
           "request": {
             "method": "POST",
             "header": [
@@ -483,33 +478,23 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "captions",
-                  "value": "Day one progress",
-                  "type": "text"
-                },
-                {
-                  "key": "captions",
-                  "value": "Day two progress",
-                  "type": "text"
-                },
-                {
-                  "key": "images",
+                  "key": "media",
                   "type": "file",
                   "src": "/path/to/local/day-one.jpg"
                 },
                 {
-                  "key": "images",
+                  "key": "media",
                   "type": "file",
-                  "src": "/path/to/local/day-two.jpg"
+                  "src": "/path/to/local/day-two.mp4"
                 }
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/api/posts/{{postId}}/images",
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "images"]
+              "path": ["api", "posts", "{{postId}}", "media"]
             },
-            "description": "Appends one or more images to an existing post. Provide uploads via `images` file fields and optional matching `captions` entries."
+            "description": "Appends additional media to an existing post. Provide uploads via `media` file fields while respecting the 4 image / 1 video limit."
           },
           "event": [
             {
@@ -526,7 +511,7 @@
           ]
         },
         {
-          "name": "Remove Post Images",
+          "name": "Remove Post Media",
           "request": {
             "method": "DELETE",
             "header": [
@@ -541,14 +526,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"imageIds\": [123, 456]\n}"
+              "raw": "{\n  \"mediaIds\": [123, 456]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/posts/{{postId}}/images",
+              "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "images"]
+              "path": ["api", "posts", "{{postId}}", "media"]
             },
-            "description": "Soft deletes one or more images from a post by marking them inactive. Pass the image IDs to remove."
+            "description": "Soft deletes one or more media items from a post by marking them inactive. Pass the media IDs to remove."
           },
           "event": [
             {
@@ -618,7 +603,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "posts", "{{postId}}", "reactions"]
             },
-            "description": "Adds or updates the caller's reaction (LIKE or DISLIKE) for the post and returns the updated reaction counts."
+            "description": "Adds or updates the caller's reaction for the post. Use LIKE or DISLIKE to react, or NO_REACTION to clear an existing reaction. Returns the updated reaction counts."
           },
           "event": [
             {
@@ -660,7 +645,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20",
+              "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
               "host": ["{{baseUrl}}"],
               "path": ["api", "events"],
               "query": [
@@ -698,10 +683,15 @@
                   "key": "limit",
                   "value": "20",
                   "description": "Optional: page size up to 100 (defaults to 20)."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional: sort direction for start date/time (ASC or DESC, defaults to ASC)."
                 }
               ]
             },
-            "description": "Lists active events with pagination and optional filters for title, place, or date range."
+            "description": "Lists active events with pagination and optional filters for title, place, or date range. Set `sort=DESC` for the latest events first (default is `ASC`)."
           },
           "event": [
             {
@@ -779,7 +769,7 @@
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "multipart/form-data"
               },
               {
                 "key": "Authorization",
@@ -787,15 +777,66 @@
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Community Cleanup Drive\",\n  \"description\": \"Neighborhood volunteers gather for a cleanup.\",\n  \"place\": \"Central Park\",\n  \"googleMapLink\": \"https://maps.google.com/?q=Central+Park\",\n  \"startDate\": \"2024-12-01\",\n  \"startTime\": \"09:00\",\n  \"endDate\": \"2024-12-01\",\n  \"endTime\": \"12:00\",\n  \"media\": [\n    {\n      \"mediaType\": \"PHOTO\",\n      \"mediaUrl\": \"https://example.com/event-photo.jpg\",\n      \"thumbnailUrl\": \"https://example.com/event-photo-thumb.jpg\",\n      \"mimeType\": \"image/jpeg\",\n      \"positionNumber\": 1,\n      \"caption\": \"Overview of the venue\"\n    }\n  ]\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Community Cleanup Drive",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Neighborhood volunteers gather for a cleanup.",
+                  "type": "text"
+                },
+                {
+                  "key": "place",
+                  "value": "Central Park",
+                  "type": "text"
+                },
+                {
+                  "key": "googleMapLink",
+                  "value": "https://maps.google.com/?q=Central+Park",
+                  "type": "text"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-12-01",
+                  "type": "text"
+                },
+                {
+                  "key": "startTime",
+                  "value": "09:00",
+                  "type": "text"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-01",
+                  "type": "text"
+                },
+                {
+                  "key": "endTime",
+                  "value": "12:00",
+                  "type": "text"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-banner.jpg"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-promo.mp4"
+                }
+              ]
             },
             "url": {
               "raw": "{{baseUrl}}/api/events",
               "host": ["{{baseUrl}}"],
               "path": ["api", "events"]
             },
-            "description": "Creates a new event with optional media attachments. Dates must be provided in YYYY-MM-DD format and times in HH:mm."
+            "description": "Creates a new event for the authenticated user. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
           },
           "event": [
             {
@@ -870,6 +911,115 @@
                   "pm.test(\"Event id present\", function () {",
                   "  pm.expect(jsonData && jsonData.id).to.exist;",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Event Media",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/event-image.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "media"]
+            },
+            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Media array present\", function () {",
+                  "  pm.expect(jsonData && Array.isArray(jsonData.media)).to.be.true;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.media) && jsonData.media.length > 0) {",
+                  "  var lastMedia = jsonData.media[jsonData.media.length - 1];",
+                  "  if (lastMedia && lastMedia.id) {",
+                  "    pm.collectionVariables.set(\"eventMediaId\", lastMedia.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Event Media",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mediaIds\": [{{eventMediaId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "media"]
+            },
+            "description": "Soft-deletes one or more media items from an event. Provide mediaIds from the add media response."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Media array present\", function () {",
+                  "  pm.expect(jsonData && Array.isArray(jsonData.media)).to.be.true;",
+                  "});",
+                  "var removedId = Number(pm.collectionVariables.get(\"eventMediaId\"));",
+                  "if (jsonData && Array.isArray(jsonData.media) && removedId) {",
+                  "  var exists = jsonData.media.some(function (item) { return item && item.id === removedId; });",
+                  "  pm.expect(exists, \"Removed media should not be present\").to.be.false;",
+                  "}"
                 ]
               }
             }
@@ -1194,6 +1344,24 @@
               "path": ["api", "admin", "users", "{{userId}}", "roles"]
             }
           }
+        },
+        {
+          "name": "Unassign Role from User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "{{userId}}", "roles", "{{roleId}}"]
+            },
+            "description": "Detaches the specified role from the user. If all roles are removed, the default public role is restored automatically."
+          }
         }
       ]
     },
@@ -1326,6 +1494,10 @@
     },
     {
       "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "eventMediaId",
       "value": ""
     },
     {

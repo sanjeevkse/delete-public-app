@@ -7,7 +7,7 @@ import {
   NonAttribute
 } from "sequelize";
 
-import type PostImage from "./PostImage";
+import type PostMedia from "./PostMedia";
 import type PostReaction from "./PostReaction";
 
 import sequelize from "../config/database";
@@ -24,7 +24,7 @@ class Post extends Model<InferAttributes<Post>, InferCreationAttributes<Post>> {
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
-  declare images?: NonAttribute<PostImage[]>;
+  declare media?: NonAttribute<PostMedia[]>;
   declare reactions?: NonAttribute<PostReaction[]>;
 }
 
