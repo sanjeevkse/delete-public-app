@@ -7,6 +7,8 @@ import eventRoutes from "./eventRoutes";
 import memberRoutes from "./memberRoutes";
 import communityTypeRoutes from "./communityTypeRoutes";
 import communityRoutes from "./communityRoutes";
+import relationTypeRoutes from "./relationTypeRoutes";
+import familyMemberRoutes from "./familyMemberRoutes";
 
 const router = Router();
 
@@ -21,6 +23,8 @@ router.use("/", eventRoutes);
 router.use("/", memberRoutes);
 router.use("/", communityTypeRoutes);
 router.use("/", communityRoutes);
+router.use("/", relationTypeRoutes);
+router.use("/", familyMemberRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;

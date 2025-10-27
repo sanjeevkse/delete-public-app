@@ -3,10 +3,12 @@ import Community from "./Community";
 import Event from "./Event";
 import EventMedia from "./EventMedia";
 import EventRegistration from "./EventRegistration";
+import FamilyMember from "./FamilyMember";
 import Member from "./Member";
 import MetaCommunityType from "./MetaCommunityType";
 import MetaPermission from "./MetaPermission";
 import MetaPermissionGroup from "./MetaPermissionGroup";
+import MetaRelationType from "./MetaRelationType";
 import MetaUserRole from "./MetaUserRole";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
@@ -24,6 +26,11 @@ const establishAssociations = (): void => {
 
   Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
   MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });
+
+  FamilyMember.belongsTo(User, { foreignKey: "userId", as: "user" });
+  User.hasMany(FamilyMember, { foreignKey: "userId", as: "familyMembers" });
+  FamilyMember.belongsTo(MetaRelationType, { foreignKey: "relationTypeId", as: "relationType" });
+  MetaRelationType.hasMany(FamilyMember, { foreignKey: "relationTypeId", as: "familyMembers" });
 
   Event.hasMany(EventMedia, { foreignKey: "eventId", as: "media" });
   EventMedia.belongsTo(Event, { foreignKey: "eventId", as: "event" });
@@ -97,10 +104,12 @@ export {
   Event,
   EventMedia,
   EventRegistration,
+  FamilyMember,
   Member,
   MetaCommunityType,
   MetaPermission,
   MetaPermissionGroup,
+  MetaRelationType,
   MetaUserRole,
   Post,
   PostMedia,
