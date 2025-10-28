@@ -7,19 +7,19 @@ import {
   toggleMlaConstituencyStatus,
   deleteMlaConstituency
 } from "../controllers/mlaConstituencyController";
-import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
+import { authenticate } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
-router.post("/mla-constituencies", requireAuthenticatedUser, createMlaConstituency);
+router.post("/mla-constituencies", authenticate(), createMlaConstituency);
 router.get("/mla-constituencies", listMlaConstituencies);
 router.get("/mla-constituencies/:id", getMlaConstituencyById);
-router.put("/mla-constituencies/:id", requireAuthenticatedUser, updateMlaConstituency);
+router.put("/mla-constituencies/:id", authenticate(), updateMlaConstituency);
 router.patch(
   "/mla-constituencies/:id/status",
-  requireAuthenticatedUser,
+  authenticate(),
   toggleMlaConstituencyStatus
 );
-router.delete("/mla-constituencies/:id", requireAuthenticatedUser, deleteMlaConstituency);
+router.delete("/mla-constituencies/:id", authenticate(), deleteMlaConstituency);
 
 export default router;
