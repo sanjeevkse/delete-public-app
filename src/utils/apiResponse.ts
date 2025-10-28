@@ -3,7 +3,7 @@ import type { Response } from "express";
 /**
  * Standard API Response Structure
  */
-interface SuccessResponse<T = any> {
+interface SuccessResponse<T = unknown> {
   success: true;
   data: T;
   message?: string;
@@ -15,7 +15,7 @@ interface ErrorResponse {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 
@@ -33,7 +33,7 @@ interface PaginationMeta {
  * @param message - Optional success message
  * @param statusCode - HTTP status code (default: 200)
  */
-export const sendSuccess = <T = any>(
+export const sendSuccess = <T = unknown>(
   res: Response,
   data: T,
   message?: string,
@@ -59,7 +59,7 @@ export const sendSuccess = <T = any>(
  * @param message - Optional success message
  * @param statusCode - HTTP status code (default: 200)
  */
-export const sendSuccessWithPagination = <T = any>(
+export const sendSuccessWithPagination = <T = unknown>(
   res: Response,
   data: T[],
   pagination: PaginationMeta,
@@ -85,7 +85,7 @@ export const sendSuccessWithPagination = <T = any>(
  * @param data - The created resource data
  * @param message - Optional success message
  */
-export const sendCreated = <T = any>(
+export const sendCreated = <T = unknown>(
   res: Response,
   data: T,
   message: string = "Resource created successfully"
@@ -114,7 +114,7 @@ export const sendError = (
   code: string,
   message: string,
   statusCode: number = 400,
-  details?: any
+  details?: unknown
 ): Response => {
   const response: ErrorResponse = {
     success: false,
@@ -124,7 +124,7 @@ export const sendError = (
     }
   };
 
-  if (details) {
+  if (details !== undefined) {
     response.error.details = details;
   }
 
@@ -140,7 +140,7 @@ export const sendError = (
 export const sendValidationError = (
   res: Response,
   message: string = "Validation failed",
-  details?: any
+  details?: unknown
 ): Response => {
   return sendError(res, "VALIDATION_ERROR", message, 422, details);
 };
@@ -262,6 +262,6 @@ export const parsePaginationParams = (
 /**
  * Type-safe response types for TypeScript
  */
-export type ApiSuccessResponse<T = any> = SuccessResponse<T>;
+export type ApiSuccessResponse<T = unknown> = SuccessResponse<T>;
 export type ApiErrorResponse = ErrorResponse;
 export type ApiPaginationMeta = PaginationMeta;

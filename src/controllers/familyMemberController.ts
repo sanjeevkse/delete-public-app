@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Op } from "sequelize";
+import type { Attributes, WhereOptions } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
@@ -33,35 +34,37 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
   const userId = req.query.userId as string;
   const relationTypeId = req.query.relationTypeId as string;
 
-  const whereClause: any = {};
+  const filters: WhereOptions<Attributes<FamilyMember>>[] = [];
 
-  // Search filter
   if (search) {
-    whereClause[Op.or] = [
-      { fullName: { [Op.like]: `%${search}%` } },
-      { contactNumber: { [Op.like]: `%${search}%` } },
-      { email: { [Op.like]: `%${search}%` } },
-      { aadhaarNumber: { [Op.like]: `%${search}%` } }
-    ];
+    filters.push({
+      [Op.or]: [
+        { fullName: { [Op.like]: `%${search}%` } },
+        { contactNumber: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { aadhaarNumber: { [Op.like]: `%${search}%` } }
+      ]
+    });
   }
 
-  // Status filter
   if (status !== undefined) {
-    whereClause.status = parseInt(status);
+    filters.push({ status: Number.parseInt(status, 10) });
   }
 
-  // User filter
   if (userId) {
-    whereClause.userId = parseInt(userId);
+    filters.push({ userId: Number.parseInt(userId, 10) });
   }
 
-  // Relation type filter
   if (relationTypeId) {
-    whereClause.relationTypeId = parseInt(relationTypeId);
+    filters.push({ relationTypeId: Number.parseInt(relationTypeId, 10) });
   }
+
+  const where: WhereOptions<Attributes<FamilyMember>> | undefined = filters.length
+    ? { [Op.and]: filters }
+    : undefined;
 
   const { rows, count } = await FamilyMember.findAndCountAll({
-    where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+    where,
     include: [
       {
         model: User,

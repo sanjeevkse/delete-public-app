@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Op } from "sequelize";
+import type { Attributes, WhereOptions } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
@@ -29,23 +30,27 @@ export const listCommunityTypes = asyncHandler(async (req: Request, res: Respons
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
 
-  const whereClause: any = {};
+  const filters: WhereOptions<Attributes<MetaCommunityType>>[] = [];
 
-  // Search filter
   if (search) {
-    whereClause[Op.or] = [
-      { dispName: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } }
-    ];
+    filters.push({
+      [Op.or]: [
+        { dispName: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ]
+    });
   }
 
-  // Status filter
   if (status !== undefined) {
-    whereClause.status = parseInt(status);
+    filters.push({ status: Number.parseInt(status, 10) });
   }
+
+  const where: WhereOptions<Attributes<MetaCommunityType>> | undefined = filters.length
+    ? { [Op.and]: filters }
+    : undefined;
 
   const { rows, count } = await MetaCommunityType.findAndCountAll({
-    where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+    where,
     limit,
     offset,
     order: [["createdAt", "DESC"]]

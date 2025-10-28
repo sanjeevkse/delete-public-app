@@ -6,7 +6,7 @@ import logger from "../utils/logger";
 interface HttpError extends Error {
   status?: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export const notFoundHandler = (req: Request, res: Response): void => {
@@ -52,7 +52,7 @@ export const errorHandler = (
     error: {
       code: errorCode,
       message: err.message ?? "Internal Server Error",
-      ...(err.details && { details: err.details })
+      ...(err.details !== undefined ? { details: err.details } : {})
     }
   });
 };
@@ -60,9 +60,9 @@ export const errorHandler = (
 export class ApiError extends Error {
   status: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 
-  constructor(message: string, status = 400, code?: string, details?: any) {
+  constructor(message: string, status = 400, code?: string, details?: unknown) {
     super(message);
     this.status = status;
     this.code = code;

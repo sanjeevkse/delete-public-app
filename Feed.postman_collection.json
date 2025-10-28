@@ -1268,8 +1268,14 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
                   "pm.test(\"Response contains data array\", function () {",
                   "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains pagination\", function () {",
+                  "  pm.expect(jsonData && jsonData.pagination).to.exist;",
                   "});",
                   "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
                   "  var first = jsonData.data[0];",
@@ -1314,8 +1320,11 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
                   "pm.test(\"Job id returned\", function () {",
-                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
                   "});"
                 ]
               }
@@ -1413,11 +1422,14 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
-                  "pm.test(\"Job id returned\", function () {",
-                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
                   "});",
-                  "if (jsonData && jsonData.id) {",
-                  "  pm.collectionVariables.set(\"jobId\", jsonData.id);",
+                  "pm.test(\"Job id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});",
+                  "if (jsonData && jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set(\"jobId\", jsonData.data.id);",
                   "}"
                 ]
               }
@@ -1510,8 +1522,11 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
                   "pm.test(\"Job id returned\", function () {",
-                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
                   "});"
                 ]
               }
@@ -1618,8 +1633,14 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
                   "pm.test(\"Response contains data array\", function () {",
                   "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains pagination\", function () {",
+                  "  pm.expect(jsonData && jsonData.pagination).to.exist;",
                   "});",
                   "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
                   "  var first = jsonData.data[0];",
@@ -1664,8 +1685,11 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
                   "pm.test(\"Scheme id returned\", function () {",
-                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
                   "});"
                 ]
               }
@@ -1712,8 +1736,11 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
-                  "if (jsonData && jsonData.id) {",
-                  "  pm.collectionVariables.set(\"schemeId\", jsonData.id);",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "if (jsonData && jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set(\"schemeId\", jsonData.data.id);",
                   "}",
                   "pm.test(\"Scheme id stored\", function () {",
                   "  pm.expect(pm.collectionVariables.get(\"schemeId\")).to.exist;",
@@ -1763,8 +1790,11 @@
                   "} catch (err) {",
                   "  jsonData = {};",
                   "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
                   "pm.test(\"Scheme id returned\", function () {",
-                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
                   "});"
                 ]
               }

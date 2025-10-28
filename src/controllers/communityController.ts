@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Op } from "sequelize";
+import type { Attributes, WhereOptions } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
@@ -32,36 +33,38 @@ export const listCommunities = asyncHandler(async (req: Request, res: Response) 
   const communityTypeId = req.query.communityTypeId as string;
   const isRegistered = req.query.isRegistered as string;
 
-  const whereClause: any = {};
+  const filters: WhereOptions<Attributes<Community>>[] = [];
 
-  // Search filter
   if (search) {
-    whereClause[Op.or] = [
-      { communityName: { [Op.like]: `%${search}%` } },
-      { contactPerson: { [Op.like]: `%${search}%` } },
-      { contactNumber: { [Op.like]: `%${search}%` } },
-      { email: { [Op.like]: `%${search}%` } },
-      { fullAddress: { [Op.like]: `%${search}%` } }
-    ];
+    filters.push({
+      [Op.or]: [
+        { communityName: { [Op.like]: `%${search}%` } },
+        { contactPerson: { [Op.like]: `%${search}%` } },
+        { contactNumber: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { fullAddress: { [Op.like]: `%${search}%` } }
+      ]
+    });
   }
 
-  // Status filter
   if (status !== undefined) {
-    whereClause.status = parseInt(status);
+    filters.push({ status: Number.parseInt(status, 10) });
   }
 
-  // Community type filter
   if (communityTypeId) {
-    whereClause.communityTypeId = parseInt(communityTypeId);
+    filters.push({ communityTypeId: Number.parseInt(communityTypeId, 10) });
   }
 
-  // Registration status filter
   if (isRegistered !== undefined) {
-    whereClause.isRegistered = parseInt(isRegistered);
+    filters.push({ isRegistered: Number.parseInt(isRegistered, 10) });
   }
+
+  const where: WhereOptions<Attributes<Community>> | undefined = filters.length
+    ? { [Op.and]: filters }
+    : undefined;
 
   const { rows, count } = await Community.findAndCountAll({
-    where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+    where,
     include: [
       {
         model: MetaCommunityType,

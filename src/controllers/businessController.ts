@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { Op } from "sequelize";
+import type { Attributes, WhereOptions } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
@@ -31,32 +32,35 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
   const status = req.query.status as string;
   const businessTypeId = req.query.businessTypeId as string;
 
-  const whereClause: any = {};
+  const filters: WhereOptions<Attributes<Business>>[] = [];
 
-  // Search filter
   if (search) {
-    whereClause[Op.or] = [
-      { businessName: { [Op.like]: `%${search}%` } },
-      { pan: { [Op.like]: `%${search}%` } },
-      { gstin: { [Op.like]: `%${search}%` } },
-      { contactNumber: { [Op.like]: `%${search}%` } },
-      { email: { [Op.like]: `%${search}%` } },
-      { fullAddress: { [Op.like]: `%${search}%` } }
-    ];
+    filters.push({
+      [Op.or]: [
+        { businessName: { [Op.like]: `%${search}%` } },
+        { pan: { [Op.like]: `%${search}%` } },
+        { gstin: { [Op.like]: `%${search}%` } },
+        { contactNumber: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { fullAddress: { [Op.like]: `%${search}%` } }
+      ]
+    });
   }
 
-  // Status filter
   if (status !== undefined) {
-    whereClause.status = parseInt(status);
+    filters.push({ status: Number.parseInt(status, 10) });
   }
 
-  // Business type filter
   if (businessTypeId) {
-    whereClause.businessTypeId = parseInt(businessTypeId);
+    filters.push({ businessTypeId: Number.parseInt(businessTypeId, 10) });
   }
+
+  const where: WhereOptions<Attributes<Business>> | undefined = filters.length
+    ? { [Op.and]: filters }
+    : undefined;
 
   const { rows, count } = await Business.findAndCountAll({
-    where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+    where,
     include: [
       {
         model: MetaBusinessType,
