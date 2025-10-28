@@ -387,32 +387,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 5. **Use pagination for lists** - Always paginate list endpoints to improve performance
 6. **Validate max limits** - Prevent clients from requesting too many records at once
 
-## 🔍 Testing Responses
-
-You can now easily test your API responses have the correct structure:
-
-```typescript
-// Success response
-expect(response.body).toHaveProperty("success", true);
-expect(response.body).toHaveProperty("data");
-expect(response.body).toHaveProperty("message");
-
-// Pagination response
-expect(response.body).toHaveProperty("pagination");
-expect(response.body.pagination).toHaveProperty("page");
-expect(response.body.pagination).toHaveProperty("limit");
-expect(response.body.pagination).toHaveProperty("total");
-expect(response.body.pagination).toHaveProperty("totalPages");
-
-// Error response
-expect(response.body).toHaveProperty("success", false);
-expect(response.body).toHaveProperty("error");
-expect(response.body.error).toHaveProperty("code");
-expect(response.body.error).toHaveProperty("message");
-```
-
 ## 📚 Additional Resources
 
-- See `src/utils/apiResponse.examples.ts` for more examples
 - Updated error handler: `src/middlewares/errorHandler.ts`
 - Response utilities: `src/utils/apiResponse.ts`
