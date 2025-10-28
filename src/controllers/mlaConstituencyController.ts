@@ -48,9 +48,7 @@ export const listMlaConstituencies = asyncHandler(
     const whereClause: any = {};
 
     if (search && typeof search === "string") {
-      whereClause[Op.or] = [
-        { dispName: { [Op.like]: `%${search}%` } },
-      ];
+      whereClause[Op.or] = [{ dispName: { [Op.like]: `%${search}%` } }];
     }
 
     if (status !== undefined) {

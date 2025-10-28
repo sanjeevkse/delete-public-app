@@ -34,9 +34,7 @@ export const listCommunityTypes = asyncHandler(async (req: Request, res: Respons
 
   if (search) {
     filters.push({
-      [Op.or]: [
-        { dispName: { [Op.like]: `%${search}%` } },
-      ]
+      [Op.or]: [{ dispName: { [Op.like]: `%${search}%` } }]
     });
   }
 

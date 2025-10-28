@@ -7,6 +7,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import { normalizePhoneNumber } from "../utils/phoneNumber";
 
 class Member extends Model<InferAttributes<Member>, InferCreationAttributes<Member>> {
   declare id: CreationOptional<number>;
@@ -32,7 +33,11 @@ Member.init(
     contactNumber: {
       field: "contact_number",
       type: DataTypes.STRING(20),
-      allowNull: false
+      allowNull: false,
+      set(value: string) {
+        const normalized = normalizePhoneNumber(value, "contactNumber");
+        this.setDataValue("contactNumber", normalized);
+      }
     },
     email: {
       type: DataTypes.STRING(191),

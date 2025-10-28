@@ -10,6 +10,7 @@ import {
 import type MetaCommunityType from "./MetaCommunityType";
 
 import sequelize from "../config/database";
+import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 
 class Community extends Model<InferAttributes<Community>, InferCreationAttributes<Community>> {
   declare id: CreationOptional<number>;
@@ -67,7 +68,11 @@ Community.init(
     contactNumber: {
       field: "contact_number",
       type: DataTypes.STRING(20),
-      allowNull: true
+      allowNull: true,
+      set(value: string | null) {
+        const normalized = normalizeOptionalPhoneNumber(value, "contactNumber");
+        this.setDataValue("contactNumber", normalized);
+      }
     },
     email: {
       type: DataTypes.STRING(191),

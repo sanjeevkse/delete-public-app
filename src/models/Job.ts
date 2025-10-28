@@ -10,6 +10,7 @@ import {
 import type User from "./User";
 
 import sequelize from "../config/database";
+import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
 
 export const JOB_SUBMISSION_FOR = ["self", "others"] as const;
 export type JobSubmissionFor = (typeof JOB_SUBMISSION_FOR)[number];
@@ -60,7 +61,11 @@ Job.init(
     contactNumber: {
       field: "contact_number",
       type: DataTypes.STRING(20),
-      allowNull: false
+      allowNull: false,
+      set(value: string) {
+        const normalized = normalizePhoneNumber(value, "contactNumber");
+        this.setDataValue("contactNumber", normalized);
+      }
     },
     email: {
       type: DataTypes.STRING(191),
@@ -69,7 +74,11 @@ Job.init(
     alternativeContactNumber: {
       field: "alternative_contact_number",
       type: DataTypes.STRING(20),
-      allowNull: true
+      allowNull: true,
+      set(value: string | null) {
+        const normalized = normalizeOptionalPhoneNumber(value, "alternativeContactNumber");
+        this.setDataValue("alternativeContactNumber", normalized);
+      }
     },
     fullAddress: {
       field: "full_address",

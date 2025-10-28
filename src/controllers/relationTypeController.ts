@@ -34,9 +34,7 @@ export const listRelationTypes = asyncHandler(async (req: Request, res: Response
 
   if (search) {
     filters.push({
-      [Op.or]: [
-        { dispName: { [Op.like]: `%${search}%` } },
-      ]
+      [Op.or]: [{ dispName: { [Op.like]: `%${search}%` } }]
     });
   }
 

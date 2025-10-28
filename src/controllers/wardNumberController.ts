@@ -13,29 +13,27 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 
-export const createWardNumber = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { dispName } = req.body;
+export const createWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { dispName } = req.body;
 
-    if (!dispName) {
-      throw new ApiError("dispName is required", 400);
-    }
-
-    const existingWardNumber = await MetaWardNumber.findOne({ where: { dispName } });
-    if (existingWardNumber) {
-      throw new ApiError("Ward number with this name already exists", 409);
-    }
-
-    const wardNumber = await MetaWardNumber.create({
-      dispName,
-      status: 1,
-      createdBy: req.user?.id,
-      updatedBy: req.user?.id
-    });
-
-    return sendCreated(res, wardNumber, "Ward number created successfully");
+  if (!dispName) {
+    throw new ApiError("dispName is required", 400);
   }
-);
+
+  const existingWardNumber = await MetaWardNumber.findOne({ where: { dispName } });
+  if (existingWardNumber) {
+    throw new ApiError("Ward number with this name already exists", 409);
+  }
+
+  const wardNumber = await MetaWardNumber.create({
+    dispName,
+    status: 1,
+    createdBy: req.user?.id,
+    updatedBy: req.user?.id
+  });
+
+  return sendCreated(res, wardNumber, "Ward number created successfully");
+});
 
 export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { page, limit } = parsePaginationParams(
@@ -47,9 +45,7 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
   const whereClause: any = {};
 
   if (search && typeof search === "string") {
-    whereClause[Op.or] = [
-      { dispName: { [Op.like]: `%${search}%` } },
-    ];
+    whereClause[Op.or] = [{ dispName: { [Op.like]: `%${search}%` } }];
   }
 
   if (status !== undefined) {
@@ -82,32 +78,30 @@ export const getWardNumberById = asyncHandler(async (req: AuthenticatedRequest, 
   return sendSuccess(res, wardNumber, "Ward number retrieved successfully");
 });
 
-export const updateWardNumber = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const { dispName } = req.body;
+export const updateWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const { dispName } = req.body;
 
-    const wardNumber = await MetaWardNumber.findByPk(id);
+  const wardNumber = await MetaWardNumber.findByPk(id);
 
-    if (!wardNumber) {
-      throw new ApiError("Ward number not found", 404);
-    }
-
-    if (dispName && dispName !== wardNumber.dispName) {
-      const existingWardNumber = await MetaWardNumber.findOne({ where: { dispName } });
-      if (existingWardNumber) {
-        throw new ApiError("Ward number with this name already exists", 409);
-      }
-    }
-
-    await wardNumber.update({
-      dispName: dispName || wardNumber.dispName,
-      updatedBy: req.user?.id
-    });
-
-    return sendSuccess(res, wardNumber, "Ward number updated successfully");
+  if (!wardNumber) {
+    throw new ApiError("Ward number not found", 404);
   }
-);
+
+  if (dispName && dispName !== wardNumber.dispName) {
+    const existingWardNumber = await MetaWardNumber.findOne({ where: { dispName } });
+    if (existingWardNumber) {
+      throw new ApiError("Ward number with this name already exists", 409);
+    }
+  }
+
+  await wardNumber.update({
+    dispName: dispName || wardNumber.dispName,
+    updatedBy: req.user?.id
+  });
+
+  return sendSuccess(res, wardNumber, "Ward number updated successfully");
+});
 
 export const toggleWardNumberStatus = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -128,18 +122,16 @@ export const toggleWardNumberStatus = asyncHandler(
   }
 );
 
-export const deleteWardNumber = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
+export const deleteWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
 
-    const wardNumber = await MetaWardNumber.findByPk(id);
+  const wardNumber = await MetaWardNumber.findByPk(id);
 
-    if (!wardNumber) {
-      throw new ApiError("Ward number not found", 404);
-    }
-
-    await wardNumber.destroy();
-
-    return sendSuccess(res, null, "Ward number deleted successfully");
+  if (!wardNumber) {
+    throw new ApiError("Ward number not found", 404);
   }
-);
+
+  await wardNumber.destroy();
+
+  return sendSuccess(res, null, "Ward number deleted successfully");
+});

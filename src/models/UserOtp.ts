@@ -7,6 +7,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import { normalizePhoneNumber } from "../utils/phoneNumber";
 import { UserOtpPurpose } from "../types/enums";
 
 class UserOtp extends Model<InferAttributes<UserOtp>, InferCreationAttributes<UserOtp>> {
@@ -34,7 +35,11 @@ UserOtp.init(
     contactNumber: {
       field: "contact_number",
       type: DataTypes.STRING(45),
-      allowNull: false
+      allowNull: false,
+      set(value: string) {
+        const normalized = normalizePhoneNumber(value, "contactNumber");
+        this.setDataValue("contactNumber", normalized);
+      }
     },
     purpose: {
       type: DataTypes.ENUM(

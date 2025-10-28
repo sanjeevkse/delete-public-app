@@ -14,6 +14,7 @@ import {
   sendSuccess,
   sendSuccessWithPagination
 } from "../utils/apiResponse";
+import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -418,7 +419,7 @@ const normalizeJobPayload = async (
     "description"
   );
 
-  const alternativeContactNumber =
+  let alternativeContactNumber =
     submittedFor === "self"
       ? (normalizeNullableString(selfApplicant?.profile?.alernativeContactNumber) ??
         existingJob?.alternativeContactNumber ??
@@ -455,6 +456,12 @@ const normalizeJobPayload = async (
     statusInput.provided || (existingJob?.status !== undefined && existingJob?.status !== null)
       ? parseOptionalStatus(statusInput.value ?? existingJob?.status)
       : undefined;
+
+  contactNumber = normalizePhoneNumber(contactNumber, "contact_number");
+  alternativeContactNumber = normalizeOptionalPhoneNumber(
+    alternativeContactNumber,
+    "alternative_contact_number"
+  );
 
   return {
     submittedFor,

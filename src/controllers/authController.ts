@@ -16,8 +16,9 @@ import { getRoleByName, getUserAccessProfile, setUserRoles } from "../services/r
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessToken, generateNumericOtp } from "../utils/auth";
+import { sendSuccess } from "../utils/apiResponse";
+import { normalizePhoneNumber } from "../utils/phoneNumber";
 import { UserOtpPurpose } from "../types/enums";
-import { sendSuccess, sendBadRequest } from "../utils/apiResponse";
 
 const MASTER_OTP = env.auth.masterOtp;
 const OTP_EXPIRY_MINUTES = env.auth.otpExpiryMinutes;
@@ -110,11 +111,8 @@ const verifyOtpForContactNumber = async (
 };
 
 export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { contactNumber } = req.body as { contactNumber?: string };
-
-  if (!contactNumber) {
-    throw new ApiError("contactNumber is required", 400);
-  }
+  const payload = req.body as { contactNumber?: unknown };
+  const contactNumber = normalizePhoneNumber(payload.contactNumber);
 
   const now = new Date();
   const existingOtp = await UserOtp.findOne({
@@ -168,18 +166,18 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { contactNumber, otp } = req.body as {
-    contactNumber?: string;
-    otp?: string;
+  const payload = req.body as {
+    contactNumber?: unknown;
+    otp?: unknown;
   };
 
-  if (!contactNumber) {
-    throw new ApiError("contactNumber is required", 400);
-  }
+  const contactNumber = normalizePhoneNumber(payload.contactNumber);
 
-  if (!otp) {
+  if (typeof payload.otp !== "string" || payload.otp.trim() === "") {
     throw new ApiError("otp is required", 400);
   }
+
+  const otp = payload.otp.trim();
 
   await verifyOtpForContactNumber(contactNumber, otp);
 

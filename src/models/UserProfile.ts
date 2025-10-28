@@ -8,6 +8,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import { UserProfileGender } from "../types/enums";
 import type User from "./User";
 
@@ -67,7 +68,11 @@ UserProfile.init(
     alernativeContactNumber: {
       field: "alernative_contact_number",
       type: DataTypes.STRING(191),
-      allowNull: true
+      allowNull: true,
+      set(value: string | null) {
+        const normalized = normalizeOptionalPhoneNumber(value, "alternativeContactNumber");
+        this.setDataValue("alernativeContactNumber", normalized);
+      }
     },
     bio: {
       type: DataTypes.TEXT,

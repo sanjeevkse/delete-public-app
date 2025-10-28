@@ -616,12 +616,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/posts?page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["posts"],
               "query": [
                 {
                   "key": "page",
@@ -723,9 +719,7 @@
       "script": {
         "type": "text/javascript",
         "requests": {},
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     },
     {
@@ -733,9 +727,7 @@
       "script": {
         "type": "text/javascript",
         "requests": {},
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     }
   ],

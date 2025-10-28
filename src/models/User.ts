@@ -11,6 +11,7 @@ import type MetaUserRole from "./MetaUserRole";
 import type UserProfile from "./UserProfile";
 
 import sequelize from "../config/database";
+import { normalizePhoneNumber } from "../utils/phoneNumber";
 
 class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;
@@ -37,7 +38,11 @@ User.init(
       field: "contact_number",
       type: DataTypes.STRING(20),
       allowNull: false,
-      unique: true
+      unique: true,
+      set(value: string) {
+        const normalized = normalizePhoneNumber(value, "contactNumber");
+        this.setDataValue("contactNumber", normalized);
+      }
     },
     email: {
       type: DataTypes.STRING(191),

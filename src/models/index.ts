@@ -48,8 +48,14 @@ const establishAssociations = (): void => {
   MetaBoothNumber.hasMany(GeoPolitical, { foreignKey: "boothNumberId", as: "geoPoliticals" });
   GeoPolitical.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
   MetaWardNumber.hasMany(GeoPolitical, { foreignKey: "wardNumberId", as: "geoPoliticals" });
-  GeoPolitical.belongsTo(MetaMlaConstituency, { foreignKey: "mlaConstituencyId", as: "mlaConstituency" });
-  MetaMlaConstituency.hasMany(GeoPolitical, { foreignKey: "mlaConstituencyId", as: "geoPoliticals" });
+  GeoPolitical.belongsTo(MetaMlaConstituency, {
+    foreignKey: "mlaConstituencyId",
+    as: "mlaConstituency"
+  });
+  MetaMlaConstituency.hasMany(GeoPolitical, {
+    foreignKey: "mlaConstituencyId",
+    as: "geoPoliticals"
+  });
 
   Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
   MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });

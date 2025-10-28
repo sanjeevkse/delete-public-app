@@ -11,6 +11,7 @@ import type MetaRelationType from "./MetaRelationType";
 import type User from "./User";
 
 import sequelize from "../config/database";
+import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 
 class FamilyMember extends Model<
   InferAttributes<FamilyMember>,
@@ -53,7 +54,11 @@ FamilyMember.init(
     contactNumber: {
       field: "contact_number",
       type: DataTypes.STRING(20),
-      allowNull: true
+      allowNull: true,
+      set(value: string | null) {
+        const normalized = normalizeOptionalPhoneNumber(value, "contactNumber");
+        this.setDataValue("contactNumber", normalized);
+      }
     },
     email: {
       type: DataTypes.STRING(191),
