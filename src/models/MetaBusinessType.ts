@@ -14,7 +14,6 @@ class MetaBusinessType extends Model<
 > {
   declare id: CreationOptional<number>;
   declare dispName: string;
-  declare description: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -34,10 +33,6 @@ MetaBusinessType.init(
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true
-    },
-    description: {
-      type: DataTypes.STRING(255),
-      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

@@ -36,7 +36,6 @@ export const listCommunityTypes = asyncHandler(async (req: Request, res: Respons
     filters.push({
       [Op.or]: [
         { dispName: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } }
       ]
     });
   }
@@ -83,7 +82,7 @@ export const getCommunityType = asyncHandler(async (req: Request, res: Response)
  */
 export const createCommunityType = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { dispName, description, status } = req.body;
+    const { dispName, status } = req.body;
     const userId = req.user?.id;
 
     // Validate required fields
@@ -99,7 +98,6 @@ export const createCommunityType = asyncHandler(
 
     const communityType = await MetaCommunityType.create({
       dispName,
-      description,
       status: status !== undefined ? status : 1,
       createdBy: userId || null,
       updatedBy: userId || null
@@ -116,7 +114,7 @@ export const createCommunityType = asyncHandler(
 export const updateCommunityType = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { dispName, description, status } = req.body;
+    const { dispName, status } = req.body;
     const userId = req.user?.id;
 
     const communityType = await MetaCommunityType.findByPk(id);
@@ -140,7 +138,6 @@ export const updateCommunityType = asyncHandler(
 
     // Update only provided fields
     if (dispName !== undefined) communityType.dispName = dispName;
-    if (description !== undefined) communityType.description = description;
     if (status !== undefined) communityType.status = status;
     if (userId) communityType.updatedBy = userId;
 
