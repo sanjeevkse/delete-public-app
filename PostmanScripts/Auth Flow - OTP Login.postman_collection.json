@@ -18,14 +18,20 @@
               "    pm.response.to.have.status(200);",
               "});",
               "",
-              "pm.test(\"Response has OTP\", function () {",
+              "pm.test(\"Response has standard success format\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.have.property('otp');",
+              "    pm.expect(jsonData).to.have.property('success', true);",
+              "    pm.expect(jsonData).to.have.property('data');",
               "    pm.expect(jsonData).to.have.property('message');",
-              "    pm.expect(jsonData).to.have.property('attemptsLeft');",
+              "});",
+              "",
+              "pm.test(\"Response has OTP data\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('otp');",
+              "    pm.expect(jsonData.data).to.have.property('attemptsLeft');",
               "    ",
               "    // Save OTP for login step",
-              "    pm.collectionVariables.set(\"otp\", jsonData.otp);",
+              "    pm.collectionVariables.set(\"otp\", jsonData.data.otp);",
               "});",
               "",
               "pm.test(\"Message indicates success\", function () {",
@@ -65,9 +71,15 @@
               "    pm.response.to.have.status(400);",
               "});",
               "",
+              "pm.test(\"Response has standard error format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success', false);",
+              "    pm.expect(jsonData).to.have.property('error');",
+              "});",
+              "",
               "pm.test(\"Error message indicates missing contactNumber\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.message).to.include('contactNumber is required');",
+              "    pm.expect(jsonData.error.message).to.include('contactNumber is required');",
               "});"
             ],
             "type": "text/javascript"
@@ -102,26 +114,32 @@
               "    pm.response.to.have.status(200);",
               "});",
               "",
-              "pm.test(\"Response contains token\", function () {",
+              "pm.test(\"Response has standard success format\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.have.property('token');",
-              "    pm.expect(jsonData).to.have.property('user');",
-              "    pm.expect(jsonData).to.have.property('access');",
-              "    pm.expect(jsonData).to.have.property('userExists');",
+              "    pm.expect(jsonData).to.have.property('success', true);",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "});",
+              "",
+              "pm.test(\"Response contains token and user data\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data).to.have.property('token');",
+              "    pm.expect(jsonData.data).to.have.property('user');",
+              "    pm.expect(jsonData.data).to.have.property('access');",
+              "    pm.expect(jsonData.data).to.have.property('userExists');",
               "    ",
               "    // Save token for authenticated requests",
-              "    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+              "    pm.collectionVariables.set(\"authToken\", jsonData.data.token);",
               "});",
               "",
               "pm.test(\"Token is not empty\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.token).to.be.a('string').and.not.empty;",
+              "    pm.expect(jsonData.data.token).to.be.a('string').and.not.empty;",
               "});",
               "",
               "pm.test(\"User object is present\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.user).to.be.an('object');",
-              "    pm.expect(jsonData.user).to.have.property('contactNumber');",
+              "    pm.expect(jsonData.data.user).to.be.an('object');",
+              "    pm.expect(jsonData.data.user).to.have.property('contactNumber');",
               "});"
             ],
             "type": "text/javascript"
@@ -130,7 +148,10 @@
         {
           "listen": "prerequest",
           "script": {
-            "exec": ["// Wait a moment to ensure OTP is ready", "setTimeout(function(){}, 500);"],
+            "exec": [
+              "// Wait a moment to ensure OTP is ready",
+              "setTimeout(function(){}, 500);"
+            ],
             "type": "text/javascript"
           }
         }
@@ -163,9 +184,15 @@
               "    pm.response.to.have.status(400);",
               "});",
               "",
+              "pm.test(\"Response has standard error format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success', false);",
+              "    pm.expect(jsonData).to.have.property('error');",
+              "});",
+              "",
               "pm.test(\"Error message indicates missing contactNumber\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.message).to.include('contactNumber is required');",
+              "    pm.expect(jsonData.error.message).to.include('contactNumber is required');",
               "});"
             ],
             "type": "text/javascript"
@@ -200,9 +227,15 @@
               "    pm.response.to.have.status(400);",
               "});",
               "",
+              "pm.test(\"Response has standard error format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success', false);",
+              "    pm.expect(jsonData).to.have.property('error');",
+              "});",
+              "",
               "pm.test(\"Error message indicates missing OTP\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.message).to.include('otp is required');",
+              "    pm.expect(jsonData.error.message).to.include('otp is required');",
               "});"
             ],
             "type": "text/javascript"
@@ -237,9 +270,15 @@
               "    pm.response.to.have.status(401);",
               "});",
               "",
+              "pm.test(\"Response has standard error format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success', false);",
+              "    pm.expect(jsonData).to.have.property('error');",
+              "});",
+              "",
               "pm.test(\"Error message indicates invalid OTP\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.message).to.include('OTP expired or not found');",
+              "    pm.expect(jsonData.error.message).to.include('OTP expired or not found');",
               "});"
             ],
             "type": "text/javascript",
@@ -276,9 +315,15 @@
               "    pm.response.to.have.status(401);",
               "});",
               "",
+              "pm.test(\"Response has standard error format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success', false);",
+              "    pm.expect(jsonData).to.have.property('error');",
+              "});",
+              "",
               "pm.test(\"Error message indicates expired OTP\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.message).to.include('OTP expired');",
+              "    pm.expect(jsonData.error.message).to.include('OTP expired');",
               "});"
             ],
             "type": "text/javascript"
@@ -345,9 +390,15 @@
               "    pm.response.to.have.status(401);",
               "});",
               "",
+              "pm.test(\"Response has standard error format\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success', false);",
+              "    pm.expect(jsonData).to.have.property('error');",
+              "});",
+              "",
               "pm.test(\"Error indicates missing authentication\", function () {",
               "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.message).to.exist;",
+              "    pm.expect(jsonData.error.message).to.exist;",
               "});"
             ],
             "type": "text/javascript"
@@ -369,7 +420,9 @@
       "script": {
         "type": "text/javascript",
         "requests": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     },
     {
@@ -377,7 +430,9 @@
       "script": {
         "type": "text/javascript",
         "requests": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     }
   ],
