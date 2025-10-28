@@ -17,8 +17,7 @@ class MetaPermissionGroup extends Model<
   declare id: CreationOptional<number>;
   declare label: string;
   declare description: CreationOptional<string | null>;
-  declare action: string;
-  declare actionUrl: CreationOptional<string | null>;
+  declare sidebar: string;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -42,15 +41,10 @@ MetaPermissionGroup.init(
       type: DataTypes.STRING(255),
       allowNull: true
     },
-    action: {
+    sidebar: {
       type: DataTypes.STRING(150),
       allowNull: false,
       unique: true
-    },
-    actionUrl: {
-      field: "action_url",
-      type: DataTypes.STRING(500),
-      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,
