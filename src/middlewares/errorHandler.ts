@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { UniqueConstraintError, ValidationError as SequelizeValidationError } from "sequelize";
 
 import logger from "../utils/logger";
 
@@ -26,11 +27,52 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
+  let alreadyLogged = false;
+
+  if (err instanceof UniqueConstraintError) {
+    const messages = Array.from(new Set(err.errors.map((item) => item.message))).filter(Boolean);
+    const details = err.errors.map((item) => ({
+      message: item.message,
+      field: item.path,
+      value: item.value
+    }));
+
+    logger.warn({ err, details }, "Handled unique constraint error");
+
+    err.status = err.status ?? 409;
+    err.code = err.code ?? "CONFLICT";
+    err.message = messages.join("; ") || err.message || "Resource already exists";
+    if (details.length && err.details === undefined) {
+      err.details = details;
+    }
+    alreadyLogged = true;
+  } else if (err instanceof SequelizeValidationError) {
+    const messages = Array.from(new Set(err.errors.map((item) => item.message))).filter(Boolean);
+    const details = err.errors.map((item) => ({
+      message: item.message,
+      field: item.path,
+      value: item.value,
+      validator: item.validatorKey
+    }));
+
+    logger.warn({ err, details }, "Handled validation error");
+
+    err.status = err.status ?? 422;
+    err.code = err.code ?? "VALIDATION_ERROR";
+    err.message = messages.join("; ") || err.message || "Validation failed";
+    if (details.length && err.details === undefined) {
+      err.details = details;
+    }
+    alreadyLogged = true;
+  }
+
   const statusCode = err.status ?? 500;
-  if (statusCode >= 500) {
-    logger.error({ err }, "Unhandled server error");
-  } else {
-    logger.warn({ err }, "Handled application error");
+  if (!alreadyLogged) {
+    if (statusCode >= 500) {
+      logger.error({ err }, "Unhandled server error");
+    } else {
+      logger.warn({ err }, "Handled application error");
+    }
   }
 
   // Map status codes to error codes

@@ -5,12 +5,10 @@ import { ApiError } from "../middlewares/errorHandler";
 import GeoPolitical from "../models/GeoPolitical";
 import MetaBoothNumber from "../models/MetaBoothNumber";
 import MetaMlaConstituency from "../models/MetaMlaConstituency";
-import MetaWardNumber from "../models/MetaWardNumber";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendSuccess,
   sendCreated,
-  sendNotFound,
   parsePaginationParams,
   sendSuccessWithPagination,
   calculatePagination
