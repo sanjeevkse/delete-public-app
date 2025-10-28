@@ -2,11 +2,17 @@ import type { Request, Response } from "express";
 import { Op } from "sequelize";
 
 import { AppEvent, emitEvent } from "../events/eventBus";
+import { PUBLIC_ROLE_NAME } from "../config/rbac";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
-import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
+import {
+  getRoleByName,
+  parseRoleIdsInput,
+  resolveRoleIdsOrDefault,
+  setUserRoles
+} from "../services/rbacService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -59,6 +65,10 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
+  const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
+  if (!publicRole) {
+    throw new ApiError("Default public role is not configured", 500);
+  }
 
   const user = await User.create({
     contactNumber,
@@ -77,7 +87,8 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  const resolvedRoleIds = await resolveRoleIdsOrDefault(parsedRoleIds);
+  const combinedRoleIds = Array.from(new Set([...(parsedRoleIds ?? []), publicRole.id]));
+  const resolvedRoleIds = await resolveRoleIdsOrDefault(combinedRoleIds);
   await setUserRoles(user.id, resolvedRoleIds);
 
   const actorId = (req as AuthenticatedRequest).user?.id;
