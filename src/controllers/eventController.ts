@@ -788,6 +788,8 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
     throw new ApiError("Forbidden", 403);
   }
 
+  const timestamp = new Date();
+
   await sequelize.transaction(async (transaction) => {
     await event.update({ status: 0, updatedBy: userId }, { transaction });
     await EventMedia.update(
@@ -795,8 +797,13 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
       { where: { eventId: event.id }, transaction }
     );
     await EventRegistration.update(
-      { status: 0, updatedBy: userId },
-      { where: { eventId: event.id }, transaction }
+      {
+        status: 0,
+        updatedBy: userId,
+        deregisterReason: "Event cancelled by organizer",
+        deregisteredAt: timestamp
+      },
+      { where: { eventId: event.id, status: 1 }, transaction }
     );
   });
 

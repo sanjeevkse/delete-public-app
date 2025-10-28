@@ -39,6 +39,32 @@ const PERMISSION_GROUP_DEFINITIONS = [
     ]
   },
   {
+    action: "jobs:*",
+    label: "Job Applications",
+    description: "Manage job application submissions",
+    permissions: [
+      { name: "jobs:*", description: "Allow all jobs actions" },
+      { name: "jobs:list", description: "Allow listing job applications" },
+      { name: "jobs:view", description: "Allow viewing a job application" },
+      { name: "jobs:create", description: "Allow creating a job application" },
+      { name: "jobs:update", description: "Allow updating a job application" },
+      { name: "jobs:delete", description: "Allow deleting a job application" }
+    ]
+  },
+  {
+    action: "schemes:*",
+    label: "Scheme Management",
+    description: "Manage government scheme catalog",
+    permissions: [
+      { name: "schemes:*", description: "Allow all schemes actions" },
+      { name: "schemes:list", description: "Allow listing schemes" },
+      { name: "schemes:view", description: "Allow viewing a scheme" },
+      { name: "schemes:create", description: "Allow creating a scheme" },
+      { name: "schemes:update", description: "Allow updating a scheme" },
+      { name: "schemes:delete", description: "Allow deleting a scheme" }
+    ]
+  },
+  {
     action: "users:*",
     label: "User Administration",
     description: "Manage member accounts",

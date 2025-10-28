@@ -5,10 +5,12 @@ import EventRegistration from "./EventRegistration";
 import MetaPermission from "./MetaPermission";
 import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaUserRole from "./MetaUserRole";
+import Job from "./Job";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
 import PostReaction from "./PostReaction";
 import RolePermission from "./RolePermission";
+import Scheme from "./Scheme";
 import User from "./User";
 import UserOtp from "./UserOtp";
 import UserProfile from "./UserProfile";
@@ -61,6 +63,9 @@ const establishAssociations = (): void => {
   PostReaction.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(PostReaction, { foreignKey: "userId", as: "postReactions" });
 
+  Job.belongsTo(User, { foreignKey: "applicantUserId", as: "applicant" });
+  User.hasMany(Job, { foreignKey: "applicantUserId", as: "jobApplications" });
+
   User.hasOne(UserProfile, { foreignKey: "userId", as: "profile" });
   UserProfile.belongsTo(User, { foreignKey: "userId", as: "user" });
 
@@ -90,6 +95,7 @@ export {
   Event,
   EventMedia,
   EventRegistration,
+  Job,
   MetaPermission,
   MetaPermissionGroup,
   MetaUserRole,
@@ -97,6 +103,7 @@ export {
   PostMedia,
   PostReaction,
   RolePermission,
+  Scheme,
   User,
   UserOtp,
   UserProfile,

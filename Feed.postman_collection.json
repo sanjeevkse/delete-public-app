@@ -1207,6 +1207,604 @@
       ]
     },
     {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "List Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs?status=1&submittedFor=self&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Optional: filter by status (0 inactive, 1 active, omit or all for both)."
+                },
+                {
+                  "key": "submittedFor",
+                  "value": "self",
+                  "description": "Optional: filter by submission type (self or others)."
+                },
+                {
+                  "key": "sort",
+                  "value": "DESC",
+                  "description": "Optional: sort direction for created date (`ASC` or `DESC`, default `DESC`)."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional: page number (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional: page size up to 100 (defaults to 20)."
+                }
+              ]
+            },
+            "description": "Lists job applications with pagination, optional status/submission filters, and customizable sort order. Responses include applicant profile details when available."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  if (first && first.id) {",
+                  "    pm.collectionVariables.set(\"jobId\", first.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Job",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "{{jobId}}"]
+            },
+            "description": "Retrieves a single active job application with applicant details if available."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Job id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "submittedFor",
+                  "value": "others",
+                  "type": "text"
+                },
+                {
+                  "key": "fullName",
+                  "value": "Jane Applicant",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "applicant@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "+15551234567",
+                  "type": "text"
+                },
+                {
+                  "key": "alternativeContactNumber",
+                  "value": "+15559876543",
+                  "type": "text"
+                },
+                {
+                  "key": "fullAddress",
+                  "value": "123 Demo Street, Springfield",
+                  "type": "text"
+                },
+                {
+                  "key": "education",
+                  "value": "B.A. in Social Work",
+                  "type": "text"
+                },
+                {
+                  "key": "workExperience",
+                  "value": "3 years volunteering with local NGOs",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Looking for community outreach opportunities.",
+                  "type": "text"
+                },
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": "/path/to/local/resume.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs"]
+            },
+            "description": "Creates a new job application. When applying for others, include contact and address details plus the resume file (PDF, DOC, DOCX up to 25 MB)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Job id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});",
+                  "if (jsonData && jsonData.id) {",
+                  "  pm.collectionVariables.set(\"jobId\", jsonData.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "submittedFor",
+                  "value": "others",
+                  "type": "text"
+                },
+                {
+                  "key": "fullName",
+                  "value": "Updated Applicant",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "updated.applicant@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "+15557654321",
+                  "type": "text"
+                },
+                {
+                  "key": "fullAddress",
+                  "value": "456 Example Avenue, Springfield",
+                  "type": "text"
+                },
+                {
+                  "key": "education",
+                  "value": "Masters in Community Development",
+                  "type": "text"
+                },
+                {
+                  "key": "workExperience",
+                  "value": "5 years coordinating social programs",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Updated motivation for the application.",
+                  "type": "text"
+                },
+                {
+                  "key": "resume",
+                  "type": "file",
+                  "src": "/path/to/local/updated-resume.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "{{jobId}}"]
+            },
+            "description": "Updates an existing job application. Submit the same required fields; include a resume file to replace the previous upload."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Job id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "{{jobId}}"]
+            },
+            "description": "Soft deletes a job application by setting status to 0."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Schemes",
+      "item": [
+        {
+          "name": "List Schemes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/schemes?status=1&search=grant&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schemes"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Optional: filter by status (0 inactive, 1 active, omit or all for both)."
+                },
+                {
+                  "key": "search",
+                  "value": "grant",
+                  "description": "Optional: fuzzy search across scheme name and description."
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "Optional: sort field (createdAt, updatedAt, schemeName, status)."
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "DESC",
+                  "description": "Optional: sort direction (`ASC` or `DESC`, default `DESC`)."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional: page number (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional: page size up to 100 (defaults to 20)."
+                }
+              ]
+            },
+            "description": "Lists scheme records with pagination, search, and sort controls."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  if (first && first.id) {",
+                  "    pm.collectionVariables.set(\"schemeId\", first.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Scheme",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schemes", "{{schemeId}}"]
+            },
+            "description": "Retrieves a single active scheme."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Scheme id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Scheme",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schemeName\": \"Skill Development Grant\",\n  \"description\": \"Financial support for vocational training participants.\",\n  \"status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schemes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schemes"]
+            },
+            "description": "Creates a new scheme record."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "if (jsonData && jsonData.id) {",
+                  "  pm.collectionVariables.set(\"schemeId\", jsonData.id);",
+                  "}",
+                  "pm.test(\"Scheme id stored\", function () {",
+                  "  pm.expect(pm.collectionVariables.get(\"schemeId\")).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Scheme",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schemeName\": \"Skill Development Grant - Updated\",\n  \"description\": \"Revised guidelines for the vocational training support scheme.\",\n  \"status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schemes", "{{schemeId}}"]
+            },
+            "description": "Updates a scheme's name, description, or status."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Scheme id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Scheme",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schemes", "{{schemeId}}"]
+            },
+            "description": "Soft deletes the scheme by toggling status to 0."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Admin / Users",
       "item": [
         {

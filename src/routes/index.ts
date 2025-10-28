@@ -2,8 +2,10 @@ import { Router } from "express";
 
 import adminRoutes from "./adminRoutes";
 import authRoutes from "./authRoutes";
-import postRoutes from "./postRoutes";
 import eventRoutes from "./eventRoutes";
+import jobRoutes from "./jobRoutes";
+import postRoutes from "./postRoutes";
+import schemeRoutes from "./schemeRoutes";
 
 const router = Router();
 
@@ -15,6 +17,8 @@ router.get("/health", (_req, res) => {
 
 router.use("/", postRoutes);
 router.use("/", eventRoutes);
+router.use("/", jobRoutes);
+router.use("/", schemeRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;
