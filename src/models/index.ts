@@ -1,9 +1,16 @@
 import AuditLog from "./AuditLog";
+import Business from "./Business";
+import Community from "./Community";
 import Event from "./Event";
 import EventMedia from "./EventMedia";
 import EventRegistration from "./EventRegistration";
+import FamilyMember from "./FamilyMember";
+import Member from "./Member";
+import MetaBusinessType from "./MetaBusinessType";
+import MetaCommunityType from "./MetaCommunityType";
 import MetaPermission from "./MetaPermission";
 import MetaPermissionGroup from "./MetaPermissionGroup";
+import MetaRelationType from "./MetaRelationType";
 import MetaUserRole from "./MetaUserRole";
 import Job from "./Job";
 import Post from "./Post";
@@ -20,6 +27,17 @@ import UserToken from "./UserToken";
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(AuditLog, { foreignKey: "userId", as: "auditLogs" });
+
+  Business.belongsTo(MetaBusinessType, { foreignKey: "businessTypeId", as: "businessType" });
+  MetaBusinessType.hasMany(Business, { foreignKey: "businessTypeId", as: "businesses" });
+
+  Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
+  MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });
+
+  FamilyMember.belongsTo(User, { foreignKey: "userId", as: "user" });
+  User.hasMany(FamilyMember, { foreignKey: "userId", as: "familyMembers" });
+  FamilyMember.belongsTo(MetaRelationType, { foreignKey: "relationTypeId", as: "relationType" });
+  MetaRelationType.hasMany(FamilyMember, { foreignKey: "relationTypeId", as: "familyMembers" });
 
   Event.hasMany(EventMedia, { foreignKey: "eventId", as: "media" });
   EventMedia.belongsTo(Event, { foreignKey: "eventId", as: "event" });
@@ -92,12 +110,19 @@ establishAssociations();
 
 export {
   AuditLog,
+  Business,
+  Community,
   Event,
   EventMedia,
   EventRegistration,
   Job,
+  FamilyMember,
+  Member,
+  MetaBusinessType,
+  MetaCommunityType,
   MetaPermission,
   MetaPermissionGroup,
+  MetaRelationType,
   MetaUserRole,
   Post,
   PostMedia,

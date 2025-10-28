@@ -8,13 +8,20 @@ import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
 import UserRole from "../models/UserRole";
 import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
+import {
+  sendSuccess,
+  sendCreated,
+  sendNoContent,
+  sendNotFound,
+  sendBadRequest
+} from "../utils/apiResponse";
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
   const roles = await MetaUserRole.findAll({
     include: [{ model: MetaPermission, as: "permissions" }]
   });
 
-  res.json(roles);
+  return sendSuccess(res, roles, "Roles retrieved successfully");
 });
 
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
@@ -41,14 +48,14 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     include: [{ model: MetaPermission, as: "permissions" }]
   });
 
-  res.status(201).json(created);
+  return sendCreated(res, created, "Role created successfully");
 });
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   const { permissions, ...rolePayload } = req.body;
   const role = await MetaUserRole.findByPk(req.params.id);
   if (!role) {
-    throw new ApiError("Role not found", 404);
+    return sendNotFound(res, "Role not found", "role");
   }
 
   await role.update(rolePayload);
@@ -68,24 +75,24 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
     include: [{ model: MetaPermission, as: "permissions" }]
   });
 
-  res.json(updated);
+  return sendSuccess(res, updated, "Role updated successfully");
 });
 
 export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
   const role = await MetaUserRole.findByPk(req.params.id);
   if (!role) {
-    throw new ApiError("Role not found", 404);
+    return sendNotFound(res, "Role not found", "role");
   }
 
   await role.update({ status: 0 });
 
-  res.status(204).send();
+  return sendNoContent(res);
 });
 
 export const assignRoleToUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findByPk(req.params.userId);
   if (!user) {
-    throw new ApiError("User not found", 404);
+    return sendNotFound(res, "User not found", "user");
   }
 
   const { roleIds, roleId } = req.body;
@@ -104,33 +111,33 @@ export const assignRoleToUser = asyncHandler(async (req: Request, res: Response)
     ]
   });
 
-  res.status(200).json(updatedUser);
+  return sendSuccess(res, updatedUser, "Role assigned to user successfully");
 });
 
 export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Response) => {
   const roleId = Number.parseInt(req.params.roleId, 10);
   if (!Number.isInteger(roleId) || roleId <= 0) {
-    throw new ApiError("Invalid role id", 400);
+    return sendBadRequest(res, "Invalid role id");
   }
 
   const userId = Number.parseInt(req.params.userId, 10);
   if (!Number.isInteger(userId) || userId <= 0) {
-    throw new ApiError("Invalid user id", 400);
+    return sendBadRequest(res, "Invalid user id");
   }
 
   const [role, user] = await Promise.all([MetaUserRole.findByPk(roleId), User.findByPk(userId)]);
 
   if (!role) {
-    throw new ApiError("Role not found", 404);
+    return sendNotFound(res, "Role not found", "role");
   }
 
   if (!user) {
-    throw new ApiError("User not found", 404);
+    return sendNotFound(res, "User not found", "user");
   }
 
   const existingAssignment = await UserRole.findOne({ where: { userId, roleId } });
   if (!existingAssignment) {
-    throw new ApiError("Role is not assigned to the user", 404);
+    return sendNotFound(res, "Role is not assigned to the user");
   }
 
   await existingAssignment.destroy();
@@ -153,5 +160,5 @@ export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Respo
     ]
   });
 
-  res.status(200).json(updatedUser);
+  return sendSuccess(res, updatedUser, "Role unassigned from user successfully");
 });

@@ -6,6 +6,12 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import Scheme from "../models/Scheme";
 import asyncHandler from "../utils/asyncHandler";
+import {
+  sendCreated,
+  sendNoContent,
+  sendSuccess,
+  sendSuccessWithPagination
+} from "../utils/apiResponse";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -190,15 +196,19 @@ export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: R
     order: [[sortBy, direction]]
   });
 
-  res.json({
-    data: rows.map(serializeScheme),
-    pagination: {
+  const totalPages = limit > 0 ? Math.ceil(count / limit) : 0;
+
+  return sendSuccessWithPagination(
+    res,
+    rows.map(serializeScheme),
+    {
       page,
       limit,
       total: count,
-      hasMore: offset + rows.length < count
-    }
-  });
+      totalPages
+    },
+    "Schemes retrieved successfully"
+  );
 });
 
 export const getScheme = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -217,7 +227,7 @@ export const getScheme = asyncHandler(async (req: AuthenticatedRequest, res: Res
     throw new ApiError("Scheme not found", 404);
   }
 
-  res.json(serializeScheme(scheme));
+  return sendSuccess(res, serializeScheme(scheme), "Scheme details retrieved successfully");
 });
 
 export const createScheme = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -238,7 +248,7 @@ export const createScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
     updatedBy: userId
   });
 
-  res.status(201).json(serializeScheme(created));
+  return sendCreated(res, serializeScheme(created), "Scheme created successfully");
 });
 
 export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -281,7 +291,7 @@ export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   await scheme.update(updates);
 
-  res.json(serializeScheme(scheme));
+  return sendSuccess(res, serializeScheme(scheme), "Scheme updated successfully");
 });
 
 export const deleteScheme = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -305,5 +315,5 @@ export const deleteScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
     updatedBy: userId
   });
 
-  res.status(204).send();
+  return sendNoContent(res);
 });

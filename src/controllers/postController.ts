@@ -14,6 +14,17 @@ import PostMedia from "../models/PostMedia";
 import PostReaction from "../models/PostReaction";
 import { MediaType, PostReactionType } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
+import {
+  sendSuccess,
+  sendCreated,
+  sendNoContent,
+  sendNotFound,
+  sendBadRequest,
+  sendForbidden,
+  sendSuccessWithPagination,
+  parsePaginationParams,
+  calculatePagination
+} from "../utils/apiResponse";
 
 type NormalizedPostMediaInput = {
   mediaType: MediaType;
@@ -379,22 +390,22 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const createdPost = await fetchPostById(createdPostId);
 
-  res.status(201).json(createdPost);
+  return sendCreated(res, createdPost, "Post created successfully");
 });
 
 export const getPost = asyncHandler(async (req: Request, res: Response) => {
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
-    throw new ApiError("Invalid post id", 400);
+    return sendBadRequest(res, "Invalid post id");
   }
 
   const post = await fetchPostById(id);
 
   if (!post) {
-    throw new ApiError("Post not found", 404);
+    return sendNotFound(res, "Post not found", "post");
   }
 
-  res.json(post);
+  return sendSuccess(res, post, "Post retrieved successfully");
 });
 
 export const listPosts = asyncHandler(async (req: Request, res: Response) => {
@@ -435,10 +446,9 @@ export const listPosts = asyncHandler(async (req: Request, res: Response) => {
     distinct: true
   });
 
-  res.json({
-    data: rows,
-    meta: computePaginationMeta(count, page, limit)
-  });
+  const pagination = calculatePagination(count, page, limit);
+
+  return sendSuccessWithPagination(res, rows, pagination, "Posts retrieved successfully");
 });
 
 export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -459,10 +469,9 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
     distinct: true
   });
 
-  res.json({
-    data: rows,
-    meta: computePaginationMeta(count, page, limit)
-  });
+  const pagination = calculatePagination(count, page, limit);
+
+  return sendSuccessWithPagination(res, rows, pagination, "Your posts retrieved successfully");
 });
 
 export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -470,16 +479,16 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
-    throw new ApiError("Invalid post id", 400);
+    return sendBadRequest(res, "Invalid post id");
   }
 
   const post = await Post.findOne({ where: { id, status: 1 } });
   if (!post) {
-    throw new ApiError("Post not found", 404);
+    return sendNotFound(res, "Post not found", "post");
   }
 
   if (post.userId !== userId && !isAdmin(roles)) {
-    throw new ApiError("Forbidden", 403);
+    return sendForbidden(res, "You don't have permission to update this post");
   }
 
   const updates: Record<string, unknown> = {};
@@ -507,7 +516,7 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   });
 
   const updated = await fetchPostById(post.id);
-  res.json(updated);
+  return sendSuccess(res, updated, "Post updated successfully");
 });
 
 export const deletePost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -515,16 +524,16 @@ export const deletePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
-    throw new ApiError("Invalid post id", 400);
+    return sendBadRequest(res, "Invalid post id");
   }
 
   const post = await Post.findOne({ where: { id, status: 1 } });
   if (!post) {
-    throw new ApiError("Post not found", 404);
+    return sendNotFound(res, "Post not found", "post");
   }
 
   if (post.userId !== userId && !isAdmin(roles)) {
-    throw new ApiError("Forbidden", 403);
+    return sendForbidden(res, "You don't have permission to delete this post");
   }
 
   await sequelize.transaction(async (transaction) => {
@@ -539,7 +548,7 @@ export const deletePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
     );
   });
 
-  res.status(204).send();
+  return sendNoContent(res);
 });
 
 export const addPostMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -613,7 +622,7 @@ export const addPostMedia = asyncHandler(async (req: AuthenticatedRequest, res: 
   });
 
   const updated = await fetchPostById(post.id);
-  res.status(201).json(updated);
+  return sendCreated(res, updated, "Media added to post successfully");
 });
 
 export const removePostMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -661,7 +670,7 @@ export const removePostMedia = asyncHandler(async (req: AuthenticatedRequest, re
   });
 
   const updated = await fetchPostById(post.id);
-  res.json(updated);
+  return sendSuccess(res, updated, "Media removed from post successfully");
 });
 
 export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -669,12 +678,12 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
-    throw new ApiError("Invalid post id", 400);
+    return sendBadRequest(res, "Invalid post id");
   }
 
   const reactionInput = req.body?.reaction;
   if (typeof reactionInput !== "string") {
-    throw new ApiError("reaction is required", 400);
+    return sendBadRequest(res, "reaction is required");
   }
 
   const normalizedReaction = reactionInput.toUpperCase();
@@ -685,7 +694,7 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
     normalizedReaction !== PostReactionType.LIKE &&
     normalizedReaction !== PostReactionType.DISLIKE
   ) {
-    throw new ApiError("reaction must be LIKE, DISLIKE, or NO_REACTION", 400);
+    return sendBadRequest(res, "reaction must be LIKE, DISLIKE, or NO_REACTION");
   }
 
   await sequelize.transaction(async (transaction: Transaction) => {
@@ -757,9 +766,12 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   const counts = await getReactionCounts(id);
 
-  res.json({
-    message: isNoReaction ? "Reaction removed" : "Reaction recorded",
-    reaction: isNoReaction ? null : normalizedReaction,
-    counts
-  });
+  return sendSuccess(
+    res,
+    {
+      reaction: isNoReaction ? null : normalizedReaction,
+      counts
+    },
+    isNoReaction ? "Reaction removed" : "Reaction recorded"
+  );
 });

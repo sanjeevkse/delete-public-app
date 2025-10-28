@@ -9,11 +9,23 @@ import UserProfile from "../models/UserProfile";
 import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
+import {
+  sendSuccess,
+  sendCreated,
+  sendNoContent,
+  sendNotFound,
+  sendSuccessWithPagination,
+  parsePaginationParams,
+  calculatePagination
+} from "../utils/apiResponse";
 
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
-  const page = Number.parseInt((req.query.page as string) ?? "1", 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? "25", 10);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string,
+    req.query.limit as string,
+    25,
+    100
+  );
   const search = (req.query.search as string) ?? "";
 
   const { rows, count } = await User.findAndCountAll({
@@ -35,14 +47,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     order: [["createdAt", "DESC"]]
   });
 
-  res.json({
-    data: rows,
-    meta: {
-      total: count,
-      page,
-      pages: Math.ceil(count / limit)
-    }
-  });
+  const pagination = calculatePagination(count, page, limit);
+
+  return sendSuccessWithPagination(res, rows, pagination, "Users retrieved successfully");
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
@@ -83,7 +90,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
-  res.status(201).json(created);
+  return sendCreated(res, created, "User created successfully");
 });
 
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
@@ -95,10 +102,10 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   });
 
   if (!user) {
-    throw new ApiError("User not found", 404);
+    return sendNotFound(res, "User not found", "user");
   }
 
-  res.json(user);
+  return sendSuccess(res, user, "User retrieved successfully");
 });
 
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
@@ -144,17 +151,17 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
-  res.json(updated);
+  return sendSuccess(res, updated, "User updated successfully");
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findByPk(req.params.id);
 
   if (!user) {
-    throw new ApiError("User not found", 404);
+    return sendNotFound(res, "User not found", "user");
   }
 
   await user.update({ status: 0 });
 
-  res.status(204).send();
+  return sendNoContent(res);
 });

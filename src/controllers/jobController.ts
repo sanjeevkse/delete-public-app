@@ -8,6 +8,12 @@ import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import Job, { JOB_SUBMISSION_FOR, type JobSubmissionFor } from "../models/Job";
 import User from "../models/User";
 import asyncHandler from "../utils/asyncHandler";
+import {
+  sendCreated,
+  sendNoContent,
+  sendSuccess,
+  sendSuccessWithPagination
+} from "../utils/apiResponse";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -493,15 +499,19 @@ export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Resp
     order: [["createdAt", sortDirection]]
   });
 
-  res.json({
-    data: rows.map(serializeJob),
-    pagination: {
+  const totalPages = limit > 0 ? Math.ceil(count / limit) : 0;
+
+  return sendSuccessWithPagination(
+    res,
+    rows.map(serializeJob),
+    {
       page,
       limit,
       total: count,
-      hasMore: offset + rows.length < count
-    }
-  });
+      totalPages
+    },
+    "Jobs retrieved successfully"
+  );
 });
 
 export const getJob = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -521,7 +531,7 @@ export const getJob = asyncHandler(async (req: AuthenticatedRequest, res: Respon
     throw new ApiError("Job not found", 404);
   }
 
-  res.json(serializeJob(job));
+  return sendSuccess(res, serializeJob(job), "Job details retrieved successfully");
 });
 
 export const createJob = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -551,7 +561,7 @@ export const createJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
     include: buildJobInclude()
   });
 
-  res.status(201).json(serializeJob(jobWithRelations ?? createdJob));
+  return sendCreated(res, serializeJob(jobWithRelations ?? createdJob), "Job created successfully");
 });
 
 export const updateJob = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -593,7 +603,7 @@ export const updateJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
   await job.reload({ include: buildJobInclude() });
 
-  res.json(serializeJob(job));
+  return sendSuccess(res, serializeJob(job), "Job updated successfully");
 });
 
 export const deleteJob = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -614,5 +624,5 @@ export const deleteJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
     updatedBy: userId
   });
 
-  res.status(204).send();
+  return sendNoContent(res);
 });

@@ -6,6 +6,13 @@ import eventRoutes from "./eventRoutes";
 import jobRoutes from "./jobRoutes";
 import postRoutes from "./postRoutes";
 import schemeRoutes from "./schemeRoutes";
+import memberRoutes from "./memberRoutes";
+import communityTypeRoutes from "./communityTypeRoutes";
+import communityRoutes from "./communityRoutes";
+import relationTypeRoutes from "./relationTypeRoutes";
+import familyMemberRoutes from "./familyMemberRoutes";
+import businessTypeRoutes from "./businessTypeRoutes";
+import businessRoutes from "./businessRoutes";
 
 const router = Router();
 
@@ -19,6 +26,13 @@ router.use("/", postRoutes);
 router.use("/", eventRoutes);
 router.use("/", jobRoutes);
 router.use("/", schemeRoutes);
+router.use("/", memberRoutes);
+router.use("/", communityTypeRoutes);
+router.use("/", communityRoutes);
+router.use("/", relationTypeRoutes);
+router.use("/", familyMemberRoutes);
+router.use("/", businessTypeRoutes);
+router.use("/", businessRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;
