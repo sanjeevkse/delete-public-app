@@ -4,7 +4,6 @@ import sequelize from "../config/database";
 interface MetaWardNumberAttributes {
   id: number;
   dispName: string;
-  description?: string;
   status: number;
   createdBy?: number;
   updatedBy?: number;
@@ -13,7 +12,7 @@ interface MetaWardNumberAttributes {
 }
 
 interface MetaWardNumberCreationAttributes
-  extends Optional<MetaWardNumberAttributes, "id" | "description" | "createdBy" | "updatedBy"> {}
+  extends Optional<MetaWardNumberAttributes, "id" | "createdBy" | "updatedBy"> {}
 
 class MetaWardNumber
   extends Model<MetaWardNumberAttributes, MetaWardNumberCreationAttributes>
@@ -21,7 +20,6 @@ class MetaWardNumber
 {
   public id!: number;
   public dispName!: string;
-  public description?: string;
   public status!: number;
   public createdBy?: number;
   public updatedBy?: number;
@@ -41,10 +39,6 @@ MetaWardNumber.init(
       allowNull: false,
       unique: true,
       field: "disp_name"
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

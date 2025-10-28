@@ -15,7 +15,7 @@ import {
 
 export const createWardNumber = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { dispName, description } = req.body;
+    const { dispName } = req.body;
 
     if (!dispName) {
       throw new ApiError("dispName is required", 400);
@@ -28,7 +28,6 @@ export const createWardNumber = asyncHandler(
 
     const wardNumber = await MetaWardNumber.create({
       dispName,
-      description,
       status: 1,
       createdBy: req.user?.id,
       updatedBy: req.user?.id
@@ -50,7 +49,6 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
   if (search && typeof search === "string") {
     whereClause[Op.or] = [
       { dispName: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } }
     ];
   }
 
@@ -87,7 +85,7 @@ export const getWardNumberById = asyncHandler(async (req: AuthenticatedRequest, 
 export const updateWardNumber = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { dispName, description } = req.body;
+    const { dispName } = req.body;
 
     const wardNumber = await MetaWardNumber.findByPk(id);
 
@@ -104,7 +102,6 @@ export const updateWardNumber = asyncHandler(
 
     await wardNumber.update({
       dispName: dispName || wardNumber.dispName,
-      description: description !== undefined ? description : wardNumber.description,
       updatedBy: req.user?.id
     });
 

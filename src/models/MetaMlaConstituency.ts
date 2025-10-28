@@ -4,7 +4,6 @@ import sequelize from "../config/database";
 interface MetaMlaConstituencyAttributes {
   id: number;
   dispName: string;
-  description?: string;
   status: number;
   createdBy?: number;
   updatedBy?: number;
@@ -13,7 +12,7 @@ interface MetaMlaConstituencyAttributes {
 }
 
 interface MetaMlaConstituencyCreationAttributes
-  extends Optional<MetaMlaConstituencyAttributes, "id" | "description" | "createdBy" | "updatedBy"> {}
+  extends Optional<MetaMlaConstituencyAttributes, "id" | "createdBy" | "updatedBy"> {}
 
 class MetaMlaConstituency
   extends Model<MetaMlaConstituencyAttributes, MetaMlaConstituencyCreationAttributes>
@@ -21,7 +20,6 @@ class MetaMlaConstituency
 {
   public id!: number;
   public dispName!: string;
-  public description?: string;
   public status!: number;
   public createdBy?: number;
   public updatedBy?: number;
@@ -41,10 +39,6 @@ MetaMlaConstituency.init(
       allowNull: false,
       unique: true,
       field: "disp_name"
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

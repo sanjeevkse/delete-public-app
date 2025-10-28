@@ -16,7 +16,7 @@ import {
 
 export const createBoothNumber = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { mlaConstituencyId, dispName, description } = req.body;
+    const { mlaConstituencyId, dispName } = req.body;
 
     if (!mlaConstituencyId) {
       throw new ApiError("mlaConstituencyId is required", 400);
@@ -35,7 +35,6 @@ export const createBoothNumber = asyncHandler(
     const boothNumber = await MetaBoothNumber.create({
       mlaConstituencyId,
       dispName,
-      description,
       status: 1,
       createdBy: req.user?.id,
       updatedBy: req.user?.id
@@ -57,7 +56,6 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
   if (search && typeof search === "string") {
     whereClause[Op.or] = [
       { dispName: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } }
     ];
   }
 
@@ -115,7 +113,7 @@ export const getBoothNumberById = asyncHandler(
 export const updateBoothNumber = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { mlaConstituencyId, dispName, description } = req.body;
+    const { mlaConstituencyId, dispName } = req.body;
 
     const boothNumber = await MetaBoothNumber.findByPk(id);
 
@@ -134,7 +132,6 @@ export const updateBoothNumber = asyncHandler(
     await boothNumber.update({
       mlaConstituencyId: mlaConstituencyId || boothNumber.mlaConstituencyId,
       dispName: dispName || boothNumber.dispName,
-      description: description !== undefined ? description : boothNumber.description,
       updatedBy: req.user?.id
     });
 

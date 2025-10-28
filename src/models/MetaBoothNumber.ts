@@ -5,7 +5,6 @@ interface MetaBoothNumberAttributes {
   id: number;
   mlaConstituencyId: number;
   dispName: string;
-  description?: string;
   status: number;
   createdBy?: number;
   updatedBy?: number;
@@ -14,7 +13,7 @@ interface MetaBoothNumberAttributes {
 }
 
 interface MetaBoothNumberCreationAttributes
-  extends Optional<MetaBoothNumberAttributes, "id" | "description" | "createdBy" | "updatedBy"> {}
+  extends Optional<MetaBoothNumberAttributes, "id" | "createdBy" | "updatedBy"> {}
 
 class MetaBoothNumber
   extends Model<MetaBoothNumberAttributes, MetaBoothNumberCreationAttributes>
@@ -23,7 +22,6 @@ class MetaBoothNumber
   public id!: number;
   public mlaConstituencyId!: number;
   public dispName!: string;
-  public description?: string;
   public status!: number;
   public createdBy?: number;
   public updatedBy?: number;
@@ -51,10 +49,6 @@ MetaBoothNumber.init(
       type: DataTypes.STRING(100),
       allowNull: false,
       field: "disp_name"
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

@@ -15,7 +15,7 @@ import {
 
 export const createMlaConstituency = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { dispName, description } = req.body;
+    const { dispName } = req.body;
 
     if (!dispName) {
       throw new ApiError("dispName is required", 400);
@@ -28,7 +28,6 @@ export const createMlaConstituency = asyncHandler(
 
     const mlaConstituency = await MetaMlaConstituency.create({
       dispName,
-      description,
       status: 1,
       createdBy: req.user?.id,
       updatedBy: req.user?.id
@@ -51,7 +50,6 @@ export const listMlaConstituencies = asyncHandler(
     if (search && typeof search === "string") {
       whereClause[Op.or] = [
         { dispName: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } }
       ];
     }
 
@@ -96,7 +94,7 @@ export const getMlaConstituencyById = asyncHandler(
 export const updateMlaConstituency = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { dispName, description } = req.body;
+    const { dispName } = req.body;
 
     const mlaConstituency = await MetaMlaConstituency.findByPk(id);
 
@@ -113,7 +111,6 @@ export const updateMlaConstituency = asyncHandler(
 
     await mlaConstituency.update({
       dispName: dispName || mlaConstituency.dispName,
-      description: description !== undefined ? description : mlaConstituency.description,
       updatedBy: req.user?.id
     });
 
