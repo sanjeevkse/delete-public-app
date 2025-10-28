@@ -2,8 +2,10 @@ import type { Response } from "express";
 import { Op } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
+import GeoPolitical from "../models/GeoPolitical";
 import MetaBoothNumber from "../models/MetaBoothNumber";
 import MetaMlaConstituency from "../models/MetaMlaConstituency";
+import MetaWardNumber from "../models/MetaWardNumber";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendSuccess,
@@ -49,7 +51,7 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     req.query.page as string,
     req.query.limit as string
   );
-  const { search, status, mlaConstituencyId } = req.query;
+  const { search, status, mlaConstituencyId, wardNumberId } = req.query;
 
   const whereClause: any = {};
 
@@ -65,6 +67,24 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
 
   if (mlaConstituencyId) {
     whereClause.mlaConstituencyId = mlaConstituencyId;
+  }
+
+  // If filtering by ward number, find booth numbers through GeoPolitical table
+  if (wardNumberId) {
+    const geoPoliticals = await GeoPolitical.findAll({
+      where: { wardNumberId: Number(wardNumberId) },
+      attributes: ["boothNumberId"]
+    });
+    
+    const boothNumberIds = [...new Set(geoPoliticals.map(gp => gp.boothNumberId))];
+    
+    if (boothNumberIds.length > 0) {
+      whereClause.id = { [Op.in]: boothNumberIds };
+    } else {
+      // No booths found for this ward, return empty result
+      const pagination = calculatePagination(0, page, limit);
+      return sendSuccessWithPagination(res, [], pagination, "Booth numbers retrieved successfully");
+    }
   }
 
   const offset = (page - 1) * limit;

@@ -4478,7 +4478,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/booth-numbers?page=1&limit=10&search=&status=1&mlaConstituencyId=",
+              "raw": "{{baseUrl}}/api/booth-numbers?page=1&limit=10&search=&status=1&mlaConstituencyId=&wardNumberId=",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -4506,10 +4506,14 @@
                 {
                   "key": "mlaConstituencyId",
                   "value": ""
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": ""
                 }
               ]
             },
-            "description": "Get all booth numbers"
+            "description": "Get all booth numbers. Filter by mlaConstituencyId or wardNumberId"
           },
           "response": []
         },

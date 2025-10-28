@@ -5,6 +5,7 @@ import Event from "./Event";
 import EventMedia from "./EventMedia";
 import EventRegistration from "./EventRegistration";
 import FamilyMember from "./FamilyMember";
+import GeoPolitical from "./GeoPolitical";
 import Member from "./Member";
 import MetaBusinessType from "./MetaBusinessType";
 import MetaBoothNumber from "./MetaBoothNumber";
@@ -42,6 +43,13 @@ const establishAssociations = (): void => {
     foreignKey: "mlaConstituencyId",
     as: "boothNumbers"
   });
+
+  GeoPolitical.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
+  MetaBoothNumber.hasMany(GeoPolitical, { foreignKey: "boothNumberId", as: "geoPoliticals" });
+  GeoPolitical.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
+  MetaWardNumber.hasMany(GeoPolitical, { foreignKey: "wardNumberId", as: "geoPoliticals" });
+  GeoPolitical.belongsTo(MetaMlaConstituency, { foreignKey: "mlaConstituencyId", as: "mlaConstituency" });
+  MetaMlaConstituency.hasMany(GeoPolitical, { foreignKey: "mlaConstituencyId", as: "geoPoliticals" });
 
   Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
   MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });
@@ -129,6 +137,7 @@ export {
   EventRegistration,
   Job,
   FamilyMember,
+  GeoPolitical,
   Member,
   MetaBoothNumber,
   MetaBusinessType,
