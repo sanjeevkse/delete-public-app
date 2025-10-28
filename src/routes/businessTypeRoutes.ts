@@ -17,7 +17,7 @@ const router = Router();
  * @desc    Create a new business type
  * @access  Protected
  */
-router.post("/business-types", authenticate, createBusinessType);
+router.post("/business-types", authenticate(), createBusinessType);
 
 /**
  * @route   GET /api/business-types
@@ -39,20 +39,20 @@ router.get("/business-types/:id", getBusinessType);
  * @desc    Update a business type
  * @access  Protected
  */
-router.put("/business-types/:id", authenticate, updateBusinessType);
+router.put("/business-types/:id", authenticate(), updateBusinessType);
 
 /**
  * @route   PATCH /api/business-types/:id/status
  * @desc    Toggle business type status (activate/deactivate)
  * @access  Protected
  */
-router.patch("/business-types/:id/status", authenticate, toggleBusinessTypeStatus);
+router.patch("/business-types/:id/status", authenticate(), toggleBusinessTypeStatus);
 
 /**
  * @route   DELETE /api/business-types/:id
  * @desc    Delete a business type
  * @access  Protected
  */
-router.delete("/business-types/:id", authenticate, deleteBusinessType);
+router.delete("/business-types/:id", authenticate(), deleteBusinessType);
 
 export default router;

@@ -17,7 +17,7 @@ const router = Router();
  * @desc    Create a new relation type
  * @access  Protected
  */
-router.post("/relation-types", authenticate, createRelationType);
+router.post("/relation-types", authenticate(), createRelationType);
 
 /**
  * @route   GET /api/relation-types
@@ -39,20 +39,20 @@ router.get("/relation-types/:id", getRelationType);
  * @desc    Update a relation type
  * @access  Protected
  */
-router.put("/relation-types/:id", authenticate, updateRelationType);
+router.put("/relation-types/:id", authenticate(), updateRelationType);
 
 /**
  * @route   PATCH /api/relation-types/:id/status
  * @desc    Toggle relation type status (activate/deactivate)
  * @access  Protected
  */
-router.patch("/relation-types/:id/status", authenticate, toggleRelationTypeStatus);
+router.patch("/relation-types/:id/status", authenticate(), toggleRelationTypeStatus);
 
 /**
  * @route   DELETE /api/relation-types/:id
  * @desc    Delete a relation type
  * @access  Protected
  */
-router.delete("/relation-types/:id", authenticate, deleteRelationType);
+router.delete("/relation-types/:id", authenticate(), deleteRelationType);
 
 export default router;

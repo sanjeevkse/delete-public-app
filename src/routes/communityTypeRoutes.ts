@@ -17,7 +17,7 @@ const router = Router();
  * @desc    Create a new community type
  * @access  Protected
  */
-router.post("/community-types", authenticate, createCommunityType);
+router.post("/community-types", authenticate(), createCommunityType);
 
 /**
  * @route   GET /api/community-types
@@ -39,20 +39,20 @@ router.get("/community-types/:id", getCommunityType);
  * @desc    Update a community type
  * @access  Protected
  */
-router.put("/community-types/:id", authenticate, updateCommunityType);
+router.put("/community-types/:id", authenticate(), updateCommunityType);
 
 /**
  * @route   PATCH /api/community-types/:id/status
  * @desc    Toggle community type status (activate/deactivate)
  * @access  Protected
  */
-router.patch("/community-types/:id/status", authenticate, toggleCommunityTypeStatus);
+router.patch("/community-types/:id/status", authenticate(), toggleCommunityTypeStatus);
 
 /**
  * @route   DELETE /api/community-types/:id
  * @desc    Delete a community type
  * @access  Protected
  */
-router.delete("/community-types/:id", authenticate, deleteCommunityType);
+router.delete("/community-types/:id", authenticate(), deleteCommunityType);
 
 export default router;
