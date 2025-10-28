@@ -13,6 +13,9 @@ import relationTypeRoutes from "./relationTypeRoutes";
 import familyMemberRoutes from "./familyMemberRoutes";
 import businessTypeRoutes from "./businessTypeRoutes";
 import businessRoutes from "./businessRoutes";
+import wardNumberRoutes from "./wardNumberRoutes";
+import mlaConstituencyRoutes from "./mlaConstituencyRoutes";
+import boothNumberRoutes from "./boothNumberRoutes";
 
 const router = Router();
 
@@ -33,6 +36,9 @@ router.use("/", relationTypeRoutes);
 router.use("/", familyMemberRoutes);
 router.use("/", businessTypeRoutes);
 router.use("/", businessRoutes);
+router.use("/", wardNumberRoutes);
+router.use("/", mlaConstituencyRoutes);
+router.use("/", boothNumberRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;

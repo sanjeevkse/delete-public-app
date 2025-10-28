@@ -7,11 +7,14 @@ import EventRegistration from "./EventRegistration";
 import FamilyMember from "./FamilyMember";
 import Member from "./Member";
 import MetaBusinessType from "./MetaBusinessType";
+import MetaBoothNumber from "./MetaBoothNumber";
 import MetaCommunityType from "./MetaCommunityType";
+import MetaMlaConstituency from "./MetaMlaConstituency";
 import MetaPermission from "./MetaPermission";
 import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaRelationType from "./MetaRelationType";
 import MetaUserRole from "./MetaUserRole";
+import MetaWardNumber from "./MetaWardNumber";
 import Job from "./Job";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
@@ -30,6 +33,15 @@ const establishAssociations = (): void => {
 
   Business.belongsTo(MetaBusinessType, { foreignKey: "businessTypeId", as: "businessType" });
   MetaBusinessType.hasMany(Business, { foreignKey: "businessTypeId", as: "businesses" });
+
+  MetaBoothNumber.belongsTo(MetaMlaConstituency, {
+    foreignKey: "mlaConstituencyId",
+    as: "mlaConstituency"
+  });
+  MetaMlaConstituency.hasMany(MetaBoothNumber, {
+    foreignKey: "mlaConstituencyId",
+    as: "boothNumbers"
+  });
 
   Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
   MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });
@@ -118,12 +130,15 @@ export {
   Job,
   FamilyMember,
   Member,
+  MetaBoothNumber,
   MetaBusinessType,
   MetaCommunityType,
+  MetaMlaConstituency,
   MetaPermission,
   MetaPermissionGroup,
   MetaRelationType,
   MetaUserRole,
+  MetaWardNumber,
   Post,
   PostMedia,
   PostReaction,

@@ -18,8 +18,13 @@
         ],
         "url": {
           "raw": "{{baseUrl}}/api/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
         }
       }
     },
@@ -42,8 +47,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/request-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "request-otp"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "request-otp"
+              ]
             },
             "description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
           }
@@ -64,8 +75,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
           }
@@ -90,8 +107,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
           }
@@ -122,8 +145,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile/image",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile", "image"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile",
+                "image"
+              ]
             },
             "description": "Uploads a new avatar for the authenticated user. Submit a single profileImage file (JPEG/PNG/WEBP/HEIC). The response returns the updated user record."
           }
@@ -140,8 +170,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/sidebar",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "sidebar"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "sidebar"
+              ]
             },
             "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups."
           }
@@ -163,8 +199,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20&sort=DESC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
               "query": [
                 {
                   "key": "tags",
@@ -246,8 +287,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Retrieves a single active post by id including media, author, and aggregated reaction counts."
           },
@@ -286,8 +333,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "my-posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "my-posts"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -377,8 +429,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
             },
             "description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 images + 1 video at 5MB each). Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
           },
@@ -429,8 +486,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated media endpoints."
           },
@@ -491,8 +554,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "media"
+              ]
             },
             "description": "Appends additional media to an existing post. Provide uploads via `media` file fields while respecting the 4 image / 1 video limit."
           },
@@ -530,8 +600,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "media"
+              ]
             },
             "description": "Soft deletes one or more media items from a post by marking them inactive. Pass the media IDs to remove."
           },
@@ -561,8 +638,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Soft deletes a post. Only the creator or an admin may perform this action."
           },
@@ -600,8 +683,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "reactions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "reactions"
+              ]
             },
             "description": "Adds or updates the caller's reaction for the post. Use LIKE or DISLIKE to react, or NO_REACTION to clear an existing reaction. Returns the updated reaction counts."
           },
@@ -646,8 +736,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ],
               "query": [
                 {
                   "key": "title",
@@ -734,8 +829,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Retrieves a single active event along with its media and registration count."
           },
@@ -833,8 +934,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ]
             },
             "description": "Creates a new event for the authenticated user. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
           },
@@ -885,8 +991,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Updates event details. Media updates must be handled using the dedicated media endpoints."
           },
@@ -938,8 +1050,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "media"
+              ]
             },
             "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
           },
@@ -992,8 +1111,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "media"
+              ]
             },
             "description": "Soft-deletes one or more media items from an event. Provide mediaIds from the add media response."
           },
@@ -1037,8 +1163,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Soft deletes an event and its media/registrations."
           },
@@ -1068,8 +1200,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "register"
+              ]
             },
             "description": "Registers the authenticated user for the selected event, reactivating any soft-deleted registration."
           },
@@ -1116,8 +1255,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/unregister",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "unregister"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "unregister"
+              ]
             },
             "description": "Soft-unregisters the authenticated user from the event. Optionally include a reason."
           },
@@ -1147,8 +1293,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "registrations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "registrations"
+              ],
               "query": [
                 {
                   "key": "includeUnregistered",
@@ -1221,8 +1374,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs?status=1&submittedFor=self&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -1300,8 +1458,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "{{jobId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "{{jobId}}"
+              ]
             },
             "description": "Retrieves a single active job application with applicant details if available."
           },
@@ -1402,8 +1566,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
             },
             "description": "Creates a new job application. When applying for others, include contact and address details plus the resume file (PDF, DOC, DOCX up to 25 MB)."
           },
@@ -1502,8 +1671,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "{{jobId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "{{jobId}}"
+              ]
             },
             "description": "Updates an existing job application. Submit the same required fields; include a resume file to replace the previous upload."
           },
@@ -1545,8 +1720,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "{{jobId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "{{jobId}}"
+              ]
             },
             "description": "Soft deletes a job application by setting status to 0."
           },
@@ -1581,8 +1762,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes?status=1&search=grant&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -1665,8 +1851,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes", "{{schemeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}"
+              ]
             },
             "description": "Retrieves a single active scheme."
           },
@@ -1716,8 +1908,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/schemes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes"
+              ]
             },
             "description": "Creates a new scheme record."
           },
@@ -1770,8 +1967,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes", "{{schemeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}"
+              ]
             },
             "description": "Updates a scheme's name, description, or status."
           },
@@ -1813,8 +2016,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes", "{{schemeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}"
+              ]
             },
             "description": "Soft deletes the scheme by toggling status to 0."
           },
@@ -1857,8 +2066,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
             }
           }
         },
@@ -1874,8 +2089,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -1901,8 +2122,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         },
@@ -1926,8 +2154,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         },
@@ -1943,8 +2178,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           }
         },
@@ -1968,8 +2210,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "roles"
+              ]
             }
           }
         },
@@ -1985,8 +2235,17 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Detaches the specified role from the user. If all roles are removed, the default public role is restored automatically."
           }
@@ -2008,8 +2267,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ]
             }
           }
         },
@@ -2033,8 +2298,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ]
             },
             "description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
           }
@@ -2051,8 +2322,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permissions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permissions"
+              ]
             },
             "description": "Lists every permission record (including wildcards such as posts:*). Requires the admin.permissions:list grant."
           }
@@ -2077,8 +2354,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Replaces the role details along with its numeric permission IDs."
           }
@@ -2095,8 +2379,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             }
           }
         }
@@ -2121,8 +2412,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ]
             },
             "description": "Create a new member with full name, contact number, and email"
           }
@@ -2134,8 +2430,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2165,8 +2466,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?search=John&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -2193,8 +2499,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2222,8 +2534,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2251,8 +2569,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2271,8 +2595,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2309,8 +2639,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/community-types",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types"
+              ]
             },
             "description": "Create a new community type with display name, description, and status"
           }
@@ -2322,8 +2657,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/community-types?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2359,8 +2699,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/community-types?search=Sports&status=1&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -2392,8 +2737,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/community-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2425,8 +2776,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/community-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2458,8 +2815,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/community-types/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2483,8 +2847,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/community-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "community-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "community-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2521,8 +2891,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ]
             },
             "description": "Create a new community with all details"
           }
@@ -2534,8 +2909,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2583,8 +2963,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?search=Tech&communityTypeId=1&isRegistered=1&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -2621,8 +3006,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2654,8 +3045,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2687,8 +3084,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2720,8 +3124,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/member-count",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id", "member-count"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id",
+                "member-count"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2745,8 +3156,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2783,8 +3200,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/relation-types",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "relation-types"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "relation-types"
+              ]
             },
             "description": "Create a new relation type"
           }
@@ -2796,8 +3218,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/relation-types?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "relation-types"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "relation-types"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2829,8 +3256,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/relation-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "relation-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "relation-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2861,8 +3294,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/relation-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "relation-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "relation-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2893,8 +3332,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/relation-types/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "relation-types", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "relation-types",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2917,8 +3363,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/relation-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "relation-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "relation-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2954,8 +3406,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members"
+              ]
             },
             "description": "Create a new family member"
           }
@@ -2967,8 +3424,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3010,8 +3472,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3042,8 +3510,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3074,8 +3548,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3098,8 +3579,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3137,8 +3624,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/business-types",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "business-types"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types"
+              ]
             },
             "description": "Create a new business type"
           },
@@ -3151,8 +3643,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/business-types?page=1&limit=10&search=&status=1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "business-types"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3183,8 +3680,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/business-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "business-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3218,8 +3721,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/business-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "business-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3244,8 +3753,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/business-types/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "business-types", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3270,8 +3786,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/business-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "business-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "business-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3310,8 +3832,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/businesses",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ]
             },
             "description": "Create a new business"
           },
@@ -3324,8 +3851,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3360,8 +3892,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3395,8 +3933,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3421,8 +3965,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3447,8 +3998,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3457,6 +4014,634 @@
               ]
             },
             "description": "Delete business"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ward Numbers",
+      "item": [
+        {
+          "name": "Create Ward Number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Ward 1\",\n  \"description\": \"First ward\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ward-numbers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers"
+              ]
+            },
+            "description": "Create a new ward number"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Ward Numbers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ward-numbers?page=1&limit=10&search=&status=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all ward numbers"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ward Number by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ward-numbers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{wardNumberId}}"
+                }
+              ]
+            },
+            "description": "Get ward number by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ward Number",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Ward 1 Updated\",\n  \"description\": \"Updated description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ward-numbers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{wardNumberId}}"
+                }
+              ]
+            },
+            "description": "Update ward number"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Ward Number Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ward-numbers/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{wardNumberId}}"
+                }
+              ]
+            },
+            "description": "Toggle ward number status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Ward Number",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ward-numbers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{wardNumberId}}"
+                }
+              ]
+            },
+            "description": "Delete ward number"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MLA Constituencies",
+      "item": [
+        {
+          "name": "Create MLA Constituency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Constituency A\",\n  \"description\": \"MLA constituency description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mla-constituencies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mla-constituencies"
+              ]
+            },
+            "description": "Create a new MLA constituency"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All MLA Constituencies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mla-constituencies?page=1&limit=10&search=&status=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mla-constituencies"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get all MLA constituencies"
+          },
+          "response": []
+        },
+        {
+          "name": "Get MLA Constituency by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mla-constituencies/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mla-constituencies",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{mlaConstituencyId}}"
+                }
+              ]
+            },
+            "description": "Get MLA constituency by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update MLA Constituency",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Constituency A Updated\",\n  \"description\": \"Updated description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mla-constituencies/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mla-constituencies",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{mlaConstituencyId}}"
+                }
+              ]
+            },
+            "description": "Update MLA constituency"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle MLA Constituency Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mla-constituencies/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mla-constituencies",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{mlaConstituencyId}}"
+                }
+              ]
+            },
+            "description": "Toggle MLA constituency status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete MLA Constituency",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/mla-constituencies/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mla-constituencies",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{mlaConstituencyId}}"
+                }
+              ]
+            },
+            "description": "Delete MLA constituency"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Booth Numbers",
+      "item": [
+        {
+          "name": "Create Booth Number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mlaConstituencyId\": 1,\n  \"dispName\": \"Booth 101\",\n  \"description\": \"Booth description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/booth-numbers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers"
+              ]
+            },
+            "description": "Create a new booth number"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Booth Numbers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/booth-numbers?page=1&limit=10&search=&status=1&mlaConstituencyId=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": "1"
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get all booth numbers"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Booth Number by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/booth-numbers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{boothNumberId}}"
+                }
+              ]
+            },
+            "description": "Get booth number by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Booth Number",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mlaConstituencyId\": 1,\n  \"dispName\": \"Booth 101 Updated\",\n  \"description\": \"Updated description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/booth-numbers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{boothNumberId}}"
+                }
+              ]
+            },
+            "description": "Update booth number"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Booth Number Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/booth-numbers/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{boothNumberId}}"
+                }
+              ]
+            },
+            "description": "Toggle booth number status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Booth Number",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/booth-numbers/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{boothNumberId}}"
+                }
+              ]
+            },
+            "description": "Delete booth number"
           },
           "response": []
         }
@@ -3522,6 +4707,18 @@
     },
     {
       "key": "businessId",
+      "value": ""
+    },
+    {
+      "key": "wardNumberId",
+      "value": ""
+    },
+    {
+      "key": "mlaConstituencyId",
+      "value": ""
+    },
+    {
+      "key": "boothNumberId",
       "value": ""
     }
   ]
