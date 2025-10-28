@@ -53,8 +53,7 @@ const parseOptionalStatus = (value: unknown): number | undefined => {
     return undefined;
   }
 
-  const numericValue =
-    typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
   if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
     throw new ApiError("status must be 0 or 1", 400);
   }
@@ -90,8 +89,7 @@ const parsePagination = (req: Request) => {
 
 const parseSort = (req: Request) => {
   const rawSortBy = (req.query.sortBy as string) ?? (req.query.sort_by as string) ?? "createdAt";
-  const rawOrder =
-    (req.query.sortOrder as string) ?? (req.query.sort_order as string) ?? "DESC";
+  const rawOrder = (req.query.sortOrder as string) ?? (req.query.sort_order as string) ?? "DESC";
 
   const sortBy = SORTABLE_FIELDS.get(rawSortBy) ?? "createdAt";
 
@@ -115,8 +113,7 @@ const normalizeSchemePayload = (
     }
   }
 
-  const descriptionInput =
-    body.description ?? (partial ? existing?.description : undefined);
+  const descriptionInput = body.description ?? (partial ? existing?.description : undefined);
   if (!partial || descriptionInput !== undefined) {
     if (descriptionInput === undefined) {
       throw new ApiError("description is required", 400);
@@ -182,10 +179,7 @@ export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: R
   if (search) {
     const pattern = `%${search}%`;
     Object.assign(where, {
-      [Op.or]: [
-        { schemeName: { [Op.like]: pattern } },
-        { description: { [Op.like]: pattern } }
-      ]
+      [Op.or]: [{ schemeName: { [Op.like]: pattern } }, { description: { [Op.like]: pattern } }]
     });
   }
 

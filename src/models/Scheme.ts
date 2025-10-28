@@ -2,7 +2,7 @@ import {
   CreationOptional,
   DataTypes,
   InferAttributes,
- InferCreationAttributes,
+  InferCreationAttributes,
   Model
 } from "sequelize";
 

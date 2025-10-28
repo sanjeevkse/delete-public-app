@@ -1,12 +1,6 @@
 import { Router } from "express";
 
-import {
-  createJob,
-  deleteJob,
-  getJob,
-  listJobs,
-  updateJob
-} from "../controllers/jobController";
+import { createJob, deleteJob, getJob, listJobs, updateJob } from "../controllers/jobController";
 import { authenticate } from "../middlewares/authMiddleware";
 import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 import { jobResumeUpload } from "../middlewares/jobUploadMiddleware";

@@ -93,8 +93,7 @@ const parseStatusFilter = (value: unknown): number | null | undefined => {
   if (typeof value === "string" && value.trim().toLowerCase() === "all") {
     return null;
   }
-  const numericValue =
-    typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
   if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
     throw new ApiError("status must be 0 or 1", 400);
   }
@@ -105,8 +104,7 @@ const parseOptionalStatus = (value: unknown): number | undefined => {
   if (value === undefined || value === null || value === "") {
     return undefined;
   }
-  const numericValue =
-    typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
   if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
     throw new ApiError("status must be 0 or 1", 400);
   }
@@ -297,13 +295,16 @@ const normalizeJobPayload = async (
 
   const submittedFor = submittedProvided
     ? parseSubmittedFor(submittedValue)
-    : existingJob?.submittedFor ??
+    : (existingJob?.submittedFor ??
       (() => {
         throw new ApiError("submitted_for is required", 400);
-      })();
+      })());
 
-  let selfApplicant: (User & { profile?: { fullAddress?: string | null; alernativeContactNumber?: string | null } | null }) | null =
-    null;
+  let selfApplicant:
+    | (User & {
+        profile?: { fullAddress?: string | null; alernativeContactNumber?: string | null } | null;
+      })
+    | null = null;
 
   if (submittedFor === "self") {
     selfApplicant = await User.findByPk(currentUserId, {
@@ -413,8 +414,9 @@ const normalizeJobPayload = async (
 
   const alternativeContactNumber =
     submittedFor === "self"
-      ? normalizeNullableString(selfApplicant?.profile?.alernativeContactNumber) ??
-        (existingJob?.alternativeContactNumber ?? null)
+      ? (normalizeNullableString(selfApplicant?.profile?.alernativeContactNumber) ??
+        existingJob?.alternativeContactNumber ??
+        null)
       : resolveOptionalStringField(
           body,
           ["alternativeContactNumber", "alternative_contact_number"],
@@ -423,9 +425,9 @@ const normalizeJobPayload = async (
 
   const email =
     submittedFor === "self"
-      ? normalizeNullableString(selfApplicant?.email)?.toLowerCase() ??
+      ? (normalizeNullableString(selfApplicant?.email)?.toLowerCase() ??
         normalizeNullableString(existingJob?.email)?.toLowerCase() ??
-        null
+        null)
       : resolveEmailField(body, existingJob?.email, true);
 
   const { provided: applicantProvided, value: applicantValue } = pickBodyValue(body, [
@@ -437,7 +439,7 @@ const normalizeJobPayload = async (
     submittedFor === "self"
       ? currentUserId
       : await resolveApplicantUserId(
-          applicantProvided ? applicantValue : existingJob?.applicantUserId ?? null,
+          applicantProvided ? applicantValue : (existingJob?.applicantUserId ?? null),
           submittedFor,
           currentUserId
         );
