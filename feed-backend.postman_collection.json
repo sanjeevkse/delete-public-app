@@ -1,0 +1,1914 @@
+{
+	"info": {
+		"_postman_id": "b102d9ba-c678-4bb5-90d4-65d66124e1eb",
+		"name": "feed-backend",
+		"description": "Postman collection covering feed-backend REST APIs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "1182352"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Request OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactNumber\": \"+15551234567\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/request-otp",
+						"description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactNumber\": \"+15551234567\",\n  \"otp\": \"196781\"\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/login",
+						"description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
+						},
+						"url": "{{baseUrl}}/api/auth/profile",
+						"description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile Image",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "profileImage",
+									"type": "file",
+									"src": "/path/to/local/avatar.jpg"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/auth/profile/image",
+						"description": "Uploads a new avatar for the authenticated user. Submit a single profileImage file (JPEG/PNG/WEBP/HEIC). The response returns the updated user record."
+					},
+					"response": []
+				},
+				{
+					"name": "Sidebar Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/auth/sidebar",
+						"description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "List Posts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  if (first && first.id) {",
+									"    pm.collectionVariables.set(\"postId\", first.id);",
+									"  }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20&sort=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts"
+							],
+							"query": [
+								{
+									"key": "tags",
+									"value": "community",
+									"description": "Optional: filter posts containing the tag substring."
+								},
+								{
+									"key": "latitude",
+									"value": "27.7172",
+									"description": "Optional: exact match latitude filter."
+								},
+								{
+									"key": "longitude",
+									"value": "85.3240",
+									"description": "Optional: exact match longitude filter."
+								},
+								{
+									"key": "search",
+									"value": "cleanup",
+									"description": "Optional: search term applied to the post description."
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: page size up to 100 (defaults to 20)."
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"description": "Optional: sort direction for creation date (ASC or DESC, defaults to DESC)."
+								}
+							]
+						},
+						"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Post id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/posts/{{postId}}",
+						"description": "Retrieves a single active post by id including media, author, and aggregated reaction counts."
+					},
+					"response": []
+				},
+				{
+					"name": "List My Posts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"my-posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: page size up to 100 (defaults to 20)."
+								}
+							]
+						},
+						"description": "Lists only the authenticated creator's active posts with pagination."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"var postId = jsonData && (jsonData.id || (jsonData.data && jsonData.data.id));",
+									"if (postId) {",
+									"  pm.collectionVariables.set(\"postId\", postId);",
+									"}",
+									"pm.test(\"Post ID stored\", function () {",
+									"  pm.expect(pm.collectionVariables.get(\"postId\")).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "description",
+									"value": "Community clean-up drive",
+									"type": "text"
+								},
+								{
+									"key": "tags",
+									"value": "community,cleanup",
+									"type": "text"
+								},
+								{
+									"key": "latitude",
+									"value": "27.7172",
+									"type": "text"
+								},
+								{
+									"key": "longitude",
+									"value": "85.3240",
+									"type": "text"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/local/before.jpg"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/local/after.mp4"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/posts",
+						"description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 images + 1 video at 5MB each). Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"if (jsonData && jsonData.id) {",
+									"  pm.collectionVariables.set(\"postId\", jsonData.id);",
+									"}",
+									"pm.test(\"Response includes post id\", function () {",
+									"  pm.expect(jsonData && jsonData.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Community clean-up drive update\",\n  \"tags\": \"cleanup,community\",\n  \"latitude\": 27.7172,\n  \"longitude\": 85.3240\n}"
+						},
+						"url": "{{baseUrl}}/api/posts/{{postId}}",
+						"description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated media endpoints."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Post Media",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/local/day-one.jpg"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/local/day-two.mp4"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/posts/{{postId}}/media",
+						"description": "Appends additional media to an existing post. Provide uploads via `media` file fields while respecting the 4 image / 1 video limit."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Post Media",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mediaIds\": [123, 456]\n}"
+						},
+						"url": "{{baseUrl}}/api/posts/{{postId}}/media",
+						"description": "Soft deletes one or more media items from a post by marking them inactive. Pass the media IDs to remove."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/posts/{{postId}}",
+						"description": "Soft deletes a post. Only the creator or an admin may perform this action."
+					},
+					"response": []
+				},
+				{
+					"name": "React To Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Counts present\", function () {",
+									"  pm.expect(jsonData && jsonData.counts && jsonData.counts.likesCount).to.not.be.undefined;",
+									"  pm.expect(jsonData && jsonData.counts && jsonData.counts.dislikesCount).to.not.be.undefined;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reaction\": \"LIKE\"\n}"
+						},
+						"url": "{{baseUrl}}/api/posts/{{postId}}/reactions",
+						"description": "Adds or updates the caller's reaction for the post. Use LIKE or DISLIKE to react, or NO_REACTION to clear an existing reaction. Returns the updated reaction counts."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Events",
+			"item": [
+				{
+					"name": "List Events",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  if (first && first.id) {",
+									"    pm.collectionVariables.set(\"eventId\", first.id);",
+									"  }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"events"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": "cleanup",
+									"description": "Optional: filter by event title."
+								},
+								{
+									"key": "place",
+									"value": "central",
+									"description": "Optional: filter by place substring."
+								},
+								{
+									"key": "startDateFrom",
+									"value": "2024-01-01",
+									"description": "Optional: start date lower bound (YYYY-MM-DD)."
+								},
+								{
+									"key": "startDateTo",
+									"value": "2024-12-31",
+									"description": "Optional: start date upper bound (YYYY-MM-DD)."
+								},
+								{
+									"key": "search",
+									"value": "community",
+									"description": "Optional: search term applied to title or description."
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: page size up to 100 (defaults to 20)."
+								},
+								{
+									"key": "sort",
+									"value": "ASC",
+									"description": "Optional: sort direction for start date/time (ASC or DESC, defaults to ASC)."
+								}
+							]
+						},
+						"description": "Lists active events with pagination and optional filters for title, place, or date range. Set `sort=DESC` for the latest events first (default is `ASC`)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Event id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/events/{{eventId}}",
+						"description": "Retrieves a single active event along with its media and registration count."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"var eventId = jsonData && (jsonData.id || (jsonData.data && jsonData.data.id));",
+									"if (eventId) {",
+									"  pm.collectionVariables.set(\"eventId\", eventId);",
+									"}",
+									"pm.test(\"Event ID stored\", function () {",
+									"  pm.expect(pm.collectionVariables.get(\"eventId\")).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Community Cleanup Drive",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Neighborhood volunteers gather for a cleanup.",
+									"type": "text"
+								},
+								{
+									"key": "place",
+									"value": "Central Park",
+									"type": "text"
+								},
+								{
+									"key": "googleMapLink",
+									"value": "https://maps.google.com/?q=Central+Park",
+									"type": "text"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-12-01",
+									"type": "text"
+								},
+								{
+									"key": "startTime",
+									"value": "09:00",
+									"type": "text"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-01",
+									"type": "text"
+								},
+								{
+									"key": "endTime",
+									"value": "12:00",
+									"type": "text"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/event-banner.jpg"
+								},
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/event-promo.mp4"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/events",
+						"description": "Creates a new event for the authenticated user. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"if (jsonData && jsonData.id) {",
+									"  pm.collectionVariables.set(\"eventId\", jsonData.id);",
+									"}",
+									"pm.test(\"Event id present\", function () {",
+									"  pm.expect(jsonData && jsonData.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Updated agenda with additional workshops.\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"14:00\"\n}"
+						},
+						"url": "{{baseUrl}}/api/events/{{eventId}}",
+						"description": "Updates event details. Media updates must be handled using the dedicated media endpoints."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Event Media",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Media array present\", function () {",
+									"  pm.expect(jsonData && Array.isArray(jsonData.media)).to.be.true;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.media) && jsonData.media.length > 0) {",
+									"  var lastMedia = jsonData.media[jsonData.media.length - 1];",
+									"  if (lastMedia && lastMedia.id) {",
+									"    pm.collectionVariables.set(\"eventMediaId\", lastMedia.id);",
+									"  }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "media",
+									"type": "file",
+									"src": "/path/to/event-image.jpg"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/events/{{eventId}}/media",
+						"description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Event Media",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Media array present\", function () {",
+									"  pm.expect(jsonData && Array.isArray(jsonData.media)).to.be.true;",
+									"});",
+									"var removedId = Number(pm.collectionVariables.get(\"eventMediaId\"));",
+									"if (jsonData && Array.isArray(jsonData.media) && removedId) {",
+									"  var exists = jsonData.media.some(function (item) { return item && item.id === removedId; });",
+									"  pm.expect(exists, \"Removed media should not be present\").to.be.false;",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mediaIds\": [{{eventMediaId}}]\n}"
+						},
+						"url": "{{baseUrl}}/api/events/{{eventId}}/media",
+						"description": "Soft-deletes one or more media items from an event. Provide mediaIds from the add media response."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/events/{{eventId}}",
+						"description": "Soft deletes an event and its media/registrations."
+					},
+					"response": []
+				},
+				{
+					"name": "Register For Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200 or 201\", function () {",
+									"  pm.expect([200, 201]).to.include(pm.response.code);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Registration object present\", function () {",
+									"  pm.expect(jsonData && jsonData.registration).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/events/{{eventId}}/register",
+						"description": "Registers the authenticated user for the selected event, reactivating any soft-deleted registration."
+					},
+					"response": []
+				},
+				{
+					"name": "Unregister From Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Unable to attend\"\n}"
+						},
+						"url": "{{baseUrl}}/api/events/{{eventId}}/unregister",
+						"description": "Soft-unregisters the authenticated user from the event. Optionally include a reason."
+					},
+					"response": []
+				},
+				{
+					"name": "List Event Registrations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"pm.test(\"includeUnregistered flag echoes request\", function () {",
+									"  pm.expect(jsonData && jsonData.includeUnregistered).to.eql(false);",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  pm.test(\"Registration has user details\", function () {",
+									"    pm.expect(first && first.user && first.user.id).to.exist;",
+									"    pm.expect(first.user).to.have.property(\"fullName\");",
+									"    pm.expect(first.user).to.have.property(\"email\");",
+									"    pm.expect(first.user).to.have.property(\"contactNumber\");",
+									"  });",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"events",
+								"{{eventId}}",
+								"registrations"
+							],
+							"query": [
+								{
+									"key": "includeUnregistered",
+									"value": "false",
+									"description": "Optional: set to true to include inactive (status 0) registrations."
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional pagination page (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional page size up to 100 (defaults to 20)."
+								}
+							]
+						},
+						"description": "Lists registrations for a specific event, including registrant profile details. Use includeUnregistered=true to include soft-unregistered entries."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin / Users",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"contactNumber\": \"+15550001111\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"address\": \"99 Demo Street, Springfield\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/api/admin/users"
+					},
+					"response": []
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "25"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/users/{{userId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Updated User\",\n  \"profile\": {\n    \"bio\": \"Updated bio\",\n    \"address\": \"100 Updated Street\"\n  }\n}"
+						},
+						"url": "{{baseUrl}}/api/admin/users/{{userId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/users/{{userId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Role to User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roleIds\": [\n    {{roleId}}\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/api/admin/users/{{userId}}/roles"
+					},
+					"response": []
+				},
+				{
+					"name": "Unassign Role from User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/users/{{userId}}/roles/{{roleId}}",
+						"description": "Detaches the specified role from the user. If all roles are removed, the default public role is restored automatically."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin / Roles & Permissions",
+			"item": [
+				{
+					"name": "List Roles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/roles"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Administrative role\",\n  \"permissions\": [\n    101,\n    102\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/api/admin/roles",
+						"description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
+					},
+					"response": []
+				},
+				{
+					"name": "List Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/permissions",
+						"description": "Lists every permission record (including wildcards such as posts:*). Requires the admin.permissions:list grant."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Role",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Updated role description\",\n  \"permissions\": [\n    201,\n    202\n  ]\n}"
+						},
+						"url": "{{baseUrl}}/api/admin/roles/{{roleId}}",
+						"description": "Replaces the role details along with its numeric permission IDs."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Role",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/roles/{{roleId}}"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Meta",
+			"item": [
+				{
+					"name": "Business Type",
+					"item": [
+						{
+							"name": "List",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = {};",
+											"try {",
+											"  jsonData = pm.response.json();",
+											"} catch (err) {",
+											"  jsonData = {};",
+											"}",
+											"pm.test(\"Response contains data array\", function () {",
+											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+											"});",
+											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+											"  var first = jsonData.data[0];",
+											"  if (first && first.id) {",
+											"    pm.collectionVariables.set(\"postId\", first.id);",
+											"  }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": "{{baseUrl}}/api/business-types",
+								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = {};",
+											"try {",
+											"  jsonData = pm.response.json();",
+											"} catch (err) {",
+											"  jsonData = {};",
+											"}",
+											"pm.test(\"Response contains data array\", function () {",
+											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+											"});",
+											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+											"  var first = jsonData.data[0];",
+											"  if (first && first.id) {",
+											"    pm.collectionVariables.set(\"postId\", first.id);",
+											"  }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
+									}
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dispName\": \"BT 1\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{baseUrl}}/api/business-types",
+								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Community Type",
+					"item": [
+						{
+							"name": "List",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = {};",
+											"try {",
+											"  jsonData = pm.response.json();",
+											"} catch (err) {",
+											"  jsonData = {};",
+											"}",
+											"pm.test(\"Response contains data array\", function () {",
+											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+											"});",
+											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+											"  var first = jsonData.data[0];",
+											"  if (first && first.id) {",
+											"    pm.collectionVariables.set(\"postId\", first.id);",
+											"  }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": "{{baseUrl}}/api/community-types",
+								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = {};",
+											"try {",
+											"  jsonData = pm.response.json();",
+											"} catch (err) {",
+											"  jsonData = {};",
+											"}",
+											"pm.test(\"Response contains data array\", function () {",
+											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+											"});",
+											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+											"  var first = jsonData.data[0];",
+											"  if (first && first.id) {",
+											"    pm.collectionVariables.set(\"postId\", first.id);",
+											"  }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
+									}
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dispName\": \"CT 1\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{baseUrl}}/api/community-types",
+								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Relation Type",
+					"item": [
+						{
+							"name": "List",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = {};",
+											"try {",
+											"  jsonData = pm.response.json();",
+											"} catch (err) {",
+											"  jsonData = {};",
+											"}",
+											"pm.test(\"Response contains data array\", function () {",
+											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+											"});",
+											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+											"  var first = jsonData.data[0];",
+											"  if (first && first.id) {",
+											"    pm.collectionVariables.set(\"postId\", first.id);",
+											"  }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": "{{baseUrl}}/api/relation-types",
+								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"  pm.response.to.have.status(200);",
+											"});",
+											"var jsonData = {};",
+											"try {",
+											"  jsonData = pm.response.json();",
+											"} catch (err) {",
+											"  jsonData = {};",
+											"}",
+											"pm.test(\"Response contains data array\", function () {",
+											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+											"});",
+											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+											"  var first = jsonData.data[0];",
+											"  if (first && first.id) {",
+											"    pm.collectionVariables.set(\"postId\", first.id);",
+											"  }",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": {
+										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
+									}
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"dispName\": \"CT 1\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": "{{baseUrl}}/api/relation-types",
+								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "List Ward Number",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  if (first && first.id) {",
+									"    pm.collectionVariables.set(\"postId\", first.id);",
+									"  }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/ward-numbers",
+						"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+					},
+					"response": []
+				},
+				{
+					"name": "List Booth Number",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  if (first && first.id) {",
+									"    pm.collectionVariables.set(\"postId\", first.id);",
+									"  }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/booth-numbers?wardNumberId=145",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"booth-numbers"
+							],
+							"query": [
+								{
+									"key": "wardNumberId",
+									"value": "145"
+								}
+							]
+						},
+						"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authToken}}"
+					}
+				],
+				"url": "{{baseUrl}}/api/health"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8081"
+		},
+		{
+			"key": "authToken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "postId",
+			"value": ""
+		},
+		{
+			"key": "eventId",
+			"value": ""
+		},
+		{
+			"key": "eventMediaId",
+			"value": ""
+		},
+		{
+			"key": "roleId",
+			"value": ""
+		},
+		{
+			"key": "otpCode",
+			"value": ""
+		}
+	]
+}
