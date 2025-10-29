@@ -54,6 +54,26 @@ export const getPermissionGroup = asyncHandler(
 );
 
 /**
+ * Get permissions for a specific permission group
+ * GET /admin/permission-groups/:id/permissions
+ */
+export const getPermissionGroupPermissions = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+
+    const permissionGroup = await MetaPermissionGroup.findByPk(id, {
+      include: [{ model: MetaPermission, as: "permissions" }]
+    });
+
+    if (!permissionGroup) {
+      throw new ApiError("Permission group not found", 404);
+    }
+
+    return sendSuccess(res, permissionGroup.permissions, "Permissions retrieved successfully");
+  }
+);
+
+/**
  * Create a new permission group
  * POST /admin/permission-groups
  */

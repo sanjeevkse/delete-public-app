@@ -1322,6 +1322,36 @@
 					"response": []
 				},
 				{
+					"name": "Get Role by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/roles/{{roleId}}",
+						"description": "Get a specific role with its permissions, parent role, and child roles."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Role Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/roles/{{roleId}}/permissions",
+						"description": "Get only the permissions for a specific role, including permission group details."
+					},
+					"response": []
+				},
+				{
 					"name": "Create Role",
 					"request": {
 						"method": "POST",
@@ -1337,7 +1367,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Administrative role\",\n  \"permissions\": [\n    101,\n    102\n  ]\n}"
+							"raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Administrative role\",\n  \"metaUserRoleId\": null,\n  \"permissions\": [\n    101,\n    102\n  ]\n}"
 						},
 						"url": "{{baseUrl}}/api/admin/roles",
 						"description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
@@ -1375,7 +1405,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Updated role description\",\n  \"permissions\": [\n    201,\n    202\n  ]\n}"
+							"raw": "{\n  \"dispName\": \"Admin\",\n  \"description\": \"Updated role description\",\n  \"metaUserRoleId\": 1,\n  \"permissions\": [\n    201,\n    202\n  ]\n}"
 						},
 						"url": "{{baseUrl}}/api/admin/roles/{{roleId}}",
 						"description": "Replaces the role details along with its numeric permission IDs."
@@ -1446,6 +1476,21 @@
 						],
 						"url": "{{baseUrl}}/api/admin/permission-groups/1",
 						"description": "Retrieve a single permission group with its associated permissions"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Permission Group Permissions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/admin/permission-groups/1/permissions",
+						"description": "Get only the permissions for a specific permission group"
 					},
 					"response": []
 				},

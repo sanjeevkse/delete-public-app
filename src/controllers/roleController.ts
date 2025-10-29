@@ -18,21 +18,68 @@ import {
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
   const roles = await MetaUserRole.findAll({
-    include: [{ model: MetaPermission, as: "permissions" }]
+    include: [
+      { model: MetaPermission, as: "permissions" },
+      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
+      { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
+    ]
   });
 
   return sendSuccess(res, roles, "Roles retrieved successfully");
 });
 
+export const getRole = asyncHandler(async (req: Request, res: Response) => {
+  const role = await MetaUserRole.findByPk(req.params.id, {
+    include: [
+      { model: MetaPermission, as: "permissions" },
+      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
+      { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
+    ]
+  });
+
+  if (!role) {
+    return sendNotFound(res, "Role not found", "role");
+  }
+
+  return sendSuccess(res, role, "Role retrieved successfully");
+});
+
+export const getRolePermissions = asyncHandler(async (req: Request, res: Response) => {
+  const role = await MetaUserRole.findByPk(req.params.id, {
+    include: [
+      { 
+        model: MetaPermission, 
+        as: "permissions",
+        include: [{ association: "group" }]
+      }
+    ]
+  });
+
+  if (!role) {
+    return sendNotFound(res, "Role not found", "role");
+  }
+
+  return sendSuccess(res, role.permissions, "Role permissions retrieved successfully");
+});
+
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
-  const { dispName, description, status = 1, permissions = [] } = req.body;
+  const { dispName, description, status = 1, metaUserRoleId, permissions = [] } = req.body;
   if (!dispName) {
     throw new ApiError("dispName is required", 400);
+  }
+
+  // Validate parent role if provided
+  if (metaUserRoleId) {
+    const parentRole = await MetaUserRole.findByPk(metaUserRoleId);
+    if (!parentRole) {
+      throw new ApiError("Parent role not found", 404);
+    }
   }
 
   const role = await MetaUserRole.create({
     dispName,
     description,
+    metaUserRoleId: metaUserRoleId || null,
     status
   });
 
@@ -45,17 +92,38 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const created = await MetaUserRole.findByPk(role.id, {
-    include: [{ model: MetaPermission, as: "permissions" }]
+    include: [
+      { model: MetaPermission, as: "permissions" },
+      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] }
+    ]
   });
 
   return sendCreated(res, created, "Role created successfully");
 });
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
-  const { permissions, ...rolePayload } = req.body;
+  const { permissions, metaUserRoleId, ...rolePayload } = req.body;
   const role = await MetaUserRole.findByPk(req.params.id);
   if (!role) {
     return sendNotFound(res, "Role not found", "role");
+  }
+
+  // Validate parent role if provided
+  if (metaUserRoleId !== undefined) {
+    if (metaUserRoleId === null) {
+      // Allow setting to null
+      rolePayload.metaUserRoleId = null;
+    } else {
+      const parentRole = await MetaUserRole.findByPk(metaUserRoleId);
+      if (!parentRole) {
+        throw new ApiError("Parent role not found", 404);
+      }
+      // Prevent circular reference
+      if (metaUserRoleId === role.id) {
+        throw new ApiError("A role cannot be its own parent", 400);
+      }
+      rolePayload.metaUserRoleId = metaUserRoleId;
+    }
   }
 
   await role.update(rolePayload);
@@ -72,7 +140,11 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const updated = await MetaUserRole.findByPk(role.id, {
-    include: [{ model: MetaPermission, as: "permissions" }]
+    include: [
+      { model: MetaPermission, as: "permissions" },
+      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
+      { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
+    ]
   });
 
   return sendSuccess(res, updated, "Role updated successfully");

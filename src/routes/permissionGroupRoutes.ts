@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   listPermissionGroups,
   getPermissionGroup,
+  getPermissionGroupPermissions,
   createPermissionGroup,
   updatePermissionGroup,
   deletePermissionGroup,
@@ -25,6 +26,13 @@ router.get(
   "/:id",
   authorizePermissions("permission-groups:view"),
   getPermissionGroup
+);
+
+// Get permissions for a permission group
+router.get(
+  "/:id/permissions",
+  authorizePermissions("permission-groups:view"),
+  getPermissionGroupPermissions
 );
 
 // Create a new permission group
