@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b102d9ba-c678-4bb5-90d4-65d66124e1eb",
+		"_postman_id": "a739449c-378d-48b0-87a1-d75bae66bd52",
 		"name": "feed-backend",
 		"description": "Postman collection covering feed-backend REST APIs.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
@@ -1157,6 +1157,622 @@
 			]
 		},
 		{
+			"name": "Jobs",
+			"item": [
+				{
+					"name": "List Jobs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"pm.test(\"Response contains pagination\", function () {",
+									"  pm.expect(jsonData && jsonData.pagination).to.exist;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  if (first && first.id) {",
+									"    pm.collectionVariables.set(\"jobId\", first.id);",
+									"  }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?status=1&submittedFor=self&sort=DESC&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Optional: filter by status (0 inactive, 1 active, omit or all for both)."
+								},
+								{
+									"key": "submittedFor",
+									"value": "self",
+									"description": "Optional: filter by submission type (self or others)."
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"description": "Optional: sort direction for created date (`ASC` or `DESC`, default `DESC`)."
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: page size up to 100 (defaults to 20)."
+								}
+							]
+						},
+						"description": "Lists job applications with pagination, optional status/submission filters, and customizable sort order. Responses include applicant profile details when available."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Job id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/jobs/{{jobId}}",
+						"description": "Retrieves a single active job application with applicant details if available."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Job id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+									"});",
+									"if (jsonData && jsonData.data && jsonData.data.id) {",
+									"  pm.collectionVariables.set(\"jobId\", jsonData.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "submittedFor",
+									"value": "others",
+									"type": "text"
+								},
+								{
+									"key": "fullName",
+									"value": "Jane Applicant",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "applicant@example.com",
+									"type": "text"
+								},
+								{
+									"key": "contactNumber",
+									"value": "+15551234567",
+									"type": "text"
+								},
+								{
+									"key": "alternativeContactNumber",
+									"value": "+15559876543",
+									"type": "text"
+								},
+								{
+									"key": "fullAddress",
+									"value": "123 Demo Street, Springfield",
+									"type": "text"
+								},
+								{
+									"key": "education",
+									"value": "B.A. in Social Work",
+									"type": "text"
+								},
+								{
+									"key": "workExperience",
+									"value": "3 years volunteering with local NGOs",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Looking for community outreach opportunities.",
+									"type": "text"
+								},
+								{
+									"key": "resume",
+									"type": "file",
+									"src": "/path/to/local/resume.pdf"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/jobs",
+						"description": "Creates a new job application. When applying for others, include contact and address details plus the resume file (PDF, DOC, DOCX up to 25 MB)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Job id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "submittedFor",
+									"value": "others",
+									"type": "text"
+								},
+								{
+									"key": "fullName",
+									"value": "Updated Applicant",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "updated.applicant@example.com",
+									"type": "text"
+								},
+								{
+									"key": "contactNumber",
+									"value": "+15557654321",
+									"type": "text"
+								},
+								{
+									"key": "fullAddress",
+									"value": "456 Example Avenue, Springfield",
+									"type": "text"
+								},
+								{
+									"key": "education",
+									"value": "Masters in Community Development",
+									"type": "text"
+								},
+								{
+									"key": "workExperience",
+									"value": "5 years coordinating social programs",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Updated motivation for the application.",
+									"type": "text"
+								},
+								{
+									"key": "resume",
+									"type": "file",
+									"src": "/path/to/local/updated-resume.pdf"
+								}
+							]
+						},
+						"url": "{{baseUrl}}/api/jobs/{{jobId}}",
+						"description": "Updates an existing job application. Submit the same required fields; include a resume file to replace the previous upload."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Job",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/jobs/{{jobId}}",
+						"description": "Soft deletes a job application by setting status to 0."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Schemes",
+			"item": [
+				{
+					"name": "List Schemes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"pm.test(\"Response contains pagination\", function () {",
+									"  pm.expect(jsonData && jsonData.pagination).to.exist;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  if (first && first.id) {",
+									"    pm.collectionVariables.set(\"schemeId\", first.id);",
+									"  }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/schemes?status=1&search=grant&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"schemes"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Optional: filter by status (0 inactive, 1 active, omit or all for both)."
+								},
+								{
+									"key": "search",
+									"value": "grant",
+									"description": "Optional: fuzzy search across scheme name and description."
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Optional: sort field (createdAt, updatedAt, schemeName, status)."
+								},
+								{
+									"key": "sortOrder",
+									"value": "DESC",
+									"description": "Optional: sort direction (`ASC` or `DESC`, default `DESC`)."
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: page size up to 100 (defaults to 20)."
+								}
+							]
+						},
+						"description": "Lists scheme records with pagination, search, and sort controls."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Scheme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Scheme id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/schemes/{{schemeId}}",
+						"description": "Retrieves a single active scheme."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Scheme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"if (jsonData && jsonData.data && jsonData.data.id) {",
+									"  pm.collectionVariables.set(\"schemeId\", jsonData.data.id);",
+									"}",
+									"pm.test(\"Scheme id stored\", function () {",
+									"  pm.expect(pm.collectionVariables.get(\"schemeId\")).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schemeName\": \"Skill Development Grant\",\n  \"description\": \"Financial support for vocational training participants.\",\n  \"status\": 1\n}"
+						},
+						"url": "{{baseUrl}}/api/schemes",
+						"description": "Creates a new scheme record."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Scheme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response success flag is true\", function () {",
+									"  pm.expect(jsonData && jsonData.success).to.be.true;",
+									"});",
+									"pm.test(\"Scheme id returned\", function () {",
+									"  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schemeName\": \"Skill Development Grant - Updated\",\n  \"description\": \"Revised guidelines for the vocational training support scheme.\",\n  \"status\": 1\n}"
+						},
+						"url": "{{baseUrl}}/api/schemes/{{schemeId}}",
+						"description": "Updates a scheme's name, description, or status."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Scheme",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/schemes/{{schemeId}}",
+						"description": "Soft deletes the scheme by toggling status to 0."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Admin / Users",
 			"item": [
 				{
@@ -1588,105 +2204,970 @@
 			]
 		},
 		{
+			"name": "Members",
+			"item": [
+				{
+					"name": "Create Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": "{{baseUrl}}/api/members",
+						"description": "Create a new member with full name, contact number, and email"
+					},
+					"response": []
+				},
+				{
+					"name": "List Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/members?page=1&limit=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"members"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "25",
+									"description": "Items per page (default: 25, max: 100)"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Search by name, contact, or email",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all members with pagination and optional search"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/members?search=John&page=1&limit=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"members"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "John",
+									"description": "Search keyword"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "25"
+								}
+							]
+						},
+						"description": "Search members by full name, contact number, or email"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Member by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Member ID"
+								}
+							]
+						},
+						"description": "Get a single member by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Member",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe Updated\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"john.doe.updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Member ID"
+								}
+							]
+						},
+						"description": "Update member details (all fields are optional)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Member - Partial",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe Partially Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Member ID"
+								}
+							]
+						},
+						"description": "Update only specific fields of a member"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Member",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Member ID"
+								}
+							]
+						},
+						"description": "Delete a member by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Communities",
+			"item": [
+				{
+					"name": "Create Community",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"communityTypeId\": 1,\n  \"communityName\": \"Tech Innovators Club\",\n  \"isRegistered\": 1,\n  \"registrationDate\": \"2024-10-01T00:00:00.000Z\",\n  \"contactPerson\": \"John Doe\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"contact@techinnovators.com\",\n  \"totalMember\": 50,\n  \"fullAddress\": \"123 Tech Street, Innovation City, IC 12345\",\n  \"status\": 1\n}"
+						},
+						"url": "{{baseUrl}}/api/communities",
+						"description": "Create a new community with all details"
+					},
+					"response": []
+				},
+				{
+					"name": "List Communities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/communities?page=1&limit=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "25",
+									"description": "Items per page (default: 25, max: 100)"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Search by community name, contact person, contact number, email, or address",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status (1=active, 0=inactive)",
+									"disabled": true
+								},
+								{
+									"key": "communityTypeId",
+									"value": "",
+									"description": "Filter by community type ID",
+									"disabled": true
+								},
+								{
+									"key": "isRegistered",
+									"value": "",
+									"description": "Filter by registration status (1=registered, 0=not registered)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all communities with pagination and optional filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Communities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/communities?search=Tech&communityTypeId=1&isRegistered=1&page=1&limit=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "Tech",
+									"description": "Search keyword"
+								},
+								{
+									"key": "communityTypeId",
+									"value": "1",
+									"description": "Filter by community type"
+								},
+								{
+									"key": "isRegistered",
+									"value": "1",
+									"description": "Filter by registration status"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "25"
+								}
+							]
+						},
+						"description": "Search communities with multiple filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Community by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/communities/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Community ID"
+								}
+							]
+						},
+						"description": "Get a single community by ID with community type details"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Community",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"communityName\": \"Tech Innovators Club - Updated\",\n  \"contactPerson\": \"Jane Doe\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"newemail@techinnovators.com\",\n  \"totalMember\": 75,\n  \"fullAddress\": \"456 Innovation Avenue, Tech City, TC 54321\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/communities/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Community ID"
+								}
+							]
+						},
+						"description": "Update community details (all fields are optional)"
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Community Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/communities/:id/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities",
+								":id",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Community ID"
+								}
+							]
+						},
+						"description": "Toggle community status (1=active, 0=inactive)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Member Count",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"totalMember\": 100\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/communities/:id/member-count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities",
+								":id",
+								"member-count"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Community ID"
+								}
+							]
+						},
+						"description": "Update community member count"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Community",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/communities/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"communities",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "Community ID"
+								}
+							]
+						},
+						"description": "Delete a community by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Businesses",
+			"item": [
+				{
+					"name": "Create Business",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"businessName\": \"ABC Retail Store\",\n  \"businessTypeId\": 1,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcretail.com\",\n  \"totalEmployees\": 50,\n  \"turnoverYearly\": 5000000.00,\n  \"fullAddress\": \"123 Main Street, City, State - 400001\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{baseUrl}}/api/businesses",
+						"description": "Create a new business"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Businesses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"businesses"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "status",
+									"value": "1"
+								},
+								{
+									"key": "businessTypeId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get all businesses"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Business by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/businesses/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"businesses",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{businessId}}"
+								}
+							]
+						},
+						"description": "Get business by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Business",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"businessName\": \"ABC Wholesale Store\",\n  \"businessTypeId\": 2,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcwholesale.com\",\n  \"totalEmployees\": 75,\n  \"turnoverYearly\": 7500000.00,\n  \"fullAddress\": \"456 Business Park, City, State - 400002\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/businesses/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"businesses",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{businessId}}"
+								}
+							]
+						},
+						"description": "Update business"
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Business Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/businesses/:id/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"businesses",
+								":id",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{businessId}}"
+								}
+							]
+						},
+						"description": "Toggle business status"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Business",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/businesses/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"businesses",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{businessId}}"
+								}
+							]
+						},
+						"description": "Delete business"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Family Members",
+			"item": [
+				{
+					"name": "Create Family Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe Sr.\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"john.sr@example.com\",\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"relationTypeId\": 1,\n  \"status\": 1\n}"
+						},
+						"url": "{{baseUrl}}/api/family-members",
+						"description": "Create a new family member"
+					},
+					"response": []
+				},
+				{
+					"name": "List Family Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/family-members?page=1&limit=25",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"family-members"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "25"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "userId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "relationTypeId",
+									"value": "",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all family members"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Family Member by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/family-members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"family-members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get a single family member"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Family Member",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe Sr. Updated\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"john.sr.updated@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/family-members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"family-members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Update family member"
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Family Member Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/family-members/:id/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"family-members",
+								":id",
+								"status"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Toggle status"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Family Member",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/family-members/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"family-members",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Delete family member"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Meta",
 			"item": [
 				{
-					"name": "Business Type",
+					"name": "Business Types",
 					"item": [
 						{
-							"name": "List",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"var jsonData = {};",
-											"try {",
-											"  jsonData = pm.response.json();",
-											"} catch (err) {",
-											"  jsonData = {};",
-											"}",
-											"pm.test(\"Response contains data array\", function () {",
-											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
-											"});",
-											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-											"  var first = jsonData.data[0];",
-											"  if (first && first.id) {",
-											"    pm.collectionVariables.set(\"postId\", first.id);",
-											"  }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
+							"name": "Create Business Type",
 							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{authToken}}"
-									}
-								],
-								"url": "{{baseUrl}}/api/business-types",
-								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
-							},
-							"response": []
-						},
-						{
-							"name": "Create",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"var jsonData = {};",
-											"try {",
-											"  jsonData = pm.response.json();",
-											"} catch (err) {",
-											"  jsonData = {};",
-											"}",
-											"pm.test(\"Response contains data array\", function () {",
-											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
-											"});",
-											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-											"  var first = jsonData.data[0];",
-											"  if (first && first.id) {",
-											"    pm.collectionVariables.set(\"postId\", first.id);",
-											"  }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
-							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
-									}
-								},
 								"method": "POST",
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Bearer {{authToken}}"
+										"value": "Bearer {{authToken}}",
+										"type": "text"
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"dispName\": \"BT 1\"\n}",
+									"raw": "{\n  \"dispName\": \"Retail\",\n  \"description\": \"Retail business\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1694,101 +3175,193 @@
 									}
 								},
 								"url": "{{baseUrl}}/api/business-types",
-								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+								"description": "Create a new business type"
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Business Types",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/business-types?page=1&limit=10&search=&status=1",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"business-types"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										},
+										{
+											"key": "search",
+											"value": ""
+										},
+										{
+											"key": "status",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Get all business types"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Business Type by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/business-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"business-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{businessTypeId}}"
+										}
+									]
+								},
+								"description": "Get business type by ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Business Type",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"dispName\": \"Wholesale\",\n  \"description\": \"Wholesale business\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/business-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"business-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{businessTypeId}}"
+										}
+									]
+								},
+								"description": "Update business type"
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Business Type Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/business-types/:id/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"business-types",
+										":id",
+										"status"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{businessTypeId}}"
+										}
+									]
+								},
+								"description": "Toggle business type status"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Business Type",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/business-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"business-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{businessTypeId}}"
+										}
+									]
+								},
+								"description": "Delete business type"
 							},
 							"response": []
 						}
 					]
 				},
 				{
-					"name": "Community Type",
+					"name": "Community Types",
 					"item": [
 						{
-							"name": "List",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"var jsonData = {};",
-											"try {",
-											"  jsonData = pm.response.json();",
-											"} catch (err) {",
-											"  jsonData = {};",
-											"}",
-											"pm.test(\"Response contains data array\", function () {",
-											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
-											"});",
-											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-											"  var first = jsonData.data[0];",
-											"  if (first && first.id) {",
-											"    pm.collectionVariables.set(\"postId\", first.id);",
-											"  }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
+							"name": "Create Community Type",
 							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{authToken}}"
-									}
-								],
-								"url": "{{baseUrl}}/api/community-types",
-								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
-							},
-							"response": []
-						},
-						{
-							"name": "Create",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"var jsonData = {};",
-											"try {",
-											"  jsonData = pm.response.json();",
-											"} catch (err) {",
-											"  jsonData = {};",
-											"}",
-											"pm.test(\"Response contains data array\", function () {",
-											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
-											"});",
-											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-											"  var first = jsonData.data[0];",
-											"  if (first && first.id) {",
-											"    pm.collectionVariables.set(\"postId\", first.id);",
-											"  }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
-							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
-									}
-								},
 								"method": "POST",
 								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
 									{
 										"key": "Authorization",
 										"value": "Bearer {{authToken}}"
@@ -1796,109 +3369,131 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"dispName\": \"CT 1\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
+									"raw": "{\n  \"dispName\": \"Sports Club\",\n  \"description\": \"Community for sports enthusiasts\",\n  \"status\": 1\n}"
 								},
 								"url": "{{baseUrl}}/api/community-types",
-								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Relation Type",
-					"item": [
-						{
-							"name": "List",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"var jsonData = {};",
-											"try {",
-											"  jsonData = pm.response.json();",
-											"} catch (err) {",
-											"  jsonData = {};",
-											"}",
-											"pm.test(\"Response contains data array\", function () {",
-											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
-											"});",
-											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-											"  var first = jsonData.data[0];",
-											"  if (first && first.id) {",
-											"    pm.collectionVariables.set(\"postId\", first.id);",
-											"  }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "Bearer {{authToken}}"
-									}
-								],
-								"url": "{{baseUrl}}/api/relation-types",
-								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+								"description": "Create a new community type with display name, description, and status"
 							},
 							"response": []
 						},
 						{
-							"name": "Create",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"  pm.response.to.have.status(200);",
-											"});",
-											"var jsonData = {};",
-											"try {",
-											"  jsonData = pm.response.json();",
-											"} catch (err) {",
-											"  jsonData = {};",
-											"}",
-											"pm.test(\"Response contains data array\", function () {",
-											"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
-											"});",
-											"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
-											"  var first = jsonData.data[0];",
-											"  if (first && first.id) {",
-											"    pm.collectionVariables.set(\"postId\", first.id);",
-											"  }",
-											"}"
-										],
-										"type": "text/javascript",
-										"packages": {},
-										"requests": {}
-									}
-								}
-							],
+							"name": "List Community Types",
 							"request": {
-								"auth": {
-									"type": "bearer",
-									"bearer": {
-										"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
-									}
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/community-types?page=1&limit=25",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"community-types"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1",
+											"description": "Page number (default: 1)"
+										},
+										{
+											"key": "limit",
+											"value": "25",
+											"description": "Items per page (default: 25, max: 100)"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"description": "Search by display name or description",
+											"disabled": true
+										},
+										{
+											"key": "status",
+											"value": "",
+											"description": "Filter by status (1=active, 0=inactive)",
+											"disabled": true
+										}
+									]
 								},
-								"method": "POST",
+								"description": "List all community types with pagination and optional search/status filters"
+							},
+							"response": []
+						},
+						{
+							"name": "Search Community Types",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/community-types?search=Sports&status=1&page=1&limit=25",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"community-types"
+									],
+									"query": [
+										{
+											"key": "search",
+											"value": "Sports",
+											"description": "Search keyword"
+										},
+										{
+											"key": "status",
+											"value": "1",
+											"description": "Filter by status"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "25"
+										}
+									]
+								},
+								"description": "Search community types by display name or description with status filter"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Community Type by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/community-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"community-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1",
+											"description": "Community Type ID"
+										}
+									]
+								},
+								"description": "Get a single community type by ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Community Type",
+							"request": {
+								"method": "PUT",
 								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
 									{
 										"key": "Authorization",
 										"value": "Bearer {{authToken}}"
@@ -1906,17 +3501,640 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"dispName\": \"CT 1\"\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
+									"raw": "{\n  \"dispName\": \"Sports Club Updated\",\n  \"description\": \"Updated description for sports community\",\n  \"status\": 1\n}"
 								},
-								"url": "{{baseUrl}}/api/relation-types",
-								"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+								"url": {
+									"raw": "{{baseUrl}}/api/community-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"community-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1",
+											"description": "Community Type ID"
+										}
+									]
+								},
+								"description": "Update community type details (all fields are optional)"
 							},
 							"response": []
+						},
+						{
+							"name": "Toggle Community Type Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": 0\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/community-types/:id/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"community-types",
+										":id",
+										"status"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1",
+											"description": "Community Type ID"
+										}
+									]
+								},
+								"description": "Toggle community type status (1=active, 0=inactive)"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Community Type",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/community-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"community-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1",
+											"description": "Community Type ID"
+										}
+									]
+								},
+								"description": "Delete a community type by ID"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Relation Types",
+					"item": [
+						{
+							"name": "Create Relation Type",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"dispName\": \"Father\",\n  \"description\": \"Father relationship\",\n  \"status\": 1\n}"
+								},
+								"url": "{{baseUrl}}/api/relation-types",
+								"description": "Create a new relation type"
+							},
+							"response": []
+						},
+						{
+							"name": "List Relation Types",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/relation-types?page=1&limit=25",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"relation-types"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "25"
+										},
+										{
+											"key": "search",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "status",
+											"value": "",
+											"disabled": true
+										}
+									]
+								},
+								"description": "List all relation types"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Relation Type by ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/relation-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"relation-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Get a single relation type"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Relation Type",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"dispName\": \"Father Updated\",\n  \"description\": \"Updated description\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/relation-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"relation-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Update relation type"
+							},
+							"response": []
+						},
+						{
+							"name": "Toggle Relation Type Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": 0\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/relation-types/:id/status",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"relation-types",
+										":id",
+										"status"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Toggle status"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Relation Type",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/relation-types/:id",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"relation-types",
+										":id"
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Delete relation type"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "OLD",
+					"item": [
+						{
+							"name": "Business Type OLD",
+							"item": [
+								{
+									"name": "List",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"var jsonData = {};",
+													"try {",
+													"  jsonData = pm.response.json();",
+													"} catch (err) {",
+													"  jsonData = {};",
+													"}",
+													"pm.test(\"Response contains data array\", function () {",
+													"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+													"});",
+													"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+													"  var first = jsonData.data[0];",
+													"  if (first && first.id) {",
+													"    pm.collectionVariables.set(\"postId\", first.id);",
+													"  }",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{authToken}}"
+											}
+										],
+										"url": "{{baseUrl}}/api/business-types",
+										"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+									},
+									"response": []
+								},
+								{
+									"name": "Create",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"var jsonData = {};",
+													"try {",
+													"  jsonData = pm.response.json();",
+													"} catch (err) {",
+													"  jsonData = {};",
+													"}",
+													"pm.test(\"Response contains data array\", function () {",
+													"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+													"});",
+													"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+													"  var first = jsonData.data[0];",
+													"  if (first && first.id) {",
+													"    pm.collectionVariables.set(\"postId\", first.id);",
+													"  }",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": {
+												"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
+											}
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{authToken}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"dispName\": \"BT 1\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": "{{baseUrl}}/api/business-types",
+										"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Community Type OLD",
+							"item": [
+								{
+									"name": "List",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"var jsonData = {};",
+													"try {",
+													"  jsonData = pm.response.json();",
+													"} catch (err) {",
+													"  jsonData = {};",
+													"}",
+													"pm.test(\"Response contains data array\", function () {",
+													"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+													"});",
+													"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+													"  var first = jsonData.data[0];",
+													"  if (first && first.id) {",
+													"    pm.collectionVariables.set(\"postId\", first.id);",
+													"  }",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{authToken}}"
+											}
+										],
+										"url": "{{baseUrl}}/api/community-types",
+										"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+									},
+									"response": []
+								},
+								{
+									"name": "Create",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"var jsonData = {};",
+													"try {",
+													"  jsonData = pm.response.json();",
+													"} catch (err) {",
+													"  jsonData = {};",
+													"}",
+													"pm.test(\"Response contains data array\", function () {",
+													"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+													"});",
+													"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+													"  var first = jsonData.data[0];",
+													"  if (first && first.id) {",
+													"    pm.collectionVariables.set(\"postId\", first.id);",
+													"  }",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": {
+												"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
+											}
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{authToken}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"dispName\": \"CT 1\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": "{{baseUrl}}/api/community-types",
+										"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Relation Type OLD",
+							"item": [
+								{
+									"name": "List",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"var jsonData = {};",
+													"try {",
+													"  jsonData = pm.response.json();",
+													"} catch (err) {",
+													"  jsonData = {};",
+													"}",
+													"pm.test(\"Response contains data array\", function () {",
+													"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+													"});",
+													"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+													"  var first = jsonData.data[0];",
+													"  if (first && first.id) {",
+													"    pm.collectionVariables.set(\"postId\", first.id);",
+													"  }",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{authToken}}"
+											}
+										],
+										"url": "{{baseUrl}}/api/relation-types",
+										"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+									},
+									"response": []
+								},
+								{
+									"name": "Create",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Status code is 200\", function () {",
+													"  pm.response.to.have.status(200);",
+													"});",
+													"var jsonData = {};",
+													"try {",
+													"  jsonData = pm.response.json();",
+													"} catch (err) {",
+													"  jsonData = {};",
+													"}",
+													"pm.test(\"Response contains data array\", function () {",
+													"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+													"});",
+													"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+													"  var first = jsonData.data[0];",
+													"  if (first && first.id) {",
+													"    pm.collectionVariables.set(\"postId\", first.id);",
+													"  }",
+													"}"
+												],
+												"type": "text/javascript",
+												"packages": {},
+												"requests": {}
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": {
+												"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInJvbGVzIjpbXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjE2MzQ3NTYsImV4cCI6MTc2MTYzODM1Nn0.wH_Wvoep3Qpix5H5-CWVj3oobQ9xFn78oIs3G01VFZw"
+											}
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer {{authToken}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"dispName\": \"CT 1\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": "{{baseUrl}}/api/relation-types",
+										"description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
+									},
+									"response": []
+								}
+							]
 						}
 					]
 				},
@@ -1983,6 +4201,12 @@
 			"response": []
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "jk"
+		}
+	},
 	"event": [
 		{
 			"listen": "prerequest",
