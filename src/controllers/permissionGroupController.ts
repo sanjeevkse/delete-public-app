@@ -21,7 +21,8 @@ export const listPermissionGroups = asyncHandler(
       whereClause.status = status;
     }
 
-    const include = includePermissions === "true" ? [{ model: MetaPermission, as: "permissions" }] : [];
+    const include =
+      includePermissions === "true" ? [{ model: MetaPermission, as: "permissions" }] : [];
 
     const permissionGroups = await MetaPermissionGroup.findAll({
       where: whereClause,
@@ -37,21 +38,19 @@ export const listPermissionGroups = asyncHandler(
  * Get a single permission group by ID
  * GET /admin/permission-groups/:id
  */
-export const getPermissionGroup = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
+export const getPermissionGroup = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
 
-    const permissionGroup = await MetaPermissionGroup.findByPk(id, {
-      include: [{ model: MetaPermission, as: "permissions" }]
-    });
+  const permissionGroup = await MetaPermissionGroup.findByPk(id, {
+    include: [{ model: MetaPermission, as: "permissions" }]
+  });
 
-    if (!permissionGroup) {
-      throw new ApiError("Permission group not found", 404);
-    }
-
-    return sendSuccess(res, permissionGroup, "Permission group retrieved successfully");
+  if (!permissionGroup) {
+    throw new ApiError("Permission group not found", 404);
   }
-);
+
+  return sendSuccess(res, permissionGroup, "Permission group retrieved successfully");
+});
 
 /**
  * Get permissions for a specific permission group

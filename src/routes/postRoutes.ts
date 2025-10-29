@@ -20,29 +20,11 @@ const router = Router();
 router.get("/posts", authenticate(), listPosts);
 router.get("/posts/:id", authenticate(), getPost);
 router.get("/my-posts", authenticate(), listMyPosts);
-router.post(
-  "/posts",
-  authenticate(),
-  postMediaUpload,
-  createPost
-);
+router.post("/posts", authenticate(), postMediaUpload, createPost);
 router.put("/posts/:id", authenticate(), updatePost);
 router.delete("/posts/:id", authenticate(), deletePost);
-router.post(
-  "/posts/:id/reactions",
-  authenticate(),
-  reactToPost
-);
-router.post(
-  "/posts/:id/media",
-  authenticate(),
-  postMediaUpload,
-  addPostMedia
-);
-router.delete(
-  "/posts/:id/media",
-  authenticate(),
-  removePostMedia
-);
+router.post("/posts/:id/reactions", authenticate(), reactToPost);
+router.post("/posts/:id/media", authenticate(), postMediaUpload, addPostMedia);
+router.delete("/posts/:id/media", authenticate(), removePostMedia);
 
 export default router;

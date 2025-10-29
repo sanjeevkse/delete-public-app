@@ -1,6 +1,13 @@
 import { Router } from "express";
 
-import { createRole, deleteRole, listRoles, getRole, getRolePermissions, updateRole } from "../controllers/roleController";
+import {
+  createRole,
+  deleteRole,
+  listRoles,
+  getRole,
+  getRolePermissions,
+  updateRole
+} from "../controllers/roleController";
 import { listPermissions } from "../controllers/permissionController";
 import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 

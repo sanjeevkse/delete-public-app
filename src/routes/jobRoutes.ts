@@ -9,18 +9,8 @@ const router = Router();
 
 router.get("/jobs", authenticate(), listJobs);
 router.get("/jobs/:id", authenticate(), getJob);
-router.post(
-  "/jobs",
-  authenticate(),
-  jobResumeUpload,
-  createJob
-);
-router.put(
-  "/jobs/:id",
-  authenticate(),
-  jobResumeUpload,
-  updateJob
-);
+router.post("/jobs", authenticate(), jobResumeUpload, createJob);
+router.put("/jobs/:id", authenticate(), jobResumeUpload, updateJob);
 router.delete("/jobs/:id", authenticate(), deleteJob);
 
 export default router;

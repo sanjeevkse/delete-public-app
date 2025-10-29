@@ -47,8 +47,8 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
 export const getRolePermissions = asyncHandler(async (req: Request, res: Response) => {
   const role = await MetaUserRole.findByPk(req.params.id, {
     include: [
-      { 
-        model: MetaPermission, 
+      {
+        model: MetaPermission,
         as: "permissions",
         include: [{ association: "group" }]
       }
