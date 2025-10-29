@@ -17,56 +17,48 @@ const router = Router();
 // List all permission groups
 router.get(
   "/",
-  authorizePermissions("permission-groups:list"),
   listPermissionGroups
 );
 
 // Get a single permission group
 router.get(
   "/:id",
-  authorizePermissions("permission-groups:view"),
   getPermissionGroup
 );
 
 // Get permissions for a permission group
 router.get(
   "/:id/permissions",
-  authorizePermissions("permission-groups:view"),
   getPermissionGroupPermissions
 );
 
 // Create a new permission group
 router.post(
   "/",
-  authorizePermissions("permission-groups:create"),
   createPermissionGroup
 );
 
 // Update a permission group
 router.put(
   "/:id",
-  authorizePermissions("permission-groups:update"),
   updatePermissionGroup
 );
 
 // Delete a permission group
 router.delete(
   "/:id",
-  authorizePermissions("permission-groups:delete"),
   deletePermissionGroup
 );
 
 // Deactivate a permission group
 router.patch(
   "/:id/deactivate",
-  authorizePermissions("permission-groups:update"),
   deactivatePermissionGroup
 );
 
 // Activate a permission group
 router.patch(
   "/:id/activate",
-  authorizePermissions("permission-groups:update"),
   activatePermissionGroup
 );
 

@@ -5,6 +5,6 @@ import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 
 const router = Router();
 
-router.get("/", authorizePermissions("permissions:list"), listPermissions);
+router.get("/", listPermissions);
 
 export default router;
