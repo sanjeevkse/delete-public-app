@@ -8,6 +8,12 @@ export enum PostReactionType {
   DISLIKE = "DISLIKE"
 }
 
+export enum PostUserReactionStatus {
+  LIKE = "LIKE",
+  DISLIKE = "DISLIKE",
+  NO_REACTION = "NO_REACTION"
+}
+
 export enum UserOtpPurpose {
   LOGIN = "LOGIN",
   TWO_FACTOR = "2FA",

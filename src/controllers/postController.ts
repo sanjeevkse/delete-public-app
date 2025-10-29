@@ -12,7 +12,7 @@ import { MAX_POST_IMAGE_COUNT, MAX_POST_VIDEO_COUNT } from "../middlewares/postU
 import Post from "../models/Post";
 import PostMedia from "../models/PostMedia";
 import PostReaction from "../models/PostReaction";
-import { MediaType, PostReactionType } from "../types/enums";
+import { MediaType, PostReactionType, PostUserReactionStatus } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendSuccess,
@@ -61,6 +61,53 @@ const reactionCountAttributes: Array<[LiteralValue, string]> = [
 
 const attributesWithReactionCounts: FindAttributeOptions = {
   include: reactionCountAttributes
+};
+
+const buildCurrentUserReactionLiteral = (userId: number): LiteralValue =>
+  sequelize.literal(`(
+    SELECT pr.reaction
+    FROM ${POST_REACTION_TABLE} AS pr
+    WHERE pr.post_id = Post.id
+      AND pr.user_id = ${sequelize.escape(userId)}
+      AND pr.status = 1
+    ORDER BY pr.updated_at DESC
+    LIMIT 1
+  )`);
+
+const buildPostAttributes = (currentUserId?: number): FindAttributeOptions => {
+  if (typeof currentUserId !== "number") {
+    return attributesWithReactionCounts;
+  }
+
+  return {
+    include: [
+      ...reactionCountAttributes,
+      [buildCurrentUserReactionLiteral(currentUserId), "currentUserReaction"]
+    ]
+  };
+};
+
+const formatPostForResponse = (post: Post, currentUserId?: number) => {
+  const plainPost = post.get({ plain: true }) as Record<string, unknown>;
+
+  if (typeof currentUserId === "number") {
+    const rawReaction = plainPost.currentUserReaction as string | null | undefined;
+    let status = PostUserReactionStatus.NO_REACTION;
+
+    if (rawReaction === PostReactionType.LIKE) {
+      status = PostUserReactionStatus.LIKE;
+    } else if (rawReaction === PostReactionType.DISLIKE) {
+      status = PostUserReactionStatus.DISLIKE;
+    }
+
+    plainPost.currentUserPostReaction = status;
+  }
+
+  if ("currentUserReaction" in plainPost) {
+    delete (plainPost as { currentUserReaction?: unknown }).currentUserReaction;
+  }
+
+  return plainPost;
 };
 
 const authorAttributes: Array<string | ProjectionAlias> = [
@@ -310,12 +357,18 @@ const normalizePostMediaInput = (
   return parseLegacyMediaInput(mediaInput);
 };
 
-const fetchPostById = async (id: number) => {
-  return Post.findOne({
+const fetchPostById = async (id: number, currentUserId?: number) => {
+  const post = await Post.findOne({
     where: { id, status: 1 },
-    attributes: attributesWithReactionCounts,
+    attributes: buildPostAttributes(currentUserId),
     include: basePostInclude
   });
+
+  if (!post) {
+    return null;
+  }
+
+  return formatPostForResponse(post, currentUserId);
 };
 
 const computePaginationMeta = (total: number, page: number, limit: number) => ({
@@ -324,7 +377,8 @@ const computePaginationMeta = (total: number, page: number, limit: number) => ({
   pages: Math.ceil(total / limit)
 });
 
-const buildListAttributes = (): FindAttributeOptions => attributesWithReactionCounts;
+const buildListAttributes = (currentUserId?: number): FindAttributeOptions =>
+  buildPostAttributes(currentUserId);
 
 const getReactionCounts = async (postId: number) => {
   const [likes, dislikes] = await Promise.all([
@@ -388,18 +442,20 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
     return post.id;
   });
 
-  const createdPost = await fetchPostById(createdPostId);
+  const createdPost = await fetchPostById(createdPostId, userId);
 
   return sendCreated(res, createdPost, "Post created successfully");
 });
 
-export const getPost = asyncHandler(async (req: Request, res: Response) => {
+export const getPost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
     return sendBadRequest(res, "Invalid post id");
   }
 
-  const post = await fetchPostById(id);
+  const post = await fetchPostById(id, userId);
 
   if (!post) {
     return sendNotFound(res, "Post not found", "post");
@@ -408,7 +464,8 @@ export const getPost = asyncHandler(async (req: Request, res: Response) => {
   return sendSuccess(res, post, "Post retrieved successfully");
 });
 
-export const listPosts = asyncHandler(async (req: Request, res: Response) => {
+export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
   const { page, limit, offset } = parsePagination(req);
   const sortDirection = parseSortDirection(req.query.sort);
 
@@ -441,14 +498,16 @@ export const listPosts = asyncHandler(async (req: Request, res: Response) => {
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(),
+    attributes: buildListAttributes(userId),
     include: basePostInclude,
     distinct: true
   });
 
   const pagination = calculatePagination(count, page, limit);
 
-  return sendSuccessWithPagination(res, rows, pagination, "Posts retrieved successfully");
+  const posts = rows.map((post) => formatPostForResponse(post, userId));
+
+  return sendSuccessWithPagination(res, posts, pagination, "Posts retrieved successfully");
 });
 
 export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -464,14 +523,16 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(),
+    attributes: buildListAttributes(userId),
     include: basePostInclude,
     distinct: true
   });
 
   const pagination = calculatePagination(count, page, limit);
 
-  return sendSuccessWithPagination(res, rows, pagination, "Your posts retrieved successfully");
+  const posts = rows.map((post) => formatPostForResponse(post, userId));
+
+  return sendSuccessWithPagination(res, posts, pagination, "Your posts retrieved successfully");
 });
 
 export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -515,7 +576,7 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
     await post.update(updates, { transaction });
   });
 
-  const updated = await fetchPostById(post.id);
+  const updated = await fetchPostById(post.id, userId);
   return sendSuccess(res, updated, "Post updated successfully");
 });
 
@@ -621,7 +682,7 @@ export const addPostMedia = asyncHandler(async (req: AuthenticatedRequest, res: 
     );
   });
 
-  const updated = await fetchPostById(post.id);
+  const updated = await fetchPostById(post.id, userId);
   return sendCreated(res, updated, "Media added to post successfully");
 });
 
@@ -669,7 +730,7 @@ export const removePostMedia = asyncHandler(async (req: AuthenticatedRequest, re
     );
   });
 
-  const updated = await fetchPostById(post.id);
+  const updated = await fetchPostById(post.id, userId);
   return sendSuccess(res, updated, "Media removed from post successfully");
 });
 
@@ -687,7 +748,7 @@ export const reactToPost = asyncHandler(async (req: AuthenticatedRequest, res: R
   }
 
   const normalizedReaction = reactionInput.toUpperCase();
-  const isNoReaction = normalizedReaction === "NO_REACTION";
+  const isNoReaction = normalizedReaction === PostUserReactionStatus.NO_REACTION;
 
   if (
     !isNoReaction &&
