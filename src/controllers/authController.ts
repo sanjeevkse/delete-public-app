@@ -431,18 +431,25 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const serializedGroups = permissionSet.has("*")
     ? groups.map((group) => {
         const payload = group.toJSON() as {
+          id: number;
+          label: string;
+          description?: string;
+          sidebar?: string;
+          status: number;
           permissions?: Array<{ dispName: string }>;
         };
-        if (Array.isArray(payload.permissions)) {
-          payload.permissions = [...payload.permissions].sort((a, b) =>
-            a.dispName.localeCompare(b.dispName)
-          );
-        }
+        // Remove permissions from the response
+        delete payload.permissions;
         return payload;
       })
     : groups
         .map((group) => {
           const payload = group.toJSON() as {
+            id: number;
+            label: string;
+            description?: string;
+            sidebar?: string;
+            status: number;
             action?: string;
             permissions?: Array<{ dispName: string }>;
           };
@@ -458,12 +465,11 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
             return null;
           }
 
-          payload.permissions = [...visiblePermissions].sort((a, b) =>
-            a.dispName.localeCompare(b.dispName)
-          );
+          // Remove permissions from the response
+          delete payload.permissions;
           return payload;
         })
-        .filter((groupPayload): groupPayload is Record<string, unknown> => Boolean(groupPayload));
+        .filter((groupPayload) => groupPayload !== null);
 
   return sendSuccess(res, { groups: serializedGroups }, "Sidebar data retrieved successfully");
 });
