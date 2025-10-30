@@ -74,7 +74,7 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ],
     limit,
@@ -104,7 +104,7 @@ export const getFamilyMember = asyncHandler(async (req: Request, res: Response) 
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -174,7 +174,7 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -246,7 +246,7 @@ export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -306,7 +306,7 @@ export const toggleFamilyMemberStatus = asyncHandler(
         {
           model: MetaRelationType,
           as: "relationType",
-          attributes: ["id", "dispName", "description"]
+          attributes: ["id", "dispName"]
         }
       ]
     });

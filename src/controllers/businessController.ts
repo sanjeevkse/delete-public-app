@@ -65,12 +65,12 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
 
   const { rows, count } = await Business.findAndCountAll({
     where,
-    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ['createdAt'] }),
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
     include: [
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ],
     limit,
@@ -99,7 +99,7 @@ export const getBusiness = asyncHandler(async (req: Request, res: Response) => {
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -178,7 +178,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -267,7 +267,7 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -322,7 +322,7 @@ export const toggleBusinessStatus = asyncHandler(
         {
           model: MetaBusinessType,
           as: "businessType",
-          attributes: ["id", "dispName", "description"]
+          attributes: ["id", "dispName"]
         }
       ]
     });

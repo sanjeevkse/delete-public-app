@@ -69,7 +69,7 @@ export const listCommunities = asyncHandler(async (req: Request, res: Response) 
       {
         model: MetaCommunityType,
         as: "communityType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ],
     limit,
@@ -94,7 +94,7 @@ export const getCommunity = asyncHandler(async (req: Request, res: Response) => 
       {
         model: MetaCommunityType,
         as: "communityType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -157,7 +157,7 @@ export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, re
       {
         model: MetaCommunityType,
         as: "communityType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -220,7 +220,7 @@ export const updateCommunity = asyncHandler(async (req: AuthenticatedRequest, re
       {
         model: MetaCommunityType,
         as: "communityType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
@@ -275,7 +275,7 @@ export const toggleCommunityStatus = asyncHandler(
         {
           model: MetaCommunityType,
           as: "communityType",
-          attributes: ["id", "dispName", "description"]
+          attributes: ["id", "dispName"]
         }
       ]
     });
@@ -312,7 +312,7 @@ export const updateMemberCount = asyncHandler(async (req: AuthenticatedRequest, 
       {
         model: MetaCommunityType,
         as: "communityType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName"]
       }
     ]
   });
