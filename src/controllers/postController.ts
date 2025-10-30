@@ -537,7 +537,13 @@ export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
   const pagination = calculatePagination(count, page, limit);
 
-  const posts = rows.map((post) => formatPostForResponse(post, userId));
+  const posts = rows.map((post) => formatPostForResponse(post, userId)).map((post) => {
+    const w = 400; //  + Math.floor(Math.random() * 200);
+    const h = 300; //  + Math.floor(Math.random() * 200);
+    return {...post, mediaUrl: `https://picsum.photos/seed/${post.id}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}/${w}/${h}`};
+  });
 
   return sendSuccessWithPagination(res, posts, pagination, "Posts retrieved successfully");
 });
