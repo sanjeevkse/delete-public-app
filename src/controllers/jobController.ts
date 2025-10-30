@@ -15,6 +15,7 @@ import {
   sendSuccessWithPagination
 } from "../utils/apiResponse";
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -486,6 +487,9 @@ export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   const statusFilter = parseStatusFilter(req.query.status);
   const sortDirection = parseSortDirection(req.query.sort ?? req.query.sortDirection);
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] });
+
   const where: WhereOptions = {};
 
   if (statusFilter === undefined) {
@@ -500,6 +504,7 @@ export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Resp
 
   const { rows, count } = await Job.findAndCountAll({
     where,
+    attributes,
     include: buildJobInclude(),
     limit,
     offset,
@@ -529,8 +534,12 @@ export const getJob = asyncHandler(async (req: AuthenticatedRequest, res: Respon
     throw new ApiError("Invalid job id", 400);
   }
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields });
+
   const job = await Job.findOne({
     where: { id, status: 1 },
+    attributes,
     include: buildJobInclude()
   });
 

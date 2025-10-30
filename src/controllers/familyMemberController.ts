@@ -17,6 +17,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 /**
  * List all family members with pagination and search
@@ -63,8 +64,12 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
     ? { [Op.and]: filters }
     : undefined;
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] });
+
   const { rows, count } = await FamilyMember.findAndCountAll({
     where,
+    attributes,
     include: [
       {
         model: User,
@@ -84,7 +89,7 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
 
   const pagination = calculatePagination(count, page, limit);
 
-  sendSuccessWithPagination(res, rows, pagination, "Family members retrieved successfully");
+  return sendSuccessWithPagination(res, rows, pagination, "Family members retrieved successfully");
 });
 
 /**
@@ -94,7 +99,11 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
 export const getFamilyMember = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields });
+
   const familyMember = await FamilyMember.findByPk(id, {
+    attributes,
     include: [
       {
         model: User,
@@ -113,7 +122,7 @@ export const getFamilyMember = asyncHandler(async (req: Request, res: Response) 
     return sendNotFound(res, "Family member not found");
   }
 
-  sendSuccess(res, familyMember, "Family member retrieved successfully");
+  return sendSuccess(res, familyMember, "Family member retrieved successfully");
 });
 
 /**

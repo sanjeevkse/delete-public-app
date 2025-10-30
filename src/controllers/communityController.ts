@@ -16,6 +16,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 /**
  * List all communities with pagination and search
@@ -63,8 +64,12 @@ export const listCommunities = asyncHandler(async (req: Request, res: Response) 
     ? { [Op.and]: filters }
     : undefined;
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] });
+
   const { rows, count } = await Community.findAndCountAll({
     where,
+    attributes,
     include: [
       {
         model: MetaCommunityType,
@@ -79,7 +84,7 @@ export const listCommunities = asyncHandler(async (req: Request, res: Response) 
 
   const pagination = calculatePagination(count, page, limit);
 
-  sendSuccessWithPagination(res, rows, pagination, "Communities retrieved successfully");
+  return sendSuccessWithPagination(res, rows, pagination, "Communities retrieved successfully");
 });
 
 /**
@@ -89,7 +94,11 @@ export const listCommunities = asyncHandler(async (req: Request, res: Response) 
 export const getCommunity = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields });
+
   const community = await Community.findByPk(id, {
+    attributes,
     include: [
       {
         model: MetaCommunityType,

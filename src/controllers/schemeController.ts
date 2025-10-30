@@ -12,6 +12,7 @@ import {
   sendSuccess,
   sendSuccessWithPagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -174,6 +175,9 @@ export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: R
   const statusFilter = parseStatusFilter(req.query.status);
   const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: [sortBy] });
+
   const where: WhereOptions = {};
 
   if (statusFilter === undefined) {
@@ -191,6 +195,7 @@ export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   const { rows, count } = await Scheme.findAndCountAll({
     where,
+    attributes,
     limit,
     offset,
     order: [[sortBy, direction]]
@@ -219,8 +224,12 @@ export const getScheme = asyncHandler(async (req: AuthenticatedRequest, res: Res
     throw new ApiError("Invalid scheme id", 400);
   }
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields });
+
   const scheme = await Scheme.findOne({
-    where: { id, status: 1 }
+    where: { id, status: 1 },
+    attributes
   });
 
   if (!scheme) {

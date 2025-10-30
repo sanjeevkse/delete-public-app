@@ -15,6 +15,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 /**
  * List all members with pagination and search
@@ -29,6 +30,9 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
   );
   const search = (req.query.search as string) ?? "";
 
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] });
+
   const { rows, count } = await Member.findAndCountAll({
     where: search
       ? {
@@ -39,6 +43,7 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
           ]
         }
       : undefined,
+    attributes,
     limit,
     offset,
     order: [["createdAt", "DESC"]]
@@ -56,7 +61,10 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
 export const getMember = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  const member = await Member.findByPk(id);
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const attributes = buildQueryAttributes({ includeAuditFields });
+
+  const member = await Member.findByPk(id, { attributes });
 
   if (!member) {
     return sendNotFound(res, "Member not found");
