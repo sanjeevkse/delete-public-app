@@ -17,7 +17,7 @@ const router = Router();
  * @desc    Create a new family member
  * @access  Protected
  */
-router.post("/family-members", authenticate, createFamilyMember);
+router.post("/family-members", authenticate(), createFamilyMember);
 
 /**
  * @route   GET /api/family-members
@@ -39,20 +39,20 @@ router.get("/family-members/:id", getFamilyMember);
  * @desc    Update a family member
  * @access  Protected
  */
-router.put("/family-members/:id", authenticate, updateFamilyMember);
+router.put("/family-members/:id", authenticate(), updateFamilyMember);
 
 /**
  * @route   PATCH /api/family-members/:id/status
  * @desc    Toggle family member status (activate/deactivate)
  * @access  Protected
  */
-router.patch("/family-members/:id/status", authenticate, toggleFamilyMemberStatus);
+router.patch("/family-members/:id/status", authenticate(), toggleFamilyMemberStatus);
 
 /**
  * @route   DELETE /api/family-members/:id
  * @desc    Delete a family member
  * @access  Protected
  */
-router.delete("/family-members/:id", authenticate, deleteFamilyMember);
+router.delete("/family-members/:id", authenticate(), deleteFamilyMember);
 
 export default router;

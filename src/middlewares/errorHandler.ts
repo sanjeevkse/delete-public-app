@@ -28,6 +28,10 @@ export const errorHandler = (
   _next: NextFunction
 ): void => {
   let alreadyLogged = false;
+  let statusCode: number;
+  let errorCode: string;
+  let errorMessage: string;
+  let errorDetails: unknown | undefined;
 
   if (err instanceof UniqueConstraintError) {
     const messages = Array.from(new Set(err.errors.map((item) => item.message))).filter(Boolean);
@@ -39,12 +43,10 @@ export const errorHandler = (
 
     logger.warn({ err, details }, "Handled unique constraint error");
 
-    err.status = err.status ?? 409;
-    err.code = err.code ?? "CONFLICT";
-    err.message = messages.join("; ") || err.message || "Resource already exists";
-    if (details.length && err.details === undefined) {
-      err.details = details;
-    }
+    statusCode = 409;
+    errorCode = "CONFLICT";
+    errorMessage = messages.join("; ") || err.message || "Resource already exists";
+    errorDetails = details.length ? details : undefined;
     alreadyLogged = true;
   } else if (err instanceof SequelizeValidationError) {
     const messages = Array.from(new Set(err.errors.map((item) => item.message))).filter(Boolean);
@@ -57,16 +59,18 @@ export const errorHandler = (
 
     logger.warn({ err, details }, "Handled validation error");
 
-    err.status = err.status ?? 422;
-    err.code = err.code ?? "VALIDATION_ERROR";
-    err.message = messages.join("; ") || err.message || "Validation failed";
-    if (details.length && err.details === undefined) {
-      err.details = details;
-    }
+    statusCode = 422;
+    errorCode = "VALIDATION_ERROR";
+    errorMessage = messages.join("; ") || err.message || "Validation failed";
+    errorDetails = details.length ? details : undefined;
     alreadyLogged = true;
+  } else {
+    statusCode = err.status ?? 500;
+    errorCode = err.code || "";
+    errorMessage = err.message;
+    errorDetails = err.details;
   }
 
-  const statusCode = err.status ?? 500;
   if (!alreadyLogged) {
     if (statusCode >= 500) {
       logger.error({ err }, "Unhandled server error");
@@ -75,26 +79,28 @@ export const errorHandler = (
     }
   }
 
-  // Map status codes to error codes
-  const errorCodeMap: Record<number, string> = {
-    400: "BAD_REQUEST",
-    401: "UNAUTHORIZED",
-    403: "FORBIDDEN",
-    404: "NOT_FOUND",
-    409: "CONFLICT",
-    422: "VALIDATION_ERROR",
-    500: "INTERNAL_ERROR",
-    503: "SERVICE_UNAVAILABLE"
-  };
+  // Map status codes to error codes if not already set
+  if (!errorCode) {
+    const errorCodeMap: Record<number, string> = {
+      400: "BAD_REQUEST",
+      401: "UNAUTHORIZED",
+      403: "FORBIDDEN",
+      404: "NOT_FOUND",
+      409: "CONFLICT",
+      422: "VALIDATION_ERROR",
+      500: "INTERNAL_ERROR",
+      503: "SERVICE_UNAVAILABLE"
+    };
 
-  const errorCode = err.code || errorCodeMap[statusCode] || "UNKNOWN_ERROR";
+    errorCode = errorCodeMap[statusCode] || "UNKNOWN_ERROR";
+  }
 
   res.status(statusCode).json({
     success: false,
     error: {
       code: errorCode,
-      message: err.message ?? "Internal Server Error",
-      ...(err.details !== undefined ? { details: err.details } : {})
+      message: errorMessage ?? "Internal Server Error",
+      ...(errorDetails !== undefined ? { details: errorDetails } : {})
     }
   });
 };

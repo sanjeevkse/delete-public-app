@@ -99,7 +99,7 @@ export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: 
  * Update a member
  * PUT /api/members/:id
  */
-export const updateMember = asyncHandler(async (req: Request, res: Response) => {
+export const updateMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   const { fullName, contactNumber, email } = req.body;
 

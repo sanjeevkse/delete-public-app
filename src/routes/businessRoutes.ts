@@ -17,7 +17,7 @@ const router = Router();
  * @desc    Create a new business
  * @access  Protected
  */
-router.post("/businesses", authenticate, createBusiness);
+router.post("/businesses", authenticate(), createBusiness);
 
 /**
  * @route   GET /api/businesses
@@ -39,20 +39,20 @@ router.get("/businesses/:id", getBusiness);
  * @desc    Update a business
  * @access  Protected
  */
-router.put("/businesses/:id", authenticate, updateBusiness);
+router.put("/businesses/:id", authenticate(), updateBusiness);
 
 /**
  * @route   PATCH /api/businesses/:id/status
  * @desc    Toggle business status (activate/deactivate)
  * @access  Protected
  */
-router.patch("/businesses/:id/status", authenticate, toggleBusinessStatus);
+router.patch("/businesses/:id/status", authenticate(), toggleBusinessStatus);
 
 /**
  * @route   DELETE /api/businesses/:id
  * @desc    Delete a business
  * @access  Protected
  */
-router.delete("/businesses/:id", authenticate, deleteBusiness);
+router.delete("/businesses/:id", authenticate(), deleteBusiness);
 
 export default router;
