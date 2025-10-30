@@ -471,5 +471,45 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
         })
         .filter((groupPayload) => groupPayload !== null);
 
+  const publicSidebars = [
+    {
+      id: 900,
+      label: "Feeds",
+      description: "Feeds and updates",
+      sidebar: "FEEDS_SCREEN",
+      status: 1
+    },
+    {
+      id: 901,
+      label: "Requets",
+      description: "User requests and submissions",
+      sidebar: "REQUESTS_SCREEN",
+      status: 1
+    },
+    {
+     id: 902,
+      label: "Profile",
+      description: "User profile and settings",
+      sidebar: "PROFILE_SCREEN",
+      status: 1
+    }
+  ];
+
+  serializedGroups.unshift(...publicSidebars);
+
+  const dahboardSidebar = [
+    {
+      id: 950,
+      label: "Dashboard",
+      description: "Administrative dashboard",
+      sidebar: "DASHBOARD_SCREEN",
+      status: 1
+    }
+  ];
+
+  if (accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
+    serializedGroups.unshift(...dahboardSidebar);
+  }
+
   return sendSuccess(res, { groups: serializedGroups }, "Sidebar data retrieved successfully");
 });
