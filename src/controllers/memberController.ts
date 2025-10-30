@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import { Op } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
+import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import Member from "../models/Member";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -13,7 +15,6 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
-import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 
 /**
  * List all members with pagination and search
@@ -68,7 +69,7 @@ export const getMember = asyncHandler(async (req: Request, res: Response) => {
  * Create a new member
  * POST /api/members
  */
-export const createMember = asyncHandler(async (req: Request, res: Response) => {
+export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { fullName, contactNumber, email } = req.body;
 
   // Validate required fields

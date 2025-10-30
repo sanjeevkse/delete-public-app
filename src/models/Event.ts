@@ -18,6 +18,8 @@ class Event extends Model<InferAttributes<Event>, InferCreationAttributes<Event>
   declare description: string;
   declare place: string;
   declare googleMapLink: string;
+  declare latitude: number | null;
+  declare longitude: number | null;
   declare startDate: Date;
   declare startTime: string;
   declare endDate: Date;
@@ -54,6 +56,22 @@ Event.init(
       field: "google_map_link",
       type: DataTypes.STRING(500),
       allowNull: false
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+      validate: {
+        min: -90,
+        max: 90
+      }
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+      validate: {
+        min: -180,
+        max: 180
+      }
     },
     startDate: {
       field: "start_date",

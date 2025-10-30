@@ -358,6 +358,8 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const description = parseRequiredString(req.body?.description, "description");
   const place = parseRequiredString(req.body?.place, "place");
   const googleMapLink = parseRequiredString(req.body?.googleMapLink, "googleMapLink");
+  const latitude = parseOptionalNumber(req.body?.latitude, "latitude");
+  const longitude = parseOptionalNumber(req.body?.longitude, "longitude");
   const startDate = parseRequiredDateOnly(req.body?.startDate, "startDate");
   const startTime = parseRequiredTime(req.body?.startTime, "startTime");
   const endDate = parseRequiredDateOnly(req.body?.endDate, "endDate");
@@ -373,6 +375,8 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
         description,
         place,
         googleMapLink,
+        latitude,
+        longitude,
         startDate: new Date(startDate),
         startTime,
         endDate: new Date(endDate),
@@ -487,6 +491,16 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
       ...(startDateFrom ? { [Op.gte]: startDateFrom } : {}),
       ...(startDateTo ? { [Op.lte]: startDateTo } : {})
     };
+  }
+
+  const latitudeFilter = parseOptionalNumber(req.query.latitude, "latitude");
+  if (latitudeFilter !== undefined) {
+    where.latitude = latitudeFilter;
+  }
+
+  const longitudeFilter = parseOptionalNumber(req.query.longitude, "longitude");
+  if (longitudeFilter !== undefined) {
+    where.longitude = longitudeFilter;
   }
 
   const { rows, count } = await Event.findAndCountAll({
@@ -629,6 +643,12 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "googleMapLink")) {
     updates.googleMapLink = parseRequiredString(req.body.googleMapLink, "googleMapLink");
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body, "latitude")) {
+    updates.latitude = parseOptionalNumber(req.body.latitude, "latitude");
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body, "longitude")) {
+    updates.longitude = parseOptionalNumber(req.body.longitude, "longitude");
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "startDate")) {
     const parsedStartDate = parseRequiredDateOnly(req.body.startDate, "startDate");
