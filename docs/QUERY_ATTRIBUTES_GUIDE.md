@@ -66,6 +66,23 @@ const attributes = buildQueryAttributes({
 });
 ```
 
+#### Keeping Specific Audit Fields (for ORDER BY)
+
+If you need to order by an audit field like `createdAt`, you must keep it in the result:
+
+```typescript
+const attributes = buildQueryAttributes({
+  includeAuditFields: false,
+  keepFields: ['createdAt'] // Keep createdAt for ORDER BY
+});
+
+// Then use it in your query
+Model.findAll({
+  attributes,
+  order: [['createdAt', 'DESC']]
+});
+```
+
 #### Including Computed Fields
 
 ```typescript

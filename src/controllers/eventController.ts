@@ -57,8 +57,8 @@ const registrationsCountAttribute = [
   "registrationsCount"
 ] as const;
 
-const buildEventAttributes = (includeAuditFields?: boolean): FindAttributeOptions => {
-  const baseAttrs = buildQueryAttributes({ includeAuditFields });
+const buildEventAttributes = (includeAuditFields?: boolean, keepFields?: string[]): FindAttributeOptions => {
+  const baseAttrs = buildQueryAttributes({ includeAuditFields, keepFields });
   const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
   
   if (!baseAttrs) {
@@ -493,7 +493,7 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     where,
     limit,
     offset,
-    attributes: buildEventAttributes(includeAuditFields),
+    attributes: buildEventAttributes(includeAuditFields, ['startDate', 'startTime']),
     include: baseEventInclude,
     order: [
       ["startDate", sortDirection],

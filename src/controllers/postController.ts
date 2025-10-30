@@ -77,9 +77,10 @@ const buildCurrentUserReactionLiteral = (userId: number): LiteralValue =>
 
 const buildPostAttributes = (
   currentUserId?: number,
-  includeAuditFields?: boolean
+  includeAuditFields?: boolean,
+  keepFields?: string[]
 ): FindAttributeOptions => {
-  const baseAttrs = buildQueryAttributes({ includeAuditFields });
+  const baseAttrs = buildQueryAttributes({ includeAuditFields, keepFields });
   
   if (typeof currentUserId !== "number") {
     if (!baseAttrs) {
@@ -406,8 +407,8 @@ const computePaginationMeta = (total: number, page: number, limit: number) => ({
   pages: Math.ceil(total / limit)
 });
 
-const buildListAttributes = (currentUserId?: number, includeAuditFields?: boolean): FindAttributeOptions =>
-  buildPostAttributes(currentUserId, includeAuditFields);
+const buildListAttributes = (currentUserId?: number, includeAuditFields?: boolean, keepFields?: string[]): FindAttributeOptions =>
+  buildPostAttributes(currentUserId, includeAuditFields, keepFields);
 
 const getReactionCounts = async (postId: number) => {
   const [likes, dislikes] = await Promise.all([
@@ -529,7 +530,7 @@ export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Res
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(userId, includeAuditFields),
+    attributes: buildListAttributes(userId, includeAuditFields, ['createdAt']),
     include: basePostInclude,
     distinct: true
   });
@@ -555,7 +556,7 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(userId, includeAuditFields),
+    attributes: buildListAttributes(userId, includeAuditFields, ['createdAt']),
     include: basePostInclude,
     distinct: true
   });

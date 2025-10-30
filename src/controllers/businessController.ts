@@ -65,7 +65,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
 
   const { rows, count } = await Business.findAndCountAll({
     where,
-    attributes: buildQueryAttributes({ includeAuditFields }),
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ['createdAt'] }),
     include: [
       {
         model: MetaBusinessType,

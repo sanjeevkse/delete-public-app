@@ -46,7 +46,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
           ]
         }
       : undefined,
-    attributes: buildQueryAttributes({ includeAuditFields }),
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ['createdAt'] }),
     include: [
       { model: UserProfile, as: "profile" },
       { association: "roles", include: [{ association: "permissions" }] }
