@@ -7,6 +7,7 @@ import {
   listMembers,
   updateMember
 } from "../controllers/memberController";
+import { authenticate } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -15,7 +16,7 @@ const router = Router();
  * @desc    Create a new member
  * @access  Public/Private (depending on your auth requirements)
  */
-router.post("/members", createMember);
+router.post("/members", authenticate, createMember);
 
 /**
  * @route   GET /api/members
@@ -23,27 +24,27 @@ router.post("/members", createMember);
  * @access  Public/Private
  * @query   ?page=1&limit=25&search=keyword
  */
-router.get("/members", listMembers);
+router.get("/members", authenticate, listMembers);
 
 /**
  * @route   GET /api/members/:id
  * @desc    Get a single member by ID
  * @access  Public/Private
  */
-router.get("/members/:id", getMember);
+router.get("/members/:id", authenticate, getMember);
 
 /**
  * @route   PUT /api/members/:id
  * @desc    Update a member
  * @access  Public/Private
  */
-router.put("/members/:id", updateMember);
+router.put("/members/:id",authenticate, updateMember);
 
 /**
  * @route   DELETE /api/members/:id
  * @desc    Delete a member
  * @access  Public/Private
  */
-router.delete("/members/:id", deleteMember);
+router.delete("/members/:id", authenticate, deleteMember);
 
 export default router;
