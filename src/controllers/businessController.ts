@@ -16,10 +16,13 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 /**
  * List all businesses with pagination and search
  * GET /api/businesses
+ * Query params:
+ *   - includeAuditFields=true : Include audit fields (createdBy, createdAt, updatedBy, updatedAt, status)
  */
 export const listBusinesses = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
@@ -31,6 +34,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
   const businessTypeId = req.query.businessTypeId as string;
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const filters: WhereOptions<Attributes<Business>>[] = [];
 
@@ -61,6 +65,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
 
   const { rows, count } = await Business.findAndCountAll({
     where,
+    attributes: buildQueryAttributes({ includeAuditFields }),
     include: [
       {
         model: MetaBusinessType,
@@ -81,11 +86,15 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
 /**
  * Get a single business by ID
  * GET /api/businesses/:id
+ * Query params:
+ *   - includeAuditFields=true : Include audit fields (createdBy, createdAt, updatedBy, updatedAt, status)
  */
 export const getBusiness = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const business = await Business.findByPk(id, {
+    attributes: buildQueryAttributes({ includeAuditFields }),
     include: [
       {
         model: MetaBusinessType,

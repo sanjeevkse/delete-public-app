@@ -25,6 +25,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 type NormalizedPostMediaInput = {
   mediaType: MediaType;
@@ -74,15 +75,43 @@ const buildCurrentUserReactionLiteral = (userId: number): LiteralValue =>
     LIMIT 1
   )`);
 
-const buildPostAttributes = (currentUserId?: number): FindAttributeOptions => {
+const buildPostAttributes = (
+  currentUserId?: number,
+  includeAuditFields?: boolean
+): FindAttributeOptions => {
+  const baseAttrs = buildQueryAttributes({ includeAuditFields });
+  
   if (typeof currentUserId !== "number") {
-    return attributesWithReactionCounts;
+    if (!baseAttrs) {
+      return attributesWithReactionCounts;
+    }
+    // Merge base attributes with reaction counts
+    const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
+    return {
+      ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+      include: [
+        ...baseInclude,
+        ...reactionCountAttributes
+      ]
+    };
   }
 
+  const extraFields: Array<string | ProjectionAlias> = [
+    ...reactionCountAttributes,
+    [buildCurrentUserReactionLiteral(currentUserId), "currentUserReaction"]
+  ];
+
+  if (!baseAttrs) {
+    return { include: extraFields };
+  }
+
+  // Merge base attributes with reaction counts and current user reaction
+  const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
   return {
+    ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
     include: [
-      ...reactionCountAttributes,
-      [buildCurrentUserReactionLiteral(currentUserId), "currentUserReaction"]
+      ...baseInclude,
+      ...extraFields
     ]
   };
 };
@@ -357,10 +386,10 @@ const normalizePostMediaInput = (
   return parseLegacyMediaInput(mediaInput);
 };
 
-const fetchPostById = async (id: number, currentUserId?: number) => {
+const fetchPostById = async (id: number, currentUserId?: number, includeAuditFields?: boolean) => {
   const post = await Post.findOne({
     where: { id, status: 1 },
-    attributes: buildPostAttributes(currentUserId),
+    attributes: buildPostAttributes(currentUserId, includeAuditFields),
     include: basePostInclude
   });
 
@@ -377,8 +406,8 @@ const computePaginationMeta = (total: number, page: number, limit: number) => ({
   pages: Math.ceil(total / limit)
 });
 
-const buildListAttributes = (currentUserId?: number): FindAttributeOptions =>
-  buildPostAttributes(currentUserId);
+const buildListAttributes = (currentUserId?: number, includeAuditFields?: boolean): FindAttributeOptions =>
+  buildPostAttributes(currentUserId, includeAuditFields);
 
 const getReactionCounts = async (postId: number) => {
   const [likes, dislikes] = await Promise.all([
@@ -449,13 +478,14 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
 export const getPost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const id = Number.parseInt(req.params.id, 10);
   if (Number.isNaN(id)) {
     return sendBadRequest(res, "Invalid post id");
   }
 
-  const post = await fetchPostById(id, userId);
+  const post = await fetchPostById(id, userId, includeAuditFields);
 
   if (!post) {
     return sendNotFound(res, "Post not found", "post");
@@ -468,6 +498,7 @@ export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Res
   const { id: userId } = requireAuthenticatedUser(req);
   const { page, limit, offset } = parsePagination(req);
   const sortDirection = parseSortDirection(req.query.sort);
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const where: WhereOptions = {
     status: 1
@@ -498,7 +529,7 @@ export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Res
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(userId),
+    attributes: buildListAttributes(userId, includeAuditFields),
     include: basePostInclude,
     distinct: true
   });
@@ -514,6 +545,7 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
   const { id: userId } = requireAuthenticatedUser(req);
   const { page, limit, offset } = parsePagination(req);
   const sortDirection = parseSortDirection(req.query.sort);
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const { rows, count } = await Post.findAndCountAll({
     where: {
@@ -523,7 +555,7 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(userId),
+    attributes: buildListAttributes(userId, includeAuditFields),
     include: basePostInclude,
     distinct: true
   });

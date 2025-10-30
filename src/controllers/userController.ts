@@ -24,6 +24,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
@@ -33,6 +34,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     100
   );
   const search = (req.query.search as string) ?? "";
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const { rows, count } = await User.findAndCountAll({
     where: search
@@ -44,6 +46,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
           ]
         }
       : undefined,
+    attributes: buildQueryAttributes({ includeAuditFields }),
     include: [
       { model: UserProfile, as: "profile" },
       { association: "roles", include: [{ association: "permissions" }] }
@@ -105,7 +108,10 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+
   const user = await User.findByPk(req.params.id, {
+    attributes: buildQueryAttributes({ includeAuditFields }),
     include: [
       { model: UserProfile, as: "profile" },
       { association: "roles", include: [{ association: "permissions" }] }

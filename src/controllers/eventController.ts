@@ -26,6 +26,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
 type NormalizedMediaInput = {
   mediaType: MediaType;
@@ -56,8 +57,21 @@ const registrationsCountAttribute = [
   "registrationsCount"
 ] as const;
 
-const attributesWithCounts: FindAttributeOptions = {
-  include: [registrationsCountAttribute]
+const buildEventAttributes = (includeAuditFields?: boolean): FindAttributeOptions => {
+  const baseAttrs = buildQueryAttributes({ includeAuditFields });
+  const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
+  
+  if (!baseAttrs) {
+    return { include: [registrationsCountAttribute] };
+  }
+
+  return {
+    ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+    include: [
+      ...baseInclude,
+      registrationsCountAttribute
+    ]
+  };
 };
 
 const baseEventInclude = [
@@ -329,10 +343,10 @@ const computePaginationMeta = (total: number, page: number, limit: number) => ({
   pages: Math.ceil(total / limit)
 });
 
-const fetchEventById = async (id: number) => {
+const fetchEventById = async (id: number, includeAuditFields?: boolean) => {
   return Event.findOne({
     where: { id, status: 1 },
-    attributes: attributesWithCounts,
+    attributes: buildEventAttributes(includeAuditFields),
     include: baseEventInclude
   });
 };
@@ -401,8 +415,9 @@ export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   if (Number.isNaN(id)) {
     return sendBadRequest(res, "Invalid event id");
   }
-
-  const eventRecord = await fetchEventById(id);
+  
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const eventRecord = await fetchEventById(id, includeAuditFields);
   if (!eventRecord) {
     return sendNotFound(res, "Event not found", "event");
   }
@@ -438,6 +453,7 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const { page, limit, offset } = parsePagination(req);
   const currentUserId = req.user?.id ?? null;
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const where: WhereOptions = {
     status: 1
@@ -477,7 +493,7 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     where,
     limit,
     offset,
-    attributes: attributesWithCounts,
+    attributes: buildEventAttributes(includeAuditFields),
     include: baseEventInclude,
     order: [
       ["startDate", sortDirection],
