@@ -13,6 +13,7 @@ import {
   parsePaginationParams,
   calculatePagination
 } from "../utils/apiResponse";
+import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 
 /**
  * List all members with pagination and search
@@ -81,7 +82,10 @@ export const createMember = asyncHandler(async (req: Request, res: Response) => 
     throw new ApiError("A member with this email already exists", 409);
   }
 
+  const { id: userId } = requireAuthenticatedUser(req);
+
   const member = await Member.create({
+    userId,
     fullName,
     contactNumber,
     email

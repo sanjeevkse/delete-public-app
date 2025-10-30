@@ -11,6 +11,7 @@ import { normalizePhoneNumber } from "../utils/phoneNumber";
 
 class Member extends Model<InferAttributes<Member>, InferCreationAttributes<Member>> {
   declare id: CreationOptional<number>;
+  declare userId: number;
   declare fullName: string;
   declare contactNumber: string;
   declare email: string;
@@ -24,6 +25,11 @@ Member.init(
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
+    },
+    userId: {
+      field: "user_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: false
     },
     fullName: {
       field: "full_name",
