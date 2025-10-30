@@ -80,7 +80,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
 
   const pagination = calculatePagination(count, page, limit);
 
-  sendSuccessWithPagination(res, rows, pagination, "Businesses retrieved successfully");
+  return sendSuccessWithPagination(res, rows, pagination, "Businesses retrieved successfully");
 });
 
 /**
@@ -108,7 +108,7 @@ export const getBusiness = asyncHandler(async (req: Request, res: Response) => {
     return sendNotFound(res, "Business not found");
   }
 
-  sendSuccess(res, business, "Business retrieved successfully");
+  return sendSuccess(res, business, "Business retrieved successfully");
 });
 
 /**
@@ -183,7 +183,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     ]
   });
 
-  sendCreated(res, createdBusiness, "Business created successfully");
+  return sendCreated(res, createdBusiness, "Business created successfully");
 });
 
 /**
@@ -272,7 +272,7 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     ]
   });
 
-  sendSuccess(res, updatedBusiness, "Business updated successfully");
+  return sendSuccess(res, updatedBusiness, "Business updated successfully");
 });
 
 /**
@@ -327,6 +327,6 @@ export const toggleBusinessStatus = asyncHandler(
       ]
     });
 
-    sendSuccess(res, updatedBusiness, "Business status updated successfully");
+    return sendSuccess(res, updatedBusiness, "Business status updated successfully");
   }
 );

@@ -45,7 +45,7 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
 
   const pagination = calculatePagination(count, page, limit);
 
-  sendSuccessWithPagination(res, rows, pagination, "Members retrieved successfully");
+  return sendSuccessWithPagination(res, rows, pagination, "Members retrieved successfully");
 });
 
 /**
@@ -61,7 +61,7 @@ export const getMember = asyncHandler(async (req: Request, res: Response) => {
     return sendNotFound(res, "Member not found");
   }
 
-  sendSuccess(res, member, "Member retrieved successfully");
+  return sendSuccess(res, member, "Member retrieved successfully");
 });
 
 /**
@@ -91,7 +91,7 @@ export const createMember = asyncHandler(async (req: Request, res: Response) => 
     email
   });
 
-  sendCreated(res, member, "Member created successfully");
+  return sendCreated(res, member, "Member created successfully");
 });
 
 /**
@@ -128,7 +128,7 @@ export const updateMember = asyncHandler(async (req: Request, res: Response) => 
 
   await member.save();
 
-  sendSuccess(res, member, "Member updated successfully");
+  return sendSuccess(res, member, "Member updated successfully");
 });
 
 /**
