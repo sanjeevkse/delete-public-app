@@ -157,3 +157,41 @@ export const deleteMember = asyncHandler(async (req: Request, res: Response) => 
 
   sendNoContent(res);
 });
+
+/**
+ * Check if the logged-in user is a member
+ * GET /api/members/me/check
+ */
+export const checkMemberStatus = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
+  const member = await Member.findOne({
+    where: { userId }
+  });
+
+  if (!member) {
+    return sendSuccess(
+      res,
+      {
+        isMember: false,
+        member: null
+      },
+      "User is not a member"
+    );
+  }
+
+  return sendSuccess(
+    res,
+    {
+      isMember: true,
+      member: {
+        id: member.id,
+        fullName: member.fullName,
+        contactNumber: member.contactNumber,
+        email: member.email,
+        createdAt: member.createdAt
+      }
+    },
+    "User is a member"
+  );
+});

@@ -5,11 +5,19 @@ import {
   deleteMember,
   getMember,
   listMembers,
-  updateMember
+  updateMember,
+  checkMemberStatus
 } from "../controllers/memberController";
 import { authenticate } from "../middlewares/authMiddleware";
 
 const router = Router();
+
+/**
+ * @route   GET /api/members/me/check
+ * @desc    Check if the logged-in user is a member
+ * @access  Private (requires authentication)
+ */
+router.get("/members/me/check", authenticate(), checkMemberStatus);
 
 /**
  * @route   POST /api/members
