@@ -5,6 +5,7 @@ interface TelescopeQueryAttributes {
   id: number;
   uuid: string;
   requestId: number | null;
+  correlationId: string | null;
   sql: string;
   bindings: object | null;
   duration: number;
@@ -13,7 +14,10 @@ interface TelescopeQueryAttributes {
 }
 
 interface TelescopeQueryCreationAttributes
-  extends Optional<TelescopeQueryAttributes, "id" | "createdAt" | "requestId" | "bindings"> {}
+  extends Optional<
+    TelescopeQueryAttributes,
+    "id" | "createdAt" | "requestId" | "bindings" | "correlationId"
+  > {}
 
 class TelescopeQuery
   extends Model<TelescopeQueryAttributes, TelescopeQueryCreationAttributes>
@@ -22,6 +26,7 @@ class TelescopeQuery
   declare id: number;
   declare uuid: string;
   declare requestId: number | null;
+  declare correlationId: string | null;
   declare sql: string;
   declare bindings: object | null;
   declare duration: number;
@@ -44,6 +49,11 @@ TelescopeQuery.init(
     },
     requestId: {
       type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    correlationId: {
+      field: "correlation_id",
+      type: DataTypes.STRING(50),
       allowNull: true
     },
     sql: {

@@ -19,11 +19,14 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
     return next();
   }
 
-  // Store start time
+  // Store start time and create a unique correlation ID for this request
   req.telescopeStartTime = Date.now();
+  const correlationId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  (req as any).telescopeCorrelationId = correlationId;
 
   // Run the rest in async context to track queries
-  requestContextStore.run({ requestId: null, startTime: Date.now() }, () => {
+  // Store correlation ID instead of requestId for now
+  requestContextStore.run({ requestId: null, startTime: Date.now(), correlationId } as any, () => {
     runMiddleware(req, res, next);
   });
 };
@@ -140,15 +143,15 @@ const runMiddleware = (req: Request, res: Response, next: NextFunction): void =>
         exceptionId: req.telescopeExceptionId || null
       });
 
-      // Store request ID for linking queries
-      if (telescopeRequest) {
+      // Link queries that were logged with the correlation ID to this request
+      if (telescopeRequest && (req as any).telescopeCorrelationId) {
         req.telescopeRequestId = telescopeRequest.id;
 
-        // Update context with actual request ID
-        const context = requestContextStore.getStore();
-        if (context) {
-          context.requestId = telescopeRequest.id;
-        }
+        // Update queries with the actual request ID
+        await telescopeService.linkQueriesByCorrelationId(
+          (req as any).telescopeCorrelationId,
+          telescopeRequest.id
+        );
       }
     } catch (error) {
       // Silently fail to avoid breaking the application

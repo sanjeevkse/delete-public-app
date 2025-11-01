@@ -312,6 +312,7 @@ class TelescopeService {
     bindings?: any[] | object | null;
     duration: number;
     requestId?: number | null;
+    correlationId?: string | null;
     connectionName?: string;
   }): Promise<TelescopeQuery | null> {
     if (!this.isEnabled()) {
@@ -334,6 +335,7 @@ class TelescopeService {
         bindings: data.bindings ? this.sanitizeData(data.bindings, 5000) : null,
         duration: data.duration,
         requestId: data.requestId || null,
+        correlationId: data.correlationId || null,
         connectionName: data.connectionName || "default"
       });
 
@@ -341,6 +343,24 @@ class TelescopeService {
     } catch (error) {
       // Silent fail to prevent breaking the application
       return null;
+    }
+  }
+
+  async linkQueriesByCorrelationId(correlationId: string, requestId: number): Promise<number> {
+    try {
+      const [affectedCount] = await TelescopeQuery.update(
+        { requestId },
+        {
+          where: {
+            correlationId,
+            requestId: null
+          }
+        }
+      );
+      return affectedCount;
+    } catch (error) {
+      logger.error({ error }, "Failed to link queries by correlation ID");
+      return 0;
     }
   }
 

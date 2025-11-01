@@ -461,7 +461,6 @@
       <div class="tabs">
         <button class="tab active" data-tab="requests">Requests</button>
         <button class="tab" data-tab="exceptions">Exceptions</button>
-        <button class="tab" data-tab="queries">Queries</button>
       </div>
 
       <!-- Requests Tab -->
@@ -525,33 +524,6 @@
 
         <div id="exceptions-pagination" class="pagination"></div>
       </div>
-
-      <!-- Queries Tab -->
-      <div id="queries-tab" class="tab-content">
-        <div class="controls">
-          <div class="filters">
-            <select class="filter-select" id="query-duration-filter">
-              <option value="">All Queries</option>
-              <option value="50">Slow (>50ms)</option>
-              <option value="100">Very Slow (>100ms)</option>
-              <option value="500">Critical (>500ms)</option>
-            </select>
-          </div>
-          <div>
-            <button class="btn btn-primary" onclick="loadQueries()">🔄 Refresh</button>
-            <button class="btn btn-danger" onclick="clearQueries()">🗑️ Clear All</button>
-          </div>
-        </div>
-
-        <div id="queries-loading" class="loading" style="display: none">
-          <div class="spinner"></div>
-          <div>Loading queries...</div>
-        </div>
-
-        <div id="queries-list"></div>
-
-        <div id="queries-pagination" class="pagination"></div>
-      </div>
     </div>
 
     <!-- Request Detail Modal -->
@@ -576,17 +548,6 @@
       </div>
     </div>
 
-    <!-- Query Detail Modal -->
-    <div id="query-modal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Query Details</h2>
-          <button class="close-btn" onclick="closeModal('query-modal')">×</button>
-        </div>
-        <div class="modal-body" id="query-detail"></div>
-      </div>
-    </div>
-
     <script>
       let currentPage = 1;
       const itemsPerPage = 20;
@@ -605,8 +566,6 @@
             loadRequests();
           } else if (tab.dataset.tab === "exceptions") {
             loadExceptions();
-          } else if (tab.dataset.tab === "queries") {
-            loadQueries();
           }
         });
       });
@@ -625,11 +584,6 @@
       document.getElementById("exception-type-filter").addEventListener("change", () => {
         currentPage = 1;
         loadExceptions();
-      });
-
-      document.getElementById("query-duration-filter").addEventListener("change", () => {
-        currentPage = 1;
-        loadQueries();
       });
 
       // Load requests
@@ -1146,73 +1100,7 @@
         }
       }
 
-      // Load queries
-      async function loadQueries() {
-        const loading = document.getElementById("queries-loading");
-        const list = document.getElementById("queries-list");
-
-        loading.style.display = "block";
-        list.innerHTML = "";
-
-        try {
-          const minDuration = document.getElementById("query-duration-filter").value;
-
-          const params = new URLSearchParams({
-            limit: itemsPerPage.toString(),
-            offset: ((currentPage - 1) * itemsPerPage).toString()
-          });
-
-          if (minDuration) {
-            params.append("minDuration", minDuration);
-          }
-
-          const response = await fetch(`/telescope/api/queries?${params}`);
-          const data = await response.json();
-
-          if (data.success) {
-            renderQueries(data.data.queries);
-            renderPagination(data.data.total, currentPage, "queries-pagination", (page) => {
-              currentPage = page;
-              loadQueries();
-            });
-          }
-        } catch (error) {
-          list.innerHTML = `<div class="error">Error loading queries: ${error.message}</div>`;
-        } finally {
-          loading.style.display = "none";
-        }
-      }
-
-      function renderQueries(queries) {
-        const list = document.getElementById("queries-list");
-
-        if (queries.length === 0) {
-          list.innerHTML = '<div class="empty">No queries found</div>';
-          return;
-        }
-
-        const html = queries
-          .map(
-            (query) => `
-            <div class="card" onclick="showQueryDetail('${query.uuid}')">
-              <div class="card-header">
-                <span class="badge ${getQuerySpeedClass(query.duration)}">${query.duration}ms</span>
-                <span class="text-muted">${formatDate(query.createdAt)}</span>
-              </div>
-              <div class="card-body">
-                <div style="font-family: 'Courier New', monospace; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                  ${truncateSQL(query.sql)}
-                </div>
-                ${query.requestId ? `<div class="text-muted" style="font-size: 0.85rem;">Request ID: ${query.requestId}</div>` : ""}
-              </div>
-            </div>
-          `
-          )
-          .join("");
-
-        list.innerHTML = html;
-      }
-
+      // Helper functions for query display in request details
       function getQuerySpeedClass(duration) {
         if (duration > 500) return "badge-danger";
         if (duration > 100) return "badge-warning";
@@ -1220,101 +1108,10 @@
         return "badge-success";
       }
 
-      function truncateSQL(sql) {
-        const maxLength = 200;
-        if (sql.length <= maxLength) return escapeHtml(sql);
-        return (
-          escapeHtml(sql.substring(0, maxLength)) +
-          '... <span style="color: #999;">[truncated]</span>'
-        );
-      }
-
       function escapeHtml(text) {
         const div = document.createElement("div");
         div.textContent = text;
         return div.innerHTML;
-      }
-
-      async function showQueryDetail(uuid) {
-        const modal = document.getElementById("query-modal");
-        const detail = document.getElementById("query-detail");
-
-        try {
-          const response = await fetch(`/telescope/api/queries/${uuid}`);
-          const data = await response.json();
-
-          if (data.success) {
-            const query = data.data;
-            detail.innerHTML = `
-              <div class="detail-section">
-                <div class="detail-label">UUID</div>
-                <div class="detail-value">${query.uuid}</div>
-              </div>
-              <div class="detail-section">
-                <div class="detail-label">Duration</div>
-                <div class="detail-value"><span class="badge ${getQuerySpeedClass(query.duration)}">${query.duration}ms</span></div>
-              </div>
-              <div class="detail-section">
-                <div class="detail-label">SQL Query</div>
-                <div class="detail-value">
-                  <pre style="background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; max-height: 300px;">${escapeHtml(query.sql)}</pre>
-                </div>
-              </div>
-              ${
-                query.bindings
-                  ? `
-              <div class="detail-section">
-                <div class="detail-label">Bindings</div>
-                <div class="detail-value">
-                  <pre style="background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto;">${JSON.stringify(query.bindings, null, 2)}</pre>
-                </div>
-              </div>
-              `
-                  : ""
-              }
-              <div class="detail-section">
-                <div class="detail-label">Connection</div>
-                <div class="detail-value">${query.connectionName}</div>
-              </div>
-              ${
-                query.requestId
-                  ? `
-              <div class="detail-section">
-                <div class="detail-label">Request ID</div>
-                <div class="detail-value">${query.requestId}</div>
-              </div>
-              `
-                  : ""
-              }
-              <div class="detail-section">
-                <div class="detail-label">Created At</div>
-                <div class="detail-value">${formatDate(query.createdAt)}</div>
-              </div>
-            `;
-            modal.style.display = "flex";
-          }
-        } catch (error) {
-          alert("Error loading query details: " + error.message);
-        }
-      }
-
-      async function clearQueries() {
-        if (!confirm("Are you sure you want to clear all queries?")) return;
-
-        try {
-          const response = await fetch("/telescope/api/queries", {
-            method: "DELETE"
-          });
-          const data = await response.json();
-
-          if (data.success) {
-            alert(data.data.message);
-            currentPage = 1;
-            loadQueries();
-          }
-        } catch (error) {
-          alert("Error clearing queries: " + error.message);
-        }
       }
 
       // Auto-refresh every 10 seconds
@@ -1324,8 +1121,6 @@
           loadRequests();
         } else if (activeTab === "exceptions") {
           loadExceptions();
-        } else if (activeTab === "queries") {
-          loadQueries();
         }
       }, 10000);
 

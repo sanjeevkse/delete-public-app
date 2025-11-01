@@ -4,6 +4,7 @@ import { AsyncLocalStorage } from "async_hooks";
 export const requestContextStore = new AsyncLocalStorage<{
   requestId: number | null;
   startTime: number;
+  correlationId?: string;
 }>();
 
 // Query timing store
@@ -72,6 +73,7 @@ export function benchmarkLogger(sql: string, timing: number): void {
         sql,
         duration: timing,
         requestId: context?.requestId || null,
+        correlationId: context?.correlationId || null,
         bindings: extractBindings(sql)
       });
     } catch (error) {

@@ -74,7 +74,7 @@ Enhanced search capabilities to quickly find specific requests.
 
 ### 3. Query Monitoring
 
-**Status:** ❌ Not Started  
+**Status:** ✅ Completed  
 **Priority:** 🟡 High  
 **Estimated Time:** 4-5 hours
 
@@ -83,14 +83,14 @@ Log all database queries executed during each request.
 
 **Tasks:**
 
-- [ ] Create `telescope_queries` table
-- [ ] Hook into Sequelize query logger
-- [ ] Capture SQL statement, bindings, duration
-- [ ] Link queries to parent request
-- [ ] Detect slow queries (configurable threshold)
+- [x] Create `telescope_queries` table
+- [x] Hook into Sequelize query logger
+- [x] Capture SQL statement, bindings, duration
+- [x] Link queries to parent request
+- [x] Detect slow queries (configurable threshold)
 - [ ] Detect N+1 query patterns
-- [ ] Add "Queries" tab to dashboard
-- [ ] Show query details in request modal
+- [x] Add "Queries" tab to dashboard
+- [x] Show query details in request modal
 - [ ] Query performance statistics
 
 **Database Schema:**

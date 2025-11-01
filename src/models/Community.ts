@@ -14,6 +14,7 @@ import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 
 class Community extends Model<InferAttributes<Community>, InferCreationAttributes<Community>> {
   declare id: CreationOptional<number>;
+  declare userId: number;
   declare communityTypeId: number;
   declare communityName: string;
   declare isRegistered: CreationOptional<number>;
@@ -37,6 +38,11 @@ Community.init(
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
+    },
+    userId: {
+      field: "user_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: false
     },
     communityTypeId: {
       field: "community_type_id",

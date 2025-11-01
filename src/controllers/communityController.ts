@@ -145,7 +145,13 @@ export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, re
     throw new ApiError("Invalid community type ID", 400);
   }
 
+  // Ensure userId is available
+  if (!userId) {
+    throw new ApiError("User ID is required to create a community", 401);
+  }
+
   const community = await Community.create({
+    userId,
     communityTypeId,
     communityName,
     isRegistered: isRegistered !== undefined ? isRegistered : 0,
@@ -156,8 +162,8 @@ export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, re
     totalMember: totalMember !== undefined ? totalMember : 0,
     fullAddress: fullAddress || null,
     status: status !== undefined ? status : 1,
-    createdBy: userId || null,
-    updatedBy: userId || null
+    createdBy: userId,
+    updatedBy: userId
   });
 
   // Fetch the created community with relations
