@@ -7,6 +7,7 @@ import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
+import UserAccess from "../models/UserAccess";
 import {
   getRoleByName,
   parseRoleIdsInput,
@@ -14,6 +15,11 @@ import {
   setUserRoles
 } from "../services/rbacService";
 import { buildProfileAttributes } from "../services/userProfileService";
+import {
+  createUserAccessProfiles,
+  updateUserAccessProfiles,
+  validateAccessibles
+} from "../services/userAccessService";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendSuccess,
@@ -49,7 +55,19 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
     include: [
       { model: UserProfile, as: "profile" },
-      { association: "roles", include: [{ association: "permissions" }] }
+      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      }
     ],
     limit,
     offset,
@@ -62,7 +80,15 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-  const { contactNumber, email, fullName, status = 1, profile, roleIds: roleIdsInput } = req.body;
+  const {
+    contactNumber,
+    email,
+    fullName,
+    status = 1,
+    profile,
+    roleIds: roleIdsInput,
+    accessibles
+  } = req.body;
   if (!contactNumber) {
     throw new ApiError("contactNumber is required", 400);
   }
@@ -94,13 +120,34 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const resolvedRoleIds = await resolveRoleIdsOrDefault(combinedRoleIds);
   await setUserRoles(user.id, resolvedRoleIds);
 
+  // Handle accessibles if provided
+  if (accessibles) {
+    const validatedAccessibles = validateAccessibles(accessibles);
+    const actorId = (req as AuthenticatedRequest).user?.id ?? user.id;
+    // Use the first role as access role, or public role if no roles provided
+    const accessRoleId = parsedRoleIds?.[0] ?? publicRole.id;
+    await createUserAccessProfiles(user.id, accessRoleId, validatedAccessibles, actorId);
+  }
+
   const actorId = (req as AuthenticatedRequest).user?.id;
   emitEvent(AppEvent.USER_CREATED, { userId: user.id, actorId: actorId ?? user.id });
 
   const created = await User.findByPk(user.id, {
     include: [
       { model: UserProfile, as: "profile" },
-      { association: "roles", include: [{ association: "permissions" }] }
+      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      }
     ]
   });
 
@@ -114,7 +161,19 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     attributes: buildQueryAttributes({ includeAuditFields }),
     include: [
       { model: UserProfile, as: "profile" },
-      { association: "roles", include: [{ association: "permissions" }] }
+      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      }
     ]
   });
 
@@ -137,7 +196,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("User not found", 404);
   }
 
-  const { profile, roleIds: roleIdsInput, ...userUpdates } = req.body;
+  const { profile, roleIds: roleIdsInput, accessibles, ...userUpdates } = req.body;
   const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
 
   await user.update(userUpdates);
@@ -158,13 +217,38 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     await setUserRoles(user.id, resolvedRoleIds);
   }
 
+  // Handle accessibles update if provided
+  if (accessibles !== undefined) {
+    const validatedAccessibles = validateAccessibles(accessibles);
+    const actorId = (req as AuthenticatedRequest).user?.id ?? user.id;
+    // Use the first role as access role, or get from existing roles
+    const accessRoleId =
+      parsedRoleIds?.[0] ?? user.roles?.[0]?.id ?? (await getRoleByName(PUBLIC_ROLE_NAME))?.id;
+    if (!accessRoleId) {
+      throw new ApiError("Cannot determine access role for user", 500);
+    }
+    await updateUserAccessProfiles(user.id, accessRoleId, validatedAccessibles, actorId);
+  }
+
   const actorId = (req as AuthenticatedRequest).user?.id;
   emitEvent(AppEvent.USER_UPDATED, { userId: user.id, actorId: actorId ?? user.id });
 
   const updated = await User.findByPk(user.id, {
     include: [
       { model: UserProfile, as: "profile" },
-      { association: "roles", include: [{ association: "permissions" }] }
+      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      }
     ]
   });
 

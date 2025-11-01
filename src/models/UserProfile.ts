@@ -20,6 +20,7 @@ class UserProfile extends Model<
   declare userId: number;
   declare displayName: CreationOptional<string | null>;
   declare alernativeContactNumber: CreationOptional<string | null>;
+  declare aadhaarNumber: CreationOptional<string | null>;
   declare bio: CreationOptional<string | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
   declare gender: CreationOptional<UserProfileGender | null>;
@@ -73,6 +74,11 @@ UserProfile.init(
         const normalized = normalizeOptionalPhoneNumber(value, "alternativeContactNumber");
         this.setDataValue("alernativeContactNumber", normalized);
       }
+    },
+    aadhaarNumber: {
+      field: "aadhaar_number",
+      type: DataTypes.STRING(12),
+      allowNull: true
     },
     bio: {
       type: DataTypes.TEXT,

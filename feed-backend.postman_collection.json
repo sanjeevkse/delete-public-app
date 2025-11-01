@@ -64,7 +64,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
+              "raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
             },
             "url": "{{baseUrl}}/api/auth/profile",
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
@@ -1791,9 +1791,33 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"+15550001111\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"address\": \"99 Demo Street, Springfield\"\n  }\n}"
+              "raw": "{\n  \"contactNumber\": \"+15550001111\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"address\": \"99 Demo Street, Springfield\"\n  },\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 5,\n      \"boothNumberId\": 12,\n      \"mlaConstituencyId\": 3,\n      \"mpConstituencyId\": 1\n    },\n    {\n      \"wardNumberId\": 5,\n      \"boothNumberId\": 13\n    }\n  ]\n}"
             },
-            "url": "{{baseUrl}}/api/admin/users"
+            "url": "{{baseUrl}}/api/admin/users",
+            "description": "Creates a new user with optional access profiles. The accessibles array defines geographical areas the user can access. Required fields: wardNumberId, boothNumberId. Optional: mlaConstituencyId, mpConstituencyId."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User (Without Accessibles)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactNumber\": \"+15550001112\",\n  \"email\": \"user2@example.com\",\n  \"fullName\": \"User Two\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User2\",\n    \"address\": \"100 Demo Street, Springfield\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/users",
+            "description": "Creates a new user without access profiles. Accessibles can be added later via the Update User endpoint."
           },
           "response": []
         },
@@ -1825,9 +1849,16 @@
                 {
                   "key": "limit",
                   "value": "25"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by contact number, full name, or email",
+                  "disabled": true
                 }
               ]
-            }
+            },
+            "description": "Lists all users with pagination. Each user includes roles, profile, and active access profiles (status=1). Use search parameter to filter by contact number, name, or email."
           },
           "response": []
         },
@@ -1841,7 +1872,8 @@
                 "value": "Bearer {{authToken}}"
               }
             ],
-            "url": "{{baseUrl}}/api/admin/users/{{userId}}"
+            "url": "{{baseUrl}}/api/admin/users/{{userId}}",
+            "description": "Retrieves a specific user by ID. Response includes roles, profile, and active access profiles (status=1) with related ward, booth, MLA constituency, and access role information."
           },
           "response": []
         },
@@ -1863,7 +1895,54 @@
               "mode": "raw",
               "raw": "{\n  \"fullName\": \"Updated User\",\n  \"profile\": {\n    \"bio\": \"Updated bio\",\n    \"address\": \"100 Updated Street\"\n  }\n}"
             },
-            "url": "{{baseUrl}}/api/admin/users/{{userId}}"
+            "url": "{{baseUrl}}/api/admin/users/{{userId}}",
+            "description": "Updates user details. Omit accessibles to keep existing access profiles unchanged."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Accessibles",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 5,\n      \"boothNumberId\": 12,\n      \"mlaConstituencyId\": 4\n    },\n    {\n      \"wardNumberId\": 6,\n      \"boothNumberId\": 20,\n      \"mpConstituencyId\": 2\n    },\n    {\n      \"wardNumberId\": 7,\n      \"boothNumberId\": 25\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/users/{{userId}}",
+            "description": "Updates user access profiles. All existing access entries are set to status=0. For each accessible: if ward+booth combination exists, it's reactivated (status=1) and updated; otherwise, a new entry is created."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User with Full Data",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Updated User Full\",\n  \"email\": \"updated@example.com\",\n  \"roleIds\": [{{roleId}}],\n  \"profile\": {\n    \"bio\": \"Updated bio\",\n    \"address\": \"100 Updated Street\",\n    \"displayName\": \"UpdatedUser\"\n  },\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 8,\n      \"boothNumberId\": 30,\n      \"mlaConstituencyId\": 5,\n      \"mpConstituencyId\": 2\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/users/{{userId}}",
+            "description": "Updates all user details including basic info, profile, roles, and access profiles in a single request."
           },
           "response": []
         },

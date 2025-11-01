@@ -55,11 +55,11 @@ Event.init(
     googleMapLink: {
       field: "google_map_link",
       type: DataTypes.STRING(500),
-      allowNull: false
+      allowNull: true
     },
     latitude: {
       type: DataTypes.DECIMAL(10, 8),
-      allowNull: true,
+      allowNull: false,
       validate: {
         min: -90,
         max: 90
@@ -67,7 +67,7 @@ Event.init(
     },
     longitude: {
       type: DataTypes.DECIMAL(11, 8),
-      allowNull: true,
+      allowNull: false,
       validate: {
         min: -180,
         max: 180

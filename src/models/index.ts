@@ -23,6 +23,7 @@ import PostReaction from "./PostReaction";
 import RolePermission from "./RolePermission";
 import Scheme from "./Scheme";
 import User from "./User";
+import UserAccess from "./UserAccess";
 import UserOtp from "./UserOtp";
 import UserProfile from "./UserProfile";
 import UserRole from "./UserRole";
@@ -144,6 +145,28 @@ const establishAssociations = (): void => {
   });
   UserRole.belongsTo(User, { foreignKey: "userId", as: "user" });
   UserRole.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
+
+  // UserAccess associations
+  UserAccess.belongsTo(User, { foreignKey: "userId", as: "user" });
+  User.hasMany(UserAccess, { foreignKey: "userId", as: "accessProfiles" });
+
+  UserAccess.belongsTo(MetaUserRole, { foreignKey: "accessRoleId", as: "accessRole" });
+  MetaUserRole.hasMany(UserAccess, { foreignKey: "accessRoleId", as: "userAccesses" });
+
+  UserAccess.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
+  MetaWardNumber.hasMany(UserAccess, { foreignKey: "wardNumberId", as: "userAccesses" });
+
+  UserAccess.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
+  MetaBoothNumber.hasMany(UserAccess, { foreignKey: "boothNumberId", as: "userAccesses" });
+
+  UserAccess.belongsTo(MetaMlaConstituency, {
+    foreignKey: "mlaConstituencyId",
+    as: "mlaConstituency"
+  });
+  MetaMlaConstituency.hasMany(UserAccess, {
+    foreignKey: "mlaConstituencyId",
+    as: "userAccesses"
+  });
 };
 
 establishAssociations();
@@ -174,6 +197,7 @@ export {
   RolePermission,
   Scheme,
   User,
+  UserAccess,
   UserOtp,
   UserProfile,
   UserRole,

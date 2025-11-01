@@ -9,6 +9,7 @@ import {
 
 import type MetaUserRole from "./MetaUserRole";
 import type UserProfile from "./UserProfile";
+import type UserAccess from "./UserAccess";
 
 import sequelize from "../config/database";
 import { normalizePhoneNumber } from "../utils/phoneNumber";
@@ -25,6 +26,7 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare updatedAt: CreationOptional<Date>;
   declare profile?: NonAttribute<UserProfile>;
   declare roles?: NonAttribute<MetaUserRole[]>;
+  declare accessProfiles?: NonAttribute<UserAccess[]>;
 }
 
 User.init(
