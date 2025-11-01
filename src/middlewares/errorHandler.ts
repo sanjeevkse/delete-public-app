@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { UniqueConstraintError, ValidationError as SequelizeValidationError } from "sequelize";
 
 import logger from "../utils/logger";
+import telescopeService from "../services/telescopeService";
 
 // Custom error interface to carry HTTP status codes.
 interface HttpError extends Error {
@@ -21,12 +22,12 @@ export const notFoundHandler = (req: Request, res: Response): void => {
   });
 };
 
-export const errorHandler = (
+export const errorHandler = async (
   err: HttpError,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
-): void => {
+): Promise<void> => {
   let alreadyLogged = false;
   let statusCode: number;
   let errorCode: string;
@@ -76,6 +77,27 @@ export const errorHandler = (
       logger.error({ err }, "Unhandled server error");
     } else {
       logger.warn({ err }, "Handled application error");
+    }
+  }
+
+  // Log exception to Telescope (only for server errors or significant errors)
+  if (statusCode >= 500 || statusCode === 422 || statusCode === 409) {
+    try {
+      const exception = await telescopeService.logException(err, {
+        statusCode,
+        errorCode,
+        path: req.path,
+        method: req.method,
+        userId: (req as any).user?.id || null
+      });
+
+      // Store exception ID in request for linking
+      if (exception) {
+        (req as any).telescopeExceptionId = exception.id;
+      }
+    } catch (telescopeError) {
+      // Don't let telescope errors break the error handler
+      logger.error({ telescopeError }, "Failed to log exception to Telescope");
     }
   }
 

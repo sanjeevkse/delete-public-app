@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Telescope - Request & Exception Monitor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          sans-serif;
+        background: #f5f8fa;
+        color: #2d3748;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .header-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .tab {
+        padding: 0.75rem 1.5rem;
+        background: none;
+        border: none;
+        color: #718096;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+      }
+
+      .tab:hover {
+        color: #667eea;
+      }
+
+      .tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .filters {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        background: white;
+        color: #2d3748;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: border-color 0.3s;
+      }
+
+      .filter-select:hover {
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 0.5rem 1.2rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-danger {
+        background: #f56565;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #e53e3e;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(245, 101, 101, 0.3);
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .method-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .method-get {
+        background: #bee3f8;
+        color: #2c5282;
+      }
+      .method-post {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+      .method-put {
+        background: #feebc8;
+        color: #7c2d12;
+      }
+      .method-patch {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+      .method-delete {
+        background: #fed7e2;
+        color: #702459;
+      }
+
+      .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .status-success {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+      .status-redirect {
+        background: #bee3f8;
+        color: #2c5282;
+      }
+      .status-client-error {
+        background: #feebc8;
+        color: #7c2d12;
+      }
+      .status-server-error {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+
+      .card-path {
+        font-size: 1rem;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      .card-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.85rem;
+        color: #718096;
+        flex-wrap: wrap;
+      }
+
+      .card-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 2rem;
+      }
+
+      .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 12px;
+        max-width: 1000px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0;
+      }
+
+      .modal-header h2 {
+        font-size: 1.3rem;
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+      }
+
+      .close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+      }
+
+      .detail-section {
+        margin-bottom: 1.5rem;
+      }
+
+      .detail-section h3 {
+        font-size: 1rem;
+        color: #667eea;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .detail-label {
+        color: #718096;
+        font-weight: 500;
+      }
+
+      .detail-value {
+        color: #2d3748;
+        word-break: break-all;
+      }
+
+      .code-block {
+        background: #1a202c;
+        color: #a0aec0;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: "Monaco", "Menlo", "Courier New", monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #718096;
+      }
+
+      .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #718096;
+      }
+
+      .spinner {
+        border: 3px solid #e2e8f0;
+        border-top-color: #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+      }
+
+      .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #cbd5e0;
+        background: white;
+        color: #2d3748;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .page-btn:hover:not(:disabled) {
+        border-color: #667eea;
+        color: #667eea;
+      }
+
+      .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .page-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .exception-card {
+        border-left: 4px solid #f56565;
+      }
+
+      .exception-type {
+        font-weight: 600;
+        color: #e53e3e;
+        margin-bottom: 0.5rem;
+      }
+
+      .stack-trace {
+        background: #1a202c;
+        color: #fc8181;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: "Monaco", "Menlo", "Courier New", monospace;
+        font-size: 0.8rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>
+        <svg
+          class="header-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 6v6l4 2"></path>
+        </svg>
+        Telescope Monitor
+      </h1>
+    </div>
+
+    <div class="container">
+      <div class="tabs">
+        <button class="tab active" data-tab="requests">Requests</button>
+        <button class="tab" data-tab="exceptions">Exceptions</button>
+      </div>
+
+      <!-- Requests Tab -->
+      <div id="requests-tab" class="tab-content active">
+        <div class="controls">
+          <div class="filters">
+            <select class="filter-select" id="method-filter">
+              <option value="">All Methods</option>
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="PATCH">PATCH</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+            <select class="filter-select" id="status-filter">
+              <option value="">All Status</option>
+              <option value="200">200 OK</option>
+              <option value="201">201 Created</option>
+              <option value="400">400 Bad Request</option>
+              <option value="401">401 Unauthorized</option>
+              <option value="404">404 Not Found</option>
+              <option value="500">500 Server Error</option>
+            </select>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="loadRequests()">🔄 Refresh</button>
+            <button class="btn btn-danger" onclick="clearRequests()">🗑️ Clear All</button>
+          </div>
+        </div>
+
+        <div id="requests-loading" class="loading" style="display: none">
+          <div class="spinner"></div>
+          <div>Loading requests...</div>
+        </div>
+
+        <div id="requests-list"></div>
+
+        <div id="requests-pagination" class="pagination"></div>
+      </div>
+
+      <!-- Exceptions Tab -->
+      <div id="exceptions-tab" class="tab-content">
+        <div class="controls">
+          <div class="filters">
+            <select class="filter-select" id="exception-type-filter">
+              <option value="">All Types</option>
+            </select>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="loadExceptions()">🔄 Refresh</button>
+            <button class="btn btn-danger" onclick="clearExceptions()">🗑️ Clear All</button>
+          </div>
+        </div>
+
+        <div id="exceptions-loading" class="loading" style="display: none">
+          <div class="spinner"></div>
+          <div>Loading exceptions...</div>
+        </div>
+
+        <div id="exceptions-list"></div>
+
+        <div id="exceptions-pagination" class="pagination"></div>
+      </div>
+    </div>
+
+    <!-- Request Detail Modal -->
+    <div id="request-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Request Details</h2>
+          <button class="close-btn" onclick="closeModal('request-modal')">×</button>
+        </div>
+        <div class="modal-body" id="request-detail"></div>
+      </div>
+    </div>
+
+    <!-- Exception Detail Modal -->
+    <div id="exception-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Exception Details</h2>
+          <button class="close-btn" onclick="closeModal('exception-modal')">×</button>
+        </div>
+        <div class="modal-body" id="exception-detail"></div>
+      </div>
+    </div>
+
+    <script>
+      let currentPage = 1;
+      const itemsPerPage = 20;
+
+      // Tab switching
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+          document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+
+          tab.classList.add("active");
+          document.getElementById(tab.dataset.tab + "-tab").classList.add("active");
+
+          currentPage = 1;
+          if (tab.dataset.tab === "requests") {
+            loadRequests();
+          } else {
+            loadExceptions();
+          }
+        });
+      });
+
+      // Filter changes
+      document.getElementById("method-filter").addEventListener("change", () => {
+        currentPage = 1;
+        loadRequests();
+      });
+
+      document.getElementById("status-filter").addEventListener("change", () => {
+        currentPage = 1;
+        loadRequests();
+      });
+
+      document.getElementById("exception-type-filter").addEventListener("change", () => {
+        currentPage = 1;
+        loadExceptions();
+      });
+
+      // Load requests
+      async function loadRequests() {
+        const loading = document.getElementById("requests-loading");
+        const list = document.getElementById("requests-list");
+
+        loading.style.display = "block";
+        list.innerHTML = "";
+
+        try {
+          const method = document.getElementById("method-filter").value;
+          const statusCode = document.getElementById("status-filter").value;
+          const offset = (currentPage - 1) * itemsPerPage;
+
+          let url = `/telescope/api/requests?limit=${itemsPerPage}&offset=${offset}`;
+          if (method) url += `&method=${method}`;
+          if (statusCode) url += `&statusCode=${statusCode}`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          loading.style.display = "none";
+
+          if (data.success && data.data.requests.length > 0) {
+            list.innerHTML = data.data.requests.map((req) => createRequestCard(req)).join("");
+            renderPagination("requests", data.data.total);
+          } else {
+            list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h3>No requests found</h3>
+                            <p>Make some API calls to see them here</p>
+                        </div>
+                    `;
+          }
+        } catch (error) {
+          loading.style.display = "none";
+          list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>Error loading requests</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+        }
+      }
+
+      function createRequestCard(req) {
+        const statusClass = getStatusClass(req.statusCode);
+        const methodClass = `method-${req.method.toLowerCase()}`;
+        const date = new Date(req.createdAt).toLocaleString();
+
+        return `
+                <div class="card" onclick="showRequestDetail('${req.uuid}')">
+                    <div class="card-header">
+                        <div>
+                            <span class="method-badge ${methodClass}">${req.method}</span>
+                            <span class="status-badge ${statusClass}">${req.statusCode}</span>
+                        </div>
+                        <div>${req.duration}ms</div>
+                    </div>
+                    <div class="card-path">${req.path}</div>
+                    <div class="card-meta">
+                        <div class="card-meta-item">
+                            <span>⏰</span>
+                            <span>${date}</span>
+                        </div>
+                        ${
+                          req.ipAddress
+                            ? `
+                        <div class="card-meta-item">
+                            <span>🌐</span>
+                            <span>${req.ipAddress}</span>
+                        </div>
+                        `
+                            : ""
+                        }
+                        ${
+                          req.userId
+                            ? `
+                        <div class="card-meta-item">
+                            <span>👤</span>
+                            <span>User #${req.userId}</span>
+                        </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                </div>
+            `;
+      }
+
+      function getStatusClass(status) {
+        if (status >= 200 && status < 300) return "status-success";
+        if (status >= 300 && status < 400) return "status-redirect";
+        if (status >= 400 && status < 500) return "status-client-error";
+        return "status-server-error";
+      }
+
+      async function showRequestDetail(uuid) {
+        const modal = document.getElementById("request-modal");
+        const detail = document.getElementById("request-detail");
+
+        try {
+          const response = await fetch(`/telescope/api/requests/${uuid}`);
+          const data = await response.json();
+
+          if (data.success) {
+            const req = data.data;
+            detail.innerHTML = `
+                        <div class="detail-section">
+                            <h3>General Information</h3>
+                            <div class="detail-grid">
+                                <div class="detail-label">Method:</div>
+                                <div class="detail-value"><span class="method-badge method-${req.method.toLowerCase()}">${req.method}</span></div>
+                                
+                                <div class="detail-label">Status:</div>
+                                <div class="detail-value"><span class="status-badge ${getStatusClass(req.statusCode)}">${req.statusCode}</span></div>
+                                
+                                <div class="detail-label">Duration:</div>
+                                <div class="detail-value">${req.duration}ms</div>
+                                
+                                <div class="detail-label">Time:</div>
+                                <div class="detail-value">${new Date(req.createdAt).toLocaleString()}</div>
+                                
+                                <div class="detail-label">Path:</div>
+                                <div class="detail-value">${req.path}</div>
+                                
+                                <div class="detail-label">Full URL:</div>
+                                <div class="detail-value">${req.fullUrl}</div>
+                                
+                                ${
+                                  req.ipAddress
+                                    ? `
+                                <div class="detail-label">IP Address:</div>
+                                <div class="detail-value">${req.ipAddress}</div>
+                                `
+                                    : ""
+                                }
+                                
+                                ${
+                                  req.userId
+                                    ? `
+                                <div class="detail-label">User ID:</div>
+                                <div class="detail-value">${req.userId}</div>
+                                `
+                                    : ""
+                                }
+                            </div>
+                        </div>
+
+                        ${
+                          Object.keys(req.queryParams || {}).length > 0
+                            ? `
+                        <div class="detail-section">
+                            <h3>Query Parameters</h3>
+                            <div class="code-block">${JSON.stringify(req.queryParams, null, 2)}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+
+                        ${
+                          Object.keys(req.bodyParams || {}).length > 0
+                            ? `
+                        <div class="detail-section">
+                            <h3>Request Body</h3>
+                            <div class="code-block">${JSON.stringify(req.bodyParams, null, 2)}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+
+                        ${
+                          Object.keys(req.headers || {}).length > 0
+                            ? `
+                        <div class="detail-section">
+                            <h3>Request Headers</h3>
+                            <div class="code-block">${JSON.stringify(req.headers, null, 2)}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+
+                        ${
+                          req.responseBody
+                            ? `
+                        <div class="detail-section">
+                            <h3>Response Body</h3>
+                            <div class="code-block">${JSON.stringify(req.responseBody, null, 2)}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+
+                        ${
+                          req.responseHeaders && Object.keys(req.responseHeaders).length > 0
+                            ? `
+                        <div class="detail-section">
+                            <h3>Response Headers</h3>
+                            <div class="code-block">${JSON.stringify(req.responseHeaders, null, 2)}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+                    `;
+
+            modal.classList.add("active");
+          }
+        } catch (error) {
+          alert("Error loading request details: " + error.message);
+        }
+      }
+
+      // Load exceptions
+      async function loadExceptions() {
+        const loading = document.getElementById("exceptions-loading");
+        const list = document.getElementById("exceptions-list");
+
+        loading.style.display = "block";
+        list.innerHTML = "";
+
+        try {
+          const type = document.getElementById("exception-type-filter").value;
+          const offset = (currentPage - 1) * itemsPerPage;
+
+          let url = `/telescope/api/exceptions?limit=${itemsPerPage}&offset=${offset}`;
+          if (type) url += `&type=${type}`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          loading.style.display = "none";
+
+          if (data.success && data.data.exceptions.length > 0) {
+            list.innerHTML = data.data.exceptions.map((exc) => createExceptionCard(exc)).join("");
+            renderPagination("exceptions", data.data.total);
+
+            // Update exception type filter
+            updateExceptionTypeFilter(data.data.exceptions);
+          } else {
+            list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✅</div>
+                            <h3>No exceptions found</h3>
+                            <p>Everything is running smoothly!</p>
+                        </div>
+                    `;
+          }
+        } catch (error) {
+          loading.style.display = "none";
+          list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>Error loading exceptions</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+        }
+      }
+
+      function createExceptionCard(exc) {
+        const date = new Date(exc.createdAt).toLocaleString();
+
+        return `
+                <div class="card exception-card" onclick="showExceptionDetail('${exc.uuid}')">
+                    <div class="exception-type">${exc.type}</div>
+                    <div class="card-path">${exc.message}</div>
+                    <div class="card-meta">
+                        <div class="card-meta-item">
+                            <span>⏰</span>
+                            <span>${date}</span>
+                        </div>
+                        ${
+                          exc.file
+                            ? `
+                        <div class="card-meta-item">
+                            <span>📄</span>
+                            <span>${exc.file}${exc.line ? ":" + exc.line : ""}</span>
+                        </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                </div>
+            `;
+      }
+
+      function updateExceptionTypeFilter(exceptions) {
+        const filter = document.getElementById("exception-type-filter");
+        const currentValue = filter.value;
+        const types = [...new Set(exceptions.map((exc) => exc.type))];
+
+        const currentOptions = Array.from(filter.options).map((opt) => opt.value);
+        const newTypes = types.filter((type) => !currentOptions.includes(type));
+
+        newTypes.forEach((type) => {
+          const option = document.createElement("option");
+          option.value = type;
+          option.textContent = type;
+          filter.appendChild(option);
+        });
+
+        filter.value = currentValue;
+      }
+
+      async function showExceptionDetail(uuid) {
+        const modal = document.getElementById("exception-modal");
+        const detail = document.getElementById("exception-detail");
+
+        try {
+          const response = await fetch(`/telescope/api/exceptions/${uuid}`);
+          const data = await response.json();
+
+          if (data.success) {
+            const exc = data.data;
+            detail.innerHTML = `
+                        <div class="detail-section">
+                            <h3>Exception Information</h3>
+                            <div class="detail-grid">
+                                <div class="detail-label">Type:</div>
+                                <div class="detail-value exception-type">${exc.type}</div>
+                                
+                                <div class="detail-label">Message:</div>
+                                <div class="detail-value">${exc.message}</div>
+                                
+                                ${
+                                  exc.code
+                                    ? `
+                                <div class="detail-label">Code:</div>
+                                <div class="detail-value">${exc.code}</div>
+                                `
+                                    : ""
+                                }
+                                
+                                <div class="detail-label">Time:</div>
+                                <div class="detail-value">${new Date(exc.createdAt).toLocaleString()}</div>
+                                
+                                ${
+                                  exc.file
+                                    ? `
+                                <div class="detail-label">File:</div>
+                                <div class="detail-value">${exc.file}</div>
+                                `
+                                    : ""
+                                }
+                                
+                                ${
+                                  exc.line
+                                    ? `
+                                <div class="detail-label">Line:</div>
+                                <div class="detail-value">${exc.line}</div>
+                                `
+                                    : ""
+                                }
+                            </div>
+                        </div>
+
+                        ${
+                          exc.stackTrace
+                            ? `
+                        <div class="detail-section">
+                            <h3>Stack Trace</h3>
+                            <div class="stack-trace">${exc.stackTrace}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+
+                        ${
+                          exc.context
+                            ? `
+                        <div class="detail-section">
+                            <h3>Context</h3>
+                            <div class="code-block">${JSON.stringify(exc.context, null, 2)}</div>
+                        </div>
+                        `
+                            : ""
+                        }
+                    `;
+
+            modal.classList.add("active");
+          }
+        } catch (error) {
+          alert("Error loading exception details: " + error.message);
+        }
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove("active");
+      }
+
+      // Close modal when clicking outside
+      document.querySelectorAll(".modal").forEach((modal) => {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            closeModal(modal.id);
+          }
+        });
+      });
+
+      function renderPagination(type, total) {
+        const paginationId = type + "-pagination";
+        const pagination = document.getElementById(paginationId);
+        const totalPages = Math.ceil(total / itemsPerPage);
+
+        if (totalPages <= 1) {
+          pagination.innerHTML = "";
+          return;
+        }
+
+        let html = "";
+
+        // Previous button
+        html += `<button class="page-btn" ${currentPage === 1 ? "disabled" : ""} onclick="changePage(${currentPage - 1}, '${type}')">‹ Prev</button>`;
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+          if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `<button class="page-btn ${i === currentPage ? "active" : ""}" onclick="changePage(${i}, '${type}')">${i}</button>`;
+          } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += `<span style="padding: 0.5rem;">...</span>`;
+          }
+        }
+
+        // Next button
+        html += `<button class="page-btn" ${currentPage === totalPages ? "disabled" : ""} onclick="changePage(${currentPage + 1}, '${type}')">Next ›</button>`;
+
+        pagination.innerHTML = html;
+      }
+
+      function changePage(page, type) {
+        currentPage = page;
+        if (type === "requests") {
+          loadRequests();
+        } else {
+          loadExceptions();
+        }
+      }
+
+      async function clearRequests() {
+        if (!confirm("Are you sure you want to clear all requests?")) return;
+
+        try {
+          const response = await fetch("/telescope/api/requests", {
+            method: "DELETE"
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            alert(data.data.message);
+            currentPage = 1;
+            loadRequests();
+          }
+        } catch (error) {
+          alert("Error clearing requests: " + error.message);
+        }
+      }
+
+      async function clearExceptions() {
+        if (!confirm("Are you sure you want to clear all exceptions?")) return;
+
+        try {
+          const response = await fetch("/telescope/api/exceptions", {
+            method: "DELETE"
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            alert(data.data.message);
+            currentPage = 1;
+            loadExceptions();
+          }
+        } catch (error) {
+          alert("Error clearing exceptions: " + error.message);
+        }
+      }
+
+      // Auto-refresh every 10 seconds
+      setInterval(() => {
+        const activeTab = document.querySelector(".tab.active").dataset.tab;
+        if (activeTab === "requests") {
+          loadRequests();
+        } else {
+          loadExceptions();
+        }
+      }, 10000);
+
+      // Initial load
+      loadRequests();
+    </script>
+  </body>
+</html>
