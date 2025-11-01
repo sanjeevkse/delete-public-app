@@ -536,6 +536,15 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
+  console.log("[listEvents] Query params:", {
+    page,
+    limit,
+    offset,
+    sortDirection,
+    userId: currentUserId,
+    filters: req.query
+  });
+
   const where: WhereOptions = {
     status: 1
   };
@@ -571,18 +580,16 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
   }
 
   const latitudeFilter = parseOptionalNumber(req.query.latitude, "latitude");
-  if (latitudeFilter !== undefined) {
+  if (latitudeFilter !== null && latitudeFilter !== undefined) {
     where.latitude = latitudeFilter;
   }
 
   const longitudeFilter = parseOptionalNumber(req.query.longitude, "longitude");
-  if (longitudeFilter !== undefined) {
+  if (longitudeFilter !== null && longitudeFilter !== undefined) {
     where.longitude = longitudeFilter;
   }
 
-  console.log("\n");
-  console.log(where);
-  console.log("\n");
+  console.log("[listEvents] WHERE clause:", JSON.stringify(where, null, 2));
 
   const { rows, count } = await Event.findAndCountAll({
     where,
@@ -597,14 +604,16 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     distinct: true
   });
 
-  const plainEvents = rows; // .map((event) => event.get({ plain: true }));
+  console.log("[listEvents] Query results:", { rowCount: rows.length, totalCount: count });
+
+  const plainEvents = rows.map((event) => event.get({ plain: true }));
 
   const registeredUsersMap = await loadRegisteredUsersForEventIds(
     plainEvents.map((event) => event.id)
   );
 
   const data = plainEvents.map((event) => {
-    const registeredUsers = []; // registeredUsersMap.get(event.id) ?? [];
+    const registeredUsers = registeredUsersMap.get(event.id) ?? [];
     const isRegistered = currentUserId
       ? registeredUsers.some((user) => user.id === currentUserId)
       : false;

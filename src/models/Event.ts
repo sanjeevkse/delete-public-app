@@ -17,9 +17,9 @@ class Event extends Model<InferAttributes<Event>, InferCreationAttributes<Event>
   declare title: string;
   declare description: string;
   declare place: string;
-  declare googleMapLink: string;
-  declare latitude: number | null;
-  declare longitude: number | null;
+  declare googleMapLink: string | null;
+  declare latitude: number;
+  declare longitude: number;
   declare startDate: Date;
   declare startTime: string;
   declare endDate: Date;
