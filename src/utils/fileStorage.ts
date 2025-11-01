@@ -27,5 +27,6 @@ export const toRelativeUploadPath = (absolutePath: string): string => {
 export const toPublicUploadPath = (relativePath: string): string => {
   const trimmed = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
   const base = UPLOAD_PATHS.PUBLIC_PATH.replace(/\/$/, "");
-  return `${base}/${trimmed}`;
+  const domain = UPLOAD_PATHS.BASE_URL.replace(/\/$/, "");
+  return `${domain}${base}/${trimmed}`;
 };

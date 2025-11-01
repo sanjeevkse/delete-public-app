@@ -10,7 +10,9 @@ export const UPLOAD_PATHS = {
   // Base directory for file uploads (persistent storage outside app)
   BASE_DIR: "/var/www/uploads/public_app",
   // Public URL path prefix for accessing uploaded files
-  PUBLIC_PATH: "/uploads"
+  PUBLIC_PATH: "/uploads",
+  // Full domain URL for uploaded files
+  BASE_URL: "https://public.nammarajajinagar.com"
 } as const;
 
 // File size limits (in bytes)
