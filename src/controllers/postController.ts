@@ -429,6 +429,7 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
   const tags = normalizeTagsInput(req.body?.tags);
+  const locationText = req.body?.locationText || req.body?.location_text || null;
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
   const media = normalizePostMediaInput(uploadedFiles, req.body?.media ?? req.body?.images);
 
@@ -440,6 +441,7 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
         tags,
         latitude,
         longitude,
+        locationText,
         status: 1,
         createdBy: userId,
         updatedBy: userId
@@ -610,6 +612,13 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   if (Object.prototype.hasOwnProperty.call(req.body, "longitude")) {
     updates.longitude = parseRequiredNumber(req.body.longitude, "longitude");
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(req.body, "locationText") ||
+    Object.prototype.hasOwnProperty.call(req.body, "location_text")
+  ) {
+    updates.locationText = req.body.locationText || req.body.location_text || null;
   }
 
   updates.updatedBy = userId;

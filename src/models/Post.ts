@@ -19,6 +19,7 @@ class Post extends Model<InferAttributes<Post>, InferCreationAttributes<Post>> {
   declare tags: CreationOptional<string | null>;
   declare latitude: number;
   declare longitude: number;
+  declare locationText: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -55,6 +56,11 @@ Post.init(
     longitude: {
       type: DataTypes.DECIMAL(11, 8),
       allowNull: false
+    },
+    locationText: {
+      field: "location_text",
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

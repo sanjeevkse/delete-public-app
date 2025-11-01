@@ -14,4 +14,10 @@ router.get("/api/exceptions/:uuid", telescopeController.getExceptionById);
 router.delete("/api/requests", telescopeController.clearRequests);
 router.delete("/api/exceptions", telescopeController.clearExceptions);
 
+// Query endpoints
+router.get("/api/queries", telescopeController.getQueries);
+router.get("/api/queries/request/:requestId", telescopeController.getQueriesForRequest);
+router.get("/api/queries/slow", telescopeController.getSlowQueries);
+router.delete("/api/queries", telescopeController.clearQueries);
+
 export default router;

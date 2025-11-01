@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import TelescopeRequest from "../models/TelescopeRequest";
 import TelescopeException from "../models/TelescopeException";
+import TelescopeQuery from "../models/TelescopeQuery";
 import logger from "../utils/logger";
 
 interface TelescopeConfig {
@@ -306,6 +307,112 @@ class TelescopeService {
     return sanitized;
   }
 
+  async logQuery(data: {
+    sql: string;
+    bindings?: any[] | object | null;
+    duration: number;
+    requestId?: number | null;
+    connectionName?: string;
+  }): Promise<TelescopeQuery | null> {
+    if (!this.isEnabled()) {
+      return null;
+    }
+
+    try {
+      // Skip logging Telescope's own queries to prevent recursion
+      if (
+        data.sql.includes("telescope_queries") ||
+        data.sql.includes("telescope_requests") ||
+        data.sql.includes("telescope_exceptions")
+      ) {
+        return null;
+      }
+
+      const query = await TelescopeQuery.create({
+        uuid: randomUUID(),
+        sql: data.sql.substring(0, 10000), // Limit SQL length
+        bindings: data.bindings ? this.sanitizeData(data.bindings, 5000) : null,
+        duration: data.duration,
+        requestId: data.requestId || null,
+        connectionName: data.connectionName || "default"
+      });
+
+      return query;
+    } catch (error) {
+      // Silent fail to prevent breaking the application
+      return null;
+    }
+  }
+
+  async getQueries(
+    options: {
+      limit?: number;
+      offset?: number;
+      requestId?: number;
+      minDuration?: number; // Get slow queries
+    } = {}
+  ): Promise<{ queries: TelescopeQuery[]; total: number }> {
+    try {
+      const where: any = {};
+
+      if (options.requestId) {
+        where.requestId = options.requestId;
+      }
+
+      if (options.minDuration) {
+        where.duration = { $gte: options.minDuration };
+      }
+
+      const { count, rows } = await TelescopeQuery.findAndCountAll({
+        where,
+        limit: options.limit || 100,
+        offset: options.offset || 0,
+        order: [["createdAt", "DESC"]]
+      });
+
+      return { queries: rows, total: count };
+    } catch (error) {
+      logger.error({ error }, "Failed to retrieve Telescope queries");
+      return { queries: [], total: 0 };
+    }
+  }
+
+  async getQueriesByRequestId(requestId: number): Promise<TelescopeQuery[]> {
+    try {
+      return await TelescopeQuery.findAll({
+        where: { requestId },
+        order: [["createdAt", "ASC"]]
+      });
+    } catch (error) {
+      logger.error({ error }, "Failed to retrieve queries for request");
+      return [];
+    }
+  }
+
+  async getSlowQueries(threshold: number = 100): Promise<TelescopeQuery[]> {
+    try {
+      return await TelescopeQuery.findAll({
+        where: {
+          duration: { $gte: threshold }
+        },
+        limit: 50,
+        order: [["duration", "DESC"]]
+      });
+    } catch (error) {
+      logger.error({ error }, "Failed to retrieve slow queries");
+      return [];
+    }
+  }
+
+  async clearQueries(): Promise<number> {
+    try {
+      return await TelescopeQuery.destroy({ where: {} });
+    } catch (error) {
+      logger.error({ error }, "Failed to clear Telescope queries");
+      return 0;
+    }
+  }
+
   private async cleanupOldEntries(): Promise<void> {
     try {
       const count = await TelescopeRequest.count();
@@ -342,6 +449,25 @@ class TelescopeService {
 
         if (idsToDelete.length > 0) {
           await TelescopeException.destroy({ where: { id: idsToDelete } });
+        }
+      }
+
+      // Cleanup queries similarly
+      const queryCount = await TelescopeQuery.count();
+      if (queryCount > this.config.storageLimit * 10) {
+        // Keep more queries as they're smaller
+        const entriesToDelete = queryCount - this.config.storageLimit * 10;
+
+        const oldestQueries = await TelescopeQuery.findAll({
+          order: [["createdAt", "ASC"]],
+          limit: entriesToDelete,
+          attributes: ["id"]
+        });
+
+        const idsToDelete = oldestQueries.map((entry) => entry.id);
+
+        if (idsToDelete.length > 0) {
+          await TelescopeQuery.destroy({ where: { id: idsToDelete } });
         }
       }
     } catch (error) {

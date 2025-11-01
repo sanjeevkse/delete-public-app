@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import telescopeService from "../services/telescopeService";
+import { requestContextStore } from "../config/queryLogger";
 
 // Extend Express Request to store telescope data
 declare global {
@@ -7,6 +8,7 @@ declare global {
     interface Request {
       telescopeStartTime?: number;
       telescopeExceptionId?: number;
+      telescopeRequestId?: number;
     }
   }
 }
@@ -20,6 +22,13 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
   // Store start time
   req.telescopeStartTime = Date.now();
 
+  // Run the rest in async context to track queries
+  requestContextStore.run({ requestId: null, startTime: Date.now() }, () => {
+    runMiddleware(req, res, next);
+  });
+};
+
+const runMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   // Capture original response methods
   const originalSend = res.send;
   const originalJson = res.json;
@@ -114,7 +123,7 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
         }
       }
 
-      await telescopeService.logRequest({
+      const telescopeRequest = await telescopeService.logRequest({
         method: req.method,
         path: req.path,
         fullUrl,
@@ -130,6 +139,17 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
         userId,
         exceptionId: req.telescopeExceptionId || null
       });
+
+      // Store request ID for linking queries
+      if (telescopeRequest) {
+        req.telescopeRequestId = telescopeRequest.id;
+
+        // Update context with actual request ID
+        const context = requestContextStore.getStore();
+        if (context) {
+          context.requestId = telescopeRequest.id;
+        }
+      }
     } catch (error) {
       // Silently fail to avoid breaking the application
       console.error("Telescope middleware error:", error);

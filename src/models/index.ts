@@ -29,6 +29,7 @@ import UserRole from "./UserRole";
 import UserToken from "./UserToken";
 import TelescopeRequest from "./TelescopeRequest";
 import TelescopeException from "./TelescopeException";
+import TelescopeQuery from "./TelescopeQuery";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -178,5 +179,6 @@ export {
   UserRole,
   UserToken,
   TelescopeRequest,
-  TelescopeException
+  TelescopeException,
+  TelescopeQuery
 };
