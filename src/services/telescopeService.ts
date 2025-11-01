@@ -208,7 +208,46 @@ class TelescopeService {
     if (!data) return data;
 
     try {
-      let jsonString = JSON.stringify(data);
+      // Handle special cases that can't be JSON.stringified
+      if (typeof data === "function") {
+        return "[Function]";
+      }
+
+      if (data instanceof Buffer) {
+        return {
+          __type: "Buffer",
+          __size: data.length,
+          __preview: data.toString("utf8", 0, Math.min(100, data.length))
+        };
+      }
+
+      // Handle circular references and non-serializable objects
+      const seen = new WeakSet();
+      const replacer = (key: string, value: any) => {
+        if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) {
+            return "[Circular Reference]";
+          }
+          seen.add(value);
+
+          // Handle special object types
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          if (value instanceof RegExp) {
+            return value.toString();
+          }
+          if (value instanceof Error) {
+            return { name: value.name, message: value.message, stack: value.stack };
+          }
+          if (Buffer.isBuffer(value)) {
+            return { __type: "Buffer", __size: value.length };
+          }
+        }
+        return value;
+      };
+
+      let jsonString = JSON.stringify(data, replacer);
 
       // Limit size if specified
       if (maxSize && jsonString.length > maxSize) {
@@ -216,13 +255,29 @@ class TelescopeService {
         return { __truncated: true, data: jsonString };
       }
 
-      // Remove sensitive data
+      // Parse back to object and remove sensitive data
+      const parsed = JSON.parse(jsonString);
       const sensitiveKeys = ["password", "token", "secret", "authorization", "cookie", "api_key"];
-      const sanitized = this.removeSensitiveKeys(data, sensitiveKeys);
+      const sanitized = this.removeSensitiveKeys(parsed, sensitiveKeys);
 
       return sanitized;
     } catch (error) {
-      return { __error: "Failed to sanitize data" };
+      // If all else fails, try to extract basic info
+      try {
+        if (typeof data === "object" && data !== null) {
+          const keys = Object.keys(data);
+          return {
+            __error: "Failed to sanitize data",
+            __type: data.constructor?.name || typeof data,
+            __keys: keys.slice(0, 10),
+            __hasMoreKeys: keys.length > 10
+          };
+        }
+      } catch {
+        // Last resort
+        return { __error: "Failed to sanitize data", __type: typeof data };
+      }
+      return { __error: "Failed to sanitize data", __type: typeof data };
     }
   }
 
