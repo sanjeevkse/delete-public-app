@@ -12,8 +12,8 @@ declare global {
 }
 
 export const telescopeMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  // Skip if telescope is disabled
-  if (!telescopeService.isEnabled()) {
+  // Skip if telescope is disabled or path should not be captured
+  if (!telescopeService.isEnabled() || !telescopeService.shouldCapture(req.path)) {
     return next();
   }
 
