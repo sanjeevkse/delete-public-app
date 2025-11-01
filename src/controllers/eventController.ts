@@ -580,6 +580,10 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     where.longitude = longitudeFilter;
   }
 
+  console.log("\n");
+  console.log(where);
+  console.log("\n");
+
   const { rows, count } = await Event.findAndCountAll({
     where,
     limit,

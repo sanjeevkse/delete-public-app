@@ -1,31 +1,23 @@
-import env from "../config/env";
+import {
+  ALLOWED_MIME_TYPES,
+  UPLOAD_COUNTS,
+  UPLOAD_LIMITS,
+  UPLOAD_MODULES,
+  ASSET_TYPES
+} from "../config/uploadConstants";
 import { ApiError } from "./errorHandler";
 import { createFileUploadMiddleware } from "./uploadMiddleware";
 
-const ALLOWED_IMAGE_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif"
-];
+const ALLOWED_IMAGE_MIME_TYPES = ALLOWED_MIME_TYPES.IMAGES as unknown as string[];
+const ALLOWED_VIDEO_MIME_TYPES = ALLOWED_MIME_TYPES.VIDEOS as unknown as string[];
 
-const ALLOWED_VIDEO_MIME_TYPES = [
-  "video/mp4",
-  "video/quicktime",
-  "video/3gpp",
-  "video/x-msvideo",
-  "video/x-matroska"
-];
+export const MAX_POST_IMAGE_COUNT = UPLOAD_COUNTS.POST.MAX_IMAGES;
+export const MAX_POST_VIDEO_COUNT = UPLOAD_COUNTS.POST.MAX_VIDEOS;
+const POST_MEDIA_MAX_FILE_COUNT = UPLOAD_COUNTS.POST.MAX_TOTAL;
 
-export const MAX_POST_IMAGE_COUNT = 4;
-export const MAX_POST_VIDEO_COUNT = 1;
-const POST_MEDIA_MAX_FILE_COUNT = MAX_POST_IMAGE_COUNT + MAX_POST_VIDEO_COUNT;
-
-const POST_MEDIA_MAX_FILE_SIZE_BYTES = Math.min(
-  5 * 1024 * 1024,
-  env.uploads.maxImageSizeBytes,
-  env.uploads.maxVideoSizeBytes
+const POST_MEDIA_MAX_FILE_SIZE_BYTES = Math.max(
+  UPLOAD_LIMITS.MAX_IMAGE_SIZE,
+  UPLOAD_LIMITS.MAX_VIDEO_SIZE
 );
 
 const ALLOWED_MEDIA_MIME_TYPES = [...ALLOWED_IMAGE_MIME_TYPES, ...ALLOWED_VIDEO_MIME_TYPES];
@@ -58,8 +50,8 @@ const validatePostMediaFiles = (files: Express.Multer.File[]) => {
 export const postMediaUpload = createFileUploadMiddleware({
   fieldName: "media",
   maxCount: POST_MEDIA_MAX_FILE_COUNT,
-  moduleName: "posts",
-  assetType: "media",
+  moduleName: UPLOAD_MODULES.POSTS,
+  assetType: ASSET_TYPES.MEDIA,
   allowedMimeTypes: ALLOWED_MEDIA_MIME_TYPES,
   maxFileSizeBytes: POST_MEDIA_MAX_FILE_SIZE_BYTES,
   validateFiles: validatePostMediaFiles
