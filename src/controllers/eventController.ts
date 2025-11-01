@@ -57,20 +57,20 @@ const registrationsCountAttribute = [
   "registrationsCount"
 ] as const;
 
-const buildEventAttributes = (includeAuditFields?: boolean, keepFields?: string[]): FindAttributeOptions => {
+const buildEventAttributes = (
+  includeAuditFields?: boolean,
+  keepFields?: string[]
+): FindAttributeOptions => {
   const baseAttrs = buildQueryAttributes({ includeAuditFields, keepFields });
   const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
-  
+
   if (!baseAttrs) {
     return { include: [registrationsCountAttribute] };
   }
 
   return {
-    ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
-    include: [
-      ...baseInclude,
-      registrationsCountAttribute
-    ]
+    ...(typeof baseAttrs === "object" && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+    include: [...baseInclude, registrationsCountAttribute]
   };
 };
 
@@ -92,6 +92,88 @@ const baseEventInclude = [
     required: false
   }
 ];
+
+type PlainEventRegistration = {
+  eventId: number;
+  user?: {
+    id: number;
+    fullName: string | null;
+    email: string | null;
+    contactNumber: string | null;
+    profile?: {
+      profileImageUrl?: string | null;
+    } | null;
+  } | null;
+};
+
+type RegisteredUser = {
+  id: number;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  profilePicture: string | null;
+};
+
+const toRegisteredUser = (registration: PlainEventRegistration): RegisteredUser | null => {
+  const user = registration.user;
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    name: user.fullName ?? null,
+    phone: user.contactNumber ?? null,
+    email: user.email ?? null,
+    profilePicture: user.profile?.profileImageUrl ?? null
+  };
+};
+
+const loadRegisteredUsersForEventIds = async (
+  eventIds: number[]
+): Promise<Map<number, RegisteredUser[]>> => {
+  if (eventIds.length === 0) {
+    return new Map();
+  }
+
+  const registrations = await EventRegistration.findAll({
+    attributes: ["eventId"],
+    where: {
+      eventId: { [Op.in]: eventIds },
+      status: 1
+    },
+    include: [
+      {
+        association: "user",
+        attributes: ["id", "fullName", "email", "contactNumber"],
+        required: true,
+        include: [
+          {
+            association: "profile",
+            attributes: ["profileImageUrl"],
+            required: false
+          }
+        ]
+      }
+    ]
+  });
+
+  const result = new Map<number, RegisteredUser[]>();
+
+  for (const registration of registrations) {
+    const plainRegistration = registration.get({ plain: true }) as PlainEventRegistration;
+    const user = toRegisteredUser(plainRegistration);
+    if (!user) {
+      continue;
+    }
+
+    const existing = result.get(plainRegistration.eventId) ?? [];
+    existing.push(user);
+    result.set(plainRegistration.eventId, existing);
+  }
+
+  return result;
+};
 
 const isAdmin = (roles: string[]): boolean => {
   const normalizedRoles = roles.map((role) => role.toLowerCase());
@@ -419,7 +501,7 @@ export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   if (Number.isNaN(id)) {
     return sendBadRequest(res, "Invalid event id");
   }
-  
+
   const includeAuditFields = shouldIncludeAuditFields(req.query);
   const eventRecord = await fetchEventById(id, includeAuditFields);
   if (!eventRecord) {
@@ -428,25 +510,20 @@ export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Resp
 
   const event = eventRecord.get({ plain: true });
 
-  let isRegistered = false;
   const currentUserId = req.user?.id ?? null;
 
-  if (currentUserId) {
-    const registration = await EventRegistration.findOne({
-      attributes: ["id"],
-      where: {
-        eventId: id,
-        userId: currentUserId,
-        status: 1
-      }
-    });
-    isRegistered = Boolean(registration);
-  }
+  const registeredUsersMap = await loadRegisteredUsersForEventIds([id]);
+  const registeredUsers = registeredUsersMap.get(id) ?? [];
+
+  const isRegistered = currentUserId
+    ? registeredUsers.some((user) => user.id === currentUserId)
+    : false;
 
   return sendSuccess(
     res,
     {
       ...event,
+      registeredUsers,
       isRegistered
     },
     "Event retrieved successfully"
@@ -507,7 +584,7 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     where,
     limit,
     offset,
-    attributes: buildEventAttributes(includeAuditFields, ['startDate', 'startTime']),
+    attributes: buildEventAttributes(includeAuditFields, ["startDate", "startTime"]),
     include: baseEventInclude,
     order: [
       ["startDate", sortDirection],
@@ -518,25 +595,22 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const plainEvents = rows.map((event) => event.get({ plain: true }));
 
-  let registeredEventIds: Set<number> = new Set();
+  const registeredUsersMap = await loadRegisteredUsersForEventIds(
+    plainEvents.map((event) => event.id)
+  );
 
-  if (currentUserId && plainEvents.length > 0) {
-    const eventIds = plainEvents.map((event) => event.id);
-    const registrations = await EventRegistration.findAll({
-      attributes: ["eventId"],
-      where: {
-        eventId: { [Op.in]: eventIds },
-        userId: currentUserId,
-        status: 1
-      }
-    });
-    registeredEventIds = new Set(registrations.map((registration) => registration.eventId));
-  }
+  const data = plainEvents.map((event) => {
+    const registeredUsers = registeredUsersMap.get(event.id) ?? [];
+    const isRegistered = currentUserId
+      ? registeredUsers.some((user) => user.id === currentUserId)
+      : false;
 
-  const data = plainEvents.map((event) => ({
-    ...event,
-    isRegistered: currentUserId ? registeredEventIds.has(event.id) : false
-  }));
+    return {
+      ...event,
+      registeredUsers,
+      isRegistered
+    };
+  });
 
   const pagination = calculatePagination(count, page, limit);
 

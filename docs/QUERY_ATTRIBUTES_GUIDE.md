@@ -7,6 +7,7 @@ This utility provides a standardized way to exclude audit fields from query resu
 ## Excluded Fields (by default)
 
 The following fields are excluded from all query results by default:
+
 - `createdBy`
 - `createdAt`
 - `updatedBy`
@@ -23,12 +24,12 @@ import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAt
 // In your controller endpoint
 export const listItems = asyncHandler(async (req: Request, res: Response) => {
   const includeAuditFields = shouldIncludeAuditFields(req.query);
-  
+
   const { rows, count } = await Model.findAndCountAll({
-    attributes: buildQueryAttributes({ includeAuditFields }),
+    attributes: buildQueryAttributes({ includeAuditFields })
     // ... other query options
   });
-  
+
   // ... rest of the code
 });
 ```
@@ -36,11 +37,13 @@ export const listItems = asyncHandler(async (req: Request, res: Response) => {
 ### Including Audit Fields via API
 
 Users can include audit fields by adding any of these query parameters:
+
 - `?includeAuditFields=true`
 - `?includeAudit=true`
 - `?withAudit=true`
 
 **Examples:**
+
 ```bash
 # Default - excludes audit fields
 GET /api/users
@@ -62,7 +65,7 @@ GET /api/users/123?includeAuditFields=true
 ```typescript
 const attributes = buildQueryAttributes({
   includeAuditFields: false,
-  exclude: ['internalNotes', 'deletedAt']
+  exclude: ["internalNotes", "deletedAt"]
 });
 ```
 
@@ -73,13 +76,13 @@ If you need to order by an audit field like `createdAt`, you must keep it in the
 ```typescript
 const attributes = buildQueryAttributes({
   includeAuditFields: false,
-  keepFields: ['createdAt'] // Keep createdAt for ORDER BY
+  keepFields: ["createdAt"] // Keep createdAt for ORDER BY
 });
 
 // Then use it in your query
 Model.findAll({
   attributes,
-  order: [['createdAt', 'DESC']]
+  order: [["createdAt", "DESC"]]
 });
 ```
 
@@ -88,9 +91,7 @@ Model.findAll({
 ```typescript
 const attributes = buildQueryAttributes({
   includeAuditFields: false,
-  include: [
-    [sequelize.fn('COUNT', sequelize.col('posts.id')), 'postCount']
-  ]
+  include: [[sequelize.fn("COUNT", sequelize.col("posts.id")), "postCount"]]
 });
 ```
 
@@ -104,19 +105,14 @@ const buildPostAttributes = (
   includeAuditFields?: boolean
 ): FindAttributeOptions => {
   const baseAttrs = buildQueryAttributes({ includeAuditFields });
-  
+
   // Merge with your custom attributes
-  const customFields = [
-    [sequelize.literal('...'), 'customField']
-  ];
-  
+  const customFields = [[sequelize.literal("..."), "customField"]];
+
   const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
   return {
-    ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
-    include: [
-      ...baseInclude,
-      ...customFields
-    ]
+    ...(typeof baseAttrs === "object" && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+    include: [...baseInclude, ...customFields]
   };
 };
 ```
@@ -126,14 +122,17 @@ const buildPostAttributes = (
 The following controllers have been updated to support this feature:
 
 ### User Controller
+
 - `GET /api/users` - List users
 - `GET /api/users/:id` - Get user by ID
 
 ### Business Controller
+
 - `GET /api/businesses` - List businesses
 - `GET /api/businesses/:id` - Get business by ID
 
 ### Post Controller
+
 - `GET /api/posts` - List all posts
 - `GET /api/posts/my` - List my posts
 - `GET /api/posts/:id` - Get post by ID
@@ -194,19 +193,22 @@ GET /api/businesses?includeAuditFields=true
 When implementing this in new controllers:
 
 1. **Import the utilities:**
+
    ```typescript
    import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
    ```
 
 2. **Extract the flag from query params:**
+
    ```typescript
    const includeAuditFields = shouldIncludeAuditFields(req.query);
    ```
 
 3. **Apply to your query:**
+
    ```typescript
    const result = await Model.findAll({
-     attributes: buildQueryAttributes({ includeAuditFields }),
+     attributes: buildQueryAttributes({ includeAuditFields })
      // ... other options
    });
    ```
@@ -226,6 +228,7 @@ When implementing this in new controllers:
 ## Backward Compatibility
 
 This change is **backward compatible** because:
+
 - Existing API calls continue to work without modification
 - Clients that need audit fields can opt-in with query parameters
 - No breaking changes to existing endpoints

@@ -37,7 +37,7 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
 
 export const getMember = asyncHandler(async (req: Request, res: Response) => {
   const member = await Member.findByPk(req.params.id);
-  
+
   if (!member) {
     return sendNotFound(res, "Member not found");
   }
@@ -82,11 +82,11 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
 
 export const getMember = asyncHandler(async (req: Request, res: Response) => {
   const includeAuditFields = shouldIncludeAuditFields(req.query);
-  
+
   const member = await Member.findByPk(req.params.id, {
     attributes: buildQueryAttributes({ includeAuditFields })
   });
-  
+
   if (!member) {
     return sendNotFound(res, "Member not found");
   }
@@ -100,19 +100,22 @@ export const getMember = asyncHandler(async (req: Request, res: Response) => {
 Only **3 changes** needed per controller:
 
 ### 1. Add Import
+
 ```typescript
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 ```
 
 ### 2. Extract Flag from Query
+
 ```typescript
 const includeAuditFields = shouldIncludeAuditFields(req.query);
 ```
 
 ### 3. Apply to Query
+
 ```typescript
 const result = await Model.findAll({
-  attributes: buildQueryAttributes({ includeAuditFields }),
+  attributes: buildQueryAttributes({ includeAuditFields })
   // ... other options
 });
 ```
@@ -122,6 +125,7 @@ const result = await Model.findAll({
 If your controller already has custom attributes, you can merge them:
 
 ### Before
+
 ```typescript
 const { rows, count } = await Community.findAndCountAll({
   include: [
@@ -137,6 +141,7 @@ const { rows, count } = await Community.findAndCountAll({
 ```
 
 ### After
+
 ```typescript
 const includeAuditFields = shouldIncludeAuditFields(req.query);
 
@@ -161,30 +166,25 @@ For controllers with complex attribute building (like postController):
 ```typescript
 const buildCustomAttributes = (userId?: number, includeAuditFields?: boolean) => {
   const baseAttrs = buildQueryAttributes({ includeAuditFields });
-  
-  const customFields = [
-    [sequelize.fn('COUNT', sequelize.col('reactions.id')), 'reactionCount']
-  ];
-  
+
+  const customFields = [[sequelize.fn("COUNT", sequelize.col("reactions.id")), "reactionCount"]];
+
   if (!baseAttrs) {
     return { include: customFields };
   }
 
   const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
   return {
-    ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
-    include: [
-      ...baseInclude,
-      ...customFields
-    ]
+    ...(typeof baseAttrs === "object" && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+    include: [...baseInclude, ...customFields]
   };
 };
 
 export const listItems = asyncHandler(async (req: Request, res: Response) => {
   const includeAuditFields = shouldIncludeAuditFields(req.query);
-  
+
   const { rows, count } = await Model.findAndCountAll({
-    attributes: buildCustomAttributes(userId, includeAuditFields),
+    attributes: buildCustomAttributes(userId, includeAuditFields)
     // ... other options
   });
 });
@@ -203,12 +203,14 @@ curl "http://localhost:3000/api/your-endpoint?includeAuditFields=true"
 ```
 
 **Verify:**
+
 - Without param: No `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `status` in response
 - With param: All audit fields present in response
 
 ## Common Patterns
 
 ### Pattern 1: Simple List
+
 ```typescript
 const includeAuditFields = shouldIncludeAuditFields(req.query);
 const items = await Model.findAll({
@@ -217,6 +219,7 @@ const items = await Model.findAll({
 ```
 
 ### Pattern 2: Get by ID
+
 ```typescript
 const includeAuditFields = shouldIncludeAuditFields(req.query);
 const item = await Model.findByPk(id, {
@@ -225,6 +228,7 @@ const item = await Model.findByPk(id, {
 ```
 
 ### Pattern 3: With Where Clause
+
 ```typescript
 const includeAuditFields = shouldIncludeAuditFields(req.query);
 const items = await Model.findAll({
@@ -234,6 +238,7 @@ const items = await Model.findAll({
 ```
 
 ### Pattern 4: With Relations
+
 ```typescript
 const includeAuditFields = shouldIncludeAuditFields(req.query);
 const items = await Model.findAll({
@@ -254,6 +259,7 @@ const items = await Model.findAll({
 ## Need Help?
 
 Refer to these files for complete examples:
+
 - Simple: `src/controllers/businessController.ts`
 - Complex: `src/controllers/postController.ts`
 - With relations: `src/controllers/userController.ts`

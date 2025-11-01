@@ -81,7 +81,7 @@ const buildPostAttributes = (
   keepFields?: string[]
 ): FindAttributeOptions => {
   const baseAttrs = buildQueryAttributes({ includeAuditFields, keepFields });
-  
+
   if (typeof currentUserId !== "number") {
     if (!baseAttrs) {
       return attributesWithReactionCounts;
@@ -89,11 +89,8 @@ const buildPostAttributes = (
     // Merge base attributes with reaction counts
     const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
     return {
-      ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
-      include: [
-        ...baseInclude,
-        ...reactionCountAttributes
-      ]
+      ...(typeof baseAttrs === "object" && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+      include: [...baseInclude, ...reactionCountAttributes]
     };
   }
 
@@ -109,11 +106,8 @@ const buildPostAttributes = (
   // Merge base attributes with reaction counts and current user reaction
   const baseInclude = Array.isArray(baseAttrs) ? baseAttrs : (baseAttrs as any)?.include || [];
   return {
-    ...(typeof baseAttrs === 'object' && !Array.isArray(baseAttrs) ? baseAttrs : {}),
-    include: [
-      ...baseInclude,
-      ...extraFields
-    ]
+    ...(typeof baseAttrs === "object" && !Array.isArray(baseAttrs) ? baseAttrs : {}),
+    include: [...baseInclude, ...extraFields]
   };
 };
 
@@ -407,8 +401,11 @@ const computePaginationMeta = (total: number, page: number, limit: number) => ({
   pages: Math.ceil(total / limit)
 });
 
-const buildListAttributes = (currentUserId?: number, includeAuditFields?: boolean, keepFields?: string[]): FindAttributeOptions =>
-  buildPostAttributes(currentUserId, includeAuditFields, keepFields);
+const buildListAttributes = (
+  currentUserId?: number,
+  includeAuditFields?: boolean,
+  keepFields?: string[]
+): FindAttributeOptions => buildPostAttributes(currentUserId, includeAuditFields, keepFields);
 
 const getReactionCounts = async (postId: number) => {
   const [likes, dislikes] = await Promise.all([
@@ -530,24 +527,26 @@ export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Res
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(userId, includeAuditFields, ['createdAt']),
+    attributes: buildListAttributes(userId, includeAuditFields, ["createdAt"]),
     include: basePostInclude,
     distinct: true
   });
 
   const pagination = calculatePagination(count, page, limit);
 
-  const posts = rows.map((post) => formatPostForResponse(post, userId)).map((post) => {
-    const w = 400; //  + Math.floor(Math.random() * 200);
-    const h = 300; //  + Math.floor(Math.random() * 200);
-    const medias = (post.media as any)?.map((media: any) => ({
-      ...media,
-      mediaUrl: `https://picsum.photos/seed/${post.id}-${Math.random()
-      .toString(36)
-      .substring(2, 8)}/${w}/${h}`
-    }));
-    return {...post, media: medias };
-  });
+  const posts = rows
+    .map((post) => formatPostForResponse(post, userId))
+    .map((post) => {
+      const w = 400; //  + Math.floor(Math.random() * 200);
+      const h = 300; //  + Math.floor(Math.random() * 200);
+      const medias = (post.media as any)?.map((media: any) => ({
+        ...media,
+        mediaUrl: `https://picsum.photos/seed/${post.id}-${Math.random()
+          .toString(36)
+          .substring(2, 8)}/${w}/${h}`
+      }));
+      return { ...post, media: medias };
+    });
 
   return sendSuccessWithPagination(res, posts, pagination, "Posts retrieved successfully");
 });
@@ -566,7 +565,7 @@ export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: R
     limit,
     offset,
     order: [["createdAt", sortDirection]],
-    attributes: buildListAttributes(userId, includeAuditFields, ['createdAt']),
+    attributes: buildListAttributes(userId, includeAuditFields, ["createdAt"]),
     include: basePostInclude,
     distinct: true
   });

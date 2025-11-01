@@ -487,7 +487,7 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
       status: 1
     },
     {
-     id: 902,
+      id: 902,
       label: "Profile",
       description: "User profile and settings",
       sidebar: "PROFILE_SCREEN",

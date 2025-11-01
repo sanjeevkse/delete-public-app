@@ -14,6 +14,7 @@ Successfully implemented a system-wide feature to exclude audit fields from API 
 ### Files Modified
 
 #### Controllers Updated
+
 1. **`src/controllers/businessController.ts`**
    - Updated `listBusinesses()` endpoint
    - Updated `getBusiness()` endpoint
@@ -50,6 +51,7 @@ Successfully implemented a system-wide feature to exclude audit fields from API 
 ## Excluded Fields
 
 The following fields are now excluded from all query responses by default:
+
 - `createdBy`
 - `createdAt`
 - `updatedBy`
@@ -59,6 +61,7 @@ The following fields are now excluded from all query responses by default:
 ## How to Include Audit Fields
 
 Users can add any of these query parameters to include audit fields:
+
 - `?includeAuditFields=true`
 - `?includeAudit=true`
 - `?withAudit=true`
@@ -66,6 +69,7 @@ Users can add any of these query parameters to include audit fields:
 ## API Examples
 
 ### Before (with audit fields shown)
+
 ```json
 {
   "id": 1,
@@ -79,6 +83,7 @@ Users can add any of these query parameters to include audit fields:
 ```
 
 ### After (default - audit fields excluded)
+
 ```json
 {
   "id": 1,
@@ -87,6 +92,7 @@ Users can add any of these query parameters to include audit fields:
 ```
 
 ### After (with includeAuditFields=true)
+
 ```json
 {
   "id": 1,
@@ -104,6 +110,7 @@ Users can add any of these query parameters to include audit fields:
 ### Manual Testing
 
 1. **Test default behavior (audit fields excluded):**
+
    ```bash
    curl http://localhost:3000/api/users
    curl http://localhost:3000/api/businesses
@@ -112,6 +119,7 @@ Users can add any of these query parameters to include audit fields:
    ```
 
 2. **Test with audit fields included:**
+
    ```bash
    curl "http://localhost:3000/api/users?includeAuditFields=true"
    curl "http://localhost:3000/api/businesses?includeAuditFields=true"
@@ -120,13 +128,14 @@ Users can add any of these query parameters to include audit fields:
    ```
 
 3. **Test single item endpoints:**
+
    ```bash
    # Without audit fields
    curl http://localhost:3000/api/users/1
    curl http://localhost:3000/api/businesses/1
    curl http://localhost:3000/api/posts/1
    curl http://localhost:3000/api/events/1
-   
+
    # With audit fields
    curl "http://localhost:3000/api/users/1?includeAuditFields=true"
    curl "http://localhost:3000/api/businesses/1?includeAuditFields=true"
@@ -161,11 +170,13 @@ Users can add any of these query parameters to include audit fields:
 To apply this to additional controllers:
 
 1. Import the utilities:
+
    ```typescript
    import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
    ```
 
 2. Extract the flag in your endpoint:
+
    ```typescript
    const includeAuditFields = shouldIncludeAuditFields(req.query);
    ```
@@ -173,7 +184,7 @@ To apply this to additional controllers:
 3. Apply to your query:
    ```typescript
    const result = await Model.findAll({
-     attributes: buildQueryAttributes({ includeAuditFields }),
+     attributes: buildQueryAttributes({ includeAuditFields })
      // ... other options
    });
    ```
@@ -181,6 +192,7 @@ To apply this to additional controllers:
 ## Rollout Status
 
 ### ✅ Completed
+
 - Core utility implementation
 - Business controller
 - User controller
@@ -189,7 +201,9 @@ To apply this to additional controllers:
 - Documentation
 
 ### 📋 Remaining Controllers (Optional)
+
 The following controllers can be updated in future iterations:
+
 - Family Member Controller
 - Member Controller
 - Community Controller
