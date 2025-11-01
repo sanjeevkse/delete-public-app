@@ -597,14 +597,14 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
     distinct: true
   });
 
-  const plainEvents = rows.map((event) => event.get({ plain: true }));
+  const plainEvents = rows; // .map((event) => event.get({ plain: true }));
 
   const registeredUsersMap = await loadRegisteredUsersForEventIds(
     plainEvents.map((event) => event.id)
   );
 
   const data = plainEvents.map((event) => {
-    const registeredUsers = registeredUsersMap.get(event.id) ?? [];
+    const registeredUsers = []; // registeredUsersMap.get(event.id) ?? [];
     const isRegistered = currentUserId
       ? registeredUsers.some((user) => user.id === currentUserId)
       : false;
