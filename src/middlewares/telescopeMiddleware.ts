@@ -67,6 +67,53 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
       const host = req.get("host");
       const fullUrl = `${protocol}://${host}${req.originalUrl}`;
 
+      // Capture file upload information
+      const bodyWithFiles: any = { ...req.body };
+
+      // Handle single file upload (req.file from multer)
+      if ((req as any).file) {
+        const file = (req as any).file;
+        bodyWithFiles.__file = {
+          fieldname: file.fieldname,
+          originalname: file.originalname,
+          encoding: file.encoding,
+          mimetype: file.mimetype,
+          size: file.size,
+          filename: file.filename,
+          path: file.path
+        };
+      }
+
+      // Handle multiple file uploads (req.files from multer)
+      if ((req as any).files) {
+        const files = (req as any).files;
+        if (Array.isArray(files)) {
+          // Array of files
+          bodyWithFiles.__files = files.map((file: any) => ({
+            fieldname: file.fieldname,
+            originalname: file.originalname,
+            encoding: file.encoding,
+            mimetype: file.mimetype,
+            size: file.size,
+            filename: file.filename,
+            path: file.path
+          }));
+        } else {
+          // Object with field names as keys
+          bodyWithFiles.__files = {};
+          for (const fieldname in files) {
+            bodyWithFiles.__files[fieldname] = files[fieldname].map((file: any) => ({
+              originalname: file.originalname,
+              encoding: file.encoding,
+              mimetype: file.mimetype,
+              size: file.size,
+              filename: file.filename,
+              path: file.path
+            }));
+          }
+        }
+      }
+
       await telescopeService.logRequest({
         method: req.method,
         path: req.path,
@@ -77,7 +124,7 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
         userAgent: req.get("user-agent") || null,
         headers: req.headers,
         queryParams: req.query,
-        bodyParams: req.body,
+        bodyParams: bodyWithFiles,
         responseBody: parsedResponseBody,
         responseHeaders: res.getHeaders(),
         userId,
