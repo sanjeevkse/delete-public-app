@@ -258,6 +258,14 @@ const parseOptionalNumber = (value: unknown, field: string): number | null => {
   return numberValue;
 };
 
+const parseRequiredNumber = (value: unknown, field: string): number => {
+  const parsed = parseOptionalNumber(value, field);
+  if (parsed === null) {
+    throw new ApiError(`${field} is required`, 400);
+  }
+  return parsed;
+};
+
 const parseBooleanQuery = (value: unknown, defaultValue = false): boolean => {
   if (value === undefined || value === null) {
     return defaultValue;
@@ -440,8 +448,8 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const description = parseRequiredString(req.body?.description, "description");
   const place = parseRequiredString(req.body?.place, "place");
   const googleMapLink = parseRequiredString(req.body?.googleMapLink, "googleMapLink");
-  const latitude = parseOptionalNumber(req.body?.latitude, "latitude");
-  const longitude = parseOptionalNumber(req.body?.longitude, "longitude");
+  const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
+  const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
   const startDate = parseRequiredDateOnly(req.body?.startDate, "startDate");
   const startTime = parseRequiredTime(req.body?.startTime, "startTime");
   const endDate = parseRequiredDateOnly(req.body?.endDate, "endDate");
@@ -732,10 +740,10 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
     updates.googleMapLink = parseRequiredString(req.body.googleMapLink, "googleMapLink");
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "latitude")) {
-    updates.latitude = parseOptionalNumber(req.body.latitude, "latitude");
+    updates.latitude = parseRequiredNumber(req.body.latitude, "latitude");
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "longitude")) {
-    updates.longitude = parseOptionalNumber(req.body.longitude, "longitude");
+    updates.longitude = parseRequiredNumber(req.body.longitude, "longitude");
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "startDate")) {
     const parsedStartDate = parseRequiredDateOnly(req.body.startDate, "startDate");

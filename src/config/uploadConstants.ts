@@ -5,10 +5,24 @@
 
 import path from "path";
 
+// Resolve upload storage location based on environment
+const DEFAULT_PRODUCTION_UPLOAD_DIR = "/var/www/uploads/public_app";
+const DEFAULT_DEVELOPMENT_UPLOAD_DIR = path.resolve(process.cwd(), "project/upload");
+
+const resolveUploadBaseDir = (): string => {
+  const explicitDir = process.env.UPLOAD_BASE_DIR?.trim();
+  if (explicitDir) {
+    return explicitDir;
+  }
+
+  const env = process.env.NODE_ENV ?? "development";
+  return env === "production" ? DEFAULT_PRODUCTION_UPLOAD_DIR : DEFAULT_DEVELOPMENT_UPLOAD_DIR;
+};
+
 // Upload paths configuration
 export const UPLOAD_PATHS = {
-  // Base directory for file uploads (persistent storage outside app)
-  BASE_DIR: "/var/www/uploads/public_app",
+  // Base directory for file uploads (falls back to project/upload during local dev)
+  BASE_DIR: resolveUploadBaseDir(),
   // Public URL path prefix for accessing uploaded files
   PUBLIC_PATH: "/uploads",
   // Full domain URL for uploaded files

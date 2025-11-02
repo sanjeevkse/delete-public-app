@@ -6,7 +6,6 @@ dotenv.config();
 const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number.parseInt(process.env.PORT ?? "8081", 10),
-  lensPort: Number.parseInt(process.env.LENS_PORT ?? "8082", 10),
   jwt: {
     secret: process.env.JWT_SECRET ?? "changeme",
     expiresIn: process.env.JWT_EXPIRES_IN ?? "1h"

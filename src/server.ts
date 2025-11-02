@@ -1,4 +1,4 @@
-import app from "./app";
+import app, { registerErrorHandlers } from "./app";
 import env from "./config/env";
 import sequelize from "./config/database";
 import "./models";
@@ -15,7 +15,8 @@ const startServer = async (): Promise<void> => {
     process.exit(1);
   }
 
-  setupLens(app);
+  await setupLens(app);
+  registerErrorHandlers();
 
   app.listen(env.port, () => {
     logger.info(`Server ready on port ${env.port}`);

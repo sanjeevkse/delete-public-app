@@ -3,13 +3,12 @@ import telescopeService from "../services/telescopeService";
 import { requestContextStore } from "../config/queryLogger";
 
 // Extend Express Request to store telescope data
-declare global {
-  namespace Express {
-    interface Request {
-      telescopeStartTime?: number;
-      telescopeExceptionId?: number;
-      telescopeRequestId?: number;
-    }
+declare module "express-serve-static-core" {
+  interface Request {
+    telescopeStartTime?: number;
+    telescopeExceptionId?: number;
+    telescopeRequestId?: number;
+    telescopeCorrelationId?: string;
   }
 }
 
@@ -22,11 +21,11 @@ export const telescopeMiddleware = (req: Request, res: Response, next: NextFunct
   // Store start time and create a unique correlation ID for this request
   req.telescopeStartTime = Date.now();
   const correlationId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-  (req as any).telescopeCorrelationId = correlationId;
+  req.telescopeCorrelationId = correlationId;
 
   // Run the rest in async context to track queries
   // Store correlation ID instead of requestId for now
-  requestContextStore.run({ requestId: null, startTime: Date.now(), correlationId } as any, () => {
+  requestContextStore.run({ requestId: null, startTime: Date.now(), correlationId }, () => {
     runMiddleware(req, res, next);
   });
 };
@@ -144,12 +143,12 @@ const runMiddleware = (req: Request, res: Response, next: NextFunction): void =>
       });
 
       // Link queries that were logged with the correlation ID to this request
-      if (telescopeRequest && (req as any).telescopeCorrelationId) {
+      if (telescopeRequest && req.telescopeCorrelationId) {
         req.telescopeRequestId = telescopeRequest.id;
 
         // Update queries with the actual request ID
         await telescopeService.linkQueriesByCorrelationId(
-          (req as any).telescopeCorrelationId,
+          req.telescopeCorrelationId,
           telescopeRequest.id
         );
       }

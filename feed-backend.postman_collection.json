@@ -160,13 +160,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts?tags=community&latitude=27.7172&longitude=85.3240&search=cleanup&page=1&limit=20&sort=DESC",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "tags",
@@ -280,13 +275,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "my-posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "my-posts"],
               "query": [
                 {
                   "key": "page",
@@ -634,13 +624,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"],
               "query": [
                 {
                   "key": "title",
@@ -1123,15 +1108,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}",
-                "registrations"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "{{eventId}}", "registrations"],
               "query": [
                 {
                   "key": "includeUnregistered",
@@ -1205,13 +1183,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs?status=1&submittedFor=self&sort=DESC&page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "jobs"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs"],
               "query": [
                 {
                   "key": "status",
@@ -1559,13 +1532,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes?status=1&search=grant&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "schemes"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "schemes"],
               "query": [
                 {
                   "key": "status",
@@ -1833,14 +1801,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
               "query": [
                 {
                   "key": "page",
@@ -2133,14 +2095,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups?includePermissions=true",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "permission-groups"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "permission-groups"],
               "query": [
                 {
                   "key": "includePermissions",
@@ -2311,15 +2267,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/me/check",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members",
-                "me",
-                "check"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", "me", "check"]
             },
             "description": "Check if the currently authenticated user is a registered member. Returns member details if exists, or a message indicating non-member status."
           },
@@ -2356,13 +2305,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members"],
               "query": [
                 {
                   "key": "page",
@@ -2393,13 +2337,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?search=John&page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members"],
               "query": [
                 {
                   "key": "search",
@@ -2427,14 +2366,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2463,14 +2396,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2499,14 +2426,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2526,14 +2447,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2581,13 +2496,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities"],
               "query": [
                 {
                   "key": "page",
@@ -2636,13 +2546,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?search=Tech&communityTypeId=1&isRegistered=1&page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities"],
               "query": [
                 {
                   "key": "search",
@@ -2680,14 +2585,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2720,14 +2619,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2760,15 +2653,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities",
-                ":id",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities", ":id", "status"],
               "variable": [
                 {
                   "key": "id",
@@ -2801,15 +2687,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/member-count",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities",
-                ":id",
-                "member-count"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities", ":id", "member-count"],
               "variable": [
                 {
                   "key": "id",
@@ -2834,14 +2713,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "communities",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "communities", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2891,13 +2764,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "businesses"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "businesses"],
               "query": [
                 {
                   "key": "page",
@@ -2932,14 +2800,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "businesses",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "businesses", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -2973,14 +2835,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "businesses",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "businesses", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3005,15 +2861,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "businesses",
-                ":id",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "businesses", ":id", "status"],
               "variable": [
                 {
                   "key": "id",
@@ -3038,14 +2887,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "businesses",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "businesses", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3092,13 +2935,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members?page=1&limit=25",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "family-members"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "family-members"],
               "query": [
                 {
                   "key": "page",
@@ -3141,14 +2979,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "family-members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "family-members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3180,14 +3012,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "family-members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "family-members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3219,15 +3045,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id/status",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "family-members",
-                ":id",
-                "status"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "family-members", ":id", "status"],
               "variable": [
                 {
                   "key": "id",
@@ -3251,14 +3070,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "family-members",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "family-members", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -3310,13 +3123,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types?page=1&limit=10&search=&status=1",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "business-types"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "business-types"],
                   "query": [
                     {
                       "key": "page",
@@ -3347,14 +3155,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "business-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "business-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3388,14 +3190,8 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "business-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "business-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3420,15 +3216,8 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id/status",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "business-types",
-                    ":id",
-                    "status"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "business-types", ":id", "status"],
                   "variable": [
                     {
                       "key": "id",
@@ -3453,14 +3242,8 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "business-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "business-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3507,13 +3290,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types?page=1&limit=25",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "community-types"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "community-types"],
                   "query": [
                     {
                       "key": "page",
@@ -3550,13 +3328,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types?search=Sports&status=1&page=1&limit=25",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "community-types"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "community-types"],
                   "query": [
                     {
                       "key": "search",
@@ -3589,14 +3362,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "community-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "community-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3629,14 +3396,8 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "community-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "community-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3669,15 +3430,8 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id/status",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "community-types",
-                    ":id",
-                    "status"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "community-types", ":id", "status"],
                   "variable": [
                     {
                       "key": "id",
@@ -3702,14 +3456,8 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "community-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "community-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3757,13 +3505,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types?page=1&limit=25",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "relation-types"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "relation-types"],
                   "query": [
                     {
                       "key": "page",
@@ -3796,14 +3539,8 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "relation-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "relation-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3835,14 +3572,8 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "relation-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "relation-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -3874,15 +3605,8 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id/status",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "relation-types",
-                    ":id",
-                    "status"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "relation-types", ":id", "status"],
                   "variable": [
                     {
                       "key": "id",
@@ -3906,14 +3630,8 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "api",
-                    "relation-types",
-                    ":id"
-                  ],
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "relation-types", ":id"],
                   "variable": [
                     {
                       "key": "id",
@@ -4289,13 +4007,8 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers?wardNumberId=145",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "booth-numbers"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "booth-numbers"],
               "query": [
                 {
                   "key": "wardNumberId",
@@ -4338,9 +4051,7 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     },
     {
@@ -4349,9 +4060,7 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     }
   ],

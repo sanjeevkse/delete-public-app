@@ -19,6 +19,9 @@ dist/
 build/
 coverage/
 uploads/
+lens.db
+lens.db-shm
+lens.db-wal
 
 # TypeScript
 *.tsbuildinfo

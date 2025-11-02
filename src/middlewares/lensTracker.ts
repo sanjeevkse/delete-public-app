@@ -1,72 +1,74 @@
-import type { Express, NextFunction, Request, Response } from "express";
+import type { Express } from "express";
+import { lens } from "@lensjs/express";
+import type { Dialect } from "sequelize";
+import { createSequelizeHandler, type SequelizeQueryType } from "@lensjs/watchers";
 
-import env from "../config/env";
 import logger from "../utils/logger";
+import env from "../config/env";
 
-type LensInstance = {
-  track?: (req: Request, res: Response) => void;
-  middleware?: (req: Request, res: Response, next: NextFunction) => void;
-  listen?: (port: number) => void;
-  start?: () => void;
-};
-
-let lensInstance: LensInstance | null = null;
 let initialized = false;
 
-export const setupLens = (app: Express): void => {
+type ExpressWithRouter = Express & {
+  _router?: {
+    stack?: Array<Record<string, unknown>>;
+  };
+};
+
+const resolveSequelizeProvider = (dialect: Dialect): SequelizeQueryType | null => {
+  const map: Partial<Record<Dialect, SequelizeQueryType>> = {
+    mysql: "mysql",
+    mariadb: "mariadb",
+    postgres: "postgresql",
+    sqlite: "sqlite"
+  };
+
+  return map[dialect] ?? null;
+};
+
+export const setupLens = async (app: Express): Promise<void> => {
   if (initialized) return;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment
-    const lensModule = require("lens.js");
-    const candidate = lensModule?.default ?? lensModule;
+    const expressApp = app as ExpressWithRouter;
+    const routerStack = expressApp._router?.stack;
+    const initialStackLength = Array.isArray(routerStack) ? routerStack.length : 0;
 
-    if (typeof candidate === "function") {
-      // Some builds export a function that accepts the Express app.
-      lensInstance = candidate({ app, port: env.lensPort });
-    } else if (candidate && typeof candidate.create === "function") {
-      lensInstance = candidate.create({ app, port: env.lensPort });
-    } else if (candidate && typeof candidate.start === "function") {
-      lensInstance = candidate.start({ app, port: env.lensPort });
-    } else {
-      lensInstance = candidate as LensInstance;
+    const lensConfig: Parameters<typeof lens>[0] = {
+      app,
+      ignoredPaths: [/^\/lens(?:\/.*)?$/, /^\/telescope(?:\/.*)?$/, /^\/uploads(?:\/.*)?$/],
+      requestWatcherEnabled: true,
+      cacheWatcherEnabled: false
+    };
+
+    const provider = resolveSequelizeProvider(env.database.dialect);
+    if (provider) {
+      lensConfig.queryWatcher = {
+        enabled: true,
+        handler: createSequelizeHandler({ provider })
+      };
     }
 
-    if (lensInstance?.listen) {
-      lensInstance.listen(env.lensPort);
-    } else if (lensInstance?.start) {
-      lensInstance.start();
+    const { handleExceptions } = await lens(lensConfig);
+
+    if (Array.isArray(routerStack) && routerStack.length > initialStackLength) {
+      const newlyAddedLayers = routerStack.splice(initialStackLength);
+      const expressInitIndex = routerStack.findIndex(
+        (layer) => typeof layer?.name === "string" && layer.name === "expressInit"
+      );
+
+      const insertIndex = expressInitIndex >= 0 ? expressInitIndex + 1 : 0;
+      routerStack.splice(insertIndex, 0, ...newlyAddedLayers);
     }
+
+    handleExceptions?.();
 
     initialized = true;
-    logger.info({ port: env.lensPort }, "Lens.js request/response tracking enabled");
+    logger.info("Lens dashboard enabled at /lens");
   } catch (error) {
     initialized = true;
     logger.warn(
       { err: error },
-      "Lens.js instrumentation failed to initialize; proceeding without external tracking"
+      "Lens instrumentation failed to initialize; proceeding without external tracking"
     );
   }
 };
-
-export const lensMiddleware =
-  () =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    if (lensInstance?.middleware) {
-      try {
-        return lensInstance.middleware(req, res, next);
-      } catch (error) {
-        logger.warn({ err: error }, "Lens.js middleware threw an error");
-      }
-    }
-
-    if (lensInstance?.track) {
-      try {
-        lensInstance.track(req, res);
-      } catch (error) {
-        logger.warn({ err: error }, "Lens.js track call failed");
-      }
-    }
-
-    next();
-  };

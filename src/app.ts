@@ -3,7 +3,6 @@ import express from "express";
 
 import apiRateLimiter from "./middlewares/rateLimiter";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
-import { lensMiddleware } from "./middlewares/lensTracker";
 import { requestLogger } from "./middlewares/requestLogger";
 import { telescopeMiddleware } from "./middlewares/telescopeMiddleware";
 import routes from "./routes";
@@ -19,7 +18,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(telescopeMiddleware);
 app.use(apiRateLimiter);
-app.use(lensMiddleware());
 ensureDirectory(UPLOAD_PATHS.BASE_DIR);
 app.use(UPLOAD_PATHS.PUBLIC_PATH, express.static(UPLOAD_PATHS.BASE_DIR));
 
@@ -28,7 +26,15 @@ app.use("/telescope", telescopeRoutes);
 
 app.use("/api", routes);
 
-app.use(notFoundHandler);
-app.use(errorHandler);
+let errorHandlersRegistered = false;
+
+export const registerErrorHandlers = (): void => {
+  if (errorHandlersRegistered) {
+    return;
+  }
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  errorHandlersRegistered = true;
+};
 
 export default app;
