@@ -80,24 +80,59 @@ export const getMember = asyncHandler(async (req: Request, res: Response) => {
 export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { fullName, contactNumber, email } = req.body;
 
-  // Validate required fields
-  if (!fullName || !contactNumber || !email) {
-    throw new ApiError("Missing required fields: fullName, contactNumber, email", 400);
+  const fieldErrors: Array<{ field: string; message: string }> = [];
+
+  const normalizedFullName =
+    typeof fullName === "string"
+      ? fullName.trim()
+      : typeof fullName === "number"
+        ? String(fullName)
+        : "";
+  if (!normalizedFullName) {
+    fieldErrors.push({ field: "fullName", message: "Full name is required" });
+  }
+
+  const normalizedContactNumber =
+    typeof contactNumber === "string"
+      ? contactNumber.trim()
+      : typeof contactNumber === "number"
+        ? String(contactNumber)
+        : "";
+  if (!normalizedContactNumber) {
+    fieldErrors.push({ field: "contactNumber", message: "Contact number is required" });
+  }
+
+  let normalizedEmail: string | null = null;
+  if (email !== undefined && email !== null) {
+    if (typeof email === "string") {
+      const trimmedEmail = email.trim();
+      if (trimmedEmail) {
+        normalizedEmail = trimmedEmail;
+      }
+    } else {
+      fieldErrors.push({ field: "email", message: "Email must be a string value" });
+    }
+  }
+
+  if (fieldErrors.length > 0) {
+    throw new ApiError("Validation failed", 422, "VALIDATION_ERROR", fieldErrors);
   }
 
   // Check if email already exists
-  const existingMember = await Member.findOne({ where: { email } });
-  if (existingMember) {
-    throw new ApiError("A member with this email already exists", 409);
+  if (normalizedEmail) {
+    const existingMember = await Member.findOne({ where: { email: normalizedEmail } });
+    if (existingMember) {
+      throw new ApiError("A member with this email already exists", 409);
+    }
   }
 
   const { id: userId } = requireAuthenticatedUser(req);
 
   const member = await Member.create({
     userId,
-    fullName,
-    contactNumber,
-    email
+    fullName: normalizedFullName,
+    contactNumber: normalizedContactNumber,
+    email: normalizedEmail
   });
 
   return sendCreated(res, member, "Member created successfully");

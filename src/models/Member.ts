@@ -14,7 +14,7 @@ class Member extends Model<InferAttributes<Member>, InferCreationAttributes<Memb
   declare userId: number;
   declare fullName: string;
   declare contactNumber: string;
-  declare email: string;
+  declare email: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -47,7 +47,7 @@ Member.init(
     },
     email: {
       type: DataTypes.STRING(191),
-      allowNull: false,
+      allowNull: true,
       unique: true,
       validate: {
         isEmail: true
