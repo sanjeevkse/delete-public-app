@@ -140,36 +140,159 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     relationTypeId,
     status
   } = req.body;
-  const currentUserId = req.user?.id;
+  const currentUserId = req.user?.id ?? null;
 
-  // Validate required fields
-  if (!userId || !fullName || !relationTypeId) {
-    throw new ApiError("Missing required fields: userId, fullName, relationTypeId", 400);
+  const fieldErrors: Array<{ field: string; message: string }> = [];
+
+  let normalizedUserId: number | null = null;
+  if (userId === undefined || userId === null || userId === "") {
+    fieldErrors.push({ field: "userId", message: "User ID is required" });
+  } else if (typeof userId === "number" && Number.isFinite(userId)) {
+    normalizedUserId = userId;
+  } else if (typeof userId === "string" && userId.trim()) {
+    const parsedUserId = Number.parseInt(userId.trim(), 10);
+    if (Number.isNaN(parsedUserId)) {
+      fieldErrors.push({ field: "userId", message: "User ID must be a numeric value" });
+    } else {
+      normalizedUserId = parsedUserId;
+    }
+  } else {
+    fieldErrors.push({ field: "userId", message: "User ID must be a numeric value" });
+  }
+
+  const normalizedFullName =
+    typeof fullName === "string"
+      ? fullName.trim()
+      : typeof fullName === "number"
+        ? String(fullName)
+        : "";
+  if (!normalizedFullName) {
+    fieldErrors.push({ field: "fullName", message: "Full name is required" });
+  }
+
+  let normalizedRelationTypeId: number | null = null;
+  if (relationTypeId === undefined || relationTypeId === null || relationTypeId === "") {
+    fieldErrors.push({ field: "relationTypeId", message: "Relation type ID is required" });
+  } else if (typeof relationTypeId === "number" && Number.isFinite(relationTypeId)) {
+    normalizedRelationTypeId = relationTypeId;
+  } else if (typeof relationTypeId === "string" && relationTypeId.trim()) {
+    const parsedRelationTypeId = Number.parseInt(relationTypeId.trim(), 10);
+    if (Number.isNaN(parsedRelationTypeId)) {
+      fieldErrors.push({
+        field: "relationTypeId",
+        message: "Relation type ID must be a numeric value"
+      });
+    } else {
+      normalizedRelationTypeId = parsedRelationTypeId;
+    }
+  } else {
+    fieldErrors.push({ field: "relationTypeId", message: "Relation type ID must be numeric" });
+  }
+
+  const normalizedContactNumber =
+    contactNumber === undefined || contactNumber === null
+      ? null
+      : typeof contactNumber === "string"
+        ? contactNumber.trim() || null
+        : typeof contactNumber === "number"
+          ? String(contactNumber)
+          : (() => {
+              fieldErrors.push({
+                field: "contactNumber",
+                message: "Contact number must be a string or numeric value"
+              });
+              return null;
+            })();
+
+  let normalizedEmail: string | null = null;
+  if (email !== undefined && email !== null) {
+    if (typeof email === "string") {
+      const trimmedEmail = email.trim();
+      if (trimmedEmail) {
+        normalizedEmail = trimmedEmail;
+      }
+    } else {
+      fieldErrors.push({ field: "email", message: "Email must be a string value" });
+    }
+  }
+
+  const normalizedFullAddress =
+    fullAddress === undefined || fullAddress === null
+      ? null
+      : typeof fullAddress === "string"
+        ? fullAddress.trim() || null
+        : (() => {
+            fieldErrors.push({
+              field: "fullAddress",
+              message: "Full address must be a string value"
+            });
+            return null;
+          })();
+
+  const normalizedAadhaarNumber =
+    aadhaarNumber === undefined || aadhaarNumber === null
+      ? null
+      : typeof aadhaarNumber === "string"
+        ? aadhaarNumber.trim() || null
+        : typeof aadhaarNumber === "number"
+          ? String(aadhaarNumber)
+          : (() => {
+              fieldErrors.push({
+                field: "aadhaarNumber",
+                message: "Aadhaar number must be a string or numeric value"
+              });
+              return null;
+            })();
+
+  let normalizedStatus: number | null = null;
+  if (status !== undefined && status !== null && status !== "") {
+    if (typeof status === "number" && Number.isFinite(status)) {
+      normalizedStatus = status;
+    } else if (typeof status === "string" && status.trim()) {
+      const parsedStatus = Number.parseInt(status.trim(), 10);
+      if (Number.isNaN(parsedStatus)) {
+        fieldErrors.push({ field: "status", message: "Status must be a numeric value" });
+      } else {
+        normalizedStatus = parsedStatus;
+      }
+    } else {
+      fieldErrors.push({ field: "status", message: "Status must be a numeric value" });
+    }
+  }
+
+  if (fieldErrors.length > 0) {
+    throw new ApiError("Validation failed", 422, "VALIDATION_ERROR", fieldErrors);
   }
 
   // Verify user exists
-  const user = await User.findByPk(userId);
+  const user = normalizedUserId ? await User.findByPk(normalizedUserId) : null;
   if (!user) {
-    throw new ApiError("Invalid user ID", 400);
+    fieldErrors.push({ field: "userId", message: "User not found" });
   }
 
   // Verify relation type exists
-  const relationType = await MetaRelationType.findByPk(relationTypeId);
+  const relationType = normalizedRelationTypeId
+    ? await MetaRelationType.findByPk(normalizedRelationTypeId)
+    : null;
   if (!relationType) {
-    throw new ApiError("Invalid relation type ID", 400);
+    fieldErrors.push({ field: "relationTypeId", message: "Relation type not found" });
+  }
+
+  if (fieldErrors.length > 0) {
+    throw new ApiError("Validation failed", 422, "VALIDATION_ERROR", fieldErrors);
   }
 
   const familyMember = await FamilyMember.create({
-    userId,
-    fullName,
-    contactNumber: contactNumber || null,
-    email: email || null,
-    fullAddress: fullAddress || null,
-    aadhaarNumber: aadhaarNumber || null,
-    relationTypeId,
-    status: status !== undefined ? status : 1,
-    createdBy: currentUserId || null,
-    updatedBy: currentUserId || null
+    userId: normalizedUserId!,
+    fullName: normalizedFullName,
+    contactNumber: normalizedContactNumber,
+    email: normalizedEmail,
+    fullAddress: normalizedFullAddress,
+    aadhaarNumber: normalizedAadhaarNumber,
+    relationTypeId: normalizedRelationTypeId!,
+    status: normalizedStatus ?? 1,
+    createdBy: currentUserId,
+    updatedBy: currentUserId
   });
 
   // Fetch the created family member with relations
