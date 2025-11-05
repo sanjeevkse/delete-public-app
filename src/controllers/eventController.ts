@@ -322,7 +322,8 @@ const isWithinEventWindow = (event: Event): boolean => {
     endDateTime.setHours(23, 59, 59, 999);
   }
 
-  return now >= startDateTime && now <= endDateTime;
+  // return now >= startDateTime && now <= endDateTime;
+  return now <= endDateTime;
 };
 
 const parseLegacyMediaInput = (mediaInput: unknown): NormalizedMediaInput[] | null => {
