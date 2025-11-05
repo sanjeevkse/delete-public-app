@@ -293,7 +293,7 @@ class TelescopeService {
 
     const sanitized: any = {};
     for (const key in obj) {
-      if (Object.hasOwn(obj, key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const lowerKey = key.toLowerCase();
         if (sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive))) {
           sanitized[key] = "***REDACTED***";

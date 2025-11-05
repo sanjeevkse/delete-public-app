@@ -1741,6 +1741,363 @@
       ]
     },
     {
+      "name": "Scheme Types",
+      "item": [
+        {
+          "name": "List Scheme Types",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains pagination\", function () {",
+                  "  pm.expect(jsonData && jsonData.pagination).to.exist;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  if (first && first.id) {",
+                  "    pm.collectionVariables.set(\"schemeTypeId\", first.id);",
+                  "  }",
+                  "  if (first && Array.isArray(first.steps) && first.steps.length > 0) {",
+                  "    var firstStep = first.steps[0];",
+                  "    if (firstStep && firstStep.id) {",
+                  "      pm.collectionVariables.set(\"schemeTypeStepId\", firstStep.id);",
+                  "    }",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-types?status=1&search=education&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scheme-types"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Optional: filter by status (0 inactive, 1 active, omit or all for both)."
+                },
+                {
+                  "key": "search",
+                  "value": "education",
+                  "description": "Optional: fuzzy search across display name and description."
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "Optional: sort field (createdAt, updatedAt, dispName, status)."
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "DESC",
+                  "description": "Optional: sort direction (`ASC` or `DESC`, default `DESC`)."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional: page number (defaults to 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Optional: page size up to 100 (defaults to 25)."
+                }
+              ]
+            },
+            "description": "Lists scheme types with pagination, search, and sort controls."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scheme Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Scheme type id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});",
+                  "if (jsonData && jsonData.data && Array.isArray(jsonData.data.steps) && jsonData.data.steps.length > 0) {",
+                  "  var firstStep = jsonData.data.steps[0];",
+                  "  if (firstStep && firstStep.id) {",
+                  "    pm.collectionVariables.set(\"schemeTypeStepId\", firstStep.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/scheme-types/{{schemeTypeId}}",
+            "description": "Fetches a specific scheme type along with its steps."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Scheme Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "if (jsonData && jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set(\"schemeTypeId\", jsonData.data.id);",
+                  "}",
+                  "if (jsonData && jsonData.data && Array.isArray(jsonData.data.steps) && jsonData.data.steps.length > 0) {",
+                  "  var firstStep = jsonData.data.steps[0];",
+                  "  if (firstStep && firstStep.id) {",
+                  "    pm.collectionVariables.set(\"schemeTypeStepId\", firstStep.id);",
+                  "  }",
+                  "}",
+                  "pm.test(\"Scheme type id stored\", function () {",
+                  "  pm.expect(pm.collectionVariables.get(\"schemeTypeId\")).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Education Assistance\",\n  \"description\": \"Support for students in low-income households.\",\n  \"status\": 1,\n  \"steps\": [\n    {\n      \"stepOrder\": 1,\n      \"dispName\": \"Application Submission\",\n      \"description\": \"Applicants upload required documents.\",\n      \"status\": 1\n    },\n    {\n      \"stepOrder\": 2,\n      \"dispName\": \"Verification\",\n      \"description\": \"Field officers verify the submission and documents.\",\n      \"status\": 1\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/scheme-types",
+            "description": "Creates a new scheme type with optional steps."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Scheme Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Scheme type id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});",
+                  "if (jsonData && jsonData.data && Array.isArray(jsonData.data.steps) && jsonData.data.steps.length > 0) {",
+                  "  var firstStep = jsonData.data.steps[0];",
+                  "  if (firstStep && firstStep.id) {",
+                  "    pm.collectionVariables.set(\"schemeTypeStepId\", firstStep.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Education Assistance - Updated\",\n  \"description\": \"Updated guidelines for the education support scheme.\",\n  \"status\": 1,\n  \"steps\": [\n    {\n      \"stepOrder\": 1,\n      \"dispName\": \"Registration\",\n      \"description\": \"Community staff register the applicant in the system.\",\n      \"status\": 1\n    },\n    {\n      \"stepOrder\": 2,\n      \"dispName\": \"Approval\",\n      \"description\": \"District committee reviews and approves the case.\",\n      \"status\": 1\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/scheme-types/{{schemeTypeId}}",
+            "description": "Updates a scheme type and replaces its steps when provided."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Scheme Type Step",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Step id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"step_order\": 2,\n  \"disp_name\": \"Final Approval\",\n  \"description\": \"Final sign-off from district committee.\",\n  \"status\": 1\n}"
+            },
+            "url": "{{baseUrl}}/api/scheme-types/{{schemeTypeId}}/steps/{{schemeTypeStepId}}",
+            "description": "Updates a single step within a scheme type."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scheme Type Step",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/scheme-types/{{schemeTypeId}}/steps/{{schemeTypeStepId}}",
+            "description": "Deletes a single step from the scheme type."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scheme Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/scheme-types/{{schemeTypeId}}",
+            "description": "Deletes the scheme type and its steps."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Admin / Users",
       "item": [
         {
@@ -4041,7 +4398,7 @@
   "auth": {
     "type": "bearer",
     "bearer": {
-      "token": "jk"
+      "token": "{{authToken}}"
     }
   },
   "event": [

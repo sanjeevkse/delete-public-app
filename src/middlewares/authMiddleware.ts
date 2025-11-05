@@ -14,13 +14,19 @@ export interface AuthenticatedRequest extends Request {
 export const authenticate =
   () =>
   (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
-    const header = req.headers.authorization;
+    const header = req.headers.authorization?.trim();
     if (!header) {
       throw new ApiError("Authorization header missing", 401);
     }
 
-    const [scheme, token] = header.split(" ");
-    if (scheme !== "Bearer" || !token) {
+    const match = header.match(/^(\S+)\s+(.+)$/);
+    if (!match) {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
+    const [, scheme, rawToken] = match;
+    const token = rawToken.trim();
+    if (!/^(Bearer)$/i.test(scheme) || token === "") {
       throw new ApiError("Invalid authorization header format", 401);
     }
 

@@ -16,6 +16,8 @@ import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaRelationType from "./MetaRelationType";
 import MetaUserRole from "./MetaUserRole";
 import MetaWardNumber from "./MetaWardNumber";
+import MetaSchemeType from "./MetaSchemeType";
+import MetaSchemeTypeStep from "./MetaSchemeTypeStep";
 import Job from "./Job";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
@@ -108,6 +110,17 @@ const establishAssociations = (): void => {
     foreignKey: "permissionGroupId",
     as: "permissions"
   });
+
+  MetaSchemeType.hasMany(MetaSchemeTypeStep, {
+    foreignKey: "schemeTypeId",
+    as: "steps",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  MetaSchemeTypeStep.belongsTo(MetaSchemeType, {
+    foreignKey: "schemeTypeId",
+    as: "schemeType"
+  });
   RolePermission.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
   RolePermission.belongsTo(MetaPermission, { foreignKey: "permissionId", as: "permission" });
 
@@ -191,6 +204,8 @@ export {
   MetaRelationType,
   MetaUserRole,
   MetaWardNumber,
+  MetaSchemeType,
+  MetaSchemeTypeStep,
   Post,
   PostMedia,
   PostReaction,
