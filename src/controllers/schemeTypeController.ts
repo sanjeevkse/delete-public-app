@@ -186,7 +186,9 @@ const normalizeStepsPayload = (
     const description = normalizeNullableDescription(stepRecord.description);
 
     const status =
-      stepRecord.status === undefined ? 1 : normalizeStatusValue(stepRecord.status, "steps[].status");
+      stepRecord.status === undefined
+        ? 1
+        : normalizeStatusValue(stepRecord.status, "steps[].status");
 
     return {
       stepOrder,
@@ -304,34 +306,124 @@ export const getSchemeType = asyncHandler(async (req: Request, res: Response) =>
   sendSuccess(res, serializeSchemeType(schemeType), "Scheme type retrieved successfully");
 });
 
-export const createSchemeType = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const body = (req.body ?? {}) as Record<string, unknown>;
-    const userId = req.user?.id ?? null;
+export const createSchemeType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const userId = req.user?.id ?? null;
 
-    const payload = normalizeSchemeTypePayload(body);
-    const stepsPayload = normalizeStepsPayload(body.steps, { allowUndefined: false }) ?? [];
+  const payload = normalizeSchemeTypePayload(body);
+  const stepsPayload = normalizeStepsPayload(body.steps, { allowUndefined: false }) ?? [];
 
+  const existingType = await MetaSchemeType.findOne({
+    where: { dispName: payload.dispName }
+  });
+
+  if (existingType) {
+    throw new ApiError("A scheme type with this display name already exists", 409);
+  }
+
+  const createdSchemeType = await sequelize.transaction(
+    async (transaction: Transaction): Promise<MetaSchemeType> => {
+      const schemeType = await MetaSchemeType.create(
+        {
+          dispName: payload.dispName!,
+          description: payload.description ?? null,
+          status: payload.status ?? 1,
+          createdBy: userId,
+          updatedBy: userId
+        },
+        { transaction }
+      );
+
+      if (stepsPayload.length > 0) {
+        await MetaSchemeTypeStep.bulkCreate(
+          stepsPayload.map((step) => ({
+            schemeTypeId: schemeType.id,
+            stepOrder: step.stepOrder,
+            dispName: step.dispName,
+            description: step.description,
+            status: step.status,
+            createdBy: userId,
+            updatedBy: userId
+          })),
+          { transaction }
+        );
+      }
+
+      await schemeType.reload({
+        include: [withStepsInclude],
+        order: [[{ model: MetaSchemeTypeStep, as: "steps" }, "stepOrder", "ASC"]],
+        transaction
+      });
+
+      return schemeType;
+    }
+  );
+
+  sendCreated(res, serializeSchemeType(createdSchemeType), "Scheme type created successfully");
+});
+
+export const updateSchemeType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const id = Number.parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) {
+    throw new ApiError("Invalid scheme type id", 400);
+  }
+
+  const schemeType = await MetaSchemeType.findByPk(id);
+  if (!schemeType) {
+    return sendNotFound(res, "Scheme type not found");
+  }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const userId = req.user?.id ?? null;
+
+  const payload = normalizeSchemeTypePayload(body, { partial: true });
+  const stepsPayload = normalizeStepsPayload(body.steps, { allowUndefined: true });
+
+  if (
+    payload.dispName === undefined &&
+    payload.description === undefined &&
+    payload.status === undefined &&
+    stepsPayload === undefined
+  ) {
+    throw new ApiError("No fields provided for update", 400);
+  }
+
+  if (payload.dispName && payload.dispName !== schemeType.dispName) {
     const existingType = await MetaSchemeType.findOne({
-      where: { dispName: payload.dispName }
+      where: {
+        dispName: payload.dispName,
+        id: { [Op.ne]: id }
+      }
     });
-
     if (existingType) {
       throw new ApiError("A scheme type with this display name already exists", 409);
     }
+  }
 
-    const createdSchemeType = await sequelize.transaction(
-      async (transaction: Transaction): Promise<MetaSchemeType> => {
-        const schemeType = await MetaSchemeType.create(
-          {
-            dispName: payload.dispName!,
-            description: payload.description ?? null,
-            status: payload.status ?? 1,
-            createdBy: userId,
-            updatedBy: userId
-          },
-          { transaction }
-        );
+  const updatedSchemeType = await sequelize.transaction(
+    async (transaction: Transaction): Promise<MetaSchemeType> => {
+      const updates: Partial<MetaSchemeType> = {};
+
+      if (payload.dispName !== undefined) {
+        updates.dispName = payload.dispName;
+      }
+      if (payload.description !== undefined) {
+        updates.description = payload.description;
+      }
+      if (payload.status !== undefined) {
+        updates.status = payload.status;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updates.updatedBy = userId;
+        await schemeType.update(updates, { transaction });
+      }
+
+      if (stepsPayload !== undefined) {
+        await MetaSchemeTypeStep.destroy({
+          where: { schemeTypeId: schemeType.id },
+          transaction
+        });
 
         if (stepsPayload.length > 0) {
           await MetaSchemeTypeStep.bulkCreate(
@@ -347,114 +439,20 @@ export const createSchemeType = asyncHandler(
             { transaction }
           );
         }
-
-        await schemeType.reload({
-          include: [withStepsInclude],
-          order: [[{ model: MetaSchemeTypeStep, as: "steps" }, "stepOrder", "ASC"]],
-          transaction
-        });
-
-        return schemeType;
       }
-    );
 
-    sendCreated(res, serializeSchemeType(createdSchemeType), "Scheme type created successfully");
-  }
-);
-
-export const updateSchemeType = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const id = Number.parseInt(req.params.id, 10);
-    if (Number.isNaN(id)) {
-      throw new ApiError("Invalid scheme type id", 400);
-    }
-
-    const schemeType = await MetaSchemeType.findByPk(id);
-    if (!schemeType) {
-      return sendNotFound(res, "Scheme type not found");
-    }
-
-    const body = (req.body ?? {}) as Record<string, unknown>;
-    const userId = req.user?.id ?? null;
-
-    const payload = normalizeSchemeTypePayload(body, { partial: true });
-    const stepsPayload = normalizeStepsPayload(body.steps, { allowUndefined: true });
-
-    if (
-      payload.dispName === undefined &&
-      payload.description === undefined &&
-      payload.status === undefined &&
-      stepsPayload === undefined
-    ) {
-      throw new ApiError("No fields provided for update", 400);
-    }
-
-    if (payload.dispName && payload.dispName !== schemeType.dispName) {
-      const existingType = await MetaSchemeType.findOne({
-        where: {
-          dispName: payload.dispName,
-          id: { [Op.ne]: id }
-        }
+      await schemeType.reload({
+        include: [withStepsInclude],
+        order: [[{ model: MetaSchemeTypeStep, as: "steps" }, "stepOrder", "ASC"]],
+        transaction
       });
-      if (existingType) {
-        throw new ApiError("A scheme type with this display name already exists", 409);
-      }
+
+      return schemeType;
     }
+  );
 
-    const updatedSchemeType = await sequelize.transaction(
-      async (transaction: Transaction): Promise<MetaSchemeType> => {
-        const updates: Partial<MetaSchemeType> = {};
-
-        if (payload.dispName !== undefined) {
-          updates.dispName = payload.dispName;
-        }
-        if (payload.description !== undefined) {
-          updates.description = payload.description;
-        }
-        if (payload.status !== undefined) {
-          updates.status = payload.status;
-        }
-
-        if (Object.keys(updates).length > 0) {
-          updates.updatedBy = userId;
-          await schemeType.update(updates, { transaction });
-        }
-
-        if (stepsPayload !== undefined) {
-          await MetaSchemeTypeStep.destroy({
-            where: { schemeTypeId: schemeType.id },
-            transaction
-          });
-
-          if (stepsPayload.length > 0) {
-            await MetaSchemeTypeStep.bulkCreate(
-              stepsPayload.map((step) => ({
-                schemeTypeId: schemeType.id,
-                stepOrder: step.stepOrder,
-                dispName: step.dispName,
-                description: step.description,
-                status: step.status,
-                createdBy: userId,
-                updatedBy: userId
-              })),
-              { transaction }
-            );
-          }
-        }
-
-        await schemeType.reload({
-          include: [withStepsInclude],
-          order: [[{ model: MetaSchemeTypeStep, as: "steps" }, "stepOrder", "ASC"]],
-          transaction
-        });
-
-        return schemeType;
-      }
-    );
-
-    sendSuccess(res, serializeSchemeType(updatedSchemeType), "Scheme type updated successfully");
-  }
-);
+  sendSuccess(res, serializeSchemeType(updatedSchemeType), "Scheme type updated successfully");
+});
 
 export const deleteSchemeType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const id = Number.parseInt(req.params.id, 10);

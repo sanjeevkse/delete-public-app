@@ -53,21 +53,13 @@ router.delete("/scheme-types/:id", authenticate(), deleteSchemeType);
  * @desc    Update a single scheme type step
  * @access  Protected
  */
-router.put(
-  "/scheme-types/:schemeTypeId/steps/:stepId",
-  authenticate(),
-  updateSchemeTypeStep
-);
+router.put("/scheme-types/:schemeTypeId/steps/:stepId", authenticate(), updateSchemeTypeStep);
 
 /**
  * @route   DELETE /api/scheme-types/:schemeTypeId/steps/:stepId
  * @desc    Delete a single scheme type step
  * @access  Protected
  */
-router.delete(
-  "/scheme-types/:schemeTypeId/steps/:stepId",
-  authenticate(),
-  deleteSchemeTypeStep
-);
+router.delete("/scheme-types/:schemeTypeId/steps/:stepId", authenticate(), deleteSchemeTypeStep);
 
 export default router;
