@@ -33,6 +33,8 @@ import UserToken from "./UserToken";
 import TelescopeRequest from "./TelescopeRequest";
 import TelescopeException from "./TelescopeException";
 import TelescopeQuery from "./TelescopeQuery";
+import ComplaintType from "./ComplaintType";
+import ComplaintTypeStep from "./ComplaintTypeSteps";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });

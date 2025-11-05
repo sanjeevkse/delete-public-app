@@ -16,6 +16,7 @@ import businessRoutes from "./businessRoutes";
 import wardNumberRoutes from "./wardNumberRoutes";
 import mlaConstituencyRoutes from "./mlaConstituencyRoutes";
 import boothNumberRoutes from "./boothNumberRoutes";
+import complaintTypeRoutes from "./complainTypesRoutes";
 import schemeTypeRoutes from "./schemeTypeRoutes";
 
 const router = Router();
@@ -40,6 +41,7 @@ router.use("/", businessRoutes);
 router.use("/", wardNumberRoutes);
 router.use("/", mlaConstituencyRoutes);
 router.use("/", boothNumberRoutes);
+router.use("/", complaintTypeRoutes);
 router.use("/", schemeTypeRoutes);
 router.use("/admin", adminRoutes);
 
