@@ -26,6 +26,7 @@ class UserProfile extends Model<
   declare gender: CreationOptional<UserProfileGender | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
+  declare referredBy: CreationOptional<string | null>;
   declare fullAddress: CreationOptional<string | null>;
   declare addressLine1: CreationOptional<string | null>;
   declare addressLine2: CreationOptional<string | null>;
@@ -106,6 +107,11 @@ UserProfile.init(
     profileImageUrl: {
       field: "profile_image_url",
       type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    referredBy: {
+      field: "referred_by",
+      type: DataTypes.STRING(45),
       allowNull: true
     },
     fullAddress: {

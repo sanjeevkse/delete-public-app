@@ -93,6 +93,8 @@ const baseEventInclude = [
   }
 ];
 
+const REFERRED_BY_MAX_LENGTH = 45;
+
 type PlainEventRegistration = {
   eventId: number;
   user?: {
@@ -108,10 +110,10 @@ type PlainEventRegistration = {
 
 type RegisteredUser = {
   id: number;
-  name: string | null;
-  phone: string | null;
+  fullName: string | null;
   email: string | null;
-  profilePicture: string | null;
+  contactNumber: string | null;
+  profileImageUrl: string | null;
 };
 
 const toRegisteredUser = (registration: PlainEventRegistration): RegisteredUser | null => {
@@ -122,10 +124,10 @@ const toRegisteredUser = (registration: PlainEventRegistration): RegisteredUser 
 
   return {
     id: user.id,
-    name: user.fullName ?? null,
-    phone: user.contactNumber ?? null,
+    fullName: user.fullName ?? null,
     email: user.email ?? null,
-    profilePicture: user.profile?.profileImageUrl ?? null
+    contactNumber: user.contactNumber ?? null,
+    profileImageUrl: user.profile?.profileImageUrl ?? null
   };
 };
 
@@ -202,6 +204,31 @@ const parseRequiredString = (value: unknown, field: string): string => {
   if (!trimmed) {
     throw new ApiError(`${field} cannot be empty`, 400);
   }
+  return trimmed;
+};
+
+const parseOptionalString = (
+  value: unknown,
+  field: string,
+  maxLength = REFERRED_BY_MAX_LENGTH
+): string | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    throw new ApiError(`${field} must be a string`, 400);
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (maxLength > 0 && trimmed.length > maxLength) {
+    throw new ApiError(`${field} must be at most ${maxLength} characters`, 400);
+  }
+
   return trimmed;
 };
 
@@ -454,6 +481,7 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const startTime = parseRequiredTime(req.body?.startTime, "startTime");
   const endDate = parseRequiredDateOnly(req.body?.endDate, "endDate");
   const endTime = parseRequiredTime(req.body?.endTime, "endTime");
+  const referredBy = parseOptionalString(req.body?.referredBy, "referredBy");
 
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
   const media = normalizeMediaInput(uploadedFiles, req.body?.media);
@@ -471,6 +499,7 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
         startTime,
         endDate: new Date(endDate),
         endTime,
+        referredBy,
         status: 1,
         createdBy: userId,
         updatedBy: userId
@@ -668,7 +697,14 @@ export const listEventRegistrations = asyncHandler(
         {
           association: "user",
           attributes: ["id", "fullName", "email", "contactNumber"],
-          required: true
+          required: true,
+          include: [
+            {
+              association: "profile",
+              attributes: ["profileImageUrl"],
+              required: false
+            }
+          ]
         }
       ],
       limit,
@@ -689,7 +725,8 @@ export const listEventRegistrations = asyncHandler(
             id: registration.user.id,
             fullName: registration.user.fullName,
             email: registration.user.email,
-            contactNumber: registration.user.contactNumber
+            contactNumber: registration.user.contactNumber,
+            profileImageUrl: registration.user.profile?.profileImageUrl ?? null
           }
         : null
     }));
@@ -758,6 +795,9 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "endTime")) {
     updates.endTime = parseRequiredTime(req.body.endTime, "endTime");
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body, "referredBy")) {
+    updates.referredBy = parseOptionalString(req.body.referredBy, "referredBy");
   }
 
   updates.updatedBy = userId;

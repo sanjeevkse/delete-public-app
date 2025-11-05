@@ -12,6 +12,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "dateOfBirth",
   "gender",
   "occupation",
+  "referredBy",
   "fullAddress",
   "addressLine1",
   "addressLine2",
@@ -102,6 +103,14 @@ export const buildProfileAttributes = (
 
   if (preferencesChanged) {
     payload.preferencesJson = preferences as never;
+  }
+
+  if (payload.referredBy !== undefined) {
+    const referredValue = payload.referredBy as unknown;
+    if (typeof referredValue === "string") {
+      const trimmed = referredValue.trim();
+      payload.referredBy = (trimmed === "" ? null : trimmed) as never;
+    }
   }
 
   return payload;

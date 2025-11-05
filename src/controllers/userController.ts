@@ -196,7 +196,17 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("User not found", 404);
   }
 
-  const { profile, roleIds: roleIdsInput, accessibles, ...userUpdates } = req.body;
+  if (Object.prototype.hasOwnProperty.call(req.body, "status")) {
+    throw new ApiError("Status must be updated using the status endpoint", 400);
+  }
+
+  const {
+    profile,
+    roleIds: roleIdsInput,
+    accessibles,
+    status: _ignoredStatus,
+    ...userUpdates
+  } = req.body;
   const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
 
   await user.update(userUpdates);
@@ -253,6 +263,74 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   });
 
   return sendSuccess(res, updated, "User updated successfully");
+});
+
+export const updateUserStatus = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.findByPk(req.params.id);
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const action = typeof req.body?.action === "string" ? req.body.action.toLowerCase() : "";
+
+  if (action !== "activate" && action !== "deactivate") {
+    throw new ApiError("Invalid action. Allowed values are 'activate' or 'deactivate'.", 400);
+  }
+
+  const targetStatus = action === "activate" ? 1 : 0;
+
+  if (user.status === targetStatus) {
+    const hydrated = await User.findByPk(user.id, {
+      include: [
+        { model: UserProfile, as: "profile" },
+        { association: "roles", include: [{ association: "permissions" }] },
+        {
+          model: UserAccess,
+          as: "accessProfiles",
+          where: { status: 1 },
+          required: false,
+          include: [
+            { association: "accessRole" },
+            { association: "wardNumber" },
+            { association: "boothNumber" },
+            { association: "mlaConstituency" }
+          ]
+        }
+      ]
+    });
+
+    const message =
+      targetStatus === 1 ? "User is already active" : "User is already inactive/deactivated";
+    return sendSuccess(res, hydrated, message);
+  }
+
+  const actorId = (req as AuthenticatedRequest).user?.id ?? null;
+  await user.update({ status: targetStatus, updatedBy: actorId });
+  emitEvent(AppEvent.USER_UPDATED, { userId: user.id, actorId: actorId ?? user.id });
+
+  const updated = await User.findByPk(user.id, {
+    include: [
+      { model: UserProfile, as: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      }
+    ]
+  });
+
+  const message =
+    targetStatus === 1 ? "User activated successfully" : "User deactivated successfully";
+  return sendSuccess(res, updated, message);
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {

@@ -24,6 +24,7 @@ class Event extends Model<InferAttributes<Event>, InferCreationAttributes<Event>
   declare startTime: string;
   declare endDate: Date;
   declare endTime: string;
+  declare referredBy: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -92,6 +93,11 @@ Event.init(
       field: "end_time",
       type: DataTypes.TIME,
       allowNull: false
+    },
+    referredBy: {
+      field: "referred_by",
+      type: DataTypes.STRING(45),
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,
