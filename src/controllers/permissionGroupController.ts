@@ -7,6 +7,7 @@ import MetaPermission from "../models/MetaPermission";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
 import { sendSuccess } from "../utils/apiResponse";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 /**
  * List all permission groups
@@ -78,7 +79,9 @@ export const getPermissionGroupPermissions = asyncHandler(
  */
 export const createPermissionGroup = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { label, description, sidebar, status } = req.body;
+    assertNoRestrictedFields(req.body);
+
+    const { label, description, sidebar } = req.body;
     const userId = req.user!.id;
 
     // Validate required fields
@@ -99,7 +102,7 @@ export const createPermissionGroup = asyncHandler(
       label,
       description,
       sidebar,
-      status: status ?? 1,
+      status: 1,
       createdBy: userId,
       updatedBy: userId
     });
@@ -115,7 +118,9 @@ export const createPermissionGroup = asyncHandler(
 export const updatePermissionGroup = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { label, description, sidebar, status } = req.body;
+    assertNoRestrictedFields(req.body);
+
+    const { label, description, sidebar } = req.body;
     const userId = req.user!.id;
 
     const permissionGroup = await MetaPermissionGroup.findByPk(id);
@@ -142,7 +147,6 @@ export const updatePermissionGroup = asyncHandler(
     if (label !== undefined) permissionGroup.label = label;
     if (description !== undefined) permissionGroup.description = description;
     if (sidebar !== undefined) permissionGroup.sidebar = sidebar;
-    if (status !== undefined) permissionGroup.status = status;
     permissionGroup.updatedBy = userId;
 
     await permissionGroup.save();

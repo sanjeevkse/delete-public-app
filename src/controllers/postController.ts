@@ -26,6 +26,7 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 type NormalizedPostMediaInput = {
   mediaType: MediaType;
@@ -425,6 +426,8 @@ const getReactionCounts = async (postId: number) => {
 export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 
+  assertNoRestrictedFields(req.body);
+
   const description = parseRequiredString(req.body?.description, "description");
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
@@ -574,6 +577,8 @@ export const updatePost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   if (Number.isNaN(id)) {
     return sendBadRequest(res, "Invalid post id");
   }
+
+  assertNoRestrictedFields(req.body);
 
   const post = await Post.findOne({ where: { id, status: 1 } });
   if (!post) {

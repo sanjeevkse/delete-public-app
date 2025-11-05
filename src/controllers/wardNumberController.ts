@@ -4,6 +4,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import MetaWardNumber from "../models/MetaWardNumber";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -14,6 +15,8 @@ import {
 } from "../utils/apiResponse";
 
 export const createWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  assertNoRestrictedFields(req.body);
+
   const { dispName } = req.body;
 
   if (!dispName) {
@@ -80,6 +83,8 @@ export const getWardNumberById = asyncHandler(async (req: AuthenticatedRequest, 
 
 export const updateWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+  assertNoRestrictedFields(req.body);
+
   const { dispName } = req.body;
 
   const wardNumber = await MetaWardNumber.findByPk(id);

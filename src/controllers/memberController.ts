@@ -6,6 +6,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import Member from "../models/Member";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -78,6 +79,8 @@ export const getMember = asyncHandler(async (req: Request, res: Response) => {
  * POST /api/members
  */
 export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  assertNoRestrictedFields(req.body);
+
   const { fullName, contactNumber, email } = req.body;
 
   const fieldErrors: Array<{ field: string; message: string }> = [];
@@ -144,6 +147,8 @@ export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: 
  */
 export const updateMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+  assertNoRestrictedFields(req.body);
+
   const { fullName, contactNumber, email } = req.body;
 
   const member = await Member.findByPk(id);

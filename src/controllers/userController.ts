@@ -31,6 +31,7 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
@@ -80,15 +81,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-  const {
-    contactNumber,
-    email,
-    fullName,
-    status = 1,
-    profile,
-    roleIds: roleIdsInput,
-    accessibles
-  } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { contactNumber, email, fullName, profile, roleIds: roleIdsInput, accessibles } = req.body;
   if (!contactNumber) {
     throw new ApiError("contactNumber is required", 400);
   }
@@ -103,7 +98,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     contactNumber,
     email,
     fullName,
-    status
+    status: 1
   });
 
   if (profile) {
@@ -195,6 +190,8 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   if (!user) {
     throw new ApiError("User not found", 404);
   }
+
+  assertNoRestrictedFields(req.body, { allow: ["status"] });
 
   if (Object.prototype.hasOwnProperty.call(req.body, "status")) {
     throw new ApiError("Status must be updated using the status endpoint", 400);

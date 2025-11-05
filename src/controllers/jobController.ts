@@ -16,6 +16,7 @@ import {
 } from "../utils/apiResponse";
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -100,17 +101,6 @@ const parseStatusFilter = (value: unknown): number | null | undefined => {
   }
   if (typeof value === "string" && value.trim().toLowerCase() === "all") {
     return null;
-  }
-  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
-    throw new ApiError("status must be 0 or 1", 400);
-  }
-  return numericValue;
-};
-
-const parseOptionalStatus = (value: unknown): number | undefined => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
   }
   const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
   if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
@@ -295,6 +285,7 @@ const normalizeJobPayload = async (
 ) => {
   const { existingJob, currentUserId } = options;
   const body = (req.body ?? {}) as RequestBody;
+  assertNoRestrictedFields(body);
 
   const { provided: submittedProvided, value: submittedValue } = pickBodyValue(body, [
     "submittedFor",
@@ -452,12 +443,6 @@ const normalizeJobPayload = async (
           currentUserId
         );
 
-  const statusInput = pickBodyValue(body, ["status"]);
-  const status =
-    statusInput.provided || (existingJob?.status !== undefined && existingJob?.status !== null)
-      ? parseOptionalStatus(statusInput.value ?? existingJob?.status)
-      : undefined;
-
   contactNumber = normalizePhoneNumber(contactNumber, "contact_number");
   alternativeContactNumber = normalizeOptionalPhoneNumber(
     alternativeContactNumber,
@@ -474,8 +459,7 @@ const normalizeJobPayload = async (
     education,
     workExperience,
     description,
-    applicantUserId,
-    status
+    applicantUserId
   };
 };
 
@@ -568,7 +552,7 @@ export const createJob = asyncHandler(async (req: AuthenticatedRequest, res: Res
     workExperience: payload.workExperience,
     description: payload.description,
     resumeUrl: resumeUrl ?? null,
-    status: payload.status ?? 1,
+    status: 1,
     createdBy: userId,
     updatedBy: userId
   });

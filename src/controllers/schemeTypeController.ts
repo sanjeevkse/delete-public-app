@@ -7,6 +7,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaSchemeType from "../models/MetaSchemeType";
 import MetaSchemeTypeStep from "../models/MetaSchemeTypeStep";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   calculatePagination,
   parsePaginationParams,
@@ -30,7 +31,6 @@ const SORTABLE_FIELDS = new Map<string, string>([
 type NormalizedSchemeTypePayload = {
   dispName?: string;
   description?: string | null;
-  status?: number;
 };
 
 type NormalizedStepPayload = {
@@ -112,9 +112,10 @@ const normalizeSchemeTypePayload = (
 ): NormalizedSchemeTypePayload => {
   const { partial = false } = options;
 
+  assertNoRestrictedFields(body);
+
   const dispNameInput = body.dispName ?? body.disp_name;
   const descriptionInput = body.description;
-  const statusInput = body.status;
 
   const payload: NormalizedSchemeTypePayload = {};
 
@@ -127,14 +128,6 @@ const normalizeSchemeTypePayload = (
 
   if (descriptionInput !== undefined) {
     payload.description = normalizeNullableDescription(descriptionInput);
-  }
-
-  if (!partial || statusInput !== undefined) {
-    if (statusInput === undefined) {
-      payload.status = 1;
-    } else {
-      payload.status = normalizeStatusValue(statusInput);
-    }
   }
 
   return payload;
@@ -327,7 +320,7 @@ export const createSchemeType = asyncHandler(async (req: AuthenticatedRequest, r
         {
           dispName: payload.dispName!,
           description: payload.description ?? null,
-          status: payload.status ?? 1,
+          status: 1,
           createdBy: userId,
           updatedBy: userId
         },
@@ -382,7 +375,6 @@ export const updateSchemeType = asyncHandler(async (req: AuthenticatedRequest, r
   if (
     payload.dispName === undefined &&
     payload.description === undefined &&
-    payload.status === undefined &&
     stepsPayload === undefined
   ) {
     throw new ApiError("No fields provided for update", 400);
@@ -409,9 +401,6 @@ export const updateSchemeType = asyncHandler(async (req: AuthenticatedRequest, r
       }
       if (payload.description !== undefined) {
         updates.description = payload.description;
-      }
-      if (payload.status !== undefined) {
-        updates.status = payload.status;
       }
 
       if (Object.keys(updates).length > 0) {

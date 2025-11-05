@@ -6,6 +6,7 @@ import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaRelationType from "../models/MetaRelationType";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -79,7 +80,9 @@ export const getRelationType = asyncHandler(async (req: Request, res: Response) 
  * POST /api/relation-types
  */
 export const createRelationType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { dispName, status } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { dispName } = req.body;
   const userId = req.user?.id;
 
   // Validate required fields
@@ -95,7 +98,7 @@ export const createRelationType = asyncHandler(async (req: AuthenticatedRequest,
 
   const relationType = await MetaRelationType.create({
     dispName,
-    status: status !== undefined ? status : 1,
+    status: 1,
     createdBy: userId || null,
     updatedBy: userId || null
   });
@@ -109,7 +112,9 @@ export const createRelationType = asyncHandler(async (req: AuthenticatedRequest,
  */
 export const updateRelationType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const { dispName, status } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { dispName } = req.body;
   const userId = req.user?.id;
 
   const relationType = await MetaRelationType.findByPk(id);
@@ -133,7 +138,6 @@ export const updateRelationType = asyncHandler(async (req: AuthenticatedRequest,
 
   // Update only provided fields
   if (dispName !== undefined) relationType.dispName = dispName;
-  if (status !== undefined) relationType.status = status;
   if (userId) relationType.updatedBy = userId;
 
   await relationType.save();

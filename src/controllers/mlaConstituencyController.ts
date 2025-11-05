@@ -4,6 +4,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import MetaMlaConstituency from "../models/MetaMlaConstituency";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -15,6 +16,8 @@ import {
 
 export const createMlaConstituency = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
+    assertNoRestrictedFields(req.body);
+
     const { dispName } = req.body;
 
     if (!dispName) {
@@ -92,6 +95,8 @@ export const getMlaConstituencyById = asyncHandler(
 export const updateMlaConstituency = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
+    assertNoRestrictedFields(req.body);
+
     const { dispName } = req.body;
 
     const mlaConstituency = await MetaMlaConstituency.findByPk(id);

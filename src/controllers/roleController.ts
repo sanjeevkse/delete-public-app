@@ -15,6 +15,7 @@ import {
   sendNotFound,
   sendBadRequest
 } from "../utils/apiResponse";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
   const roles = await MetaUserRole.findAll({
@@ -63,7 +64,9 @@ export const getRolePermissions = asyncHandler(async (req: Request, res: Respons
 });
 
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
-  const { dispName, description, status = 1, metaUserRoleId, permissions = [] } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { dispName, description, metaUserRoleId, permissions = [] } = req.body;
   if (!dispName) {
     throw new ApiError("dispName is required", 400);
   }
@@ -80,7 +83,7 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     dispName,
     description,
     metaUserRoleId: metaUserRoleId || null,
-    status
+    status: 1
   });
 
   if (Array.isArray(permissions) && permissions.length > 0) {
@@ -102,6 +105,8 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
+  assertNoRestrictedFields(req.body);
+
   const { permissions, metaUserRoleId, ...rolePayload } = req.body;
   const role = await MetaUserRole.findByPk(req.params.id);
   if (!role) {

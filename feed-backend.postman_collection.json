@@ -1660,7 +1660,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"schemeName\": \"Skill Development Grant\",\n  \"description\": \"Financial support for vocational training participants.\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"schemeName\": \"Skill Development Grant\",\n  \"description\": \"Financial support for vocational training participants.\"\n}"
             },
             "url": "{{baseUrl}}/api/schemes",
             "description": "Creates a new scheme record."
@@ -1708,10 +1708,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"schemeName\": \"Skill Development Grant - Updated\",\n  \"description\": \"Revised guidelines for the vocational training support scheme.\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"schemeName\": \"Skill Development Grant - Updated\",\n  \"description\": \"Revised guidelines for the vocational training support scheme.\"\n}"
             },
             "url": "{{baseUrl}}/api/schemes/{{schemeId}}",
-            "description": "Updates a scheme's name, description, or status."
+            "description": "Updates a scheme's name or description."
           },
           "response": []
         },
@@ -1935,7 +1935,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dispName\": \"Education Assistance\",\n  \"description\": \"Support for students in low-income households.\",\n  \"status\": 1,\n  \"steps\": [\n    {\n      \"stepOrder\": 1,\n      \"dispName\": \"Application Submission\",\n      \"description\": \"Applicants upload required documents.\",\n      \"status\": 1\n    },\n    {\n      \"stepOrder\": 2,\n      \"dispName\": \"Verification\",\n      \"description\": \"Field officers verify the submission and documents.\",\n      \"status\": 1\n    }\n  ]\n}"
+              "raw": "{\n  \"dispName\": \"Education Assistance\",\n  \"description\": \"Support for students in low-income households.\",\n  \"steps\": [\n    {\n      \"stepOrder\": 1,\n      \"dispName\": \"Application Submission\",\n      \"description\": \"Applicants upload required documents.\"\n    },\n    {\n      \"stepOrder\": 2,\n      \"dispName\": \"Verification\",\n      \"description\": \"Field officers verify the submission and documents.\"\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/scheme-types",
             "description": "Creates a new scheme type with optional steps."
@@ -1989,7 +1989,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"dispName\": \"Education Assistance - Updated\",\n  \"description\": \"Updated guidelines for the education support scheme.\",\n  \"status\": 1,\n  \"steps\": [\n    {\n      \"stepOrder\": 1,\n      \"dispName\": \"Registration\",\n      \"description\": \"Community staff register the applicant in the system.\",\n      \"status\": 1\n    },\n    {\n      \"stepOrder\": 2,\n      \"dispName\": \"Approval\",\n      \"description\": \"District committee reviews and approves the case.\",\n      \"status\": 1\n    }\n  ]\n}"
+              "raw": "{\n  \"dispName\": \"Education Assistance - Updated\",\n  \"description\": \"Updated guidelines for the education support scheme.\",\n  \"steps\": [\n    {\n      \"stepOrder\": 1,\n      \"dispName\": \"Registration\",\n      \"description\": \"Community staff register the applicant in the system.\"\n    },\n    {\n      \"stepOrder\": 2,\n      \"dispName\": \"Approval\",\n      \"description\": \"District committee reviews and approves the case.\"\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/scheme-types/{{schemeTypeId}}",
             "description": "Updates a scheme type and replaces its steps when provided."
@@ -2546,7 +2546,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"label\": \"Posts Management\",\n  \"description\": \"Permission group for managing posts\",\n  \"sidebar\": \"posts\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"label\": \"Posts Management\",\n  \"description\": \"Permission group for managing posts\",\n  \"sidebar\": \"posts\"\n}"
             },
             "url": "{{baseUrl}}/api/admin/permission-groups",
             "description": "Create a new permission group"
@@ -2569,7 +2569,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"label\": \"Posts Management (Updated)\",\n  \"description\": \"Updated description\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"label\": \"Posts Management (Updated)\",\n  \"description\": \"Updated description\"\n}"
             },
             "url": "{{baseUrl}}/api/admin/permission-groups/1",
             "description": "Update an existing permission group"
@@ -2867,7 +2867,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"communityTypeId\": 1,\n  \"communityName\": \"Tech Innovators Club\",\n  \"isRegistered\": 1,\n  \"registrationDate\": \"2024-10-01T00:00:00.000Z\",\n  \"contactPerson\": \"John Doe\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"contact@techinnovators.com\",\n  \"totalMember\": 50,\n  \"fullAddress\": \"123 Tech Street, Innovation City, IC 12345\",\n  \"status\": 1\n}"
+              "raw": "{\n  \"communityTypeId\": 1,\n  \"communityName\": \"Tech Innovators Club\",\n  \"isRegistered\": 1,\n  \"registrationDate\": \"2024-10-01T00:00:00.000Z\",\n  \"contactPerson\": \"John Doe\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"contact@techinnovators.com\",\n  \"totalMember\": 50,\n  \"fullAddress\": \"123 Tech Street, Innovation City, IC 12345\"\n}"
             },
             "url": "{{baseUrl}}/api/communities",
             "description": "Create a new community with all details"
@@ -3306,7 +3306,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe Sr.\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"john.sr@example.com\",\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"relationTypeId\": 1,\n  \"status\": 1\n}"
+              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe Sr.\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"john.sr@example.com\",\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"relationTypeId\": 1\n}"
             },
             "url": "{{baseUrl}}/api/family-members",
             "description": "Create a new family member"
@@ -3661,10 +3661,10 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"dispName\": \"Sports Club\",\n  \"description\": \"Community for sports enthusiasts\",\n  \"status\": 1\n}"
+                  "raw": "{\n  \"dispName\": \"Sports Club\",\n  \"description\": \"Community for sports enthusiasts\"\n}"
                 },
                 "url": "{{baseUrl}}/api/community-types",
-                "description": "Create a new community type with display name, description, and status"
+                "description": "Create a new community type with display name and description"
               },
               "response": []
             },
@@ -3777,7 +3777,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"dispName\": \"Sports Club Updated\",\n  \"description\": \"Updated description for sports community\",\n  \"status\": 1\n}"
+                  "raw": "{\n  \"dispName\": \"Sports Club Updated\",\n  \"description\": \"Updated description for sports community\"\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
@@ -3876,7 +3876,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"dispName\": \"Father\",\n  \"description\": \"Father relationship\",\n  \"status\": 1\n}"
+                  "raw": "{\n  \"dispName\": \"Father\",\n  \"description\": \"Father relationship\"\n}"
                 },
                 "url": "{{baseUrl}}/api/relation-types",
                 "description": "Create a new relation type"

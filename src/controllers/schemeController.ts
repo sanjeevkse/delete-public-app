@@ -13,6 +13,7 @@ import {
   sendSuccessWithPagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -112,6 +113,8 @@ const normalizeSchemePayload = (
 ) => {
   const { existing, partial = false } = options;
 
+  assertNoRestrictedFields(body);
+
   const schemeNameInput =
     body.schemeName ?? body.scheme_name ?? (partial ? existing?.schemeName : undefined);
   if (!partial || schemeNameInput !== undefined) {
@@ -130,7 +133,6 @@ const normalizeSchemePayload = (
   const normalized: {
     schemeName?: string;
     description?: string;
-    status?: number;
   } = {};
 
   if (schemeNameInput !== undefined) {
@@ -139,14 +141,6 @@ const normalizeSchemePayload = (
 
   if (descriptionInput !== undefined) {
     normalized.description = normalizeDescription(descriptionInput);
-  }
-
-  const statusInput = body.status ?? (partial ? existing?.status : undefined);
-  if (statusInput !== undefined) {
-    const parsedStatus = parseOptionalStatus(statusInput);
-    if (parsedStatus !== undefined) {
-      normalized.status = parsedStatus;
-    }
   }
 
   return normalized;
@@ -246,13 +240,12 @@ export const createScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
   const payload = normalizeSchemePayload(body, { partial: false }) as {
     schemeName: string;
     description: string;
-    status?: number;
   };
 
   const created = await Scheme.create({
     schemeName: payload.schemeName,
     description: payload.description,
-    status: payload.status ?? 1,
+    status: 1,
     createdBy: userId,
     updatedBy: userId
   });
@@ -276,11 +269,7 @@ export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
   const body = (req.body ?? {}) as Record<string, unknown>;
   const payload = normalizeSchemePayload(body, { existing: scheme, partial: true });
 
-  if (
-    payload.schemeName === undefined &&
-    payload.description === undefined &&
-    payload.status === undefined
-  ) {
+  if (payload.schemeName === undefined && payload.description === undefined) {
     throw new ApiError("No fields provided for update", 400);
   }
 
@@ -291,9 +280,6 @@ export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
   }
   if (payload.description !== undefined) {
     updates.description = payload.description;
-  }
-  if (payload.status !== undefined) {
-    updates.status = payload.status;
   }
 
   updates.updatedBy = userId;

@@ -7,6 +7,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import Business from "../models/Business";
 import MetaBusinessType from "../models/MetaBusinessType";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -116,6 +117,8 @@ export const getBusiness = asyncHandler(async (req: Request, res: Response) => {
  * POST /api/businesses
  */
 export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  assertNoRestrictedFields(req.body);
+
   const {
     businessName,
     businessTypeId,
@@ -125,8 +128,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     email,
     totalEmployees,
     turnoverYearly,
-    fullAddress,
-    status
+    fullAddress
   } = req.body;
   const userId = req.user?.id;
 
@@ -167,7 +169,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     totalEmployees: totalEmployees || null,
     turnoverYearly: turnoverYearly || null,
     fullAddress: fullAddress || null,
-    status: status !== undefined ? status : 1,
+    status: 1,
     createdBy: userId || null,
     updatedBy: userId || null
   });
@@ -192,6 +194,8 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
  */
 export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+  assertNoRestrictedFields(req.body);
+
   const {
     businessName,
     businessTypeId,
@@ -201,8 +205,7 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     email,
     totalEmployees,
     turnoverYearly,
-    fullAddress,
-    status
+    fullAddress
   } = req.body;
   const userId = req.user?.id;
 
@@ -256,7 +259,6 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   if (totalEmployees !== undefined) business.totalEmployees = totalEmployees;
   if (turnoverYearly !== undefined) business.turnoverYearly = turnoverYearly;
   if (fullAddress !== undefined) business.fullAddress = fullAddress;
-  if (status !== undefined) business.status = status;
   if (userId) business.updatedBy = userId;
 
   await business.save();

@@ -17,6 +17,7 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 /**
  * List all communities with pagination and search
@@ -120,6 +121,8 @@ export const getCommunity = asyncHandler(async (req: Request, res: Response) => 
  * POST /api/communities
  */
 export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  assertNoRestrictedFields(req.body);
+
   const {
     communityTypeId,
     communityName,
@@ -129,8 +132,7 @@ export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, re
     contactNumber,
     email,
     totalMember,
-    fullAddress,
-    status
+    fullAddress
   } = req.body;
   const userId = req.user?.id;
 
@@ -161,7 +163,7 @@ export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, re
     email: email || null,
     totalMember: totalMember !== undefined ? totalMember : 0,
     fullAddress: fullAddress || null,
-    status: status !== undefined ? status : 1,
+    status: 1,
     createdBy: userId,
     updatedBy: userId
   });
@@ -186,6 +188,8 @@ export const createCommunity = asyncHandler(async (req: AuthenticatedRequest, re
  */
 export const updateCommunity = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+  assertNoRestrictedFields(req.body);
+
   const {
     communityTypeId,
     communityName,
@@ -195,8 +199,7 @@ export const updateCommunity = asyncHandler(async (req: AuthenticatedRequest, re
     contactNumber,
     email,
     totalMember,
-    fullAddress,
-    status
+    fullAddress
   } = req.body;
   const userId = req.user?.id;
 
@@ -224,7 +227,6 @@ export const updateCommunity = asyncHandler(async (req: AuthenticatedRequest, re
   if (email !== undefined) community.email = email;
   if (totalMember !== undefined) community.totalMember = totalMember;
   if (fullAddress !== undefined) community.fullAddress = fullAddress;
-  if (status !== undefined) community.status = status;
   if (userId) community.updatedBy = userId;
 
   await community.save();

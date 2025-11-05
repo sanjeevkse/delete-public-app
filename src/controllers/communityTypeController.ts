@@ -6,6 +6,7 @@ import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaCommunityType from "../models/MetaCommunityType";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -80,7 +81,9 @@ export const getCommunityType = asyncHandler(async (req: Request, res: Response)
  */
 export const createCommunityType = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { dispName, status } = req.body;
+    assertNoRestrictedFields(req.body);
+
+    const { dispName } = req.body;
     const userId = req.user?.id;
 
     // Validate required fields
@@ -96,7 +99,7 @@ export const createCommunityType = asyncHandler(
 
     const communityType = await MetaCommunityType.create({
       dispName,
-      status: status !== undefined ? status : 1,
+      status: 1,
       createdBy: userId || null,
       updatedBy: userId || null
     });
@@ -112,7 +115,9 @@ export const createCommunityType = asyncHandler(
 export const updateCommunityType = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const { dispName, status } = req.body;
+    assertNoRestrictedFields(req.body);
+
+    const { dispName } = req.body;
     const userId = req.user?.id;
 
     const communityType = await MetaCommunityType.findByPk(id);
@@ -136,7 +141,6 @@ export const updateCommunityType = asyncHandler(
 
     // Update only provided fields
     if (dispName !== undefined) communityType.dispName = dispName;
-    if (status !== undefined) communityType.status = status;
     if (userId) communityType.updatedBy = userId;
 
     await communityType.save();

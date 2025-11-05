@@ -6,6 +6,7 @@ import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaBusinessType from "../models/MetaBusinessType";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -79,7 +80,9 @@ export const getBusinessType = asyncHandler(async (req: Request, res: Response) 
  * POST /api/business-types
  */
 export const createBusinessType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { dispName, status } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { dispName } = req.body;
   const userId = req.user?.id;
 
   // Validate required fields
@@ -95,7 +98,7 @@ export const createBusinessType = asyncHandler(async (req: AuthenticatedRequest,
 
   const businessType = await MetaBusinessType.create({
     dispName,
-    status: status !== undefined ? status : 1,
+    status: 1,
     createdBy: userId || null,
     updatedBy: userId || null
   });
@@ -109,7 +112,9 @@ export const createBusinessType = asyncHandler(async (req: AuthenticatedRequest,
  */
 export const updateBusinessType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const { dispName, status } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { dispName } = req.body;
   const userId = req.user?.id;
 
   const businessType = await MetaBusinessType.findByPk(id);
@@ -133,7 +138,6 @@ export const updateBusinessType = asyncHandler(async (req: AuthenticatedRequest,
 
   // Update only provided fields
   if (dispName !== undefined) businessType.dispName = dispName;
-  if (status !== undefined) businessType.status = status;
   if (userId) businessType.updatedBy = userId;
 
   await businessType.save();

@@ -6,6 +6,7 @@ import GeoPolitical from "../models/GeoPolitical";
 import MetaBoothNumber from "../models/MetaBoothNumber";
 import MetaMlaConstituency from "../models/MetaMlaConstituency";
 import asyncHandler from "../utils/asyncHandler";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
   sendSuccess,
   sendCreated,
@@ -15,6 +16,8 @@ import {
 } from "../utils/apiResponse";
 
 export const createBoothNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  assertNoRestrictedFields(req.body);
+
   const { mlaConstituencyId, dispName } = req.body;
 
   if (!mlaConstituencyId) {
@@ -124,6 +127,8 @@ export const getBoothNumberById = asyncHandler(async (req: AuthenticatedRequest,
 
 export const updateBoothNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+  assertNoRestrictedFields(req.body);
+
   const { mlaConstituencyId, dispName } = req.body;
 
   const boothNumber = await MetaBoothNumber.findByPk(id);

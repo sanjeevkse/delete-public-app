@@ -27,6 +27,7 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 type NormalizedMediaInput = {
   mediaType: MediaType;
@@ -472,6 +473,8 @@ const fetchEventById = async (id: number, includeAuditFields?: boolean) => {
 export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 
+  assertNoRestrictedFields(req.body);
+
   const title = parseRequiredString(req.body?.title, "title");
   const description = parseRequiredString(req.body?.description, "description");
   const place = parseRequiredString(req.body?.place, "place");
@@ -753,6 +756,8 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   if (Number.isNaN(id)) {
     throw new ApiError("Invalid event id", 400);
   }
+
+  assertNoRestrictedFields(req.body);
 
   const event = await Event.findOne({ where: { id, status: 1 } });
   if (!event) {

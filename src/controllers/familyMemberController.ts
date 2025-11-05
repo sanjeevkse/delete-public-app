@@ -18,6 +18,7 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 /**
  * List all family members with pagination and search
@@ -130,16 +131,10 @@ export const getFamilyMember = asyncHandler(async (req: Request, res: Response) 
  * POST /api/family-members
  */
 export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const {
-    userId,
-    fullName,
-    contactNumber,
-    email,
-    fullAddress,
-    aadhaarNumber,
-    relationTypeId,
-    status
-  } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { userId, fullName, contactNumber, email, fullAddress, aadhaarNumber, relationTypeId } =
+    req.body;
   const currentUserId = req.user?.id ?? null;
 
   const fieldErrors: Array<{ field: string; message: string }> = [];
@@ -244,22 +239,6 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
               return null;
             })();
 
-  let normalizedStatus: number | null = null;
-  if (status !== undefined && status !== null && status !== "") {
-    if (typeof status === "number" && Number.isFinite(status)) {
-      normalizedStatus = status;
-    } else if (typeof status === "string" && status.trim()) {
-      const parsedStatus = Number.parseInt(status.trim(), 10);
-      if (Number.isNaN(parsedStatus)) {
-        fieldErrors.push({ field: "status", message: "Status must be a numeric value" });
-      } else {
-        normalizedStatus = parsedStatus;
-      }
-    } else {
-      fieldErrors.push({ field: "status", message: "Status must be a numeric value" });
-    }
-  }
-
   if (fieldErrors.length > 0) {
     throw new ApiError("Validation failed", 422, "VALIDATION_ERROR", fieldErrors);
   }
@@ -290,7 +269,7 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     fullAddress: normalizedFullAddress,
     aadhaarNumber: normalizedAadhaarNumber,
     relationTypeId: normalizedRelationTypeId!,
-    status: normalizedStatus ?? 1,
+    status: 1,
     createdBy: currentUserId,
     updatedBy: currentUserId
   });
@@ -320,16 +299,10 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
  */
 export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const {
-    userId,
-    fullName,
-    contactNumber,
-    email,
-    fullAddress,
-    aadhaarNumber,
-    relationTypeId,
-    status
-  } = req.body;
+  assertNoRestrictedFields(req.body);
+
+  const { userId, fullName, contactNumber, email, fullAddress, aadhaarNumber, relationTypeId } =
+    req.body;
   const currentUserId = req.user?.id;
 
   const familyMember = await FamilyMember.findByPk(id);
@@ -362,7 +335,6 @@ export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
   if (fullAddress !== undefined) familyMember.fullAddress = fullAddress;
   if (aadhaarNumber !== undefined) familyMember.aadhaarNumber = aadhaarNumber;
   if (relationTypeId !== undefined) familyMember.relationTypeId = relationTypeId;
-  if (status !== undefined) familyMember.status = status;
   if (currentUserId) familyMember.updatedBy = currentUserId;
 
   await familyMember.save();
