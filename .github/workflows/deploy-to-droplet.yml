@@ -26,7 +26,10 @@ jobs:
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             echo "Lockfile found → npm ci"
-            npm ci
+            npm ci || {
+              echo "::warning ::Lockfile is out of sync; running 'npm install' to refresh it."
+              npm install --no-audit --no-fund
+            }
           else
             echo "No lockfile → npm install"
             npm install
