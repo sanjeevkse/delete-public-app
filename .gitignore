@@ -36,3 +36,5 @@ lens.db-wal
 .idea/
 .vscode/
 *.swp
+
+migrations
