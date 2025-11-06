@@ -35,6 +35,11 @@ import TelescopeException from "./TelescopeException";
 import TelescopeQuery from "./TelescopeQuery";
 import ComplaintType from "./ComplaintType";
 import ComplaintTypeStep from "./ComplaintTypeSteps";
+import MetaFieldType from "./MetaFieldType";
+import MetaInputFormat from "./MetaInputFormat";
+import Form from "./Form";
+import FormField from "./FormField";
+import FormFieldOption from "./FormFieldOption";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -158,6 +163,28 @@ const establishAssociations = (): void => {
     otherKey: "userId",
     as: "users"
   });
+
+  Form.hasMany(FormField, {
+    foreignKey: "formId",
+    as: "fields",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormField.belongsTo(Form, { foreignKey: "formId", as: "form" });
+
+  FormField.belongsTo(MetaFieldType, { foreignKey: "fieldTypeId", as: "fieldType" });
+  MetaFieldType.hasMany(FormField, { foreignKey: "fieldTypeId", as: "formFields" });
+
+  FormField.belongsTo(MetaInputFormat, { foreignKey: "inputFormatId", as: "inputFormat" });
+  MetaInputFormat.hasMany(FormField, { foreignKey: "inputFormatId", as: "formFields" });
+
+  FormField.hasMany(FormFieldOption, {
+    foreignKey: "fieldId",
+    as: "options",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormFieldOption.belongsTo(FormField, { foreignKey: "fieldId", as: "field" });
   UserRole.belongsTo(User, { foreignKey: "userId", as: "user" });
   UserRole.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
 

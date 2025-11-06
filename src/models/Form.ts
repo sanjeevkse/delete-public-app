@@ -5,73 +5,72 @@ import {
   InferCreationAttributes,
   Model
 } from "sequelize";
-import sequelize from "../config/database";
 
-class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttributes<Complaint>> {
+import sequelize from "../config/database";
+import type FormField from "./FormField";
+
+class Form extends Model<
+  InferAttributes<Form, { omit: "fields" }>,
+  InferCreationAttributes<Form, { omit: "fields" }>
+> {
   declare id: CreationOptional<number>;
-  declare selfOther: "SELF" | "OTHER";
-  declare complaintTypeId: number;
   declare title: string;
-  declare description: string | null;
-  declare locationText: string | null;
-  declare latitude: number | null;
-  declare longitude: number | null;
-  declare landmark: string | null;
+  declare description: CreationOptional<string | null>;
+  declare slug: CreationOptional<string | null>;
+  declare isPublic: CreationOptional<number>;
+  declare startAt: CreationOptional<Date | null>;
+  declare endAt: CreationOptional<Date | null>;
+  declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+
+  declare fields?: FormField[];
 }
 
-Complaint.init(
+Form.init(
   {
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
     },
-    selfOther: {
-      field: "self_other",
-      type: DataTypes.ENUM("SELF", "OTHER"),
-      allowNull: false
-    },
-    complaintTypeId: {
-      field: "complaint_type_id",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false
-    },
     title: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(191),
       allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    locationText: {
-      field: "location_text",
-      type: DataTypes.STRING(255),
+    slug: {
+      type: DataTypes.STRING(191),
       allowNull: true
     },
-    latitude: {
-      type: DataTypes.DECIMAL(10, 6),
+    isPublic: {
+      field: "is_public",
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1
+    },
+    startAt: {
+      field: "start_at",
+      type: DataTypes.DATE,
       allowNull: true
     },
-    longitude: {
-      type: DataTypes.DECIMAL(10, 6),
+    endAt: {
+      field: "end_at",
+      type: DataTypes.DATE,
       allowNull: true
     },
-    landmark: {
-      type: DataTypes.STRING(255),
-      allowNull: true
+    status: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1
     },
     createdBy: {
       field: "created_by",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
-    },
-    updatedBy: {
-      field: "updated_by",
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },
@@ -80,6 +79,11 @@ Complaint.init(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
+    },
+    updatedBy: {
+      field: "updated_by",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     updatedAt: {
       field: "updated_at",
@@ -90,10 +94,10 @@ Complaint.init(
   },
   {
     sequelize,
-    tableName: "tbl_complaint",
-    modelName: "Complaint",
-    timestamps: false
+    tableName: "tbl_form",
+    timestamps: true,
+    underscored: true
   }
 );
 
-export default Complaint;
+export default Form;

@@ -18,6 +18,7 @@ import mlaConstituencyRoutes from "./mlaConstituencyRoutes";
 import boothNumberRoutes from "./boothNumberRoutes";
 import complaintTypeRoutes from "./complainTypesRoutes";
 import schemeTypeRoutes from "./schemeTypeRoutes";
+import formBuilderRoutes from "./formBuilderRoutes";
 
 const router = Router();
 
@@ -43,6 +44,7 @@ router.use("/", mlaConstituencyRoutes);
 router.use("/", boothNumberRoutes);
 router.use("/", complaintTypeRoutes);
 router.use("/", schemeTypeRoutes);
+router.use("/", formBuilderRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;

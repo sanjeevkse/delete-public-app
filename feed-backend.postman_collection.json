@@ -912,7 +912,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/media",
-            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
+            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each \u2264 5MB). Update the file path before sending."
           },
           "response": []
         },
@@ -4409,6 +4409,898 @@
       ]
     },
     {
+      "name": "Form Builder",
+      "description": "Endpoints for managing dynamic form definitions.",
+      "item": [
+        {
+          "name": "Field Types",
+          "description": "Manage form field control types.",
+          "item": [
+            {
+              "name": "List Field Types",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/form-field-types?search=text&page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "form-field-types"],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "text",
+                      "description": "Optional search term matched against fieldType and dispName."
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "description": "Filter by status (1 active, 0 inactive)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number (default 1)."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "Page size up to 100 (default 25)."
+                    }
+                  ]
+                },
+                "description": "Lists field type metadata with pagination and optional search."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Field Type",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/form-field-types/{{formFieldTypeId}}",
+                "description": "Retrieves a single field type by id."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Field Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "var jsonData = {};",
+                      "try {",
+                      "  jsonData = pm.response.json();",
+                      "} catch (err) {",
+                      "  jsonData = {};",
+                      "}",
+                      "if (jsonData && jsonData.data && jsonData.data.id) {",
+                      "  pm.collectionVariables.set(\"formFieldTypeId\", jsonData.data.id);",
+                      "}",
+                      "pm.test(\"Field type id stored\", function () {",
+                      "  pm.expect(pm.collectionVariables.get(\"formFieldTypeId\")).to.exist;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fieldType\": \"text\",\n  \"dispName\": \"Single Line\",\n  \"description\": \"Basic text input\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/form-field-types",
+                "description": "Creates a new field type definition."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Field Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dispName\": \"Single Line Updated\",\n  \"description\": \"Updated description\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/form-field-types/{{formFieldTypeId}}",
+                "description": "Updates an existing field type."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Field Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 204\", function () {",
+                      "  pm.response.to.have.status(204);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/form-field-types/{{formFieldTypeId}}",
+                "description": "Deletes a field type by id."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Input Formats",
+          "description": "Maintain input format metadata for text-like fields.",
+          "item": [
+            {
+              "name": "List Input Formats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/form-input-formats?fieldType=text&page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "form-input-formats"],
+                  "query": [
+                    {
+                      "key": "fieldType",
+                      "value": "text",
+                      "description": "Optional filter by field type."
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "description": "Filter by status (1 active, 0 inactive)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number (default 1)."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "Page size up to 100 (default 25)."
+                    }
+                  ]
+                },
+                "description": "Lists input formats with optional field type filter."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Input Format",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/form-input-formats/{{formInputFormatId}}",
+                "description": "Retrieves a single input format by id."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Input Format",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "var jsonData = {};",
+                      "try {",
+                      "  jsonData = pm.response.json();",
+                      "} catch (err) {",
+                      "  jsonData = {};",
+                      "}",
+                      "if (jsonData && jsonData.data && jsonData.data.id) {",
+                      "  pm.collectionVariables.set(\"formInputFormatId\", jsonData.data.id);",
+                      "}",
+                      "pm.test(\"Input format id stored\", function () {",
+                      "  pm.expect(pm.collectionVariables.get(\"formInputFormatId\")).to.exist;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fieldType\": \"text\",\n  \"dispName\": \"Email\",\n  \"targetValue\": \"value_text\",\n  \"description\": \"Validates email format\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/form-input-formats",
+                "description": "Creates a new input format definition."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Input Format",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dispName\": \"Email Updated\",\n  \"description\": \"Updated description\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/form-input-formats/{{formInputFormatId}}",
+                "description": "Updates an existing input format."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Input Format",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 204\", function () {",
+                      "  pm.response.to.have.status(204);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/form-input-formats/{{formInputFormatId}}",
+                "description": "Deletes an input format by id."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Forms",
+          "description": "Create forms and manage their fields/options.",
+          "item": [
+            {
+              "name": "List Forms",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/forms?search=feedback&status=1&page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "forms"],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "feedback",
+                      "description": "Optional search term matched against title and slug."
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "description": "Filter by status (1 active, 0 inactive)."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number (default 1)."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "Page size up to 100 (default 25)."
+                    }
+                  ]
+                },
+                "description": "Lists forms with pagination, optional filters, and nested fields/options."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Form",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/forms/{{formId}}",
+                "description": "Retrieves a form including its fields and options."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Form",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "var jsonData = {};",
+                      "try {",
+                      "  jsonData = pm.response.json();",
+                      "} catch (err) {",
+                      "  jsonData = {};",
+                      "}",
+                      "if (jsonData && jsonData.data && jsonData.data.id) {",
+                      "  pm.collectionVariables.set(\"formId\", jsonData.data.id);",
+                      "}",
+                      "if (jsonData && jsonData.data && Array.isArray(jsonData.data.fields) && jsonData.data.fields.length > 0) {",
+                      "  var firstField = jsonData.data.fields[0];",
+                      "  if (firstField && firstField.id) {",
+                      "    pm.collectionVariables.set(\"formFieldId\", firstField.id);",
+                      "    pm.test(\"Form field id stored from form create\", function () {",
+                      "      pm.expect(pm.collectionVariables.get(\"formFieldId\")).to.exist;",
+                      "    });",
+                      "  }",
+                      "  if (firstField && Array.isArray(firstField.options) && firstField.options.length > 0) {",
+                      "    var firstOption = firstField.options[0];",
+                      "    if (firstOption && firstOption.id) {",
+                      "      pm.collectionVariables.set(\"formFieldOptionId\", firstOption.id);",
+                      "      pm.test(\"Field option id stored from form create\", function () {",
+                      "        pm.expect(pm.collectionVariables.get(\"formFieldOptionId\")).to.exist;",
+                      "      });",
+                      "    }",
+                      "  }",
+                      "}",
+                      "pm.test(\"Form id stored\", function () {",
+                      "  pm.expect(pm.collectionVariables.get(\"formId\")).to.exist;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Citizen Feedback\",\n  \"description\": \"Collect feedback from residents on local services.\",\n  \"slug\": \"citizen-feedback\",\n  \"isPublic\": true,\n  \"startAt\": \"2024-01-01T00:00:00Z\",\n  \"endAt\": null,\n  \"formFields\": [\n    {\n      \"fieldKey\": \"fullName\",\n      \"label\": \"Full Name\",\n      \"helpText\": \"Enter your full legal name\",\n      \"fieldTypeId\": \"{{formFieldTypeId}}\",\n      \"inputFormatId\": \"{{formInputFormatId}}\",\n      \"isRequired\": true,\n      \"sortOrder\": 1,\n      \"placeholder\": \"John Doe\",\n      \"attrsJson\": {\n        \"maxLength\": 120\n      }\n    },\n    {\n      \"fieldKey\": \"feedbackType\",\n      \"label\": \"Feedback Type\",\n      \"fieldTypeId\": \"{{formFieldTypeId}}\",\n      \"isRequired\": false,\n      \"sortOrder\": 2,\n      \"options\": [\n        {\n          \"optionLabel\": \"Suggestion\",\n          \"optionValue\": \"suggestion\",\n          \"sortOrder\": 1\n        },\n        {\n          \"optionLabel\": \"Complaint\",\n          \"optionValue\": \"complaint\",\n          \"sortOrder\": 2,\n          \"isDefault\": true\n        }\n      ]\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/forms",
+                "description": "Creates a new form definition. Optionally include formFields to seed fields and options."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Form",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Citizen Feedback (Updated)\",\n  \"description\": \"Updated description for the feedback form.\",\n  \"isPublic\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": "{{baseUrl}}/api/forms/{{formId}}",
+                "description": "Updates an existing form definition. Form field changes must be managed via the form field endpoints and any formFields payload is ignored."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Form",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 204\", function () {",
+                      "  pm.response.to.have.status(204);",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{authToken}}"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/forms/{{formId}}",
+                "description": "Deletes a form and its fields."
+              },
+              "response": []
+            },
+            {
+              "name": "Form Fields",
+              "description": "CRUD operations for fields within a form.",
+              "item": [
+                {
+                  "name": "List Form Fields",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                      }
+                    ],
+                    "url": "{{baseUrl}}/api/forms/{{formId}}/fields",
+                    "description": "Lists fields for the selected form ordered by sortOrder."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Form Field",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                      }
+                    ],
+                    "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}",
+                    "description": "Retrieves a single form field with metadata and options."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Create Form Field",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code is 201\", function () {",
+                          "  pm.response.to.have.status(201);",
+                          "});",
+                          "var jsonData = {};",
+                          "try {",
+                          "  jsonData = pm.response.json();",
+                          "} catch (err) {",
+                          "  jsonData = {};",
+                          "}",
+                          "if (jsonData && jsonData.data && jsonData.data.id) {",
+                          "  pm.collectionVariables.set(\"formFieldId\", jsonData.data.id);",
+                          "}",
+                          "pm.test(\"Form field id stored\", function () {",
+                          "  pm.expect(pm.collectionVariables.get(\"formFieldId\")).to.exist;",
+                          "});"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"fieldKey\": \"fullName\",\n  \"label\": \"Full Name\",\n  \"helpText\": \"Enter your full legal name\",\n  \"fieldTypeId\": \"{{formFieldTypeId}}\",\n  \"inputFormatId\": \"{{formInputFormatId}}\",\n  \"isRequired\": true,\n  \"sortOrder\": 1,\n  \"placeholder\": \"John Doe\",\n  \"defaultValue\": \"\",\n  \"validationRegex\": null,\n  \"minLength\": 2,\n  \"maxLength\": 120,\n  \"attrsJson\": {\n    \"maxLength\": 120\n  }\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": "{{baseUrl}}/api/forms/{{formId}}/fields",
+                    "description": "Creates a new field inside the selected form."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update Form Field",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code is 200\", function () {",
+                          "  pm.response.to.have.status(200);",
+                          "});"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"label\": \"Full Name (Updated)\",\n  \"helpText\": \"Update your full legal name\",\n  \"sortOrder\": 2\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}",
+                    "description": "Updates an existing form field."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete Form Field",
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                          "pm.test(\"Status code is 204\", function () {",
+                          "  pm.response.to_have.status(204);",
+                          "});"
+                        ]
+                      }
+                    }
+                  ],
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                      }
+                    ],
+                    "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}",
+                    "description": "Deletes a form field and its options."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Field Options",
+                  "description": "Manage options for select-like fields.",
+                  "item": [
+                    {
+                      "name": "List Field Options",
+                      "request": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer {{authToken}}"
+                          }
+                        ],
+                        "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}/options",
+                        "description": "Lists option entries for a select, radio, or checkbox field."
+                      },
+                      "response": []
+                    },
+                    {
+                      "name": "Get Field Option",
+                      "request": {
+                        "method": "GET",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer {{authToken}}"
+                          }
+                        ],
+                        "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}/options/{{formFieldOptionId}}",
+                        "description": "Retrieves a single field option by id."
+                      },
+                      "response": []
+                    },
+                    {
+                      "name": "Create Field Option",
+                      "event": [
+                        {
+                          "listen": "test",
+                          "script": {
+                            "type": "text/javascript",
+                            "exec": [
+                              "pm.test(\"Status code is 201\", function () {",
+                              "  pm.response.to.have.status(201);",
+                              "});",
+                              "var jsonData = {};",
+                              "try {",
+                              "  jsonData = pm.response.json();",
+                              "} catch (err) {",
+                              "  jsonData = {};",
+                              "}",
+                              "if (jsonData && jsonData.data && jsonData.data.id) {",
+                              "  pm.collectionVariables.set(\"formFieldOptionId\", jsonData.data.id);",
+                              "}",
+                              "pm.test(\"Field option id stored\", function () {",
+                              "  pm.expect(pm.collectionVariables.get(\"formFieldOptionId\")).to.exist;",
+                              "});"
+                            ]
+                          }
+                        }
+                      ],
+                      "request": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer {{authToken}}"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"optionLabel\": \"Option A\",\n  \"optionValue\": \"option_a\",\n  \"sortOrder\": 1,\n  \"isDefault\": false\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}/options",
+                        "description": "Creates a new option for the selected field."
+                      },
+                      "response": []
+                    },
+                    {
+                      "name": "Update Field Option",
+                      "event": [
+                        {
+                          "listen": "test",
+                          "script": {
+                            "type": "text/javascript",
+                            "exec": [
+                              "pm.test(\"Status code is 200\", function () {",
+                              "  pm.response.to.have.status(200);",
+                              "});"
+                            ]
+                          }
+                        }
+                      ],
+                      "request": {
+                        "method": "PUT",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          },
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer {{authToken}}"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"optionLabel\": \"Option A Updated\",\n  \"sortOrder\": 2,\n  \"isDefault\": true\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}/options/{{formFieldOptionId}}",
+                        "description": "Updates an existing field option."
+                      },
+                      "response": []
+                    },
+                    {
+                      "name": "Delete Field Option",
+                      "event": [
+                        {
+                          "listen": "test",
+                          "script": {
+                            "type": "text/javascript",
+                            "exec": [
+                              "pm.test(\"Status code is 204\", function () {",
+                              "  pm.response.to.have.status(204);",
+                              "});"
+                            ]
+                          }
+                        }
+                      ],
+                      "request": {
+                        "method": "DELETE",
+                        "header": [
+                          {
+                            "key": "Authorization",
+                            "value": "Bearer {{authToken}}"
+                          }
+                        ],
+                        "url": "{{baseUrl}}/api/forms/{{formId}}/fields/{{formFieldId}}/options/{{formFieldOptionId}}",
+                        "description": "Deletes a field option."
+                      },
+                      "response": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Health Check",
       "request": {
         "method": "GET",
@@ -4480,6 +5372,26 @@
     },
     {
       "key": "otpCode",
+      "value": ""
+    },
+    {
+      "key": "formFieldTypeId",
+      "value": ""
+    },
+    {
+      "key": "formInputFormatId",
+      "value": ""
+    },
+    {
+      "key": "formId",
+      "value": ""
+    },
+    {
+      "key": "formFieldId",
+      "value": ""
+    },
+    {
+      "key": "formFieldOptionId",
       "value": ""
     }
   ]
