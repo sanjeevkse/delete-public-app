@@ -8,7 +8,8 @@ const env = {
   port: Number.parseInt(process.env.PORT ?? "8081", 10),
   jwt: {
     secret: process.env.JWT_SECRET ?? "changeme",
-    expiresIn: process.env.JWT_EXPIRES_IN ?? "1h"
+    expiresIn: undefined
+    // expiresIn: process.env.JWT_EXPIRES_IN === "infinite" ? undefined : (process.env.JWT_EXPIRES_IN ?? "1h")
   },
   auth: {
     masterOtp: process.env.MASTER_OTP ?? "999999",

@@ -12,7 +12,9 @@ const jwtSecret = env.jwt.secret as Secret;
 const jwtExpiresIn = env.jwt.expiresIn as SignOptions["expiresIn"];
 
 export const generateAccessToken = (payload: JwtPayload): string => {
-  return jwt.sign(payload, jwtSecret, { expiresIn: jwtExpiresIn });
+  // If expiresIn is undefined, token will never expire
+  const signOptions: SignOptions = jwtExpiresIn ? { expiresIn: jwtExpiresIn } : {};
+  return jwt.sign(payload, jwtSecret, signOptions);
 };
 
 export const verifyAccessToken = (token: string): JwtPayload => {

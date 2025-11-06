@@ -187,7 +187,15 @@ const establishAssociations = (): void => {
   FormFieldOption.belongsTo(FormField, { foreignKey: "fieldId", as: "field" });
   UserRole.belongsTo(User, { foreignKey: "userId", as: "user" });
   UserRole.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
+  ComplaintType.hasMany(ComplaintTypeStep, {
+    foreignKey: "complaint_type_id",
+    as: "steps"
+  });
 
+  ComplaintTypeStep.belongsTo(ComplaintType, {
+    foreignKey: "complaint_type_id",
+    as: "complaintType"
+  });
   // UserAccess associations
   UserAccess.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(UserAccess, { foreignKey: "userId", as: "accessProfiles" });
@@ -248,5 +256,7 @@ export {
   UserToken,
   TelescopeRequest,
   TelescopeException,
-  TelescopeQuery
+  TelescopeQuery,
+  ComplaintType,
+  ComplaintTypeStep
 };
