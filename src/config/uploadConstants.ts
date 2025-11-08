@@ -53,7 +53,11 @@ export const UPLOAD_COUNTS = {
   },
   JOB: {
     MAX_RESUMES: 1
-  }
+  },
+  COMPLAINT: {
+    MAX_IMAGES: 5,
+    MAX_VIDEOS: 2, 
+    MAX_TOTAL: 7 }
 } as const;
 
 // Allowed MIME types
@@ -72,7 +76,8 @@ export const UPLOAD_MODULES = {
   POSTS: "posts",
   EVENTS: "events",
   PROFILE: "profile",
-  JOBS: "jobs"
+  JOBS: "jobs",
+  COMPLAINTS: "complaints"
 } as const;
 
 // Asset types within modules

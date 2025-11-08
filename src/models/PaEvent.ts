@@ -7,39 +7,27 @@ import {
 } from "sequelize";
 import sequelize from "../config/database";
 
-class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttributes<Complaint>> {
+class PaEvent extends Model<InferAttributes<PaEvent>, InferCreationAttributes<PaEvent>> {
   declare id: CreationOptional<number>;
-  declare selfOther: "SELF" | "OTHER";
-  declare complaintTypeId: number;
   declare title: string;
   declare description: string | null;
-  declare locationText: string | null;
-  declare latitude: number | null;
-  declare longitude: number | null;
-  declare landmark: string | null;
-  declare status: CreationOptional<number>;
+  declare startDate: Date;
+  declare startTime: string;
+  declare endDate: Date | null;
+  declare endTime: string | null;
   declare createdBy: number | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedBy: number | null;
   declare updatedAt: CreationOptional<Date>;
+  declare status: CreationOptional<number>;
 }
 
-Complaint.init(
+PaEvent.init(
   {
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
-    },
-    selfOther: {
-      type: DataTypes.ENUM("SELF", "OTHER"),
-      allowNull: false,
-      field: "self_other",
-    },
-    complaintTypeId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      field: "complaint_type_id",
     },
     title: {
       type: DataTypes.STRING(255),
@@ -49,27 +37,25 @@ Complaint.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    locationText: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      field: "location_text",
-    },
-    latitude: {
-      type: DataTypes.DECIMAL(10, 8),
-      allowNull: true,
-    },
-    longitude: {
-      type: DataTypes.DECIMAL(11, 8),
-      allowNull: true,
-    },
-    landmark: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
-    status: {
-      type: DataTypes.TINYINT,
+    startDate: {
+      type: DataTypes.DATEONLY,
       allowNull: false,
-      defaultValue: 1,
+      field: "start_date",
+    },
+    startTime: {
+      type: DataTypes.TIME,
+      allowNull: false,
+      field: "start_time",
+    },
+    endDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: "end_date",
+    },
+    endTime: {
+      type: DataTypes.TIME,
+      allowNull: true,
+      field: "end_time",
     },
     createdBy: {
       type: DataTypes.BIGINT.UNSIGNED,
@@ -93,13 +79,18 @@ Complaint.init(
       defaultValue: DataTypes.NOW,
       field: "updated_at",
     },
+    status: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+    },
   },
   {
     sequelize,
-    tableName: "tbl_complaint",
-    modelName: "Complaint",
-    timestamps: false, // we handle createdAt/updatedAt manually
+    tableName: "tbl_pa_event",
+    modelName: "PaEvent",
+    timestamps: false,
   }
 );
 
-export default Complaint;
+export default PaEvent;

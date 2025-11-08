@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { Op } from "sequelize";
 import asyncHandler from "../utils/asyncHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
@@ -19,157 +20,258 @@ const parseRequiredString = (value: unknown, field: string): string => {
   }
   return trimmed;
 };
+// ✅ Common attributes to exclude
+const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
 
 // ✅ CREATE Complaint Type
-export const createComplaintType = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id: userId } = requireAuthenticatedUser(req);
-    const dispName = parseRequiredString(req.body?.dispName, "dispName");
-    const description = req.body?.description || null;
-    const steps = Array.isArray(req.body?.steps) ? req.body.steps : [];
+export const createComplaintType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+  const dispName = parseRequiredString(req.body?.dispName, "dispName");
+  const description = req.body?.description || null;
+  const steps = Array.isArray(req.body?.steps) ? req.body.steps : [];
 
-    const createdComplaintTypeId = await sequelize.transaction(async (transaction) => {
-      const complaintType = await ComplaintType.create(
-        { dispName, description, status: 1, createdBy: userId, updatedBy: userId },
+  const createdComplaintTypeId = await sequelize.transaction(async (transaction) => {
+    const complaintType = await ComplaintType.create(
+      { dispName, description, status: 1, createdBy: userId, updatedBy: userId },
+      { transaction }
+    );
+
+    if (steps.length > 0) {
+      await ComplaintTypeStep.bulkCreate(
+        steps.map((step: any) => ({
+          complaintTypeId: complaintType.id,
+          stepOrder: step.stepOrder,
+          dispName: step.dispName,
+          description: step.description || null,
+          status: 1,
+          createdBy: userId,
+          updatedBy: userId
+        })),
         { transaction }
       );
+    }
 
-      if (steps.length > 0) {
-        await ComplaintTypeStep.bulkCreate(
-          steps.map((step: any) => ({
-            complaintTypeId: complaintType.id,
+    return complaintType.id;
+  });
+
+  const createdComplaintType = await ComplaintType.findByPk(createdComplaintTypeId, {
+    attributes: { exclude: excludeFields },
+    include: [
+      {
+        model: ComplaintTypeStep,
+        as: "steps",
+        where: { status: 1 },
+        required: false,
+        attributes: { exclude: excludeFields }
+      }
+    ]
+  });
+
+  return sendCreated(res, createdComplaintType, "Complaint Type created successfully");
+});
+
+export const getAllComplaintTypes = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { page = 1, pageSize = 10, search = "", status = 1 } = req.query as any;
+
+  const offset = (Number(page) - 1) * Number(pageSize);
+  const where: any = {};
+
+  // Filter by status
+  if (status !== undefined && status !== null && status !== "") {
+    where.status = Number(status);
+  }
+
+  if (search) {
+    where[Op.or] = [
+      { dispName: { [Op.like]: `%${search}%` } },
+      { description: { [Op.like]: `%${search}%` } }
+    ];
+  }
+
+  const rows = await ComplaintType.findAll({
+    where,
+    attributes: { exclude: excludeFields },
+    include: [
+      {
+        model: ComplaintTypeStep,
+        as: "steps",
+        where: { status: 1 },
+        required: false,
+        attributes: { exclude: excludeFields }
+      }
+    ],
+    order: [["id", "ASC"]],
+    offset,
+    limit: Number(pageSize)
+  });
+
+  const data = rows.map((ct: any) => {
+    const ctJson = ct.toJSON ? ct.toJSON() : ct; 
+    return {
+      id: ctJson.id,
+      dispName: ctJson.dispName,
+      description: ctJson.description,
+      status: ctJson.status,
+      steps: Array.isArray(ctJson.steps)
+        ? ctJson.steps.map((s: any) => ({
+            id: s.id,
+            name: s.dispName,
+            description: s.description,
+            status: s.status,
+          }))
+        : [],
+    };
+  });
+
+  const pagination = {
+    page: Number(page),
+    limit: Number(pageSize),
+    total: data.length,
+    totalPages: 1
+  };
+
+  return res.json({
+    success: true,
+    data,
+    pagination,
+    message: "Complaint Types fetched successfully"
+  });
+});
+
+
+// ✅ GET Complaint Type By ID
+export const getComplaintTypeById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const complaintType = await ComplaintType.findOne({
+    where: { id, status: 1 },
+    attributes: { exclude: excludeFields },
+    include: [
+      {
+        model: ComplaintTypeStep,
+        as: "steps",
+        where: { status: 1 },
+        required: false,
+        attributes: { exclude: excludeFields }
+      }
+    ]
+  });
+
+  if (!complaintType) {
+    throw new ApiError("Complaint Type not found", 404);
+  }
+
+  return sendSuccess(res, complaintType, "Complaint Type fetched successfully");
+});
+
+// ✅ UPDATE Complaint Type and Steps
+export const updateComplaintType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+  const { id: paramId } = req.params;
+  const id = Number(paramId);
+  const { dispName, description, steps = [] } = req.body;
+
+  if (isNaN(id)) {
+    throw new ApiError("Invalid complaint type ID", 400);
+  }
+
+  const updatedComplaintType = await sequelize.transaction(async (transaction) => {
+    const complaintType = await ComplaintType.findByPk(id, { transaction });
+
+    if (!complaintType || complaintType.status === 0) {
+      throw new ApiError("Complaint Type not found", 404);
+    }
+
+    await complaintType.update(
+      { dispName, description, updatedBy: userId },
+      { transaction }
+    );
+
+    await ComplaintTypeStep.update(
+      { status: 0 },
+      { where: { complaintTypeId: id }, transaction }
+    );
+
+    // 4️⃣ Upsert steps
+    for (const step of steps) {
+      if (step.id) {
+        const [affectedCount] = await ComplaintTypeStep.update(
+          {
+            stepOrder: step.stepOrder,
+            dispName: step.dispName,
+            description: step.description || null,
+            status: 1,
+            updatedBy: userId
+          },
+          { where: { id: step.id, complaintTypeId: id }, transaction }
+        );
+
+        if (affectedCount === 0) {
+          throw new ApiError(`Invalid step ID: ${step.id}`, 400);
+        }
+      } else {
+        await ComplaintTypeStep.create(
+          {
+            complaintTypeId: id,
             stepOrder: step.stepOrder,
             dispName: step.dispName,
             description: step.description || null,
             status: 1,
             createdBy: userId,
             updatedBy: userId
-          })),
+          },
           { transaction }
         );
       }
+    }
 
-      return complaintType.id;
+    return await ComplaintType.findByPk(id, {
+      transaction,
+      attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] },
+      include: [
+        {
+          model: ComplaintTypeStep,
+          as: "steps",
+          where: { status: 1 },
+          required: false,
+          attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
+        }
+      ]
     });
+  });
 
-    const createdComplaintType = await ComplaintType.findByPk(createdComplaintTypeId, {
-      include: [{ model: ComplaintTypeStep, as: "steps", where: { status: 1 }, required: false }]
-    });
+  return sendSuccess(res, updatedComplaintType, "Complaint Type updated successfully");
+});
 
-    return sendCreated(res, createdComplaintType, "Complaint Type created successfully");
+// ✅ DELETE Complaint Type (soft delete)
+export const deleteComplaintType = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: paramId } = req.params;
+  const id = Number(paramId);
+
+  if (isNaN(id)) {
+    throw new ApiError("Invalid complaint type ID", 400);
   }
-);
 
-// ✅ GET All Complaint Types
-export const getAllComplaintTypes = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const complaintTypes = await ComplaintType.findAll({
-      where: { status: 1 },
-      include: [{ model: ComplaintTypeStep, as: "steps", where: { status: 1 }, required: false }],
-      order: [["id", "ASC"]]
-    });
-
-    return sendSuccess(res, complaintTypes, "Complaint Types fetched successfully");
-  }
-);
-
-// ✅ GET Complaint Type By ID
-export const getComplaintTypeById = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
+  const result = await sequelize.transaction(async (transaction) => {
     const complaintType = await ComplaintType.findOne({
       where: { id, status: 1 },
-      include: [{ model: ComplaintTypeStep, as: "steps", where: { status: 1 }, required: false }]
+      transaction,
     });
 
     if (!complaintType) {
-      throw new ApiError("Complaint Type not found", 404);
+      throw new ApiError("Complaint Type not found or already deleted", 404);
     }
 
-    return sendSuccess(res, complaintType, "Complaint Type fetched successfully");
-  }
-);
+    await ComplaintType.update(
+      { status: 0 },
+      { where: { id }, transaction }
+    );
+    await ComplaintTypeStep.update(
+      { status: 0 },
+      { where: { complaintTypeId: id }, transaction }
+    );
 
-// ✅ UPDATE Complaint Type and Steps
-export const updateComplaintType = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id: userId } = requireAuthenticatedUser(req);
-    const { id: paramId } = req.params;
-    const id = Number(paramId); // ✅ convert to number
-    const { dispName, description, steps = [] } = req.body;
+    return complaintType;
+  });
 
-    if (isNaN(id)) {
-      throw new ApiError("Invalid complaint type ID", 400);
-    }
-
-    const complaintType = await ComplaintType.findByPk(id);
-    if (!complaintType) throw new ApiError("Complaint Type not found", 404);
-
-    await sequelize.transaction(async (transaction) => {
-      await complaintType.update({ dispName, description, updatedBy: userId }, { transaction });
-
-      // 1️⃣ make all existing steps inactive
-      await ComplaintTypeStep.update(
-        { status: 0 },
-        { where: { complaintTypeId: id }, transaction }
-      );
-
-      // 2️⃣ loop through new steps
-      for (const step of steps) {
-        if (step.id) {
-          // 3️⃣ update existing
-          await ComplaintTypeStep.update(
-            {
-              stepOrder: step.stepOrder,
-              dispName: step.dispName,
-              description: step.description || null,
-              status: 1,
-              updatedBy: userId
-            },
-            { where: { id: step.id }, transaction }
-          );
-        } else {
-          // 4️⃣ insert new
-          await ComplaintTypeStep.create(
-            {
-              complaintTypeId: id, // ✅ number type now
-              stepOrder: step.stepOrder,
-              dispName: step.dispName,
-              description: step.description || null,
-              status: 1,
-              createdBy: userId,
-              updatedBy: userId
-            },
-            { transaction }
-          );
-        }
-      }
-    });
-
-    const updatedComplaintType = await ComplaintType.findByPk(id, {
-      include: [{ model: ComplaintTypeStep, as: "steps", where: { status: 1 }, required: false }]
-    });
-
-    return sendSuccess(res, updatedComplaintType, "Complaint Type updated successfully");
-  }
-);
-
-// ✅ DELETE Complaint Type (soft delete)
-export const deleteComplaintType = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-
-    const complaintType = await ComplaintType.findByPk(id);
-    if (!complaintType) throw new ApiError("Complaint Type not found", 404);
-
-    await sequelize.transaction(async (transaction) => {
-      await ComplaintType.update({ status: 0 }, { where: { id }, transaction });
-      await ComplaintTypeStep.update(
-        { status: 0 },
-        { where: { complaintTypeId: id }, transaction }
-      );
-    });
-
-    return sendSuccess(res, null, "Complaint Type deleted successfully");
-  }
-);
+  return sendSuccess(res, null, `Complaint Type '${result.dispName}' deleted successfully`);
+});

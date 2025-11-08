@@ -12,16 +12,16 @@ import { authenticate } from "../middlewares/authMiddleware";
 const router = Router();
 
 // CREATE
-router.post("/createComplaintType", authenticate(), createComplaintType);
+router.post("/complaint-types", authenticate(), createComplaintType);
 
 // READ
-router.get("/getAllComplaintTypes", authenticate(), getAllComplaintTypes);
-router.get("/getComplaintType/:id", authenticate(), getComplaintTypeById);
+router.get("/complaint-types", authenticate(), getAllComplaintTypes);
+router.get("/complaint-types/:id", authenticate(), getComplaintTypeById);
 
 // UPDATE
-router.put("/updateComplaintType/:id", authenticate(), updateComplaintType);
+router.put("/complaint-types/:id", authenticate(), updateComplaintType);
 
 // DELETE (soft delete)
-router.delete("/deleteComplaintType/:id", authenticate(), deleteComplaintType);
+router.delete("/complaint-types/:id", authenticate(), deleteComplaintType);
 
 export default router;

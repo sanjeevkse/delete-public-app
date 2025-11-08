@@ -35,11 +35,14 @@ import TelescopeException from "./TelescopeException";
 import TelescopeQuery from "./TelescopeQuery";
 import ComplaintType from "./ComplaintType";
 import ComplaintTypeStep from "./ComplaintTypeSteps";
+import Complaint from "./Complaint";
+import ComplaintMedia from "./ComplaintMedia";
 import MetaFieldType from "./MetaFieldType";
 import MetaInputFormat from "./MetaInputFormat";
 import Form from "./Form";
 import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
+
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -196,6 +199,26 @@ const establishAssociations = (): void => {
     foreignKey: "complaint_type_id",
     as: "complaintType"
   });
+
+    // Complaint associations
+  Complaint.belongsTo(ComplaintType, {
+    foreignKey: "complaintTypeId",
+    as: "complaintType"
+  });
+  ComplaintType.hasMany(Complaint, {
+    foreignKey: "complaintTypeId",
+    as: "complaints"
+  });
+
+  Complaint.hasMany(ComplaintMedia, {
+    foreignKey: "complaintId",
+    as: "media"
+  });
+  ComplaintMedia.belongsTo(Complaint, {
+    foreignKey: "complaintId",
+    as: "complaint"
+  });
+
   // UserAccess associations
   UserAccess.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(UserAccess, { foreignKey: "userId", as: "accessProfiles" });
