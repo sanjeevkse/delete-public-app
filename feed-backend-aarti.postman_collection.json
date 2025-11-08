@@ -754,7 +754,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"type": "text/javascript",
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"  pm.response.to.have.status(200);",
@@ -774,11 +773,24 @@
 									"    pm.collectionVariables.set(\"eventId\", first.id);",
 									"  }",
 									"}"
-								]
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1OTE0MDgsImV4cCI6MTc2MjU5NTAwOH0.GVPo8FZvUU1o9hMkVjwZ6ncf_fm61oNHIrOJNGdJBAk",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -787,7 +799,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
+							"raw": "{{baseUrl}}/api/events?limit=2",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -799,42 +811,49 @@
 								{
 									"key": "title",
 									"value": "cleanup",
-									"description": "Optional: filter by event title."
+									"description": "Optional: filter by event title.",
+									"disabled": true
 								},
 								{
 									"key": "place",
 									"value": "central",
-									"description": "Optional: filter by place substring."
+									"description": "Optional: filter by place substring.",
+									"disabled": true
 								},
 								{
 									"key": "startDateFrom",
 									"value": "2024-01-01",
-									"description": "Optional: start date lower bound (YYYY-MM-DD)."
+									"description": "Optional: start date lower bound (YYYY-MM-DD).",
+									"disabled": true
 								},
 								{
 									"key": "startDateTo",
 									"value": "2024-12-31",
-									"description": "Optional: start date upper bound (YYYY-MM-DD)."
+									"description": "Optional: start date upper bound (YYYY-MM-DD).",
+									"disabled": true
 								},
 								{
 									"key": "search",
 									"value": "community",
-									"description": "Optional: search term applied to title or description."
+									"description": "Optional: search term applied to title or description.",
+									"disabled": true
 								},
 								{
 									"key": "page",
 									"value": "1",
-									"description": "Optional: page number (defaults to 1)."
+									"description": "Optional: page number (defaults to 1).",
+									"disabled": true
 								},
 								{
 									"key": "limit",
-									"value": "20",
+									"value": "2",
 									"description": "Optional: page size up to 100 (defaults to 20)."
 								},
 								{
 									"key": "sort",
 									"value": "ASC",
-									"description": "Optional: sort direction for start date/time (ASC or DESC, defaults to ASC)."
+									"description": "Optional: sort direction for start date/time (ASC or DESC, defaults to ASC).",
+									"disabled": true
 								}
 							]
 						},
@@ -1388,6 +1407,53 @@
 							]
 						},
 						"description": "Lists registrations for a specific event, including registrant profile details. Use includeUnregistered=true to include soft-unregistered entries."
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0NDQ4MzYsImV4cCI6MTc2MjQ0ODQzNn0.BbHZmTgtwlSSWUzi2GjYJnC6KtECNWSrAJb6YfeoJe4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MzE1MDMsImV4cCI6MTc2MjQzNTEwM30.tEYMqE4ppxKSjE6Vsy55nvUEsXPOx5ryhRmYGVdY19Y"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Community Event\",\n  \"description\": \"Updated description for community event.\",\n  \"startDate\": \"2025-11-11\",\n  \"startTime\": \"10:00:00\",\n  \"endDate\": \"2025-11-11\",\n  \"endTime\": \"13:00:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pa-events/3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pa-events",
+								"3"
+							]
+						}
 					},
 					"response": []
 				}
@@ -4909,7 +4975,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MDk0NjIsImV4cCI6MTc2MjQxMzA2Mn0.wOARrEhbJESbpeJ5BQADlywBuirJGtoC36xGz7dX2Fw",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1OTE0MDgsImV4cCI6MTc2MjU5NTAwOH0.GVPo8FZvUU1o9hMkVjwZ6ncf_fm61oNHIrOJNGdJBAk",
 									"type": "string"
 								}
 							]
@@ -4934,6 +5000,21 @@
 								{
 									"key": "search",
 									"value": "Electricaly",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "sort",
+									"value": "ASC",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "1",
 									"disabled": true
 								}
 							]
@@ -4984,7 +5065,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MDk0NjIsImV4cCI6MTc2MjQxMzA2Mn0.wOARrEhbJESbpeJ5BQADlywBuirJGtoC36xGz7dX2Fw",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1ODM4NzcsImV4cCI6MTc2MjU4NzQ3N30.yvTL2w7wGyJlAqtxRZ59VrwfBkSIVoMqmmG0uqvrm_Q",
 									"type": "string"
 								}
 							]
@@ -5068,7 +5149,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MTMxODMsImV4cCI6MTc2MjQxNjc4M30.CmW-EFAdWWs3njUASmc89Qcbz6ueKWUrqCmltEacY1Y",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1ODc3NjcsImV4cCI6MTc2MjU5MTM2N30.vCHYkw5kGBkDhDfGyuZ22V5qG3gxLztvuuj9tn4UImg",
 									"type": "string"
 								}
 							]
@@ -5077,7 +5158,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjIzNDIyMjcsImV4cCI6MTc2MjM0NTgyN30.svB3mPoLMj-lflD_AnmlWNADZxIMd0tWrw8-lnGevh8"
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1ODc3NjcsImV4cCI6MTc2MjU5MTM2N30.vCHYkw5kGBkDhDfGyuZ22V5qG3gxLztvuuj9tn4UImg"
 							}
 						],
 						"body": {
@@ -5109,13 +5190,29 @@
 									"type": "text"
 								},
 								{
+									"key": "locationText",
+									"value": "Area 12, Main Street",
+									"type": "text"
+								},
+								{
+									"key": "latitude",
+									"value": "19.12345678",
+									"type": "text"
+								},
+								{
+									"key": "longitude",
+									"value": "72.98765432",
+									"type": "text"
+								},
+								{
+									"key": "landmark",
+									"value": "Near City Park",
+									"type": "text"
+								},
+								{
 									"key": "media",
 									"type": "file",
-									"src": [
-										"/C:/Users/sanke/Downloads/dummy_6.jpg8ed0eb08-e208-48e0-a1ae-9dc0805bcc6cZoom.jpg",
-										"/C:/Users/sanke/Downloads/dummy_6.jpg8ed0eb08-e208-48e0-a1ae-9dc0805bcc6cZoom.jpg",
-										"/C:/Users/sanke/Downloads/dummy_6.jpg8ed0eb08-e208-48e0-a1ae-9dc0805bcc6cZoom.jpg"
-									]
+									"src": "/C:/Users/sanke/Downloads/dummy_6.jpg8ed0eb08-e208-48e0-a1ae-9dc0805bcc6cZoom.jpg"
 								}
 							]
 						},
@@ -5140,7 +5237,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MTY4MzAsImV4cCI6MTc2MjQyMDQzMH0.SSRQxg3bmf5RoR9XWi7XJwVwzMPE5SQKwek25tzNJ2I",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1OTE0MDgsImV4cCI6MTc2MjU5NTAwOH0.GVPo8FZvUU1o9hMkVjwZ6ncf_fm61oNHIrOJNGdJBAk",
 									"type": "string"
 								}
 							]
@@ -5153,7 +5250,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/complaints?page=1&pageSize=10",
+							"raw": "{{baseUrl}}/api/complaints?limit=2",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -5164,11 +5261,17 @@
 							"query": [
 								{
 									"key": "page",
-									"value": "1"
+									"value": "3",
+									"disabled": true
 								},
 								{
-									"key": "pageSize",
-									"value": "10"
+									"key": "limit",
+									"value": "2"
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"disabled": true
 								}
 							]
 						}
@@ -5183,7 +5286,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MTY4MzAsImV4cCI6MTc2MjQyMDQzMH0.SSRQxg3bmf5RoR9XWi7XJwVwzMPE5SQKwek25tzNJ2I",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MzE3OTAsImV4cCI6MTc2MjQzNTM5MH0.ME6CWK4PIOBgrXrweW9_K4FUIpcBD0A1f0lhvBxtQsA",
 									"type": "string"
 								}
 							]
@@ -5196,14 +5299,14 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/complaints/8",
+							"raw": "{{baseUrl}}/api/complaints/13",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"complaints",
-								"8"
+								"13"
 							]
 						}
 					},
@@ -5217,7 +5320,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MTMxODMsImV4cCI6MTc2MjQxNjc4M30.CmW-EFAdWWs3njUASmc89Qcbz6ueKWUrqCmltEacY1Y",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1ODc3NjcsImV4cCI6MTc2MjU5MTM2N30.vCHYkw5kGBkDhDfGyuZ22V5qG3gxLztvuuj9tn4UImg",
 									"type": "string"
 								}
 							]
@@ -5226,7 +5329,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjIzNDIyMjcsImV4cCI6MTc2MjM0NTgyN30.svB3mPoLMj-lflD_AnmlWNADZxIMd0tWrw8-lnGevh8"
+								"value": "Bearer <TOKEN>"
 							}
 						],
 						"body": {
@@ -5253,21 +5356,41 @@
 									"type": "text"
 								},
 								{
-									"key": "media",
-									"type": "file",
-									"src": "/C:/Users/sanke/Downloads/signature (1).jpg"
+									"key": "locationText",
+									"value": "Main Street near park",
+									"type": "text"
+								},
+								{
+									"key": "latitude",
+									"value": "19.12345678",
+									"type": "text"
+								},
+								{
+									"key": "longitude",
+									"value": "72.98765432",
+									"type": "text"
+								},
+								{
+									"key": "landmark",
+									"value": "Near signal pole",
+									"type": "text"
+								},
+								{
+									"key": "priority",
+									"value": "HIGH",
+									"type": "text"
 								}
 							]
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/complaints/8",
+							"raw": "{{baseUrl}}/api/complaints/13",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"complaints",
-								"8"
+								"13"
 							]
 						}
 					},
@@ -5281,7 +5404,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MDk0NjIsImV4cCI6MTc2MjQxMzA2Mn0.wOARrEhbJESbpeJ5BQADlywBuirJGtoC36xGz7dX2Fw",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1OTE0MDgsImV4cCI6MTc2MjU5NTAwOH0.GVPo8FZvUU1o9hMkVjwZ6ncf_fm61oNHIrOJNGdJBAk",
 									"type": "string"
 								}
 							]
@@ -5301,7 +5424,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "1"
+									"value": "18"
 								}
 							]
 						}
@@ -5316,7 +5439,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MTY4MzAsImV4cCI6MTc2MjQyMDQzMH0.SSRQxg3bmf5RoR9XWi7XJwVwzMPE5SQKwek25tzNJ2I",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MzE3OTAsImV4cCI6MTc2MjQzNTM5MH0.ME6CWK4PIOBgrXrweW9_K4FUIpcBD0A1f0lhvBxtQsA",
 									"type": "string"
 								}
 							]
@@ -5339,14 +5462,14 @@
 							]
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/complaints/8/media",
+							"raw": "{{baseUrl}}/api/complaints/13/media",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"complaints",
-								"8",
+								"13",
 								"media"
 							]
 						}
@@ -5361,7 +5484,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MTY4MzAsImV4cCI6MTc2MjQyMDQzMH0.SSRQxg3bmf5RoR9XWi7XJwVwzMPE5SQKwek25tzNJ2I",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1OTE0MDgsImV4cCI6MTc2MjU5NTAwOH0.GVPo8FZvUU1o9hMkVjwZ6ncf_fm61oNHIrOJNGdJBAk",
 									"type": "string"
 								}
 							]
@@ -5379,7 +5502,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"mediaIds\": [16]\n  }",
+							"raw": "{\n    \"mediaIds\": [25]\n  }",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -5387,15 +5510,235 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/complaints/8/media",
+							"raw": "{{baseUrl}}/api/complaints/13/media",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"complaints",
-								"8",
+								"13",
 								"media"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "PA-Events",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1ODAyODIsImV4cCI6MTc2MjU4Mzg4Mn0.HBQnuFzZQHT576ApVHIdl07TfdMj8L8VuH9UxRWyEuU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <token>"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Community Clean-Up Drive\",\n    \"description\": \"Join us for a cleanliness drive in Rajajinagar.\",\n    \"startDate\": \"2025-11-10\",\n    \"startTime\": \"09:00:00\",\n    \"endDate\": \"2025-11-10\",\n    \"endTime\": \"12:00:00\"\n  }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pa-events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pa-events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "list",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI1ODc3NjcsImV4cCI6MTc2MjU5MTM2N30.vCHYkw5kGBkDhDfGyuZ22V5qG3gxLztvuuj9tn4UImg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MzE1MDMsImV4cCI6MTc2MjQzNTEwM30.tEYMqE4ppxKSjE6Vsy55nvUEsXPOx5ryhRmYGVdY19Y"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pa-events?limit=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pa-events"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "Update",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "1"
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Event-Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0NDQ4MzYsImV4cCI6MTc2MjQ0ODQzNn0.BbHZmTgtwlSSWUzi2GjYJnC6KtECNWSrAJb6YfeoJe4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MzE1MDMsImV4cCI6MTc2MjQzNTEwM30.tEYMqE4ppxKSjE6Vsy55nvUEsXPOx5ryhRmYGVdY19Y"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pa-events/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pa-events",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0NDQ4MzYsImV4cCI6MTc2MjQ0ODQzNn0.BbHZmTgtwlSSWUzi2GjYJnC6KtECNWSrAJb6YfeoJe4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0MzE1MDMsImV4cCI6MTc2MjQzNTEwM30.tEYMqE4ppxKSjE6Vsy55nvUEsXPOx5ryhRmYGVdY19Y"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Community Event\",\n  \"description\": \"Updated description for community event.\",\n  \"startDate\": \"2025-11-11\",\n  \"startTime\": \"10:00:00\",\n  \"endDate\": \"2025-11-11\",\n  \"endTime\": \"13:00:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pa-events/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pa-events",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjExLCJyb2xlcyI6WyJQdWJsaWMiXSwicGVybWlzc2lvbnMiOlsiKiJdLCJpYXQiOjE3NjI0NDQ4MzYsImV4cCI6MTc2MjQ0ODQzNn0.BbHZmTgtwlSSWUzi2GjYJnC6KtECNWSrAJb6YfeoJe4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": ""
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pa-events/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pa-events",
+								"2"
 							]
 						}
 					},

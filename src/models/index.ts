@@ -281,5 +281,6 @@ export {
   TelescopeException,
   TelescopeQuery,
   ComplaintType,
-  ComplaintTypeStep
+  ComplaintTypeStep,
+  ComplaintMedia
 };

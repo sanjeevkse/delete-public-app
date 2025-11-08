@@ -1,9 +1,9 @@
-import { Response } from "express";
+import type { Request, Response, Express } from "express";
 import { Op } from "sequelize";
 import asyncHandler from "../utils/asyncHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
-import { sendCreated, sendSuccess } from "../utils/apiResponse";
+import { sendCreated, sendSuccess, calculatePagination, sendSuccessWithPagination } from "../utils/apiResponse";
 import sequelize from "../config/database";
 import ComplaintType from "../models/ComplaintType";
 import ComplaintTypeStep from "../models/ComplaintTypeSteps";
@@ -70,25 +70,59 @@ export const createComplaintType = asyncHandler(async (req: AuthenticatedRequest
   return sendCreated(res, createdComplaintType, "Complaint Type created successfully");
 });
 
-export const getAllComplaintTypes = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { page = 1, pageSize = 10, search = "", status = 1 } = req.query as any;
+const parseSortDirection = (
+  value: unknown,
+  defaultDirection: "ASC" | "DESC" = "DESC"
+): "ASC" | "DESC" => {
+  if (typeof value !== "string") {
+    return defaultDirection;
+  }
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "ASC" || normalized === "DESC") {
+    return normalized;
+  }
+  return defaultDirection;
+};
 
-  const offset = (Number(page) - 1) * Number(pageSize);
+const PAGE_DEFAULT = 1;
+const LIMIT_DEFAULT = 10;
+const LIMIT_MAX = 100;
+
+const parsePagination = (req: Request) => {
+  const page = Number.parseInt((req.query.page as string) ?? `${PAGE_DEFAULT}`, 10);
+  const limit = Number.parseInt((req.query.limit as string) ?? `${LIMIT_DEFAULT}`, 10);
+
+  const safePage = Number.isNaN(page) || page <= 0 ? PAGE_DEFAULT : page;
+  const safeLimit = Number.isNaN(limit) || limit <= 0 ? LIMIT_DEFAULT : Math.min(limit, LIMIT_MAX);
+
+  return {
+    page: safePage,
+    limit: safeLimit,
+    offset: (safePage - 1) * safeLimit
+  };
+};
+
+export const getAllComplaintTypes = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { page, limit, offset } = parsePagination(req);
+  const sortDirection = parseSortDirection(req.query.sort, "ASC");
+
   const where: any = {};
 
-  // Filter by status
-  if (status !== undefined && status !== null && status !== "") {
-    where.status = Number(status);
+  const searchTerm = (req.query.search as string | undefined)?.trim();
+  const status = req.query.status ? Number(req.query.status) : 1;
+
+  if (typeof status === "number" && !Number.isNaN(status)) {
+    where.status = status;
   }
 
-  if (search) {
+  if (searchTerm) {
     where[Op.or] = [
-      { dispName: { [Op.like]: `%${search}%` } },
-      { description: { [Op.like]: `%${search}%` } }
+      { dispName: { [Op.like]: `%${searchTerm}%` } },
+      { description: { [Op.like]: `%${searchTerm}%` } },
     ];
   }
 
-  const rows = await ComplaintType.findAll({
+  const { rows, count } = await ComplaintType.findAndCountAll({
     where,
     attributes: { exclude: excludeFields },
     include: [
@@ -97,16 +131,25 @@ export const getAllComplaintTypes = asyncHandler(async (req: AuthenticatedReques
         as: "steps",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields }
-      }
+        attributes: [
+          "id",
+          ["disp_name", "name"],
+          "description",
+          "status",
+          ["step_order", "stepOrder"],
+          ["complaint_type_id", "complaintTypeId"],
+        ],
+        order: [["step_order", "ASC"]],
+      },
     ],
-    order: [["id", "ASC"]],
+    order: [["id", sortDirection]],
+    limit,
     offset,
-    limit: Number(pageSize)
+    distinct: true,
   });
 
   const data = rows.map((ct: any) => {
-    const ctJson = ct.toJSON ? ct.toJSON() : ct; 
+    const ctJson = ct.toJSON ? ct.toJSON() : ct;
     return {
       id: ctJson.id,
       dispName: ctJson.dispName,
@@ -115,29 +158,25 @@ export const getAllComplaintTypes = asyncHandler(async (req: AuthenticatedReques
       steps: Array.isArray(ctJson.steps)
         ? ctJson.steps.map((s: any) => ({
             id: s.id,
-            name: s.dispName,
+            name: s.name,
             description: s.description,
-            status: s.status,
+            // status: s.status,
+            stepOrder: s.stepOrder,
+            complaintTypeId: s.complaintTypeId,
           }))
         : [],
     };
   });
 
-  const pagination = {
-    page: Number(page),
-    limit: Number(pageSize),
-    total: data.length,
-    totalPages: 1
-  };
+  const pagination = calculatePagination(count, page, limit);
 
-  return res.json({
-    success: true,
+  return sendSuccessWithPagination(
+    res,
     data,
     pagination,
-    message: "Complaint Types fetched successfully"
-  });
+    data.length ? "Complaint Types fetched successfully" : "No complaint types found"
+  );
 });
-
 
 // ✅ GET Complaint Type By ID
 export const getComplaintTypeById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -151,8 +190,15 @@ export const getComplaintTypeById = asyncHandler(async (req: AuthenticatedReques
         as: "steps",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields }
-      }
+        attributes: [
+          ["id", "id"],
+          ["complaint_type_id", "complaintTypeId"],
+          ["step_order", "stepOrder"],
+          ["disp_name", "dispName"],
+          ["description", "description"],
+          ["status", "status"],
+        ],
+      },
     ]
   });
 

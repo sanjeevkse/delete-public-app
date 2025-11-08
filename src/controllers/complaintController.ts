@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
-import { sendSuccess, sendCreated } from "../utils/apiResponse";
+import { sendCreated, sendSuccess, calculatePagination, sendSuccessWithPagination } from "../utils/apiResponse";
 import { ApiError } from "../middlewares/errorHandler";
 import sequelize from "../config/database";
 import Complaint from "../models/Complaint";
@@ -116,20 +116,65 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
   return sendSuccess(res, complaintJson, "Complaint fetched successfully");
 });
 
-export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { page = 1, pageSize = 10, search, complaintTypeId, selfOther } = req.query as any;
+const parseSortDirection = (
+  value: unknown,
+  defaultDirection: "ASC" | "DESC" = "DESC"
+): "ASC" | "DESC" => {
+  if (typeof value !== "string") {
+    return defaultDirection;
+  }
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "ASC" || normalized === "DESC") {
+    return normalized;
+  }
+  return defaultDirection;
+};
 
-  const offset = (Number(page) - 1) * Number(pageSize);
+const PAGE_DEFAULT = 1;
+const LIMIT_DEFAULT = 10;
+const LIMIT_MAX = 100;
+
+const parsePagination = (req: Request) => {
+  const page = Number.parseInt((req.query.page as string) ?? `${PAGE_DEFAULT}`, 10);
+  const limit = Number.parseInt((req.query.limit as string) ?? `${LIMIT_DEFAULT}`, 10);
+
+  const safePage = Number.isNaN(page) || page <= 0 ? PAGE_DEFAULT : page;
+  const safeLimit = Number.isNaN(limit) || limit <= 0 ? LIMIT_DEFAULT : Math.min(limit, LIMIT_MAX);
+
+  return {
+    page: safePage,
+    limit: safeLimit,
+    offset: (safePage - 1) * safeLimit
+  };
+};
+
+export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { page, limit, offset } = parsePagination(req);
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+
   const where: any = { status: 1 };
 
-  if (search) where.title = { [Op.like]: `%${search}%` };
-  if (complaintTypeId) where.complaintTypeId = complaintTypeId;
-  if (selfOther) where.selfOther = selfOther;
+  const searchTerm = (req.query.search as string | undefined)?.trim();
+  const complaintTypeId = req.query.complaintTypeId ? Number(req.query.complaintTypeId) : undefined;
+  const selfOther = (req.query.selfOther as string | undefined)?.trim();
+
+  if (complaintTypeId && !Number.isNaN(complaintTypeId)) {
+    where.complaintTypeId = complaintTypeId;
+  }
+
+  if (selfOther) {
+    where.selfOther = selfOther;
+  }
+
+  if (searchTerm) {
+    where[Op.or] = [
+      { title: { [Op.like]: `%${searchTerm}%` } },
+      { description: { [Op.like]: `%${searchTerm}%` } },
+    ];
+  }
 
   const { rows, count } = await Complaint.findAndCountAll({
     where,
-    limit: Number(pageSize),
-    offset,
     attributes: { exclude: excludeFields },
     include: [
       {
@@ -138,18 +183,22 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         where: { status: 1 },
         required: false,
         attributes: {
-          exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"]
-        }
-      }
-    ]
+          exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"],
+        },
+      },
+    ],
+    order: [["id", sortDirection]],
+    limit,
+    offset,
+    distinct: true,
   });
 
-  const complaintsJSON = rows.map(c => c.toJSON());
-  const complaintTypeIds = [...new Set(complaintsJSON.map(c => c.complaintTypeId))];
+  const complaintsJSON = rows.map((c: any) => c.toJSON());
+  const complaintTypeIds = [...new Set(complaintsJSON.map((c: any) => c.complaintTypeId))];
 
   const types = await ComplaintType.findAll({
     where: { id: complaintTypeIds },
-    attributes: ["id", "dispName"]
+    attributes: ["id", "dispName"],
   });
 
   const typeMap = types.reduce((acc, t) => {
@@ -159,8 +208,8 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 
   const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
 
-  const data = complaintsJSON.map(c => {
-    const mediaRecords = Array.isArray((c as any).media) ? (c as any).media : [];
+  const data = complaintsJSON.map((c: any) => {
+    const mediaRecords = Array.isArray(c.media) ? c.media : [];
 
     const formattedMedia = mediaRecords.map((m: any) => {
       const makeFullUrl = (url: string | null) => {
@@ -171,31 +220,33 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       return {
         ...m,
         mediaUrl: makeFullUrl(m.mediaUrl),
-        thumbnailUrl: makeFullUrl(m.thumbnailUrl)
+        thumbnailUrl: makeFullUrl(m.thumbnailUrl),
       };
     });
 
-
     return {
-      ...c,
+      id: c.id,
+      selfOther: c.selfOther,
+      complaintTypeId: c.complaintTypeId,
+      title: c.title,
+      description: c.description,
+      locationText: c.locationText,
+      latitude: c.latitude,
+      longitude: c.longitude,
+      landmark: c.landmark,
+      media: formattedMedia,
       complaintType: typeMap[c.complaintTypeId] || null,
-      media: formattedMedia
     };
   });
 
-  const pagination = {
-    page: Number(page),
-    limit: Number(pageSize),
-    total: count,
-    totalPages: Math.ceil(count / Number(pageSize))
-  };
+  const pagination = calculatePagination(count, page, limit);
 
-  return res.json({
-    success: true,
+  return sendSuccessWithPagination(
+    res,
     data,
     pagination,
-    message: "Complaints listed successfully"
-  });
+    data.length ? "Complaints listed successfully" : "No complaints found"
+  );
 });
 
 export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -401,6 +452,20 @@ export const removeComplaintMedia = asyncHandler(async (req: AuthenticatedReques
     throw new ApiError("mediaIds must contain valid numeric identifiers", 400);
   }
 
+  // ✅ Validate that all provided media belong to this complaint
+  const existingMedia = await ComplaintMedia.findAll({
+    where: {
+      id: { [Op.in]: mediaIds },
+      complaintId,
+      status: 1,
+    },
+  });
+
+  if (existingMedia.length !== mediaIds.length) {
+    throw new ApiError("Invalid media for the complaint", 400);
+  }
+
+  // ✅ Proceed with deletion inside a transaction
   await sequelize.transaction(async (transaction) => {
     await ComplaintMedia.update(
       { status: 0, updatedBy: userId },
@@ -422,7 +487,6 @@ export const removeComplaintMedia = asyncHandler(async (req: AuthenticatedReques
         as: "media",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields },
       },
       {
         model: ComplaintType,
@@ -436,20 +500,26 @@ export const removeComplaintMedia = asyncHandler(async (req: AuthenticatedReques
     throw new ApiError("Complaint not found after update", 404);
   }
 
+  // ✅ Format clean response
   const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
   const complaintJson: any = updatedComplaint.toJSON();
 
   if (complaintJson?.media?.length) {
     complaintJson.media = complaintJson.media.map((m: any) => {
-      const formatUrl = (url: string | null) => {
-        if (!url) return null;
-        return url.startsWith(baseUrl) ? url : `${baseUrl}${url}`;
-      };
+      const formatUrl = (url: string | null) =>
+        !url ? null : url.startsWith(baseUrl) ? url : `${baseUrl}${url}`;
 
+      // return only essential fields
       return {
-        ...m,
+        id: m.id,
+        complaintId: m.complaintId,
+        mediaType: m.mediaType,
         mediaUrl: formatUrl(m.mediaUrl),
         thumbnailUrl: formatUrl(m.thumbnailUrl),
+        mimeType: m.mimeType,
+        durationSecond: m.durationSecond,
+        positionNumber: m.positionNumber,
+        caption: m.caption,
       };
     });
   }

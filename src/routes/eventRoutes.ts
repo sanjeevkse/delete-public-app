@@ -8,6 +8,7 @@ import {
   listEventRegistrations,
   registerForEvent,
   unregisterFromEvent,
+  unregisterRegistration,
   updateEvent,
   addEventMedia,
   removeEventMedia
@@ -28,5 +29,6 @@ router.delete("/events/:id/media", authenticate(), removeEventMedia);
 router.delete("/events/:id", authenticate(), deleteEvent);
 router.post("/events/:id/register", authenticate(), registerForEvent);
 router.post("/events/:id/unregister", authenticate(), unregisterFromEvent);
+router.delete("/registrations/:registrationId", authenticate(), unregisterRegistration);
 
 export default router;

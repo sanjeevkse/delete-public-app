@@ -35,7 +35,16 @@ const sequelize = new Sequelize(env.database.name, env.database.user, env.databa
   },
   logging: env.nodeEnv === "development" ? customLogger : false,
   benchmark: true, // Enable benchmark mode to get query timing
-  logQueryParameters: true // Log query parameters for better debugging
+  logQueryParameters: true, // Log query parameters for better debugging
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000, // Maximum time (ms) to acquire a connection
+    idle: 10000 // Maximum time (ms) a connection can be idle before being released
+  },
+  dialectOptions: {
+    connectTimeout: 10000 // Connection timeout in milliseconds
+  }
 });
 
 // Add Telescope query logging hook

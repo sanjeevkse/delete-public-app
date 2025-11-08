@@ -18,7 +18,11 @@ class EventRegistration extends Model<
 > {
   declare id: CreationOptional<number>;
   declare eventId: number;
-  declare userId: number;
+  declare userId: number | null;
+  declare guestName: CreationOptional<string | null>;
+  declare guestContactNumber: CreationOptional<string | null>;
+  declare guestEmail: CreationOptional<string | null>;
+  declare registeredBy: CreationOptional<number | null>;
   declare status: CreationOptional<number>;
   declare deregisterReason: CreationOptional<string | null>;
   declare deregisteredAt: CreationOptional<Date | null>;
@@ -45,7 +49,27 @@ EventRegistration.init(
     userId: {
       field: "user_id",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false
+      allowNull: true
+    },
+    guestName: {
+      field: "guest_name",
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    guestContactNumber: {
+      field: "guest_contact_number",
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    guestEmail: {
+      field: "guest_email",
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    registeredBy: {
+      field: "registered_by",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

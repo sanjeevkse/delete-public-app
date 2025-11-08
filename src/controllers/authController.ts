@@ -235,6 +235,23 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
+  const user = await User.findByPk(userId, {
+    include: [
+      { association: "profile" },
+      { association: "roles", include: [{ association: "permissions" }] }
+    ]
+  });
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  return sendSuccess(res, { user }, "Profile retrieved successfully");
+});
+
 export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 

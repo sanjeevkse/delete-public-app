@@ -13,8 +13,8 @@ class PaEvent extends Model<InferAttributes<PaEvent>, InferCreationAttributes<Pa
   declare description: string | null;
   declare startDate: Date;
   declare startTime: string;
-  declare endDate: Date | null;
-  declare endTime: string | null;
+  declare endDate: Date;
+  declare endTime: string;
   declare createdBy: number | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedBy: number | null;
@@ -49,12 +49,12 @@ PaEvent.init(
     },
     endDate: {
       type: DataTypes.DATEONLY,
-      allowNull: true,
+      allowNull: false,
       field: "end_date",
     },
     endTime: {
       type: DataTypes.TIME,
-      allowNull: true,
+      allowNull: false,
       field: "end_time",
     },
     createdBy: {

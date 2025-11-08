@@ -18,9 +18,10 @@ import mlaConstituencyRoutes from "./mlaConstituencyRoutes";
 import boothNumberRoutes from "./boothNumberRoutes";
 import complaintTypeRoutes from "./complainTypesRoutes";
 import schemeTypeRoutes from "./schemeTypeRoutes";
-import complaintRoutes from "./complaintRoutes"
+import complaintRoutes from "./complaintRoutes";
 import PaEventRoutes from "./PaEventRoutes";
 import formBuilderRoutes from "./formBuilderRoutes";
+import metaTablesRoutes from "./metaTablesRoutes";
 
 const router = Router();
 
@@ -49,6 +50,7 @@ router.use("/", schemeTypeRoutes);
 router.use("/", complaintRoutes);
 router.use("/", PaEventRoutes);
 router.use("/", formBuilderRoutes);
+router.use("/", metaTablesRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;
