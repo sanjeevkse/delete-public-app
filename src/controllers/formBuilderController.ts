@@ -17,9 +17,13 @@ import {
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaFieldType from "../models/MetaFieldType";
 import MetaInputFormat from "../models/MetaInputFormat";
+import MetaWardNumber from "../models/MetaWardNumber";
+import MetaBoothNumber from "../models/MetaBoothNumber";
 import Form from "../models/Form";
 import FormField from "../models/FormField";
 import FormFieldOption from "../models/FormFieldOption";
+import FormMapping from "../models/FormMapping";
+import UserProfile from "../models/UserProfile";
 import sequelize from "../config/database";
 
 type PaginationQuery = {
@@ -92,6 +96,53 @@ const ensureDateOrNull = (value: unknown, fieldName: string): Date | null => {
     throw new ApiError(`Invalid ${fieldName} value`, 400);
   }
   return date;
+};
+
+const ensureWardNumberExists = async (wardNumberId: number): Promise<void> => {
+  const wardNumber = await MetaWardNumber.findByPk(wardNumberId);
+  if (!wardNumber) {
+    throw new ApiError("Invalid wardNumberId", 400);
+  }
+};
+
+const ensureBoothNumberExists = async (boothNumberId: number): Promise<void> => {
+  const boothNumber = await MetaBoothNumber.findByPk(boothNumberId);
+  if (!boothNumber) {
+    throw new ApiError("Invalid boothNumberId", 400);
+  }
+};
+
+type NullableForeignKey = {
+  provided: boolean;
+  value: number | null;
+};
+
+const parseNullableForeignKey = (value: unknown, fieldName: string): NullableForeignKey => {
+  if (value === undefined) {
+    return { provided: false, value: null };
+  }
+
+  if (value === null || value === "") {
+    return { provided: true, value: null };
+  }
+
+  return { provided: true, value: ensureNumber(value, fieldName) };
+};
+
+const buildFormMappingWhere = (
+  wardNumberId: number | null,
+  boothNumberId: number | null
+): WhereOptions<Attributes<FormMapping>> | undefined => {
+  if (
+    boothNumberId === null ||
+    boothNumberId === undefined ||
+    wardNumberId === null ||
+    wardNumberId === undefined
+  ) {
+    return undefined;
+  }
+
+  return { boothNumberId, wardNumberId };
 };
 
 const loadFormOrThrow = async (formId: string | number): Promise<Form> => {
@@ -334,6 +385,22 @@ const formInclude: IncludeOptions[] = [
         association: "inputFormat",
         required: false,
         attributes: ["id", "fieldType", "dispName", "targetValue"]
+      }
+    ]
+  },
+  {
+    association: "mappings",
+    required: false,
+    include: [
+      {
+        association: "wardNumber",
+        required: false,
+        attributes: ["id", "dispName"]
+      },
+      {
+        association: "boothNumber",
+        required: false,
+        attributes: ["id", "dispName"]
       }
     ]
   }
@@ -587,13 +654,31 @@ export const deleteMetaInputFormat = asyncHandler(async (req: Request, res: Resp
 
 // Form Handlers
 
-export const listForms = asyncHandler(async (req: Request, res: Response) => {
+export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { page, limit, offset } = paginate(req.query);
   const search = (req.query.search as string) ?? "";
   const status = parseStatusFilter(req.query.status);
   const isPublic = parseBooleanLike(req.query.isPublic);
 
   const filters: WhereOptions<Attributes<Form>>[] = [];
+
+  const userId = req.user?.id;
+  if (!userId) {
+    throw new ApiError("Authentication required", 401);
+  }
+
+  const userProfile = await UserProfile.findOne({
+    where: { userId },
+    attributes: ["wardNumberId", "boothNumberId"]
+  });
+
+  const wardNumberId = userProfile?.wardNumberId ?? null;
+  const boothNumberId = userProfile?.boothNumberId ?? null;
+
+  if (wardNumberId === null || boothNumberId === null) {
+    const pagination = calculatePagination(0, page, limit);
+    return sendSuccessWithPagination(res, [], pagination, "Forms retrieved successfully");
+  }
 
   if (search) {
     filters.push({
@@ -609,14 +694,27 @@ export const listForms = asyncHandler(async (req: Request, res: Response) => {
     filters.push({ isPublic });
   }
 
+  const mappingWhere = buildFormMappingWhere(wardNumberId, boothNumberId);
+
   const where: WhereOptions<Attributes<Form>> | undefined =
     filters.length > 0 ? { [Op.and]: filters } : undefined;
+
+  const include = formInclude.map((includeItem) => {
+    if ("association" in includeItem && includeItem.association === "mappings") {
+      return {
+        ...includeItem,
+        required: mappingWhere !== undefined,
+        where: mappingWhere
+      };
+    }
+    return includeItem;
+  });
 
   const { rows, count } = await Form.findAndCountAll({
     where,
     limit,
     offset,
-    include: formInclude,
+    include,
     distinct: true,
     order: [
       ["createdAt", "DESC"],
@@ -661,7 +759,18 @@ export const getForm = asyncHandler(async (req: Request, res: Response) => {
 export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
 
-  const { title, description, slug, isPublic, startAt, endAt, fields, formFields } = req.body;
+  const {
+    title,
+    description,
+    slug,
+    isPublic,
+    startAt,
+    endAt,
+    fields,
+    formFields,
+    wardNumberId,
+    boothNumberId
+  } = req.body;
   const userId = req.user?.id ?? null;
 
   if (!title) {
@@ -681,6 +790,21 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const normalizedFields: FormFieldInput[] = shouldProcessFields
     ? (fieldsInput as FormFieldInput[])
     : [];
+
+  const wardNumberInput = parseNullableForeignKey(wardNumberId, "wardNumberId");
+  const boothNumberInput = parseNullableForeignKey(boothNumberId, "boothNumberId");
+
+  if (wardNumberInput.provided && wardNumberInput.value !== null) {
+    await ensureWardNumberExists(wardNumberInput.value);
+  }
+
+  if (boothNumberInput.provided && boothNumberInput.value !== null) {
+    await ensureBoothNumberExists(boothNumberInput.value);
+  }
+
+  const shouldCreateMapping =
+    (wardNumberInput.provided && wardNumberInput.value !== null) ||
+    (boothNumberInput.provided && boothNumberInput.value !== null);
 
   const form = await sequelize.transaction(async (transaction) => {
     const createdForm = await Form.create(
@@ -703,6 +827,19 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
         createdForm.id,
         userId ?? null,
         transaction
+      );
+    }
+
+    if (shouldCreateMapping) {
+      await FormMapping.create(
+        {
+          formId: createdForm.id,
+          wardNumberId: wardNumberInput.value,
+          boothNumberId: boothNumberInput.value,
+          createdBy: userId,
+          updatedBy: userId
+        },
+        { transaction }
       );
     }
 
@@ -743,7 +880,9 @@ export const updateForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     startAt,
     endAt,
     fields: _fields,
-    formFields: _formFields
+    formFields: _formFields,
+    wardNumberId,
+    boothNumberId
   } = req.body;
 
   const userId = req.user?.id ?? null;
@@ -770,7 +909,48 @@ export const updateForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     form.updatedBy = userId;
   }
 
+  const wardNumberInput = parseNullableForeignKey(wardNumberId, "wardNumberId");
+  const boothNumberInput = parseNullableForeignKey(boothNumberId, "boothNumberId");
+
+  if (wardNumberInput.provided && wardNumberInput.value !== null) {
+    await ensureWardNumberExists(wardNumberInput.value);
+  }
+
+  if (boothNumberInput.provided && boothNumberInput.value !== null) {
+    await ensureBoothNumberExists(boothNumberInput.value);
+  }
+
   await form.save();
+
+  if (wardNumberInput.provided || boothNumberInput.provided) {
+    const existingMapping = await FormMapping.findOne({ where: { formId: form.id } });
+    const nextWardNumberId = wardNumberInput.provided
+      ? wardNumberInput.value
+      : (existingMapping?.wardNumberId ?? null);
+    const nextBoothNumberId = boothNumberInput.provided
+      ? boothNumberInput.value
+      : (existingMapping?.boothNumberId ?? null);
+    const hasMappingValues = nextWardNumberId !== null || nextBoothNumberId !== null;
+
+    if (existingMapping) {
+      if (hasMappingValues) {
+        existingMapping.wardNumberId = nextWardNumberId;
+        existingMapping.boothNumberId = nextBoothNumberId;
+        existingMapping.updatedBy = userId ?? existingMapping.updatedBy;
+        await existingMapping.save();
+      } else {
+        await existingMapping.destroy();
+      }
+    } else if (hasMappingValues) {
+      await FormMapping.create({
+        formId: form.id,
+        wardNumberId: nextWardNumberId,
+        boothNumberId: nextBoothNumberId,
+        createdBy: userId,
+        updatedBy: userId
+      });
+    }
+  }
 
   sendSuccess(res, form, "Form updated successfully");
 });

@@ -3,7 +3,7 @@ import {
   DataTypes,
   CreationOptional,
   InferAttributes,
-  InferCreationAttributes,
+  InferCreationAttributes
 } from "sequelize";
 import sequelize from "../config/database";
 
@@ -29,76 +29,76 @@ Complaint.init(
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
-      primaryKey: true,
+      primaryKey: true
     },
     selfOther: {
       type: DataTypes.ENUM("SELF", "OTHER"),
       allowNull: false,
-      field: "self_other",
+      field: "self_other"
     },
     complaintTypeId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "complaint_type_id",
+      field: "complaint_type_id"
     },
     title: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: true
     },
     locationText: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      field: "location_text",
+      field: "location_text"
     },
     latitude: {
       type: DataTypes.DECIMAL(10, 8),
-      allowNull: true,
+      allowNull: true
     },
     longitude: {
       type: DataTypes.DECIMAL(11, 8),
-      allowNull: true,
+      allowNull: true
     },
     landmark: {
       type: DataTypes.STRING(255),
-      allowNull: true,
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,
       allowNull: false,
-      defaultValue: 1,
+      defaultValue: 1
     },
     createdBy: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true,
-      field: "created_by",
+      field: "created_by"
     },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: "created_at",
+      field: "created_at"
     },
     updatedBy: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true,
-      field: "updated_by",
+      field: "updated_by"
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: "updated_at",
-    },
+      field: "updated_at"
+    }
   },
   {
     sequelize,
     tableName: "tbl_complaint",
     modelName: "Complaint",
-    timestamps: false, // we handle createdAt/updatedAt manually
+    timestamps: false // we handle createdAt/updatedAt manually
   }
 );
 

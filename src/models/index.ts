@@ -42,7 +42,7 @@ import MetaInputFormat from "./MetaInputFormat";
 import Form from "./Form";
 import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
-
+import FormMapping from "./FormMapping";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -175,6 +175,20 @@ const establishAssociations = (): void => {
   });
   FormField.belongsTo(Form, { foreignKey: "formId", as: "form" });
 
+  Form.hasMany(FormMapping, {
+    foreignKey: "formId",
+    as: "mappings",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormMapping.belongsTo(Form, { foreignKey: "formId", as: "form" });
+
+  FormMapping.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
+  MetaWardNumber.hasMany(FormMapping, { foreignKey: "wardNumberId", as: "formMappings" });
+
+  FormMapping.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
+  MetaBoothNumber.hasMany(FormMapping, { foreignKey: "boothNumberId", as: "formMappings" });
+
   FormField.belongsTo(MetaFieldType, { foreignKey: "fieldTypeId", as: "fieldType" });
   MetaFieldType.hasMany(FormField, { foreignKey: "fieldTypeId", as: "formFields" });
 
@@ -200,7 +214,7 @@ const establishAssociations = (): void => {
     as: "complaintType"
   });
 
-    // Complaint associations
+  // Complaint associations
   Complaint.belongsTo(ComplaintType, {
     foreignKey: "complaintTypeId",
     as: "complaintType"

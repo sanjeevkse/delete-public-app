@@ -19,6 +19,8 @@ export const authenticate =
       throw new ApiError("Authorization header missing", 401);
     }
 
+    console.log(header);
+
     const match = header.match(/^(\S+)\s+(.+)$/);
     if (!match) {
       throw new ApiError("Invalid authorization header format", 401);

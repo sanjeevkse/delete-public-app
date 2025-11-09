@@ -2,19 +2,19 @@ import { Request, Response } from "express";
 import { Op } from "sequelize";
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
-import { sendCreated, sendSuccess, calculatePagination, sendSuccessWithPagination, sendValidationError } from "../utils/apiResponse";
+import {
+  sendCreated,
+  sendSuccess,
+  calculatePagination,
+  sendSuccessWithPagination,
+  sendValidationError
+} from "../utils/apiResponse";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import PaEvent from "../models/PaEvent";
 import sequelize from "../config/database";
 
 // ✅ Common exclude list
-const excludeFields = [
-  "createdBy",
-  "updatedBy",
-  "status",
-  "createdAt",
-  "updatedAt"
-];
+const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
 
 export const createPaEvent = asyncHandler(async (req: Request, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
@@ -36,7 +36,7 @@ export const createPaEvent = asyncHandler(async (req: Request, res: Response) =>
 
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
     return sendValidationError(res, "Invalid date format provided", [
-      { field: "startDate/endDate", message: "Please provide valid date strings (YYYY-MM-DD)" },
+      { field: "startDate/endDate", message: "Please provide valid date strings (YYYY-MM-DD)" }
     ]);
   }
 
@@ -49,7 +49,7 @@ export const createPaEvent = asyncHandler(async (req: Request, res: Response) =>
     endTime,
     createdBy: userId,
     updatedBy: userId,
-    status: 1,
+    status: 1
   });
 
   const responseData = Object.fromEntries(
@@ -65,9 +65,7 @@ const parseSortDirection = (
 ): "ASC" | "DESC" => {
   if (typeof value !== "string") return defaultDirection;
   const normalized = value.trim().toUpperCase();
-  return normalized === "ASC" || normalized === "DESC"
-    ? normalized
-    : defaultDirection;
+  return normalized === "ASC" || normalized === "DESC" ? normalized : defaultDirection;
 };
 
 const PAGE_DEFAULT = 1;
@@ -107,11 +105,11 @@ export const listPaEvents = asyncHandler(async (req: Request, res: Response) => 
     attributes: { exclude: excludeFields },
     order: [
       ["startDate", sortDirection],
-      ["startTime", sortDirection],
+      ["startTime", sortDirection]
     ],
     limit,
     offset,
-    distinct: true,
+    distinct: true
   });
 
   const pagination = calculatePagination(count, page, limit);
@@ -129,7 +127,7 @@ export const getPaEventById = asyncHandler(async (req: Request, res: Response) =
 
   const event = await PaEvent.findOne({
     where: { id, status: 1 },
-    attributes: { exclude: excludeFields },
+    attributes: { exclude: excludeFields }
   });
 
   if (!event) throw new ApiError("Event not found or inactive", 404);
@@ -140,15 +138,7 @@ export const getPaEventById = asyncHandler(async (req: Request, res: Response) =
 export const updatePaEvent = asyncHandler(async (req: Request, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
   const { id } = req.params;
-  const {
-    title,
-    description,
-    startDate,
-    startTime,
-    endDate,
-    endTime,
-    status,
-  } = req.body;
+  const { title, description, startDate, startTime, endDate, endTime, status } = req.body;
 
   const event = await PaEvent.findOne({ where: { id, status: 1 } });
   if (!event) throw new ApiError("Event not found or inactive", 404);
@@ -163,14 +153,14 @@ export const updatePaEvent = asyncHandler(async (req: Request, res: Response) =>
         endDate,
         endTime,
         status,
-        updatedBy: userId,
+        updatedBy: userId
       },
       { transaction }
     );
   });
 
   const updatedEvent = await PaEvent.findByPk(id, {
-    attributes: { exclude: excludeFields },
+    attributes: { exclude: excludeFields }
   });
 
   return sendSuccess(res, updatedEvent, "Event updated successfully");

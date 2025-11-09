@@ -56,8 +56,9 @@ export const UPLOAD_COUNTS = {
   },
   COMPLAINT: {
     MAX_IMAGES: 5,
-    MAX_VIDEOS: 2, 
-    MAX_TOTAL: 7 }
+    MAX_VIDEOS: 2,
+    MAX_TOTAL: 7
+  }
 } as const;
 
 // Allowed MIME types

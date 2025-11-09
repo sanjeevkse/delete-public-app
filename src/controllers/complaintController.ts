@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
-import { sendCreated, sendSuccess, calculatePagination, sendSuccessWithPagination } from "../utils/apiResponse";
+import {
+  sendCreated,
+  sendSuccess,
+  calculatePagination,
+  sendSuccessWithPagination
+} from "../utils/apiResponse";
 import { ApiError } from "../middlewares/errorHandler";
 import sequelize from "../config/database";
 import Complaint from "../models/Complaint";
@@ -17,7 +22,16 @@ const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updated
 
 export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
-  const { selfOther, complaintTypeId, title, description, locationText, latitude, longitude, landmark } = req.body;
+  const {
+    selfOther,
+    complaintTypeId,
+    title,
+    description,
+    locationText,
+    latitude,
+    longitude,
+    landmark
+  } = req.body;
 
   const mediaFiles = req.files as Express.Multer.File[] | undefined;
   const complaintType = await ComplaintType.findOne({ where: { id: complaintTypeId, status: 1 } });
@@ -169,7 +183,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
   if (searchTerm) {
     where[Op.or] = [
       { title: { [Op.like]: `%${searchTerm}%` } },
-      { description: { [Op.like]: `%${searchTerm}%` } },
+      { description: { [Op.like]: `%${searchTerm}%` } }
     ];
   }
 
@@ -183,14 +197,14 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         where: { status: 1 },
         required: false,
         attributes: {
-          exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"],
-        },
-      },
+          exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"]
+        }
+      }
     ],
     order: [["id", sortDirection]],
     limit,
     offset,
-    distinct: true,
+    distinct: true
   });
 
   const complaintsJSON = rows.map((c: any) => c.toJSON());
@@ -198,13 +212,16 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 
   const types = await ComplaintType.findAll({
     where: { id: complaintTypeIds },
-    attributes: ["id", "dispName"],
+    attributes: ["id", "dispName"]
   });
 
-  const typeMap = types.reduce((acc, t) => {
-    acc[t.id] = { id: t.id, dispName: t.dispName };
-    return acc;
-  }, {} as Record<number, { id: number; dispName: string }>);
+  const typeMap = types.reduce(
+    (acc, t) => {
+      acc[t.id] = { id: t.id, dispName: t.dispName };
+      return acc;
+    },
+    {} as Record<number, { id: number; dispName: string }>
+  );
 
   const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
 
@@ -220,7 +237,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       return {
         ...m,
         mediaUrl: makeFullUrl(m.mediaUrl),
-        thumbnailUrl: makeFullUrl(m.thumbnailUrl),
+        thumbnailUrl: makeFullUrl(m.thumbnailUrl)
       };
     });
 
@@ -235,7 +252,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       longitude: c.longitude,
       landmark: c.landmark,
       media: formattedMedia,
-      complaintType: typeMap[c.complaintTypeId] || null,
+      complaintType: typeMap[c.complaintTypeId] || null
     };
   });
 
@@ -320,7 +337,6 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   return sendSuccess(res, complaintJson, "Complaint updated successfully");
 });
 
-
 export const deleteComplaint = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
   const { id } = req.params;
@@ -347,17 +363,15 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
     throw new ApiError("Complaint not found", 404);
   }
 
-  const uploadedFiles = Array.isArray(req.files)
-    ? (req.files as Express.Multer.File[])
-    : [];
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : [];
 
   const media = [
     ...(req.body?.media ?? []),
     ...uploadedFiles.map((file) => ({
       mediaType: file.mimetype.startsWith("video") ? MediaType.VIDEO : MediaType.PHOTO,
       mediaUrl: `/uploads/complaints/${file.filename}`,
-      mimeType: file.mimetype,
-    })),
+      mimeType: file.mimetype
+    }))
   ];
 
   if (!media.length) {
@@ -365,11 +379,9 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
   }
 
   const existingMaxPosition = (await ComplaintMedia.max("positionNumber", {
-    where: { complaintId, status: 1 },
+    where: { complaintId, status: 1 }
   })) as number | null;
-  const startingPosition = Number.isFinite(existingMaxPosition ?? NaN)
-    ? existingMaxPosition!
-    : 0;
+  const startingPosition = Number.isFinite(existingMaxPosition ?? NaN) ? existingMaxPosition! : 0;
 
   await sequelize.transaction(async (transaction) => {
     await ComplaintMedia.bulkCreate(
@@ -382,7 +394,7 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
         positionNumber: startingPosition + index + 1,
         status: 1,
         createdBy: userId,
-        updatedBy: userId,
+        updatedBy: userId
       })),
       { transaction }
     );
@@ -395,14 +407,14 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
         as: "media",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields },
+        attributes: { exclude: excludeFields }
       },
       {
         model: ComplaintType,
         as: "complaintType",
-        attributes: ["id", "dispName"],
-      },
-    ],
+        attributes: ["id", "dispName"]
+      }
+    ]
   });
 
   const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
@@ -418,7 +430,7 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
       return {
         ...m,
         mediaUrl: formatUrl(m.mediaUrl),
-        thumbnailUrl: formatUrl(m.thumbnailUrl),
+        thumbnailUrl: formatUrl(m.thumbnailUrl)
       };
     });
   }
@@ -426,103 +438,105 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
   return sendCreated(res, complaintJson, "Media added to complaint successfully");
 });
 
-export const removeComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
+export const removeComplaintMedia = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id: userId } = requireAuthenticatedUser(req);
 
-  const complaintId = Number.parseInt(req.params.id, 10);
-  if (Number.isNaN(complaintId)) {
-    throw new ApiError("Invalid complaint id", 400);
-  }
+    const complaintId = Number.parseInt(req.params.id, 10);
+    if (Number.isNaN(complaintId)) {
+      throw new ApiError("Invalid complaint id", 400);
+    }
 
-  const complaint = await Complaint.findOne({ where: { id: complaintId, status: 1 } });
-  if (!complaint) {
-    throw new ApiError("Complaint not found", 404);
-  }
+    const complaint = await Complaint.findOne({ where: { id: complaintId, status: 1 } });
+    if (!complaint) {
+      throw new ApiError("Complaint not found", 404);
+    }
 
-  const mediaIdsInput = req.body?.mediaIds ?? req.body?.ids ?? req.body?.imageIds;
-  if (!Array.isArray(mediaIdsInput) || mediaIdsInput.length === 0) {
-    throw new ApiError("mediaIds must be a non-empty array", 400);
-  }
+    const mediaIdsInput = req.body?.mediaIds ?? req.body?.ids ?? req.body?.imageIds;
+    if (!Array.isArray(mediaIdsInput) || mediaIdsInput.length === 0) {
+      throw new ApiError("mediaIds must be a non-empty array", 400);
+    }
 
-  const mediaIds = mediaIdsInput
-    .map((v) => Number.parseInt(String(v), 10))
-    .filter((v) => Number.isInteger(v) && v > 0);
+    const mediaIds = mediaIdsInput
+      .map((v) => Number.parseInt(String(v), 10))
+      .filter((v) => Number.isInteger(v) && v > 0);
 
-  if (!mediaIds.length) {
-    throw new ApiError("mediaIds must contain valid numeric identifiers", 400);
-  }
+    if (!mediaIds.length) {
+      throw new ApiError("mediaIds must contain valid numeric identifiers", 400);
+    }
 
-  // ✅ Validate that all provided media belong to this complaint
-  const existingMedia = await ComplaintMedia.findAll({
-    where: {
-      id: { [Op.in]: mediaIds },
-      complaintId,
-      status: 1,
-    },
-  });
-
-  if (existingMedia.length !== mediaIds.length) {
-    throw new ApiError("Invalid media for the complaint", 400);
-  }
-
-  // ✅ Proceed with deletion inside a transaction
-  await sequelize.transaction(async (transaction) => {
-    await ComplaintMedia.update(
-      { status: 0, updatedBy: userId },
-      {
-        where: {
-          id: { [Op.in]: mediaIds },
-          complaintId,
-          status: 1,
-        },
-        transaction,
+    // ✅ Validate that all provided media belong to this complaint
+    const existingMedia = await ComplaintMedia.findAll({
+      where: {
+        id: { [Op.in]: mediaIds },
+        complaintId,
+        status: 1
       }
-    );
-  });
-
-  const updatedComplaint = await Complaint.findByPk(complaintId, {
-    include: [
-      {
-        model: ComplaintMedia,
-        as: "media",
-        where: { status: 1 },
-        required: false,
-      },
-      {
-        model: ComplaintType,
-        as: "complaintType",
-        attributes: ["id", "dispName"],
-      },
-    ],
-  });
-
-  if (!updatedComplaint) {
-    throw new ApiError("Complaint not found after update", 404);
-  }
-
-  // ✅ Format clean response
-  const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
-  const complaintJson: any = updatedComplaint.toJSON();
-
-  if (complaintJson?.media?.length) {
-    complaintJson.media = complaintJson.media.map((m: any) => {
-      const formatUrl = (url: string | null) =>
-        !url ? null : url.startsWith(baseUrl) ? url : `${baseUrl}${url}`;
-
-      // return only essential fields
-      return {
-        id: m.id,
-        complaintId: m.complaintId,
-        mediaType: m.mediaType,
-        mediaUrl: formatUrl(m.mediaUrl),
-        thumbnailUrl: formatUrl(m.thumbnailUrl),
-        mimeType: m.mimeType,
-        durationSecond: m.durationSecond,
-        positionNumber: m.positionNumber,
-        caption: m.caption,
-      };
     });
-  }
 
-  return sendSuccess(res, complaintJson, "Media removed from complaint successfully");
-});
+    if (existingMedia.length !== mediaIds.length) {
+      throw new ApiError("Invalid media for the complaint", 400);
+    }
+
+    // ✅ Proceed with deletion inside a transaction
+    await sequelize.transaction(async (transaction) => {
+      await ComplaintMedia.update(
+        { status: 0, updatedBy: userId },
+        {
+          where: {
+            id: { [Op.in]: mediaIds },
+            complaintId,
+            status: 1
+          },
+          transaction
+        }
+      );
+    });
+
+    const updatedComplaint = await Complaint.findByPk(complaintId, {
+      include: [
+        {
+          model: ComplaintMedia,
+          as: "media",
+          where: { status: 1 },
+          required: false
+        },
+        {
+          model: ComplaintType,
+          as: "complaintType",
+          attributes: ["id", "dispName"]
+        }
+      ]
+    });
+
+    if (!updatedComplaint) {
+      throw new ApiError("Complaint not found after update", 404);
+    }
+
+    // ✅ Format clean response
+    const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
+    const complaintJson: any = updatedComplaint.toJSON();
+
+    if (complaintJson?.media?.length) {
+      complaintJson.media = complaintJson.media.map((m: any) => {
+        const formatUrl = (url: string | null) =>
+          !url ? null : url.startsWith(baseUrl) ? url : `${baseUrl}${url}`;
+
+        // return only essential fields
+        return {
+          id: m.id,
+          complaintId: m.complaintId,
+          mediaType: m.mediaType,
+          mediaUrl: formatUrl(m.mediaUrl),
+          thumbnailUrl: formatUrl(m.thumbnailUrl),
+          mimeType: m.mimeType,
+          durationSecond: m.durationSecond,
+          positionNumber: m.positionNumber,
+          caption: m.caption
+        };
+      });
+    }
+
+    return sendSuccess(res, complaintJson, "Media removed from complaint successfully");
+  }
+);

@@ -52,7 +52,7 @@ router.delete("/form-input-formats/:id", authenticate(), deleteMetaInputFormat);
 /**
  * Form routes
  */
-router.get("/forms", listForms);
+router.get("/forms", authenticate(), listForms);
 router.get("/forms/:id", getForm);
 router.post("/forms", authenticate(), createForm);
 router.put("/forms/:id", authenticate(), updateForm);

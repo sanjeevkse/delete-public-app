@@ -4,7 +4,7 @@ import {
   listPaEvents,
   getPaEventById,
   updatePaEvent,
-  deletePaEvent,
+  deletePaEvent
 } from "../controllers/PaEventController";
 import { authenticate } from "../middlewares/authMiddleware";
 
