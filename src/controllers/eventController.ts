@@ -99,9 +99,9 @@ const REFERRED_BY_MAX_LENGTH = 45;
 type PlainEventRegistration = {
   eventId: number;
   userId: number | null;
-  guestName: string | null;
-  guestContactNumber: string | null;
-  guestEmail: string | null;
+  fullName: string | null;
+  contactNumber: string | null;
+  email: string | null;
   user?: {
     id: number;
     fullName: string | null;
@@ -123,13 +123,13 @@ type RegisteredAttendee = {
 };
 
 const toRegisteredAttendee = (registration: PlainEventRegistration): RegisteredAttendee | null => {
-  // Check if it's a guest registration
-  if (!registration.userId && registration.guestName) {
+  // Check if it's a guest registration (no userId)
+  if (!registration.userId && registration.fullName) {
     return {
       id: null,
-      fullName: registration.guestName,
-      email: registration.guestEmail,
-      contactNumber: registration.guestContactNumber,
+      fullName: registration.fullName,
+      email: registration.email,
+      contactNumber: registration.contactNumber,
       profileImageUrl: null,
       isGuest: true
     };
@@ -159,7 +159,7 @@ const loadRegisteredUsersForEventIds = async (
   }
 
   const registrations = await EventRegistration.findAll({
-    attributes: ["eventId", "userId", "guestName", "guestContactNumber", "guestEmail"],
+    attributes: ["eventId", "userId", "fullName", "contactNumber", "email"],
     where: {
       eventId: { [Op.in]: eventIds },
       status: 1
@@ -755,9 +755,9 @@ export const listEventRegistrations = asyncHandler(
           : null,
         guestDetails: isGuest
           ? {
-              name: registration.guestName,
-              contactNumber: registration.guestContactNumber,
-              email: registration.guestEmail
+              name: registration.fullName,
+              contactNumber: registration.contactNumber,
+              email: registration.email
             }
           : null
       };
@@ -1053,152 +1053,84 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     return sendBadRequest(res, "Event registration is only allowed during the event window");
   }
 
-  // Check if this is a guest registration or self registration
-  const { guestName, guestContactNumber, guestEmail } = req.body;
-  const isGuestRegistration = !!(guestName || guestContactNumber || guestEmail);
+  // Parse and validate all fields - fullName and contactNumber are mandatory
+  const parsedUserId = req.body.userId !== undefined && req.body.userId !== null && req.body.userId !== "" 
+    ? parseRequiredNumber(req.body.userId, "userId") 
+    : null;
+  
+  const parsedFullName = parseRequiredString(req.body.fullName, "fullName");
+  const parsedContactNumber = parseRequiredString(req.body.contactNumber, "contactNumber");
+  const parsedEmail = parseOptionalString(req.body.email, "email", 255);
+  const parsedRegisteredBy = parseOptionalString(req.body.registeredBy, "registeredBy");
+  const parsedFullAddress = parseOptionalString(req.body.fullAddress, "fullAddress");
+  const parsedWardNumberId = parseOptionalNumber(req.body.wardNumberId, "wardNumberId");
+  const parsedBoothNumberId = parseOptionalNumber(req.body.boothNumberId, "boothNumberId");
+  const parsedDateOfBirth = parseOptionalDateOnly(req.body.dateOfBirth, "dateOfBirth");
+  const parsedAge = parseOptionalNumber(req.body.age, "age");
 
-  let userId: number | null = null;
-  let registrationData: {
-    eventId: number;
-    userId: number | null;
-    guestName?: string | null;
-    guestContactNumber?: string | null;
-    guestEmail?: string | null;
-    registeredBy?: number | null;
-    status: number;
-    createdBy: number;
-    updatedBy: number;
-  };
+  // Check for existing registration - uniqueness by eventId + userId OR eventId + contactNumber
+  let existingRegistration = null;
 
-  if (isGuestRegistration) {
-    // Guest registration - validate guest details
-    if (!guestName || typeof guestName !== "string" || guestName.trim().length === 0) {
-      return sendBadRequest(res, "Guest name is required for guest registration");
-    }
-
-    if (
-      !guestContactNumber ||
-      typeof guestContactNumber !== "string" ||
-      guestContactNumber.trim().length === 0
-    ) {
-      return sendBadRequest(res, "Guest contact number is required for guest registration");
-    }
-
-    // Check for duplicate guest registration (same contact number for same event)
-    const existingGuestRegistration = await EventRegistration.findOne({
-      where: {
-        eventId,
-        guestContactNumber: guestContactNumber.trim(),
-        userId: null
-      }
+  if (parsedUserId) {
+    existingRegistration = await EventRegistration.findOne({
+      where: { eventId, userId: parsedUserId }
     });
-
-    if (existingGuestRegistration) {
-      if (existingGuestRegistration.status === 1) {
-        return sendConflict(res, "This guest is already registered for this event");
-      }
-
-      // Reactivate existing guest registration
-      await existingGuestRegistration.update({
-        guestName: guestName.trim(),
-        guestEmail: guestEmail && typeof guestEmail === "string" ? guestEmail.trim() : null,
-        status: 1,
-        deregisterReason: null,
-        deregisteredAt: null,
-        registeredBy: loggedInUserId,
-        updatedBy: loggedInUserId
-      });
-
-      return sendSuccess(
-        res,
-        {
-          id: existingGuestRegistration.id,
-          eventId: existingGuestRegistration.eventId,
-          isGuest: true,
-          guestDetails: {
-            name: existingGuestRegistration.guestName,
-            contactNumber: existingGuestRegistration.guestContactNumber,
-            email: existingGuestRegistration.guestEmail
-          }
-        },
-        "Guest registration reactivated"
-      );
-    }
-
-    registrationData = {
-      eventId,
-      userId: null,
-      guestName: guestName.trim(),
-      guestContactNumber: guestContactNumber.trim(),
-      guestEmail: guestEmail && typeof guestEmail === "string" ? guestEmail.trim() : null,
-      registeredBy: loggedInUserId,
-      status: 1,
-      createdBy: loggedInUserId,
-      updatedBy: loggedInUserId
-    };
-  } else {
-    // Self registration - use logged-in user's ID
-    userId = loggedInUserId;
-
-    const existingRegistration = await EventRegistration.findOne({
-      where: { eventId, userId }
+  } else if (parsedContactNumber) {
+    existingRegistration = await EventRegistration.findOne({
+      where: { eventId, contactNumber: parsedContactNumber, userId: null }
     });
-
-    if (existingRegistration) {
-      if (existingRegistration.status === 1) {
-        return sendConflict(res, "Already registered for this event");
-      }
-
-      await existingRegistration.update({
-        status: 1,
-        deregisterReason: null,
-        deregisteredAt: null,
-        updatedBy: userId
-      });
-
-      return sendSuccess(
-        res,
-        {
-          id: existingRegistration.id,
-          eventId: existingRegistration.eventId,
-          isGuest: false
-        },
-        "Registration reactivated"
-      );
-    }
-
-    registrationData = {
-      eventId,
-      userId,
-      status: 1,
-      createdBy: userId,
-      updatedBy: userId
-    };
   }
 
-  const registration = await EventRegistration.create(registrationData);
+  // Prepare registration data
+  const registrationData = {
+    eventId,
+    userId: parsedUserId,
+    fullName: parsedFullName,
+    contactNumber: parsedContactNumber,
+    email: parsedEmail,
+    registeredBy: parsedRegisteredBy,
+    fullAddress: parsedFullAddress,
+    wardNumberId: parsedWardNumberId,
+    boothNumberId: parsedBoothNumberId,
+    dateOfBirth: parsedDateOfBirth ? new Date(parsedDateOfBirth) : null,
+    age: parsedAge,
+    status: 1,
+    deregisterReason: null,
+    deregisteredAt: null,
+    createdBy: loggedInUserId,
+    updatedBy: loggedInUserId
+  };
 
-  const responseData = isGuestRegistration
-    ? {
-        id: registration.id,
-        eventId: registration.eventId,
-        isGuest: true,
-        guestDetails: {
-          name: registration.guestName,
-          contactNumber: registration.guestContactNumber,
-          email: registration.guestEmail
-        }
-      }
-    : {
-        id: registration.id,
-        eventId: registration.eventId,
-        isGuest: false
-      };
+  if (existingRegistration) {
+    if (existingRegistration.status === 1) {
+      return sendConflict(res, "Already registered for this event");
+    }
+
+    // Reactivate with new data
+    await existingRegistration.update(registrationData);
+
+    return sendSuccess(
+      res,
+      {
+        id: existingRegistration.id,
+        eventId: existingRegistration.eventId,
+        isGuest: !parsedUserId
+      },
+      "Registration reactivated"
+    );
+  }
+
+  // Create new registration
+  const registration = await EventRegistration.create(registrationData);
 
   return sendCreated(
     res,
-    responseData,
-    isGuestRegistration ? "Guest registered successfully" : "Registered successfully"
+    {
+      id: registration.id,
+      eventId: registration.eventId,
+      isGuest: !parsedUserId
+    },
+    "Registered successfully"
   );
 });
 
@@ -1281,10 +1213,13 @@ export const unregisterRegistration = asyncHandler(
     // Check if user has permission to unregister
     // They can unregister if:
     // 1. It's their own registration (userId matches), OR
-    // 2. It's a guest registration they created (registeredBy matches)
+    // 2. For guest registrations, check if registeredBy matches (if registeredBy is numeric)
     const canUnregister =
       (registration.userId !== null && registration.userId === userId) ||
-      (registration.userId === null && registration.registeredBy === userId);
+      (registration.userId === null && 
+        registration.registeredBy && 
+        !Number.isNaN(Number(registration.registeredBy)) &&
+        Number(registration.registeredBy) === userId);
 
     if (!canUnregister) {
       return sendForbidden(res, "You don't have permission to unregister this registration");

@@ -29,8 +29,8 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 
-// Exclude audit fields and status from API responses
-const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
+// Exclude only audit fields from API responses (keep status)
+const excludeFields = ["createdBy", "updatedBy", "createdAt", "updatedAt"];
 
 // Define meta table configuration
 interface MetaTableConfig {
@@ -44,6 +44,68 @@ interface MetaTableConfig {
   hasStatus?: boolean;
   customIncludes?: any[];
 }
+
+/**
+ * Get all fields from a model excluding audit fields
+ */
+const getAllFields = (model: ModelStatic<any>): string[] => {
+  const attributes = Object.keys(model.getAttributes());
+  return attributes.filter((attr) => !excludeFields.includes(attr));
+};
+
+/**
+ * Get field metadata including relation information
+ */
+const getFieldsWithRelations = (model: ModelStatic<any>, config: MetaTableConfig) => {
+  const attributes = model.getAttributes();
+  const fields: any[] = [];
+
+  for (const [fieldName, attribute] of Object.entries(attributes)) {
+    // Skip audit fields
+    if (excludeFields.includes(fieldName)) {
+      continue;
+    }
+
+    const fieldInfo: any = {
+      name: fieldName,
+      type: (attribute as any).type?.constructor?.name || "unknown"
+    };
+
+    // Check if this field has a reference (foreign key)
+    const references = (attribute as any).references;
+    if (references && references.model) {
+      fieldInfo.isForeignKey = true;
+      fieldInfo.references = {
+        table: references.model,
+        key: references.key
+      };
+
+      // Try to find the association name from model.associations
+      if (model.associations) {
+        for (const [assocName, association] of Object.entries(model.associations)) {
+          if ((association as any).foreignKey === fieldName) {
+            fieldInfo.associationName = assocName;
+
+            // If there's a customInclude for this association, it will have the dispName included
+            if (config.customIncludes) {
+              const hasCustomInclude = config.customIncludes.some(
+                (inc: any) => inc.association === assocName
+              );
+              if (hasCustomInclude) {
+                fieldInfo.includesRelationData = true;
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    fields.push(fieldInfo);
+  }
+
+  return fields;
+};
 
 // Registry of all meta tables
 const META_TABLES: Record<string, MetaTableConfig> = {
@@ -137,7 +199,13 @@ const META_TABLES: Record<string, MetaTableConfig> = {
     description: "User role definitions",
     primaryKey: "id",
     searchableFields: ["dispName", "name"],
-    hasStatus: true
+    hasStatus: true,
+    customIncludes: [
+      {
+        association: "parentRole",
+        attributes: ["id", "dispName"]
+      }
+    ]
   },
   wardNumber: {
     name: "wardNumber",
@@ -208,8 +276,9 @@ export const listMetaTables = asyncHandler(async (_req: Request, res: Response) 
     displayName: config.displayName,
     description: config.description,
     primaryKey: config.primaryKey,
-    searchableFields: config.searchableFields,
-    hasStatus: config.hasStatus
+    allFields: getAllFields(config.model),
+    fieldsWithRelations: getFieldsWithRelations(config.model, config),
+    searchableFields: config.searchableFields
   }));
 
   sendSuccess(res, tables, "Meta tables retrieved successfully");

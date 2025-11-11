@@ -5,6 +5,7 @@ interface MetaBoothNumberAttributes {
   id: number;
   mlaConstituencyId: number;
   dispName: string;
+  description?: string | null;
   status: number;
   createdBy?: number;
   updatedBy?: number;
@@ -22,6 +23,7 @@ class MetaBoothNumber
   public id!: number;
   public mlaConstituencyId!: number;
   public dispName!: string;
+  public description?: string | null;
   public status!: number;
   public createdBy?: number;
   public updatedBy?: number;
@@ -49,6 +51,10 @@ MetaBoothNumber.init(
       type: DataTypes.STRING(100),
       allowNull: false,
       field: "disp_name"
+    },
+    description: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

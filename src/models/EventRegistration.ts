@@ -19,10 +19,15 @@ class EventRegistration extends Model<
   declare id: CreationOptional<number>;
   declare eventId: number;
   declare userId: number | null;
-  declare guestName: CreationOptional<string | null>;
-  declare guestContactNumber: CreationOptional<string | null>;
-  declare guestEmail: CreationOptional<string | null>;
-  declare registeredBy: CreationOptional<number | null>;
+  declare fullName: CreationOptional<string | null>;
+  declare contactNumber: CreationOptional<string | null>;
+  declare email: CreationOptional<string | null>;
+  declare registeredBy: CreationOptional<string | null>;
+  declare fullAddress: CreationOptional<string | null>;
+  declare wardNumberId: CreationOptional<number | null>;
+  declare boothNumberId: CreationOptional<number | null>;
+  declare dateOfBirth: CreationOptional<Date | null>;
+  declare age: CreationOptional<number | null>;
   declare status: CreationOptional<number>;
   declare deregisterReason: CreationOptional<string | null>;
   declare deregisteredAt: CreationOptional<Date | null>;
@@ -51,24 +56,49 @@ EventRegistration.init(
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },
-    guestName: {
-      field: "guest_name",
+    fullName: {
+      field: "full_name",
       type: DataTypes.STRING(255),
       allowNull: true
     },
-    guestContactNumber: {
-      field: "guest_contact_number",
+    contactNumber: {
+      field: "contact_number",
       type: DataTypes.STRING(20),
       allowNull: true
     },
-    guestEmail: {
-      field: "guest_email",
+    email: {
+      field: "email",
       type: DataTypes.STRING(255),
       allowNull: true
     },
     registeredBy: {
       field: "registered_by",
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    fullAddress: {
+      field: "full_address",
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    wardNumberId: {
+      field: "ward_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    boothNumberId: {
+      field: "booth_number_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    dateOfBirth: {
+      field: "date_of_birth",
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    age: {
+      field: "age",
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
     status: {
