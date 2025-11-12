@@ -17,6 +17,14 @@ import MetaSchemeType from "../models/MetaSchemeType";
 import MetaSchemeTypeStep from "../models/MetaSchemeTypeStep";
 import MetaFieldType from "../models/MetaFieldType";
 import MetaInputFormat from "../models/MetaInputFormat";
+import MetaGovernmentLevel from "../models/MetaGovernmentLevel";
+import MetaSector from "../models/MetaSector";
+import MetaSchemeTypeLookup from "../models/MetaSchemeTypeLookup";
+import MetaOwnershipType from "../models/MetaOwnershipType";
+import MetaGenderOption from "../models/MetaGenderOption";
+import MetaWidowStatus from "../models/MetaWidowStatus";
+import MetaDisabilityStatus from "../models/MetaDisabilityStatus";
+import MetaEmploymentStatus from "../models/MetaEmploymentStatus";
 import asyncHandler from "../utils/asyncHandler";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
@@ -242,6 +250,86 @@ const META_TABLES: Record<string, MetaTableConfig> = {
         attributes: ["id", "dispName"]
       }
     ]
+  },
+  governmentLevel: {
+    name: "governmentLevel",
+    tableName: "meta_government_levels",
+    displayName: "Government Levels",
+    model: MetaGovernmentLevel,
+    description: "Government hierarchy levels for scheme eligibility (e.g., State, Central).",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  sector: {
+    name: "sector",
+    tableName: "meta_sectors",
+    displayName: "Sectors",
+    model: MetaSector,
+    description: "Sectors associated with schemes (public, private, etc.).",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  schemeTypeLookup: {
+    name: "schemeTypeLookup",
+    tableName: "meta_scheme_type_lookup",
+    displayName: "Scheme Type Lookup",
+    model: MetaSchemeTypeLookup,
+    description: "Meta list that powers the scheme type dropdown for user applications.",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  ownershipType: {
+    name: "ownershipType",
+    tableName: "meta_ownership_types",
+    displayName: "Ownership Types",
+    model: MetaOwnershipType,
+    description: "Property ownership categories for applicant residences.",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  genderOption: {
+    name: "genderOption",
+    tableName: "meta_gender_options",
+    displayName: "Gender Options",
+    model: MetaGenderOption,
+    description: "Allowed gender selections for applications.",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  widowStatus: {
+    name: "widowStatus",
+    tableName: "meta_widow_statuses",
+    displayName: "Widow Status",
+    model: MetaWidowStatus,
+    description: "Widow/Widower response options.",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  disabilityStatus: {
+    name: "disabilityStatus",
+    tableName: "meta_disability_statuses",
+    displayName: "Disability Status",
+    model: MetaDisabilityStatus,
+    description: "Disability declaration options used in scheme applications.",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
+  },
+  employmentStatus: {
+    name: "employmentStatus",
+    tableName: "meta_employment_statuses",
+    displayName: "Employment Status",
+    model: MetaEmploymentStatus,
+    description: "Employment status choices (employed, student, unemployed, etc.).",
+    primaryKey: "id",
+    searchableFields: ["dispName"],
+    hasStatus: true
   },
   fieldType: {
     name: "fieldType",

@@ -54,6 +54,9 @@ export const UPLOAD_COUNTS = {
   JOB: {
     MAX_RESUMES: 1
   },
+  SCHEME_APPLICATION: {
+    MAX_DOCUMENTS: 5 // Mirror event MAX_TOTAL limit
+  },
   COMPLAINT: {
     MAX_IMAGES: 5,
     MAX_VIDEOS: 2,
@@ -78,7 +81,8 @@ export const UPLOAD_MODULES = {
   EVENTS: "events",
   PROFILE: "profile",
   JOBS: "jobs",
-  COMPLAINTS: "complaints"
+  COMPLAINTS: "complaints",
+  SCHEME_APPLICATIONS: "scheme-applications"
 } as const;
 
 // Asset types within modules
@@ -86,5 +90,6 @@ export const ASSET_TYPES = {
   MEDIA: "media",
   IMAGES: "images",
   VIDEOS: "videos",
-  RESUMES: "resumes"
+  RESUMES: "resumes",
+  DOCUMENTS: "documents"
 } as const;

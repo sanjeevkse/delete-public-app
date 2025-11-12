@@ -2608,6 +2608,427 @@
       ]
     },
     {
+      "name": "User Scheme Applications",
+      "item": [
+        {
+          "name": "List Scheme Applications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains data array\", function () {",
+                  "  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+                  "});",
+                  "pm.test(\"Response contains pagination\", function () {",
+                  "  pm.expect(jsonData && jsonData.pagination).to.exist;",
+                  "});",
+                  "if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+                  "  var first = jsonData.data[0];",
+                  "  if (first && first.id) {",
+                  "    pm.collectionVariables.set(\"schemeApplicationId\", first.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-applications?status=1&applicantType=SELF&schemeId={{schemeId}}&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scheme-applications"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Optional: filter by status (1 active, 0 soft-deleted)."
+                },
+                {
+                  "key": "applicantType",
+                  "value": "SELF",
+                  "description": "Optional: SELF or OTHERS."
+                },
+                {
+                  "key": "schemeId",
+                  "value": "{{schemeId}}",
+                  "description": "Optional: limit to a single scheme id.",
+                  "disabled": true
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "1",
+                  "description": "Optional: filter by ward mapping.",
+                  "disabled": true
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "1",
+                  "description": "Optional: filter by booth mapping.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Arjunan",
+                  "description": "Optional: fuzzy search across applicant name, phone, voter id, aadhaar.",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Page size up to 100 (default 20)."
+                }
+              ]
+            },
+            "description": "Lists user scheme applications with pagination, meta-table filters, and fuzzy search. Each record returns both the foreign key ids and expanded metadata objects (scheme, ward, booth, governmentLevel, sector, schemeType, ownershipType, genderOption, widowStatus, disabilityStatus, employmentStatus)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scheme Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Application id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scheme-applications", "{{schemeApplicationId}}"]
+            },
+            "description": "Retrieves a single active application. The response includes related metadata objects for scheme, ward, booth, governmentLevel, sector, schemeType, ownershipType, genderOption, widowStatus, disabilityStatus, employmentStatus, plus reviewer/applicant summaries."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Scheme Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "if (jsonData && jsonData.data && jsonData.data.id) {",
+                  "  pm.collectionVariables.set(\"schemeApplicationId\", jsonData.data.id);",
+                  "}",
+                  "pm.test(\"schemeApplicationId stored\", function () {",
+                  "  pm.expect(pm.collectionVariables.get(\"schemeApplicationId\")).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "schemeId",
+                  "value": "{{schemeId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "applicantType",
+                  "value": "SELF",
+                  "type": "text"
+                },
+                {
+                  "key": "applicantName",
+                  "value": "Arjunan",
+                  "type": "text"
+                },
+                {
+                  "key": "mobilePrimary",
+                  "value": "+919876543210",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "applicant@example.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "addressLine",
+                  "value": "12th Cross, Malleshwaram, Bangalore",
+                  "type": "text"
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "governmentLevelId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "sectorId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "schemeTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "ownershipTypeId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "genderOptionId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "widowStatusId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "disabilityStatusId",
+                  "value": "2",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "educationLevel",
+                  "value": "Bachelor of Arts",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "employmentStatusId",
+                  "value": "1",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "termsAccepted",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "document",
+                  "type": "file",
+                  "src": "/absolute/path/to/supporting-document.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-applications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scheme-applications"]
+            },
+            "description": "Submits a new scheme application with the mandatory document upload. Provide the ids from the relevant meta tables (governmentLevel, sector, schemeTypeLookup, etc.)."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Scheme Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Application id returned\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "applicantName",
+                  "value": "Arjunan Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "mobilePrimary",
+                  "value": "+919111223344",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentStatusId",
+                  "value": "2",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "termsAccepted",
+                  "value": "true",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "document",
+                  "type": "file",
+                  "src": "/absolute/path/to/new-supporting-document.pdf",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scheme-applications", "{{schemeApplicationId}}"]
+            },
+            "description": "Updates mutable fields on an application. Status/audit columns remain server managed. Attach a new document to replace the existing file."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scheme Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204\", function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scheme-applications", "{{schemeApplicationId}}"]
+            },
+            "description": "Soft deletes the application (status=0)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Members",
       "item": [
         {
@@ -5036,7 +5457,8 @@
               "raw": "{{baseUrl}}/api/meta-tables",
               "host": ["{{baseUrl}}"],
               "path": ["api", "meta-tables"]
-            }
+            },
+            "description": "Returns metadata describing every manageable lookup table. Newly added entries include `governmentLevel`, `sector`, `schemeTypeLookup`, `ownershipType`, `genderOption`, `widowStatus`, `disabilityStatus`, and `employmentStatus` in addition to existing meta tables. Use the `name` value from this response with the other `/meta-tables/:tableName/*` endpoints."
           },
           "response": []
         },
@@ -5471,6 +5893,14 @@
     },
     {
       "key": "roleId",
+      "value": ""
+    },
+    {
+      "key": "schemeId",
+      "value": ""
+    },
+    {
+      "key": "schemeApplicationId",
       "value": ""
     },
     {

@@ -18,12 +18,21 @@ import MetaUserRole from "./MetaUserRole";
 import MetaWardNumber from "./MetaWardNumber";
 import MetaSchemeType from "./MetaSchemeType";
 import MetaSchemeTypeStep from "./MetaSchemeTypeStep";
+import MetaGovernmentLevel from "./MetaGovernmentLevel";
+import MetaSector from "./MetaSector";
+import MetaSchemeTypeLookup from "./MetaSchemeTypeLookup";
+import MetaOwnershipType from "./MetaOwnershipType";
+import MetaGenderOption from "./MetaGenderOption";
+import MetaWidowStatus from "./MetaWidowStatus";
+import MetaDisabilityStatus from "./MetaDisabilityStatus";
+import MetaEmploymentStatus from "./MetaEmploymentStatus";
 import Job from "./Job";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
 import PostReaction from "./PostReaction";
 import RolePermission from "./RolePermission";
 import Scheme from "./Scheme";
+import UserSchemeApplication from "./UserSchemeApplication";
 import User from "./User";
 import UserAccess from "./UserAccess";
 import UserOtp from "./UserOtp";
@@ -147,6 +156,99 @@ const establishAssociations = (): void => {
 
   Job.belongsTo(User, { foreignKey: "applicantUserId", as: "applicant" });
   User.hasMany(Job, { foreignKey: "applicantUserId", as: "jobApplications" });
+
+  UserSchemeApplication.belongsTo(Scheme, { foreignKey: "schemeId", as: "scheme" });
+  Scheme.hasMany(UserSchemeApplication, { foreignKey: "schemeId", as: "applications" });
+
+  UserSchemeApplication.belongsTo(User, { foreignKey: "applicantUserId", as: "applicant" });
+  User.hasMany(UserSchemeApplication, {
+    foreignKey: "applicantUserId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(User, { foreignKey: "reviewerUserId", as: "reviewer" });
+  User.hasMany(UserSchemeApplication, {
+    foreignKey: "reviewerUserId",
+    as: "reviewedSchemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
+  MetaWardNumber.hasMany(UserSchemeApplication, {
+    foreignKey: "wardNumberId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
+  MetaBoothNumber.hasMany(UserSchemeApplication, {
+    foreignKey: "boothNumberId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaGovernmentLevel, {
+    foreignKey: "governmentLevelId",
+    as: "governmentLevel"
+  });
+  MetaGovernmentLevel.hasMany(UserSchemeApplication, {
+    foreignKey: "governmentLevelId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaSector, { foreignKey: "sectorId", as: "sector" });
+  MetaSector.hasMany(UserSchemeApplication, { foreignKey: "sectorId", as: "schemeApplications" });
+
+  UserSchemeApplication.belongsTo(MetaSchemeTypeLookup, {
+    foreignKey: "schemeTypeId",
+    as: "schemeType"
+  });
+  MetaSchemeTypeLookup.hasMany(UserSchemeApplication, {
+    foreignKey: "schemeTypeId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaOwnershipType, {
+    foreignKey: "ownershipTypeId",
+    as: "ownershipType"
+  });
+  MetaOwnershipType.hasMany(UserSchemeApplication, {
+    foreignKey: "ownershipTypeId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaGenderOption, {
+    foreignKey: "genderOptionId",
+    as: "genderOption"
+  });
+  MetaGenderOption.hasMany(UserSchemeApplication, {
+    foreignKey: "genderOptionId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaWidowStatus, {
+    foreignKey: "widowStatusId",
+    as: "widowStatus"
+  });
+  MetaWidowStatus.hasMany(UserSchemeApplication, {
+    foreignKey: "widowStatusId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaDisabilityStatus, {
+    foreignKey: "disabilityStatusId",
+    as: "disabilityStatus"
+  });
+  MetaDisabilityStatus.hasMany(UserSchemeApplication, {
+    foreignKey: "disabilityStatusId",
+    as: "schemeApplications"
+  });
+
+  UserSchemeApplication.belongsTo(MetaEmploymentStatus, {
+    foreignKey: "employmentStatusId",
+    as: "employmentStatus"
+  });
+  MetaEmploymentStatus.hasMany(UserSchemeApplication, {
+    foreignKey: "employmentStatusId",
+    as: "schemeApplications"
+  });
 
   User.hasOne(UserProfile, { foreignKey: "userId", as: "profile" });
   UserProfile.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -280,6 +382,14 @@ export {
   MetaWardNumber,
   MetaSchemeType,
   MetaSchemeTypeStep,
+  MetaGovernmentLevel,
+  MetaSector,
+  MetaSchemeTypeLookup,
+  MetaOwnershipType,
+  MetaGenderOption,
+  MetaWidowStatus,
+  MetaDisabilityStatus,
+  MetaEmploymentStatus,
   Post,
   PostMedia,
   PostReaction,
@@ -296,5 +406,6 @@ export {
   TelescopeQuery,
   ComplaintType,
   ComplaintTypeStep,
-  ComplaintMedia
+  ComplaintMedia,
+  UserSchemeApplication
 };

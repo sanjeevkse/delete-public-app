@@ -22,6 +22,7 @@ import complaintRoutes from "./complaintRoutes";
 import PaEventRoutes from "./PaEventRoutes";
 import formBuilderRoutes from "./formBuilderRoutes";
 import metaTablesRoutes from "./metaTablesRoutes";
+import userSchemeApplicationRoutes from "./userSchemeApplicationRoutes";
 
 const router = Router();
 
@@ -35,6 +36,7 @@ router.use("/", postRoutes);
 router.use("/", eventRoutes);
 router.use("/", jobRoutes);
 router.use("/", schemeRoutes);
+router.use("/", userSchemeApplicationRoutes);
 router.use("/", memberRoutes);
 router.use("/", communityTypeRoutes);
 router.use("/", communityRoutes);
