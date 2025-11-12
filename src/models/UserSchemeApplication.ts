@@ -26,9 +26,10 @@ import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/pho
 export const USER_SCHEME_APPLICANT_TYPES = ["SELF", "OTHERS"] as const;
 export type UserSchemeApplicantType = (typeof USER_SCHEME_APPLICANT_TYPES)[number];
 
-class UserSchemeApplication
-  extends Model<InferAttributes<UserSchemeApplication>, InferCreationAttributes<UserSchemeApplication>>
-{
+class UserSchemeApplication extends Model<
+  InferAttributes<UserSchemeApplication>,
+  InferCreationAttributes<UserSchemeApplication>
+> {
   declare id: CreationOptional<number>;
   declare schemeId: number;
   declare applicantUserId: CreationOptional<number | null>;

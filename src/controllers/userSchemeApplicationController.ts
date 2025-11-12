@@ -286,7 +286,10 @@ const ensureBoothExists = async (boothNumberId: number | null): Promise<number |
 };
 
 type MetaModel = {
-  findOne: (options: { where: { id: number; status: number }; attributes: string[] }) => Promise<any>;
+  findOne: (options: {
+    where: { id: number; status: number };
+    attributes: string[];
+  }) => Promise<any>;
 };
 
 const ensureActiveMetaRecord = async (
@@ -346,7 +349,9 @@ const normalizeApplicationPayload = async (
   const schemeId = parsePositiveInt(schemeIdInput, "schemeId");
   await ensureSchemeExists(schemeId);
 
-  const applicantType = parseApplicantType(body.applicantType ?? body.applicant_type ?? body.selfOther);
+  const applicantType = parseApplicantType(
+    body.applicantType ?? body.applicant_type ?? body.selfOther
+  );
   const applicantUserId = await resolveApplicantUserId(
     body.applicantUserId ?? body.applicant_user_id,
     applicantType,
@@ -526,9 +531,7 @@ const serializeApplication = (application: UserSchemeApplication) => {
   return {
     id: plain.id,
     schemeId: plain.schemeId,
-    scheme: plain.scheme
-      ? { id: plain.scheme.id, schemeName: plain.scheme.schemeName }
-      : null,
+    scheme: plain.scheme ? { id: plain.scheme.id, schemeName: plain.scheme.schemeName } : null,
     applicantType: plain.applicantType,
     applicantUserId: plain.applicantUserId ?? null,
     applicant: plain.applicant
@@ -620,10 +623,7 @@ const parseStatusFilter = (value: unknown): number | null | undefined => {
   if (normalizedValue === undefined || normalizedValue === null || normalizedValue === "") {
     return undefined;
   }
-  if (
-    typeof normalizedValue === "string" &&
-    normalizedValue.trim().toLowerCase() === "all"
-  ) {
+  if (typeof normalizedValue === "string" && normalizedValue.trim().toLowerCase() === "all") {
     return null;
   }
   const numeric =
@@ -638,9 +638,8 @@ const parseStatusFilter = (value: unknown): number | null | undefined => {
 
 const parseSort = (req: Request) => {
   const rawSortByValue = firstQueryValue(req.query.sortBy ?? req.query.sort_by);
-  const rawSortBy = typeof rawSortByValue === "string" && rawSortByValue.trim()
-    ? rawSortByValue
-    : "createdAt";
+  const rawSortBy =
+    typeof rawSortByValue === "string" && rawSortByValue.trim() ? rawSortByValue : "createdAt";
   const sortBy = SORTABLE_FIELDS.get(rawSortBy) ?? "createdAt";
   const rawOrderValue = firstQueryValue(req.query.sortOrder ?? req.query.sort_order);
   const rawOrder =
@@ -756,7 +755,11 @@ export const getUserSchemeApplication = asyncHandler(
       throw new ApiError("Application not found", 404);
     }
 
-    return sendSuccess(res, serializeApplication(application), "Application retrieved successfully");
+    return sendSuccess(
+      res,
+      serializeApplication(application),
+      "Application retrieved successfully"
+    );
   }
 );
 

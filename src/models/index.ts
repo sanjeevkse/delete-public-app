@@ -178,7 +178,10 @@ const establishAssociations = (): void => {
     as: "schemeApplications"
   });
 
-  UserSchemeApplication.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
+  UserSchemeApplication.belongsTo(MetaBoothNumber, {
+    foreignKey: "boothNumberId",
+    as: "boothNumber"
+  });
   MetaBoothNumber.hasMany(UserSchemeApplication, {
     foreignKey: "boothNumberId",
     as: "schemeApplications"
