@@ -330,6 +330,77 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
   return sendSuccess(res, updated, message);
 });
 
+export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.findByPk(req.params.id, {
+    include: [{ model: UserProfile, as: "profile" }]
+  });
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const action = typeof req.body?.action === "string" ? req.body.action.toLowerCase() : "";
+  if (action !== "block" && action !== "unblock") {
+    throw new ApiError("Invalid action. Allowed values are 'block' or 'unblock'.", 400);
+  }
+
+  const shouldBlock = action === "block";
+  const actorId = (req as AuthenticatedRequest).user?.id ?? null;
+
+  const fetchUserDetails = () =>
+    User.findByPk(user.id, {
+      include: [
+        { model: UserProfile, as: "profile" },
+        { association: "roles", include: [{ association: "permissions" }] },
+        {
+          model: UserAccess,
+          as: "accessProfiles",
+          where: { status: 1 },
+          required: false,
+          include: [
+            { association: "accessRole" },
+            { association: "wardNumber" },
+            { association: "boothNumber" },
+            { association: "mlaConstituency" }
+          ]
+        }
+      ]
+    });
+
+  if (!user.profile) {
+    if (!shouldBlock) {
+      const hydrated = await fetchUserDetails();
+      return sendSuccess(res, hydrated, "User posts are already unblocked");
+    }
+
+    await UserProfile.create({
+      userId: user.id,
+      postsBlocked: true,
+      createdBy: actorId,
+      updatedBy: actorId
+    });
+  } else {
+    if (user.profile.postsBlocked === shouldBlock) {
+      const hydrated = await fetchUserDetails();
+      const message = shouldBlock
+        ? "User posts are already blocked"
+        : "User posts are already unblocked";
+      return sendSuccess(res, hydrated, message);
+    }
+
+    await user.profile.update({
+      postsBlocked: shouldBlock,
+      updatedBy: actorId
+    });
+  }
+
+  const updated = await fetchUserDetails();
+  const message = shouldBlock
+    ? "User posts blocked successfully"
+    : "User posts unblocked successfully";
+  return sendSuccess(res, updated, message);
+});
+
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findByPk(req.params.id);
 

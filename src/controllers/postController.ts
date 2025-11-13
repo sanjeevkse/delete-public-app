@@ -12,6 +12,7 @@ import { MAX_POST_IMAGE_COUNT, MAX_POST_VIDEO_COUNT } from "../middlewares/postU
 import Post from "../models/Post";
 import PostMedia from "../models/PostMedia";
 import PostReaction from "../models/PostReaction";
+import UserProfile from "../models/UserProfile";
 import { MediaType, PostReactionType, PostUserReactionStatus } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -427,6 +428,10 @@ export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const { id: userId } = requireAuthenticatedUser(req);
 
   assertNoRestrictedFields(req.body);
+  const profile = await UserProfile.findOne({ where: { userId } });
+  if (profile?.postsBlocked) {
+    return sendForbidden(res, "User is blocked from creating posts");
+  }
 
   const description = parseRequiredString(req.body?.description, "description");
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");

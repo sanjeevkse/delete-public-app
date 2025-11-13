@@ -6,6 +6,7 @@ import {
   getUser,
   listUsers,
   updateUser,
+  updateUserPostsBlockStatus,
   updateUserStatus
 } from "../controllers/userController";
 import { assignRoleToUser, unassignRoleFromUser } from "../controllers/roleController";
@@ -18,6 +19,7 @@ router.post("/", createUser);
 router.get("/", listUsers);
 router.get("/:id", getUser);
 router.put("/:id", updateUser);
+router.patch("/:id/posts-block", updateUserPostsBlockStatus);
 router.patch("/:id/update-status", updateUserStatus);
 router.delete("/:id", deleteUser);
 router.post("/:userId/roles", assignRoleToUser);

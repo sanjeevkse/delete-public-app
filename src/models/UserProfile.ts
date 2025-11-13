@@ -41,6 +41,7 @@ class UserProfile extends Model<
   declare longitude: CreationOptional<number | null>;
   declare socialLinksJson: CreationOptional<Record<string, unknown> | null>;
   declare preferencesJson: CreationOptional<Record<string, unknown> | null>;
+  declare postsBlocked: CreationOptional<boolean>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -179,6 +180,12 @@ UserProfile.init(
       field: "preferences_json",
       type: DataTypes.JSON,
       allowNull: true
+    },
+    postsBlocked: {
+      field: "posts_blocked",
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     },
     status: {
       type: DataTypes.TINYINT,

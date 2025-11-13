@@ -2106,6 +2106,40 @@
             "description": "Detaches the specified role from the user. If all roles are removed, the default public role is restored automatically."
           },
           "response": []
+        },
+        {
+          "name": "Block/Unblock User Posts",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"block\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/:id/posts-block",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", ":id", "posts-block"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "11",
+                  "description": "User ID"
+                }
+              ]
+            },
+            "description": "Blocks or unblocks a user's ability to create posts. Set action to \"block\" or \"unblock\"."
+          },
+          "response": []
         }
       ]
     },
