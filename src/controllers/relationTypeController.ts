@@ -158,7 +158,7 @@ export const deleteRelationType = asyncHandler(async (req: Request, res: Respons
     return sendNotFound(res, "Relation type not found");
   }
 
-  await relationType.destroy();
+  await relationType.update({ status: 0 });
 
   sendNoContent(res);
 });

@@ -80,7 +80,7 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName"]
+        attributes: ["id", "dispName", "description"]
       }
     ],
     limit,
@@ -114,7 +114,7 @@ export const getFamilyMember = asyncHandler(async (req: Request, res: Response) 
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName"]
+        attributes: ["id", "dispName", "description"]
       }
     ]
   });
@@ -285,7 +285,7 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName"]
+        attributes: ["id", "dispName", "description"]
       }
     ]
   });
@@ -350,7 +350,7 @@ export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: MetaRelationType,
         as: "relationType",
-        attributes: ["id", "dispName"]
+        attributes: ["id", "dispName", "description"]
       }
     ]
   });
@@ -371,7 +371,7 @@ export const deleteFamilyMember = asyncHandler(async (req: Request, res: Respons
     return sendNotFound(res, "Family member not found");
   }
 
-  await familyMember.destroy();
+  await familyMember.update({ status: 0 });
 
   sendNoContent(res);
 });
@@ -410,7 +410,7 @@ export const toggleFamilyMemberStatus = asyncHandler(
         {
           model: MetaRelationType,
           as: "relationType",
-          attributes: ["id", "dispName"]
+          attributes: ["id", "dispName", "description"]
         }
       ]
     });

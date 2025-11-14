@@ -158,7 +158,7 @@ export const deleteBusinessType = asyncHandler(async (req: Request, res: Respons
     return sendNotFound(res, "Business type not found");
   }
 
-  await businessType.destroy();
+  await businessType.update({ status: 0 });
 
   sendNoContent(res);
 });

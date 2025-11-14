@@ -11,6 +11,10 @@ import sequelize from "../config/database";
 import Complaint from "../models/Complaint";
 import ComplaintMedia from "../models/ComplaintMedia";
 import ComplaintType from "../models/ComplaintType";
+import MetaSectorDepartment from "../models/MetaSectorDepartment";
+import MetaWardNumber from "../models/MetaWardNumber";
+import MetaBoothNumber from "../models/MetaBoothNumber";
+import MetaComplaintStatus from "../models/MetaComplaintStatus";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { MediaType } from "../types/enums";
@@ -24,14 +28,27 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   const { id: userId } = requireAuthenticatedUser(req);
   const {
     selfOther,
+    sectorDepartmentId,
     complaintTypeId,
+    wardNumberId,
+    boothNumberId,
     title,
     description,
     locationText,
     latitude,
     longitude,
-    landmark
+    landmark,
+    fullName,
+    contactNumber,
+    alternateContactNumber,
+    email,
+    fullAddress
   } = req.body;
+
+  // Validate required fields
+  if (!fullName || !contactNumber) {
+    throw new ApiError("Full name and contact number are required", 400);
+  }
 
   const mediaFiles = req.files as Express.Multer.File[] | undefined;
   const complaintType = await ComplaintType.findOne({ where: { id: complaintTypeId, status: 1 } });
@@ -41,13 +58,21 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     const newComplaint = await Complaint.create(
       {
         selfOther,
+        sectorDepartmentId: sectorDepartmentId || null,
         complaintTypeId,
+        wardNumberId: wardNumberId || null,
+        boothNumberId: boothNumberId || null,
         title,
         description,
         locationText,
         latitude,
         longitude,
         landmark,
+        fullName,
+        contactNumber,
+        alternateContactNumber: alternateContactNumber || null,
+        email: email || null,
+        fullAddress: fullAddress || null,
         createdBy: userId,
         updatedBy: userId
       },
@@ -83,7 +108,26 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         required: false,
         attributes: { exclude: excludeFields }
       },
-      { model: ComplaintType, as: "complaintType", attributes: ["id", "dispName"] }
+      { model: ComplaintType, as: "complaintType", attributes: ["id", "dispName", "description"] },
+      {
+        model: MetaSectorDepartment,
+        as: "sectorDepartment",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
+      {
+        model: MetaBoothNumber,
+        as: "boothNumber",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      {
+        model: MetaComplaintStatus,
+        as: "currentStatus",
+        attributes: ["id", "dispName", "description", "colorCode"],
+        required: false
+      }
     ]
   });
 
@@ -106,7 +150,26 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
       {
         model: ComplaintType,
         as: "complaintType",
-        attributes: ["id", "dispName"]
+        attributes: ["id", "dispName", "description"]
+      },
+      {
+        model: MetaSectorDepartment,
+        as: "sectorDepartment",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
+      {
+        model: MetaBoothNumber,
+        as: "boothNumber",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      {
+        model: MetaComplaintStatus,
+        as: "currentStatus",
+        attributes: ["id", "dispName", "description", "colorCode"],
+        required: false
       }
     ]
   });
@@ -199,6 +262,31 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         attributes: {
           exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"]
         }
+      },
+      {
+        model: ComplaintType,
+        as: "complaintType",
+        attributes: ["id", "dispName", "description"],
+        required: false
+      },
+      {
+        model: MetaSectorDepartment,
+        as: "sectorDepartment",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
+      {
+        model: MetaBoothNumber,
+        as: "boothNumber",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      {
+        model: MetaComplaintStatus,
+        as: "currentStatus",
+        attributes: ["id", "dispName", "description", "colorCode"],
+        required: false
       }
     ],
     order: [["id", sortDirection]],
@@ -208,21 +296,6 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
   });
 
   const complaintsJSON = rows.map((c: any) => c.toJSON());
-  const complaintTypeIds = [...new Set(complaintsJSON.map((c: any) => c.complaintTypeId))];
-
-  const types = await ComplaintType.findAll({
-    where: { id: complaintTypeIds },
-    attributes: ["id", "dispName"]
-  });
-
-  const typeMap = types.reduce(
-    (acc, t) => {
-      acc[t.id] = { id: t.id, dispName: t.dispName };
-      return acc;
-    },
-    {} as Record<number, { id: number; dispName: string }>
-  );
-
   const baseUrl = process.env.PUBLIC_BASE_URL || "https://public.nammarajajinagar.com";
 
   const data = complaintsJSON.map((c: any) => {
@@ -244,15 +317,28 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
     return {
       id: c.id,
       selfOther: c.selfOther,
+      sectorDepartmentId: c.sectorDepartmentId,
+      sectorDepartment: c.sectorDepartment || null,
       complaintTypeId: c.complaintTypeId,
+      complaintType: c.complaintType || null,
+      wardNumberId: c.wardNumberId,
+      wardNumber: c.wardNumber || null,
+      boothNumberId: c.boothNumberId,
+      boothNumber: c.boothNumber || null,
+      currentStatusId: c.currentStatusId,
+      currentStatus: c.currentStatus || null,
       title: c.title,
       description: c.description,
       locationText: c.locationText,
       latitude: c.latitude,
       longitude: c.longitude,
       landmark: c.landmark,
-      media: formattedMedia,
-      complaintType: typeMap[c.complaintTypeId] || null
+      fullName: c.fullName,
+      contactNumber: c.contactNumber,
+      alternateContactNumber: c.alternateContactNumber,
+      email: c.email,
+      fullAddress: c.fullAddress,
+      media: formattedMedia
     };
   });
 
@@ -283,7 +369,15 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     "longitude",
     "landmark",
     "selfOther",
-    "complaintTypeId"
+    "sectorDepartmentId",
+    "complaintTypeId",
+    "wardNumberId",
+    "boothNumberId",
+    "fullName",
+    "contactNumber",
+    "alternateContactNumber",
+    "email",
+    "fullAddress"
   ];
 
   for (const field of allowedFields) {
@@ -312,6 +406,25 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         model: ComplaintType,
         as: "complaintType",
         attributes: ["id", "dispName"]
+      },
+      {
+        model: MetaSectorDepartment,
+        as: "sectorDepartment",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
+      {
+        model: MetaBoothNumber,
+        as: "boothNumber",
+        attributes: ["id", "dispName"],
+        required: false
+      },
+      {
+        model: MetaComplaintStatus,
+        as: "currentStatus",
+        attributes: ["id", "dispName", "description", "colorCode"],
+        required: false
       }
     ]
   });

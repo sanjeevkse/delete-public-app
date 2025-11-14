@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Firebase Push Notifications Test Portal</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .header h1 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #666;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .card h2 {
+        color: #667eea;
+        margin-bottom: 20px;
+        font-size: 20px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        width: 100%;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        display: none;
+      }
+
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+        display: block;
+      }
+
+      .info-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+      }
+
+      .info-box code {
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+      }
+
+      .tokens-list {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .token-item {
+        background: #f8f9fa;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        font-size: 13px;
+      }
+
+      .token-item strong {
+        color: #667eea;
+      }
+
+      .response-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 15px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        display: none;
+      }
+
+      .response-box.show {
+        display: block;
+      }
+
+      .small-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🔔 Firebase Push Notifications Test Portal</h1>
+        <p>Test your Firebase push notification integration</p>
+      </div>
+
+      <div class="grid">
+        <!-- Login Card -->
+        <div class="card">
+          <h2>🔐 Authentication</h2>
+          <div class="info-box">
+            <p><strong>API Base URL:</strong></p>
+            <code id="apiBaseUrl">http://localhost:8081/api</code>
+          </div>
+          <div class="form-group">
+            <label for="apiUrl">API Base URL</label>
+            <input
+              type="text"
+              id="apiUrl"
+              value="http://localhost:8081/api"
+              placeholder="http://localhost:8081/api"
+            />
+          </div>
+          <div class="form-group">
+            <label for="jwtToken">JWT Token</label>
+            <textarea id="jwtToken" placeholder="Paste your JWT token here"></textarea>
+            <p class="small-text">Get this from your login endpoint: POST /api/auth/login</p>
+          </div>
+          <button onclick="saveToken()">💾 Save Token</button>
+          <div id="authStatus" class="status"></div>
+        </div>
+
+        <!-- Register Token Card -->
+        <div class="card">
+          <h2>📱 Register Device Token</h2>
+          <div class="form-group">
+            <label for="deviceToken">FCM Device Token</label>
+            <textarea id="deviceToken" placeholder="Firebase Cloud Messaging token"></textarea>
+            <p class="small-text">Get this from your Firebase mobile/web app</p>
+          </div>
+          <div class="form-group">
+            <label for="deviceId">Device ID (Optional)</label>
+            <input type="text" id="deviceId" placeholder="e.g., device_12345" />
+          </div>
+          <div class="form-group">
+            <label for="platform">Platform</label>
+            <select id="platform">
+              <option value="">Select Platform</option>
+              <option value="android">Android</option>
+              <option value="ios">iOS</option>
+              <option value="web">Web</option>
+            </select>
+          </div>
+          <button onclick="registerToken()">✅ Register Token</button>
+          <div id="registerStatus" class="status"></div>
+          <div id="registerResponse" class="response-box"></div>
+        </div>
+
+        <!-- Get Tokens Card -->
+        <div class="card">
+          <h2>📋 My Device Tokens</h2>
+          <button onclick="getTokens()">🔄 Refresh Tokens</button>
+          <div id="tokensStatus" class="status"></div>
+          <div id="tokensList" class="tokens-list"></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- Send to User Card -->
+        <div class="card">
+          <h2>📤 Send to User</h2>
+          <div class="form-group">
+            <label for="targetUserId">Target User ID</label>
+            <input type="number" id="targetUserId" placeholder="e.g., 123" />
+          </div>
+          <div class="form-group">
+            <label for="notifTitle">Title</label>
+            <input type="text" id="notifTitle" placeholder="Notification title" />
+          </div>
+          <div class="form-group">
+            <label for="notifBody">Body</label>
+            <textarea id="notifBody" placeholder="Notification message"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="notifData">Custom Data (JSON, Optional)</label>
+            <textarea id="notifData" placeholder='{"key": "value"}'></textarea>
+          </div>
+          <button onclick="sendToUser()">🚀 Send Notification</button>
+          <div id="sendUserStatus" class="status"></div>
+          <div id="sendUserResponse" class="response-box"></div>
+        </div>
+
+        <!-- Send to Multiple Users Card -->
+        <div class="card">
+          <h2>📤 Send to Multiple Users</h2>
+          <div class="form-group">
+            <label for="targetUserIds">User IDs (comma-separated)</label>
+            <input type="text" id="targetUserIds" placeholder="e.g., 1, 2, 3, 4" />
+          </div>
+          <div class="form-group">
+            <label for="bulkTitle">Title</label>
+            <input type="text" id="bulkTitle" placeholder="Notification title" />
+          </div>
+          <div class="form-group">
+            <label for="bulkBody">Body</label>
+            <textarea id="bulkBody" placeholder="Notification message"></textarea>
+          </div>
+          <button onclick="sendToMultipleUsers()">🚀 Send to All</button>
+          <div id="sendBulkStatus" class="status"></div>
+          <div id="sendBulkResponse" class="response-box"></div>
+        </div>
+
+        <!-- Topic Management Card -->
+        <div class="card">
+          <h2>🏷️ Topic Management</h2>
+          <div class="form-group">
+            <label for="topicName">Topic Name</label>
+            <input type="text" id="topicName" placeholder="e.g., news, updates" />
+          </div>
+          <button onclick="subscribeToTopic()">➕ Subscribe to Topic</button>
+          <button
+            onclick="unsubscribeFromTopic()"
+            style="margin-top: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+          >
+            ➖ Unsubscribe from Topic
+          </button>
+          <div id="topicStatus" class="status"></div>
+
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0" />
+
+          <div class="form-group">
+            <label for="topicNotifName">Topic for Notification</label>
+            <input type="text" id="topicNotifName" placeholder="e.g., news" />
+          </div>
+          <div class="form-group">
+            <label for="topicNotifTitle">Title</label>
+            <input type="text" id="topicNotifTitle" placeholder="Notification title" />
+          </div>
+          <div class="form-group">
+            <label for="topicNotifBody">Body</label>
+            <textarea id="topicNotifBody" placeholder="Notification message"></textarea>
+          </div>
+          <button onclick="sendToTopic()">🚀 Send to Topic</button>
+          <div id="sendTopicStatus" class="status"></div>
+          <div id="sendTopicResponse" class="response-box"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let API_BASE = "http://localhost:8081/api";
+      let JWT_TOKEN = "";
+
+      // Load saved values from localStorage
+      window.onload = function () {
+        const savedUrl = localStorage.getItem("apiUrl");
+        const savedToken = localStorage.getItem("jwtToken");
+
+        if (savedUrl) {
+          API_BASE = savedUrl;
+          document.getElementById("apiUrl").value = savedUrl;
+          document.getElementById("apiBaseUrl").textContent = savedUrl;
+        }
+
+        if (savedToken) {
+          JWT_TOKEN = savedToken;
+          document.getElementById("jwtToken").value = savedToken;
+          showStatus("authStatus", "Token loaded from storage", "info");
+        }
+      };
+
+      function saveToken() {
+        const url = document.getElementById("apiUrl").value.trim();
+        const token = document.getElementById("jwtToken").value.trim();
+
+        if (!token) {
+          showStatus("authStatus", "Please enter a JWT token", "error");
+          return;
+        }
+
+        API_BASE = url;
+        JWT_TOKEN = token;
+
+        localStorage.setItem("apiUrl", url);
+        localStorage.setItem("jwtToken", token);
+        document.getElementById("apiBaseUrl").textContent = url;
+
+        showStatus("authStatus", "Token saved successfully!", "success");
+      }
+
+      function getHeaders() {
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JWT_TOKEN}`
+        };
+      }
+
+      function showStatus(elementId, message, type) {
+        const statusEl = document.getElementById(elementId);
+        statusEl.textContent = message;
+        statusEl.className = `status ${type}`;
+      }
+
+      function showResponse(elementId, data) {
+        const responseEl = document.getElementById(elementId);
+        responseEl.textContent = JSON.stringify(data, null, 2);
+        responseEl.classList.add("show");
+      }
+
+      async function registerToken() {
+        const token = document.getElementById("deviceToken").value.trim();
+        const deviceId = document.getElementById("deviceId").value.trim();
+        const platform = document.getElementById("platform").value;
+
+        if (!token) {
+          showStatus("registerStatus", "Please enter a device token", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/notifications/tokens/register`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({
+              token,
+              deviceId: deviceId || undefined,
+              platform: platform || undefined
+            })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showStatus(
+              "registerStatus",
+              data.message || "Token registered successfully!",
+              "success"
+            );
+            showResponse("registerResponse", data);
+          } else {
+            showStatus("registerStatus", data.message || "Failed to register token", "error");
+            showResponse("registerResponse", data);
+          }
+        } catch (error) {
+          showStatus("registerStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function getTokens() {
+        try {
+          const response = await fetch(`${API_BASE}/notifications/tokens`, {
+            method: "GET",
+            headers: getHeaders()
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.data) {
+            const listEl = document.getElementById("tokensList");
+
+            if (data.data.length === 0) {
+              listEl.innerHTML =
+                '<p style="text-align: center; color: #999; padding: 20px;">No tokens registered</p>';
+            } else {
+              listEl.innerHTML = data.data
+                .map(
+                  (token) => `
+                            <div class="token-item">
+                                <strong>ID:</strong> ${token.id}<br>
+                                <strong>Platform:</strong> ${token.platform || "N/A"}<br>
+                                <strong>Device ID:</strong> ${token.deviceId || "N/A"}<br>
+                                <strong>Last Used:</strong> ${token.lastUsedAt ? new Date(token.lastUsedAt).toLocaleString() : "Never"}
+                            </div>
+                        `
+                )
+                .join("");
+            }
+
+            showStatus("tokensStatus", `Found ${data.data.length} token(s)`, "success");
+          } else {
+            showStatus("tokensStatus", data.message || "Failed to fetch tokens", "error");
+          }
+        } catch (error) {
+          showStatus("tokensStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function sendToUser() {
+        const userId = document.getElementById("targetUserId").value.trim();
+        const title = document.getElementById("notifTitle").value.trim();
+        const body = document.getElementById("notifBody").value.trim();
+        const dataStr = document.getElementById("notifData").value.trim();
+
+        if (!userId || !title || !body) {
+          showStatus("sendUserStatus", "Please fill in User ID, Title, and Body", "error");
+          return;
+        }
+
+        let data = undefined;
+        if (dataStr) {
+          try {
+            data = JSON.parse(dataStr);
+          } catch (e) {
+            showStatus("sendUserStatus", "Invalid JSON in Custom Data", "error");
+            return;
+          }
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/notifications/send/user`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({
+              userId: parseInt(userId),
+              title,
+              body,
+              data
+            })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showStatus("sendUserStatus", result.message || "Notification sent!", "success");
+            showResponse("sendUserResponse", result);
+          } else {
+            showStatus("sendUserStatus", result.message || "Failed to send notification", "error");
+            showResponse("sendUserResponse", result);
+          }
+        } catch (error) {
+          showStatus("sendUserStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function sendToMultipleUsers() {
+        const userIdsStr = document.getElementById("targetUserIds").value.trim();
+        const title = document.getElementById("bulkTitle").value.trim();
+        const body = document.getElementById("bulkBody").value.trim();
+
+        if (!userIdsStr || !title || !body) {
+          showStatus("sendBulkStatus", "Please fill in User IDs, Title, and Body", "error");
+          return;
+        }
+
+        const userIds = userIdsStr
+          .split(",")
+          .map((id) => parseInt(id.trim()))
+          .filter((id) => !isNaN(id));
+
+        if (userIds.length === 0) {
+          showStatus("sendBulkStatus", "Please provide valid user IDs", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/notifications/send/users`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({
+              userIds,
+              title,
+              body
+            })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showStatus("sendBulkStatus", result.message || "Notifications sent!", "success");
+            showResponse("sendBulkResponse", result);
+          } else {
+            showStatus("sendBulkStatus", result.message || "Failed to send notifications", "error");
+            showResponse("sendBulkResponse", result);
+          }
+        } catch (error) {
+          showStatus("sendBulkStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function subscribeToTopic() {
+        const topic = document.getElementById("topicName").value.trim();
+
+        if (!topic) {
+          showStatus("topicStatus", "Please enter a topic name", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/notifications/topics/subscribe`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({ topic })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showStatus("topicStatus", data.message || "Subscribed successfully!", "success");
+          } else {
+            showStatus("topicStatus", data.message || "Failed to subscribe", "error");
+          }
+        } catch (error) {
+          showStatus("topicStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function unsubscribeFromTopic() {
+        const topic = document.getElementById("topicName").value.trim();
+
+        if (!topic) {
+          showStatus("topicStatus", "Please enter a topic name", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/notifications/topics/unsubscribe`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({ topic })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showStatus("topicStatus", data.message || "Unsubscribed successfully!", "success");
+          } else {
+            showStatus("topicStatus", data.message || "Failed to unsubscribe", "error");
+          }
+        } catch (error) {
+          showStatus("topicStatus", `Error: ${error.message}`, "error");
+        }
+      }
+
+      async function sendToTopic() {
+        const topic = document.getElementById("topicNotifName").value.trim();
+        const title = document.getElementById("topicNotifTitle").value.trim();
+        const body = document.getElementById("topicNotifBody").value.trim();
+
+        if (!topic || !title || !body) {
+          showStatus("sendTopicStatus", "Please fill in Topic, Title, and Body", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/notifications/send/topic`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({
+              topic,
+              title,
+              body
+            })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showStatus(
+              "sendTopicStatus",
+              result.message || "Notification sent to topic!",
+              "success"
+            );
+            showResponse("sendTopicResponse", result);
+          } else {
+            showStatus("sendTopicStatus", result.message || "Failed to send notification", "error");
+            showResponse("sendTopicResponse", result);
+          }
+        } catch (error) {
+          showStatus("sendTopicStatus", `Error: ${error.message}`, "error");
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -404,12 +404,7 @@ const normalizeJobPayload = async (
     "work_experience"
   );
 
-  const description = resolveRequiredStringField(
-    body,
-    ["description"],
-    existingJob?.description,
-    "description"
-  );
+  const description = resolveOptionalStringField(body, ["description"], existingJob?.description);
 
   let alternativeContactNumber =
     submittedFor === "self"

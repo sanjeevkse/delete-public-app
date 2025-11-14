@@ -15,6 +15,9 @@ class Member extends Model<InferAttributes<Member>, InferCreationAttributes<Memb
   declare fullName: string;
   declare contactNumber: string;
   declare email: CreationOptional<string | null>;
+  declare status: CreationOptional<number>;
+  declare createdBy: CreationOptional<number | null>;
+  declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -52,6 +55,21 @@ Member.init(
       validate: {
         isEmail: true
       }
+    },
+    status: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1
+    },
+    createdBy: {
+      field: "created_by",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    updatedBy: {
+      field: "updated_by",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     createdAt: {
       field: "created_at",

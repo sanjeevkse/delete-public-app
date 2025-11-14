@@ -134,7 +134,8 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   await role.update(rolePayload);
 
   if (Array.isArray(permissions)) {
-    await RolePermission.destroy({ where: { roleId: role.id } });
+    // Soft delete existing role permissions
+    await RolePermission.update({ status: 0 }, { where: { roleId: role.id } });
     if (permissions.length > 0) {
       const payload = permissions.map((permissionId: number) => ({
         roleId: role.id,
@@ -217,7 +218,8 @@ export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Respo
     return sendNotFound(res, "Role is not assigned to the user");
   }
 
-  await existingAssignment.destroy();
+  // Soft delete: set status to 0
+  await existingAssignment.update({ status: 0 });
 
   const remainingAssignments = await UserRole.findAll({ where: { userId } });
   if (remainingAssignments.length === 0) {

@@ -162,7 +162,7 @@ export const deleteCommunityType = asyncHandler(async (req: Request, res: Respon
     return sendNotFound(res, "Community type not found");
   }
 
-  await communityType.destroy();
+  await communityType.update({ status: 0 });
 
   sendNoContent(res);
 });

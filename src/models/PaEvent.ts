@@ -3,7 +3,7 @@ import {
   DataTypes,
   CreationOptional,
   InferAttributes,
-  InferCreationAttributes
+  InferCreationAttributes,
 } from "sequelize";
 import sequelize from "../config/database";
 
@@ -27,69 +27,69 @@ PaEvent.init(
     id: {
       type: DataTypes.BIGINT.UNSIGNED,
       autoIncrement: true,
-      primaryKey: true
+      primaryKey: true,
     },
     title: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      allowNull: false,
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true
+      allowNull: true,
     },
     startDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
-      field: "start_date"
+      field: "start_date",
     },
     startTime: {
       type: DataTypes.TIME,
       allowNull: false,
-      field: "start_time"
+      field: "start_time",
     },
     endDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
-      field: "end_date"
+      field: "end_date",
     },
     endTime: {
       type: DataTypes.TIME,
       allowNull: false,
-      field: "end_time"
+      field: "end_time",
     },
     createdBy: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true,
-      field: "created_by"
+      field: "created_by",
     },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: "created_at"
+      field: "created_at",
     },
     updatedBy: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true,
-      field: "updated_by"
+      field: "updated_by",
     },
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: "updated_at"
+      field: "updated_at",
     },
     status: {
       type: DataTypes.TINYINT,
       allowNull: false,
-      defaultValue: 1
-    }
+      defaultValue: 1,
+    },
   },
   {
     sequelize,
     tableName: "tbl_pa_event",
     modelName: "PaEvent",
-    timestamps: false
+    timestamps: false,
   }
 );
 

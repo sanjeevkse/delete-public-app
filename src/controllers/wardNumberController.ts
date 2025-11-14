@@ -136,7 +136,7 @@ export const deleteWardNumber = asyncHandler(async (req: AuthenticatedRequest, r
     throw new ApiError("Ward number not found", 404);
   }
 
-  await wardNumber.destroy();
+  await wardNumber.update({ status: 0 });
 
   return sendSuccess(res, null, "Ward number deleted successfully");
 });

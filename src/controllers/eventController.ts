@@ -1054,11 +1054,10 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   }
 
   // Parse and validate all fields - fullName and contactNumber are mandatory
-  const parsedUserId =
-    req.body.userId !== undefined && req.body.userId !== null && req.body.userId !== ""
-      ? parseRequiredNumber(req.body.userId, "userId")
-      : null;
-
+  const parsedUserId = req.body.userId !== undefined && req.body.userId !== null && req.body.userId !== "" 
+    ? parseRequiredNumber(req.body.userId, "userId") 
+    : null;
+  
   const parsedFullName = parseRequiredString(req.body.fullName, "fullName");
   const parsedContactNumber = parseRequiredString(req.body.contactNumber, "contactNumber");
   const parsedEmail = parseOptionalString(req.body.email, "email", 255);
@@ -1217,8 +1216,8 @@ export const unregisterRegistration = asyncHandler(
     // 2. For guest registrations, check if registeredBy matches (if registeredBy is numeric)
     const canUnregister =
       (registration.userId !== null && registration.userId === userId) ||
-      (registration.userId === null &&
-        registration.registeredBy &&
+      (registration.userId === null && 
+        registration.registeredBy && 
         !Number.isNaN(Number(registration.registeredBy)) &&
         Number(registration.registeredBy) === userId);
 

@@ -150,7 +150,7 @@ export const deleteMlaConstituency = asyncHandler(
       throw new ApiError("MLA constituency not found", 404);
     }
 
-    await mlaConstituency.destroy();
+    await mlaConstituency.update({ status: 0 });
 
     return sendSuccess(res, null, "MLA constituency deleted successfully");
   }

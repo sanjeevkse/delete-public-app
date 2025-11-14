@@ -3,20 +3,33 @@ import {
   DataTypes,
   InferAttributes,
   InferCreationAttributes,
-  Model
+  Model,
+  NonAttribute
 } from "sequelize";
 
 import sequelize from "../config/database";
+import type SchemeStep from "./SchemeStep";
+import type MetaSchemeCategory from "./MetaSchemeCategory";
+import type MetaSchemeSector from "./MetaSchemeSector";
 
-class Scheme extends Model<InferAttributes<Scheme>, InferCreationAttributes<Scheme>> {
+class Scheme extends Model<
+  InferAttributes<Scheme, { omit: "steps" | "schemeCategory" | "schemeSector" }>,
+  InferCreationAttributes<Scheme, { omit: "steps" | "schemeCategory" | "schemeSector" }>
+> {
   declare id: CreationOptional<number>;
-  declare schemeName: string;
-  declare description: string;
+  declare schemeCategoryId: number | null;
+  declare schemeSectorId: number | null;
+  declare dispName: string;
+  declare description: string | null;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+
+  declare steps?: NonAttribute<SchemeStep[]>;
+  declare schemeCategory?: NonAttribute<MetaSchemeCategory>;
+  declare schemeSector?: NonAttribute<MetaSchemeSector>;
 }
 
 Scheme.init(
@@ -26,14 +39,32 @@ Scheme.init(
       autoIncrement: true,
       primaryKey: true
     },
-    schemeName: {
-      field: "scheme_name",
-      type: DataTypes.STRING(191),
+    schemeCategoryId: {
+      field: "scheme_category_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "tbl_meta_scheme_category",
+        key: "id"
+      }
+    },
+    schemeSectorId: {
+      field: "scheme_sector_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "tbl_meta_scheme_sector",
+        key: "id"
+      }
+    },
+    dispName: {
+      field: "disp_name",
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: false
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

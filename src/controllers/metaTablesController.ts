@@ -557,7 +557,7 @@ export const deleteMetaTableRecord = asyncHandler(
       return sendNotFound(res, `Record not found in ${config.displayName}`);
     }
 
-    await record.destroy();
+    await record.update({ status: 0 });
 
     sendNoContent(res);
   }

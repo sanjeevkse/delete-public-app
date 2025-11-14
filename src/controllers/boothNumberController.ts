@@ -192,7 +192,7 @@ export const deleteBoothNumber = asyncHandler(async (req: AuthenticatedRequest, 
     throw new ApiError("Booth number not found", 404);
   }
 
-  await boothNumber.destroy();
+  await boothNumber.update({ status: 0 });
 
   return sendSuccess(res, null, "Booth number deleted successfully");
 });

@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import path from "path";
 
 import apiRateLimiter from "./middlewares/rateLimiter";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
@@ -22,6 +23,14 @@ app.use(telescopeMiddleware);
 app.use(apiRateLimiter);
 ensureDirectory(UPLOAD_PATHS.BASE_DIR);
 app.use(UPLOAD_PATHS.PUBLIC_PATH, express.static(UPLOAD_PATHS.BASE_DIR));
+
+// Serve static files from public directory
+app.use("/public", express.static(path.join(__dirname, "../public")));
+
+// Firebase test portal
+app.get("/firebase-test", (_req, res) => {
+  res.sendFile(path.join(__dirname, "../public/firebase-test.html"));
+});
 
 // Telescope monitoring dashboard
 app.use("/telescope", telescopeRoutes);

@@ -193,7 +193,8 @@ export const deleteMember = asyncHandler(async (req: Request, res: Response) => 
     return sendNotFound(res, "Member not found");
   }
 
-  await member.destroy();
+  // Soft delete: set status to 0
+  await member.update({ status: 0 });
 
   sendNoContent(res);
 });

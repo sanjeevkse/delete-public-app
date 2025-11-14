@@ -22,6 +22,10 @@ const env = {
     user: process.env.DB_USER ?? "root",
     password: process.env.DB_PASSWORD ?? "",
     dialect: (process.env.DB_DIALECT ?? "mysql") as Dialect
+  },
+  firebase: {
+    serviceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH ?? "",
+    serviceAccountJson: process.env.FIREBASE_SERVICE_ACCOUNT_JSON ?? ""
   }
 };
 

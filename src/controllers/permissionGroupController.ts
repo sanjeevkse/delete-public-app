@@ -179,7 +179,7 @@ export const deletePermissionGroup = asyncHandler(
       );
     }
 
-    await permissionGroup.destroy();
+    await permissionGroup.update({ status: 0 });
 
     return sendSuccess(res, null, "Permission group deleted successfully");
   }

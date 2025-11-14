@@ -16,6 +16,10 @@ import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaRelationType from "./MetaRelationType";
 import MetaUserRole from "./MetaUserRole";
 import MetaWardNumber from "./MetaWardNumber";
+import MetaSectorDepartment from "./MetaSectorDepartment";
+import MetaSchemeCategory from "./MetaSchemeCategory";
+import MetaSchemeSector from "./MetaSchemeSector";
+import SchemeStep from "./SchemeStep";
 import MetaSchemeType from "./MetaSchemeType";
 import MetaSchemeTypeStep from "./MetaSchemeTypeStep";
 import MetaGovernmentLevel from "./MetaGovernmentLevel";
@@ -46,12 +50,16 @@ import ComplaintType from "./ComplaintType";
 import ComplaintTypeStep from "./ComplaintTypeSteps";
 import Complaint from "./Complaint";
 import ComplaintMedia from "./ComplaintMedia";
+import MetaComplaintStatus from "./MetaComplaintStatus";
+import ComplaintStatusHistory from "./ComplaintStatusHistory";
+import ComplaintStatusHistoryMedia from "./ComplaintStatusHistoryMedia";
 import MetaFieldType from "./MetaFieldType";
 import MetaInputFormat from "./MetaInputFormat";
 import Form from "./Form";
 import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
 import FormMapping from "./FormMapping";
+import DeviceToken from "./DeviceToken";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -130,15 +138,23 @@ const establishAssociations = (): void => {
     as: "permissions"
   });
 
-  MetaSchemeType.hasMany(MetaSchemeTypeStep, {
-    foreignKey: "schemeTypeId",
+  Scheme.hasMany(SchemeStep, {
+    foreignKey: "schemeId",
     as: "steps",
     onDelete: "CASCADE",
     hooks: true
   });
-  MetaSchemeTypeStep.belongsTo(MetaSchemeType, {
-    foreignKey: "schemeTypeId",
-    as: "schemeType"
+  SchemeStep.belongsTo(Scheme, {
+    foreignKey: "schemeId",
+    as: "scheme"
+  });
+  Scheme.belongsTo(MetaSchemeCategory, {
+    foreignKey: "schemeCategoryId",
+    as: "schemeCategory"
+  });
+  Scheme.belongsTo(MetaSchemeSector, {
+    foreignKey: "schemeSectorId",
+    as: "schemeSector"
   });
   RolePermission.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
   RolePermission.belongsTo(MetaPermission, { foreignKey: "permissionId", as: "permission" });
@@ -329,6 +345,42 @@ const establishAssociations = (): void => {
     as: "complaints"
   });
 
+  Complaint.belongsTo(MetaSectorDepartment, {
+    foreignKey: "sectorDepartmentId",
+    as: "sectorDepartment"
+  });
+  MetaSectorDepartment.hasMany(Complaint, {
+    foreignKey: "sectorDepartmentId",
+    as: "complaints"
+  });
+
+  Complaint.belongsTo(MetaWardNumber, {
+    foreignKey: "wardNumberId",
+    as: "wardNumber"
+  });
+  MetaWardNumber.hasMany(Complaint, {
+    foreignKey: "wardNumberId",
+    as: "complaints"
+  });
+
+  Complaint.belongsTo(MetaBoothNumber, {
+    foreignKey: "boothNumberId",
+    as: "boothNumber"
+  });
+  MetaBoothNumber.hasMany(Complaint, {
+    foreignKey: "boothNumberId",
+    as: "complaints"
+  });
+
+  Complaint.belongsTo(MetaComplaintStatus, {
+    foreignKey: "currentStatusId",
+    as: "currentStatus"
+  });
+  MetaComplaintStatus.hasMany(Complaint, {
+    foreignKey: "currentStatusId",
+    as: "complaints"
+  });
+
   Complaint.hasMany(ComplaintMedia, {
     foreignKey: "complaintId",
     as: "media"
@@ -336,6 +388,33 @@ const establishAssociations = (): void => {
   ComplaintMedia.belongsTo(Complaint, {
     foreignKey: "complaintId",
     as: "complaint"
+  });
+
+  Complaint.hasMany(ComplaintStatusHistory, {
+    foreignKey: "complaintId",
+    as: "statusHistory"
+  });
+  ComplaintStatusHistory.belongsTo(Complaint, {
+    foreignKey: "complaintId",
+    as: "complaint"
+  });
+
+  ComplaintStatusHistory.belongsTo(MetaComplaintStatus, {
+    foreignKey: "complaintStatusId",
+    as: "complaintStatus"
+  });
+  MetaComplaintStatus.hasMany(ComplaintStatusHistory, {
+    foreignKey: "complaintStatusId",
+    as: "statusHistories"
+  });
+
+  ComplaintStatusHistory.hasMany(ComplaintStatusHistoryMedia, {
+    foreignKey: "complaintStatusHistoryId",
+    as: "media"
+  });
+  ComplaintStatusHistoryMedia.belongsTo(ComplaintStatusHistory, {
+    foreignKey: "complaintStatusHistoryId",
+    as: "statusHistory"
   });
 
   // UserAccess associations
@@ -359,6 +438,10 @@ const establishAssociations = (): void => {
     foreignKey: "mlaConstituencyId",
     as: "userAccesses"
   });
+
+  // DeviceToken associations
+  DeviceToken.belongsTo(User, { foreignKey: "userId", as: "user" });
+  User.hasMany(DeviceToken, { foreignKey: "userId", as: "deviceTokens" });
 };
 
 establishAssociations();
@@ -393,6 +476,7 @@ export {
   MetaWidowStatus,
   MetaDisabilityStatus,
   MetaEmploymentStatus,
+  SchemeStep,
   Post,
   PostMedia,
   PostReaction,
@@ -410,5 +494,6 @@ export {
   ComplaintType,
   ComplaintTypeStep,
   ComplaintMedia,
-  UserSchemeApplication
+  UserSchemeApplication,
+  DeviceToken
 };

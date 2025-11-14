@@ -26,7 +26,7 @@ class Job extends Model<InferAttributes<Job>, InferCreationAttributes<Job>> {
   declare fullAddress: string;
   declare education: CreationOptional<string | null>;
   declare workExperience: CreationOptional<string | null>;
-  declare description: string;
+  declare description: CreationOptional<string | null>;
   declare resumeUrl: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
@@ -96,7 +96,7 @@ Job.init(
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: false
+      allowNull: true
     },
     resumeUrl: {
       field: "resume_url",

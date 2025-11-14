@@ -1,10 +1,14 @@
 import type { Request, Response } from "express";
-import { Op, type WhereOptions } from "sequelize";
+import { Op, Transaction, type WhereOptions } from "sequelize";
 
+import sequelize from "../config/database";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import Scheme from "../models/Scheme";
+import SchemeStep from "../models/SchemeStep";
+import MetaSchemeCategory from "../models/MetaSchemeCategory";
+import MetaSchemeSector from "../models/MetaSchemeSector";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendCreated,
@@ -22,39 +26,8 @@ const LIMIT_MAX = 100;
 const SORTABLE_FIELDS = new Map<string, string>([
   ["createdAt", "createdAt"],
   ["updatedAt", "updatedAt"],
-  ["schemeName", "schemeName"],
   ["status", "status"]
 ]);
-
-const normalizeString = (value: unknown, field: string): string => {
-  if (typeof value !== "string") {
-    throw new ApiError(`${field} is required`, 400);
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    throw new ApiError(`${field} cannot be empty`, 400);
-  }
-
-  if (trimmed.length > 191 && field === "scheme_name") {
-    throw new ApiError(`${field} must be at most 191 characters`, 400);
-  }
-
-  return trimmed;
-};
-
-const normalizeDescription = (value: unknown): string => {
-  if (typeof value !== "string") {
-    throw new ApiError("description is required", 400);
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    throw new ApiError("description cannot be empty", 400);
-  }
-
-  return trimmed;
-};
 
 const parseOptionalStatus = (value: unknown): number | undefined => {
   if (value === undefined || value === null || value === "") {
@@ -115,49 +88,240 @@ const normalizeSchemePayload = (
 
   assertNoRestrictedFields(body);
 
-  const schemeNameInput =
-    body.schemeName ?? body.scheme_name ?? (partial ? existing?.schemeName : undefined);
-  if (!partial || schemeNameInput !== undefined) {
-    if (schemeNameInput === undefined) {
-      throw new ApiError("scheme_name is required", 400);
+  const dispNameInput =
+    body.dispName ?? body.disp_name ?? (partial ? existing?.dispName : undefined);
+  if (!partial || dispNameInput !== undefined) {
+    if (dispNameInput === undefined) {
+      throw new ApiError("disp_name is required", 400);
     }
   }
+
+  const schemeCategoryIdInput =
+    body.schemeCategoryId ??
+    body.scheme_category_id ??
+    (partial ? existing?.schemeCategoryId : undefined);
+
+  const schemeSectorIdInput =
+    body.schemeSectorId ??
+    body.scheme_sector_id ??
+    (partial ? existing?.schemeSectorId : undefined);
 
   const descriptionInput = body.description ?? (partial ? existing?.description : undefined);
-  if (!partial || descriptionInput !== undefined) {
-    if (descriptionInput === undefined) {
-      throw new ApiError("description is required", 400);
-    }
-  }
 
   const normalized: {
-    schemeName?: string;
-    description?: string;
+    dispName?: string;
+    description?: string | null;
+    schemeCategoryId?: number | null;
+    schemeSectorId?: number | null;
   } = {};
 
-  if (schemeNameInput !== undefined) {
-    normalized.schemeName = normalizeString(schemeNameInput, "scheme_name");
+  if (dispNameInput !== undefined) {
+    if (typeof dispNameInput !== "string") {
+      throw new ApiError("disp_name must be a string", 400);
+    }
+    const trimmed = dispNameInput.trim();
+    if (!trimmed) {
+      throw new ApiError("disp_name cannot be empty", 400);
+    }
+    if (trimmed.length > 255) {
+      throw new ApiError("disp_name must be at most 255 characters", 400);
+    }
+    normalized.dispName = trimmed;
   }
 
   if (descriptionInput !== undefined) {
-    normalized.description = normalizeDescription(descriptionInput);
+    if (descriptionInput === null || descriptionInput === "") {
+      normalized.description = null;
+    } else if (typeof descriptionInput === "string") {
+      normalized.description = descriptionInput.trim();
+    } else {
+      throw new ApiError("description must be a string", 400);
+    }
+  }
+
+  if (schemeCategoryIdInput !== undefined) {
+    if (schemeCategoryIdInput === null || schemeCategoryIdInput === "") {
+      normalized.schemeCategoryId = null;
+    } else {
+      const categoryId = Number.parseInt(String(schemeCategoryIdInput), 10);
+      if (Number.isNaN(categoryId) || categoryId <= 0) {
+        throw new ApiError("scheme_category_id must be a valid positive number", 400);
+      }
+      normalized.schemeCategoryId = categoryId;
+    }
+  }
+
+  if (schemeSectorIdInput !== undefined) {
+    if (schemeSectorIdInput === null || schemeSectorIdInput === "") {
+      normalized.schemeSectorId = null;
+    } else {
+      const sectorId = Number.parseInt(String(schemeSectorIdInput), 10);
+      if (Number.isNaN(sectorId) || sectorId <= 0) {
+        throw new ApiError("scheme_sector_id must be a valid positive number", 400);
+      }
+      normalized.schemeSectorId = sectorId;
+    }
   }
 
   return normalized;
 };
 
+type NormalizedStepPayload = {
+  stepOrder: number;
+  dispName: string;
+  description: string | null;
+  status: number;
+};
+
+const normalizeStatusValue = (value: unknown, field: string = "status"): number => {
+  if (value === undefined || value === null || value === "") {
+    throw new ApiError(`${field} is required`, 400);
+  }
+
+  const numericValue = Number.parseInt(String(value), 10);
+
+  if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
+    throw new ApiError(`${field} must be 0 or 1`, 400);
+  }
+
+  return numericValue;
+};
+
+const normalizeStepsPayload = (
+  rawSteps: unknown,
+  options: { allowUndefined?: boolean } = {}
+): NormalizedStepPayload[] | undefined => {
+  const { allowUndefined = false } = options;
+
+  if (rawSteps === undefined) {
+    return allowUndefined ? undefined : [];
+  }
+
+  if (!Array.isArray(rawSteps)) {
+    throw new ApiError("steps must be an array", 400);
+  }
+
+  const seenOrders = new Set<number>();
+
+  return rawSteps.map((rawStep, index) => {
+    if (rawStep === null || typeof rawStep !== "object") {
+      throw new ApiError(`steps[${index}] must be an object`, 400);
+    }
+
+    const stepRecord = rawStep as Record<string, unknown>;
+
+    const stepOrderInput = stepRecord.stepOrder ?? stepRecord.step_order;
+    if (stepOrderInput === undefined) {
+      throw new ApiError(`steps[${index}].step_order is required`, 400);
+    }
+    const stepOrder = Number.parseInt(String(stepOrderInput), 10);
+    if (!Number.isFinite(stepOrder) || stepOrder <= 0) {
+      throw new ApiError(`steps[${index}].step_order must be a positive integer`, 400);
+    }
+
+    if (seenOrders.has(stepOrder)) {
+      throw new ApiError("step_order values must be unique within the scheme", 400);
+    }
+    seenOrders.add(stepOrder);
+
+    const dispNameInput = stepRecord.dispName ?? stepRecord.disp_name;
+    if (dispNameInput === undefined) {
+      throw new ApiError(`steps[${index}].disp_name is required`, 400);
+    }
+    if (typeof dispNameInput !== "string") {
+      throw new ApiError(`steps[${index}].disp_name must be a string`, 400);
+    }
+    const trimmed = dispNameInput.trim();
+    if (!trimmed) {
+      throw new ApiError(`steps[${index}].disp_name cannot be empty`, 400);
+    }
+    if (trimmed.length > 255) {
+      throw new ApiError(`steps[${index}].disp_name must be at most 255 characters`, 400);
+    }
+    const dispName = trimmed;
+
+    const descriptionInput = stepRecord.description;
+    let description: string | null = null;
+    if (descriptionInput !== undefined && descriptionInput !== null) {
+      if (typeof descriptionInput !== "string") {
+        throw new ApiError(`steps[${index}].description must be a string`, 400);
+      }
+      description = descriptionInput.trim();
+    }
+
+    return {
+      stepOrder,
+      dispName,
+      description,
+      status: 1
+    };
+  });
+};
+
+const withStepsInclude = {
+  model: SchemeStep,
+  as: "steps"
+} as const;
+
+const withCategoryInclude = {
+  model: MetaSchemeCategory,
+  as: "schemeCategory",
+  attributes: ["id", "dispName", "description"]
+};
+
+const withSectorInclude = {
+  model: MetaSchemeSector,
+  as: "schemeSector",
+  attributes: ["id", "dispName", "description"]
+};
+
 const serializeScheme = (scheme: Scheme) => {
-  const plain = scheme.get({ plain: true });
+  const plain = scheme.get({ plain: true }) as Scheme & {
+    steps?: SchemeStep[];
+    schemeCategory?: MetaSchemeCategory;
+    schemeSector?: MetaSchemeSector;
+  };
+
+  const steps = Array.isArray(plain.steps) ? plain.steps : [];
+  const sortedSteps = [...steps].sort((a, b) => a.stepOrder - b.stepOrder);
 
   return {
     id: plain.id,
-    schemeName: plain.schemeName,
-    description: plain.description,
+    schemeCategoryId: plain.schemeCategoryId ?? null,
+    schemeSectorId: plain.schemeSectorId ?? null,
+    schemeCategory: plain.schemeCategory
+      ? {
+          id: plain.schemeCategory.id,
+          dispName: plain.schemeCategory.dispName,
+          description: plain.schemeCategory.description ?? null
+        }
+      : null,
+    schemeSector: plain.schemeSector
+      ? {
+          id: plain.schemeSector.id,
+          dispName: plain.schemeSector.dispName,
+          description: plain.schemeSector.description ?? null
+        }
+      : null,
+    dispName: plain.dispName,
+    description: plain.description ?? null,
     status: plain.status,
     createdBy: plain.createdBy ?? null,
     updatedBy: plain.updatedBy ?? null,
     createdAt: plain.createdAt,
-    updatedAt: plain.updatedAt
+    updatedAt: plain.updatedAt,
+    steps: sortedSteps.map((step) => ({
+      id: step.id,
+      schemeId: step.schemeId,
+      stepOrder: step.stepOrder,
+      dispName: step.dispName,
+      description: step.description ?? null,
+      status: step.status,
+      createdBy: step.createdBy ?? null,
+      updatedBy: step.updatedBy ?? null,
+      createdAt: step.createdAt,
+      updatedAt: step.updatedAt
+    }))
   };
 };
 
@@ -183,7 +347,7 @@ export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: R
   if (search) {
     const pattern = `%${search}%`;
     Object.assign(where, {
-      [Op.or]: [{ schemeName: { [Op.like]: pattern } }, { description: { [Op.like]: pattern } }]
+      dispName: { [Op.like]: pattern }
     });
   }
 
@@ -192,7 +356,12 @@ export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: R
     attributes,
     limit,
     offset,
-    order: [[sortBy, direction]]
+    distinct: true,
+    include: [withStepsInclude, withCategoryInclude, withSectorInclude],
+    order: [
+      [sortBy, direction],
+      [{ model: SchemeStep, as: "steps" }, "stepOrder", "ASC"]
+    ]
   });
 
   const totalPages = limit > 0 ? Math.ceil(count / limit) : 0;
@@ -223,7 +392,9 @@ export const getScheme = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
   const scheme = await Scheme.findOne({
     where: { id, status: 1 },
-    attributes
+    attributes,
+    include: [withStepsInclude, withCategoryInclude, withSectorInclude],
+    order: [[{ model: SchemeStep, as: "steps" }, "stepOrder", "ASC"]]
   });
 
   if (!scheme) {
@@ -238,19 +409,54 @@ export const createScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   const body = (req.body ?? {}) as Record<string, unknown>;
   const payload = normalizeSchemePayload(body, { partial: false }) as {
-    schemeName: string;
-    description: string;
+    dispName: string;
+    description?: string | null;
+    schemeCategoryId?: number | null;
+    schemeSectorId?: number | null;
   };
+  const stepsPayload = normalizeStepsPayload(body.steps, { allowUndefined: false }) ?? [];
 
-  const created = await Scheme.create({
-    schemeName: payload.schemeName,
-    description: payload.description,
-    status: 1,
-    createdBy: userId,
-    updatedBy: userId
-  });
+  const createdScheme = await sequelize.transaction(
+    async (transaction: Transaction): Promise<Scheme> => {
+      const scheme = await Scheme.create(
+        {
+          schemeCategoryId: payload.schemeCategoryId ?? null,
+          schemeSectorId: payload.schemeSectorId ?? null,
+          dispName: payload.dispName,
+          description: payload.description ?? null,
+          status: 1,
+          createdBy: userId,
+          updatedBy: userId
+        },
+        { transaction }
+      );
 
-  return sendCreated(res, serializeScheme(created), "Scheme created successfully");
+      if (stepsPayload.length > 0) {
+        await SchemeStep.bulkCreate(
+          stepsPayload.map((step) => ({
+            schemeId: scheme.id,
+            stepOrder: step.stepOrder,
+            dispName: step.dispName,
+            description: step.description,
+            status: step.status,
+            createdBy: userId,
+            updatedBy: userId
+          })),
+          { transaction }
+        );
+      }
+
+      await scheme.reload({
+        include: [withStepsInclude, withCategoryInclude, withSectorInclude],
+        order: [[{ model: SchemeStep, as: "steps" }, "stepOrder", "ASC"]],
+        transaction
+      });
+
+      return scheme;
+    }
+  );
+
+  return sendCreated(res, serializeScheme(createdScheme), "Scheme created successfully");
 });
 
 export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -268,25 +474,77 @@ export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   const body = (req.body ?? {}) as Record<string, unknown>;
   const payload = normalizeSchemePayload(body, { existing: scheme, partial: true });
+  const stepsPayload = normalizeStepsPayload(body.steps, { allowUndefined: true });
 
-  if (payload.schemeName === undefined && payload.description === undefined) {
+  if (
+    payload.dispName === undefined &&
+    payload.description === undefined &&
+    payload.schemeCategoryId === undefined &&
+    payload.schemeSectorId === undefined &&
+    stepsPayload === undefined
+  ) {
     throw new ApiError("No fields provided for update", 400);
   }
 
-  const updates: Record<string, unknown> = {};
+  const updatedScheme = await sequelize.transaction(
+    async (transaction: Transaction): Promise<Scheme> => {
+      const updates: Record<string, unknown> = {};
 
-  if (payload.schemeName !== undefined) {
-    updates.schemeName = payload.schemeName;
-  }
-  if (payload.description !== undefined) {
-    updates.description = payload.description;
-  }
+      if (payload.dispName !== undefined) {
+        updates.dispName = payload.dispName;
+      }
+      if (payload.description !== undefined) {
+        updates.description = payload.description;
+      }
+      if (payload.schemeCategoryId !== undefined) {
+        updates.schemeCategoryId = payload.schemeCategoryId;
+      }
+      if (payload.schemeSectorId !== undefined) {
+        updates.schemeSectorId = payload.schemeSectorId;
+      }
 
-  updates.updatedBy = userId;
+      if (Object.keys(updates).length > 0) {
+        updates.updatedBy = userId;
+        await scheme.update(updates, { transaction });
+      }
 
-  await scheme.update(updates);
+      if (stepsPayload !== undefined) {
+        // Soft delete existing steps by setting status to 0
+        await SchemeStep.update(
+          { status: 0, updatedBy: userId },
+          {
+            where: { schemeId: scheme.id },
+            transaction
+          }
+        );
 
-  return sendSuccess(res, serializeScheme(scheme), "Scheme updated successfully");
+        if (stepsPayload.length > 0) {
+          await SchemeStep.bulkCreate(
+            stepsPayload.map((step) => ({
+              schemeId: scheme.id,
+              stepOrder: step.stepOrder,
+              dispName: step.dispName,
+              description: step.description,
+              status: step.status,
+              createdBy: userId,
+              updatedBy: userId
+            })),
+            { transaction }
+          );
+        }
+      }
+
+      await scheme.reload({
+        include: [withStepsInclude, withCategoryInclude, withSectorInclude],
+        order: [[{ model: SchemeStep, as: "steps" }, "stepOrder", "ASC"]],
+        transaction
+      });
+
+      return scheme;
+    }
+  );
+
+  return sendSuccess(res, serializeScheme(updatedScheme), "Scheme updated successfully");
 });
 
 export const deleteScheme = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -311,4 +569,107 @@ export const deleteScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
   });
 
   return sendNoContent(res);
+});
+
+export const updateSchemeStep = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
+  const schemeId = Number.parseInt(req.params.schemeId, 10);
+  const stepId = Number.parseInt(req.params.stepId, 10);
+
+  if (Number.isNaN(schemeId)) {
+    throw new ApiError("Invalid scheme id", 400);
+  }
+  if (Number.isNaN(stepId)) {
+    throw new ApiError("Invalid step id", 400);
+  }
+
+  const step = await SchemeStep.findOne({
+    where: { id: stepId, schemeId }
+  });
+
+  if (!step) {
+    throw new ApiError("Scheme step not found", 404);
+  }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  assertNoRestrictedFields(body);
+
+  const updates: Record<string, unknown> = {};
+
+  const stepOrderInput = body.stepOrder ?? body.step_order;
+  if (stepOrderInput !== undefined) {
+    const stepOrder = Number.parseInt(String(stepOrderInput), 10);
+    if (!Number.isFinite(stepOrder) || stepOrder <= 0) {
+      throw new ApiError("step_order must be a positive integer", 400);
+    }
+
+    if (stepOrder !== step.stepOrder) {
+      const existingStep = await SchemeStep.findOne({
+        where: {
+          schemeId,
+          stepOrder,
+          id: { [Op.ne]: stepId }
+        }
+      });
+      if (existingStep) {
+        throw new ApiError("A step with this step_order already exists in this scheme", 409);
+      }
+    }
+    updates.stepOrder = stepOrder;
+  }
+
+  const dispNameInput = body.dispName ?? body.disp_name;
+  if (dispNameInput !== undefined) {
+    if (typeof dispNameInput !== "string") {
+      throw new ApiError("disp_name must be a string", 400);
+    }
+    const trimmed = dispNameInput.trim();
+    if (!trimmed) {
+      throw new ApiError("disp_name cannot be empty", 400);
+    }
+    if (trimmed.length > 255) {
+      throw new ApiError("disp_name must be at most 255 characters", 400);
+    }
+    updates.dispName = trimmed;
+  }
+
+  const descriptionInput = body.description;
+  if (descriptionInput !== undefined) {
+    if (descriptionInput === null || descriptionInput === "") {
+      updates.description = null;
+    } else if (typeof descriptionInput === "string") {
+      updates.description = descriptionInput.trim();
+    } else {
+      throw new ApiError("description must be a string", 400);
+    }
+  }
+
+  const statusInput = body.status;
+  if (statusInput !== undefined) {
+    updates.status = normalizeStatusValue(statusInput);
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new ApiError("No fields provided for update", 400);
+  }
+
+  updates.updatedBy = userId;
+
+  await step.update(updates);
+
+  const serialized = {
+    id: step.id,
+    schemeId: step.schemeId,
+    stepOrder: step.stepOrder,
+    dispName: step.dispName,
+    description: step.description ?? null,
+    status: step.status,
+    createdBy: step.createdBy ?? null,
+    updatedBy: step.updatedBy ?? null,
+    createdAt: step.createdAt,
+    updatedAt: step.updatedAt
+  };
+
+  return sendSuccess(res, serialized, "Scheme step updated successfully");
 });
