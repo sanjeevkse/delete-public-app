@@ -26,8 +26,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/request-otp",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "request-otp"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "request-otp"
+              ]
             },
             "description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
           },
@@ -49,8 +55,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
           },
@@ -68,8 +80,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "Retrieves the authenticated user's profile information including user details, profile data, roles, and permissions. Requires a valid Bearer token obtained from the Login endpoint."
           },
@@ -95,8 +113,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
           },
@@ -128,8 +152,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/profile/image",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "profile", "image"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile",
+                "image"
+              ]
             },
             "description": "Uploads a new avatar for the authenticated user. Submit a single profileImage file (JPEG/PNG/WEBP/HEIC). The response returns the updated user record."
           },
@@ -147,8 +178,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/sidebar",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "sidebar"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "sidebar"
+              ]
             },
             "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups."
           },
@@ -171,8 +208,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25&search=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -207,8 +250,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -278,8 +328,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts?page=1&limit=20&sort=DESC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
               "query": [
                 {
                   "key": "tags",
@@ -360,8 +415,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Retrieves a single active post by id including media, author, and aggregated reaction counts."
           },
@@ -401,8 +462,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "my-posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "my-posts"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -497,8 +563,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ]
             },
             "description": "Creates a new post for the authenticated user. Submit the request as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 images + 1 video at 5MB each). Uploaded media becomes available from `{{baseUrl}}/uploads/...`."
           },
@@ -549,8 +620,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Updates a post's textual metadata (description, tags, and coordinates). Only the original creator or an admin can modify it. To manage media, use the dedicated media endpoints."
           },
@@ -600,8 +677,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "media"
+              ]
             },
             "description": "Appends additional media to an existing post. Provide uploads via `media` file fields while respecting the 4 image / 1 video limit."
           },
@@ -640,8 +724,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "media"
+              ]
             },
             "description": "Soft deletes one or more media items from a post by marking them inactive. Pass the media IDs to remove."
           },
@@ -672,8 +763,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ]
             },
             "description": "Soft deletes a post. Only the creator or an admin may perform this action."
           },
@@ -722,8 +819,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts", "{{postId}}", "reactions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}",
+                "reactions"
+              ]
             },
             "description": "Adds or updates the caller's reaction for the post. Use LIKE or DISLIKE to react, or NO_REACTION to clear an existing reaction. Returns the updated reaction counts."
           },
@@ -774,8 +878,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ],
               "query": [
                 {
                   "key": "title",
@@ -857,8 +966,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Retrieves a single active event along with its media and registration count."
           },
@@ -961,8 +1076,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ]
             },
             "description": "Creates a new event for the authenticated user. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
           },
@@ -1013,8 +1133,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Updates event details. Media updates must be handled using the dedicated media endpoints."
           },
@@ -1070,8 +1196,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "media"
+              ]
             },
             "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
           },
@@ -1124,8 +1257,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "media"
+              ]
             },
             "description": "Soft-deletes one or more media items from an event. Provide mediaIds from the add media response."
           },
@@ -1156,59 +1296,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
             },
             "description": "Soft deletes an event and its media/registrations."
-          },
-          "response": []
-        },
-        {
-          "name": "Register For Event (Self)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status code is 200 or 201\", function () {",
-                  "  pm.expect([200, 201]).to.include(pm.response.code);",
-                  "});",
-                  "var jsonData = {};",
-                  "try {",
-                  "  jsonData = pm.response.json();",
-                  "} catch (err) {",
-                  "  jsonData = {};",
-                  "}",
-                  "pm.test(\"Registration object present\", function () {",
-                  "  pm.expect(jsonData && jsonData.registration).to.exist;",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "register"]
-            },
-            "description": "Registers the authenticated user for the selected event, reactivating any soft-deleted registration."
           },
           "response": []
         },
@@ -1260,50 +1357,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "register"
+              ]
             },
             "description": "Registers a guest (non-user) for an event. Worker must be logged in. Requires guestName and guestContactNumber. Email is optional."
-          },
-          "response": []
-        },
-        {
-          "name": "Register Guest For Event (No Email)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status code is 200 or 201\", function () {",
-                  "  pm.expect([200, 201]).to.include(pm.response.code);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{authToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"guestName\": \"Jane Williams\",\n  \"guestContactNumber\": \"5551234567\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "register"]
-            },
-            "description": "Registers a guest without email (email is optional). Only guestName and guestContactNumber are required."
           },
           "response": []
         },
@@ -1340,8 +1404,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/unregister",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "unregister"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "unregister"
+              ]
             },
             "description": "Soft-unregisters the authenticated user from the event. Optionally include a reason."
           },
@@ -1380,8 +1451,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/registrations/{{registrationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "registrations", "{{registrationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "registrations",
+                "{{registrationId}}"
+              ]
             },
             "description": "Unregisters a specific registration by ID. Can unregister your own user registration or a guest registration you created. Reason is optional."
           },
@@ -1444,8 +1521,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "registrations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "registrations"
+              ],
               "query": [
                 {
                   "key": "includeUnregistered",
@@ -1465,6 +1549,101 @@
               ]
             },
             "description": "Lists registrations for a specific event, including both user and guest registrations. Each registration has an isGuest flag. User registrations have user details, guest registrations have guestDetails. Use includeUnregistered=true to include soft-unregistered entries."
+          },
+          "response": []
+        },
+        {
+          "name": "Register For Event (User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Registration object present\", function () {",
+                  "  pm.expect(jsonData && jsonData.data).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"1234567890\",\n  \"email\": \"john@example.com\",\n  \"fullAddress\": \"123 Main Street\",\n  \"wardNumberId\": 5,\n  \"boothNumberId\": 10,\n  \"dateOfBirth\": \"1990-01-01\",\n  \"age\": 34,\n  \"registeredBy\": \"Self\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "register"
+              ]
+            },
+            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, and other fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Register For Event (Minimal - Guest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Minimal Guest\",\n  \"contactNumber\": \"5551234567\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "register"
+              ]
+            },
+            "description": "Registers a guest with only mandatory fields: fullName and contactNumber."
           },
           "response": []
         }
@@ -1519,8 +1698,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs?status=1&submittedFor=self&sort=DESC&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -1590,8 +1774,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "{{jobId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "{{jobId}}"
+              ]
             },
             "description": "Retrieves a single active job application with applicant details if available."
           },
@@ -1696,8 +1886,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/jobs",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ]
             },
             "description": "Creates a new job application. When applying for others, include contact and address details plus the resume file (PDF, DOC, DOCX up to 25 MB)."
           },
@@ -1794,8 +1989,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "{{jobId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "{{jobId}}"
+              ]
             },
             "description": "Updates an existing job application. Submit the same required fields; include a resume file to replace the previous upload."
           },
@@ -1826,8 +2027,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/{{jobId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "{{jobId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "{{jobId}}"
+              ]
             },
             "description": "Soft deletes a job application by setting status to 0."
           },
@@ -1884,8 +2091,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes?status=1&search=grant&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -1960,8 +2172,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes", "{{schemeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}"
+              ]
             },
             "description": "Retrieves a single active scheme."
           },
@@ -2015,8 +2233,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/schemes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes"
+              ]
             },
             "description": "Creates a new scheme record."
           },
@@ -2067,8 +2290,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes", "{{schemeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}"
+              ]
             },
             "description": "Updates a scheme's name, description, or status."
           },
@@ -2099,10 +2328,72 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/schemes/{{schemeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes", "{{schemeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}"
+              ]
             },
             "description": "Soft deletes the scheme by toggling status to 0."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Scheme Step",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = {};",
+                  "try {",
+                  "  jsonData = pm.response.json();",
+                  "} catch (err) {",
+                  "  jsonData = {};",
+                  "}",
+                  "pm.test(\"Response success flag is true\", function () {",
+                  "  pm.expect(jsonData && jsonData.success).to.be.true;",
+                  "});",
+                  "pm.test(\"Scheme step updated\", function () {",
+                  "  pm.expect(jsonData && jsonData.data && jsonData.data.id).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stepOrder\": 1,\n  \"dispName\": \"Updated Step Name\",\n  \"description\": \"Updated step description\",\n  \"status\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/schemes/{{schemeId}}/steps/{{stepId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes",
+                "{{schemeId}}",
+                "steps",
+                "{{stepId}}"
+              ]
+            },
+            "description": "Updates an individual scheme step."
           },
           "response": []
         }
@@ -2131,8 +2422,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
             }
           },
           "response": []
@@ -2149,8 +2446,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2177,8 +2480,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           },
           "response": []
@@ -2203,8 +2513,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           },
           "response": []
@@ -2221,8 +2538,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
             }
           },
           "response": []
@@ -2247,8 +2571,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "roles"
+              ]
             }
           },
           "response": []
@@ -2265,8 +2597,17 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/{{userId}}/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "{{userId}}", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{userId}}",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Detaches the specified role from the user. If all roles are removed, the default public role is restored automatically."
           },
@@ -2292,8 +2633,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/:id/posts-block",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", ":id", "posts-block"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":id",
+                "posts-block"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2323,8 +2672,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ]
             }
           },
           "response": []
@@ -2341,8 +2696,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Get a specific role with its permissions, parent role, and child roles."
           },
@@ -2360,8 +2722,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}", "permissions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}",
+                "permissions"
+              ]
             },
             "description": "Get only the permissions for a specific role, including permission group details."
           },
@@ -2387,8 +2757,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ]
             },
             "description": "Creates a role with the supplied numeric permission IDs. Call the permissions listing endpoint to look up IDs."
           },
@@ -2406,8 +2782,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permissions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permissions"
+              ]
             },
             "description": "Lists every permission record (including wildcards such as posts:*). Requires the admin.permissions:list grant."
           },
@@ -2433,8 +2815,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             },
             "description": "Replaces the role details along with its numeric permission IDs."
           },
@@ -2452,8 +2841,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles/{{roleId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles", "{{roleId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles",
+                "{{roleId}}"
+              ]
             }
           },
           "response": []
@@ -2470,8 +2866,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups?includePermissions=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups"
+              ],
               "query": [
                 {
                   "key": "includePermissions",
@@ -2502,8 +2904,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups",
+                "1"
+              ]
             },
             "description": "Retrieve a single permission group with its associated permissions"
           },
@@ -2521,8 +2930,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups/1/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups", "1", "permissions"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups",
+                "1",
+                "permissions"
+              ]
             },
             "description": "Get only the permissions for a specific permission group"
           },
@@ -2548,8 +2965,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups"
+              ]
             },
             "description": "Create a new permission group"
           },
@@ -2575,8 +2998,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups",
+                "1"
+              ]
             },
             "description": "Update an existing permission group"
           },
@@ -2594,8 +3024,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups/1/deactivate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups", "1", "deactivate"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups",
+                "1",
+                "deactivate"
+              ]
             },
             "description": "Soft delete (deactivate) a permission group"
           },
@@ -2613,8 +3051,16 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups/1/activate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups", "1", "activate"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups",
+                "1",
+                "activate"
+              ]
             },
             "description": "Activate a deactivated permission group"
           },
@@ -2632,8 +3078,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups",
+                "1"
+              ]
             },
             "description": "Permanently delete a permission group (only if it has no associated permissions)"
           },
@@ -2690,8 +3143,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-applications?status=1&applicantType=SELF&schemeId={{schemeId}}&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-applications"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-applications"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -2780,8 +3238,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-applications", "{{schemeApplicationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-applications",
+                "{{schemeApplicationId}}"
+              ]
             },
             "description": "Retrieves a single active application. The response includes related metadata objects for scheme, ward, booth, governmentLevel, sector, schemeType, ownershipType, genderOption, widowStatus, disabilityStatus, employmentStatus, plus reviewer/applicant summaries."
           },
@@ -2940,8 +3404,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/scheme-applications",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-applications"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-applications"
+              ]
             },
             "description": "Submits a new scheme application with the mandatory document upload. Provide the ids from the relevant meta tables (governmentLevel, sector, schemeTypeLookup, etc.)."
           },
@@ -3021,8 +3490,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-applications", "{{schemeApplicationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-applications",
+                "{{schemeApplicationId}}"
+              ]
             },
             "description": "Updates mutable fields on an application. Status/audit columns remain server managed. Attach a new document to replace the existing file."
           },
@@ -3053,8 +3528,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-applications", "{{schemeApplicationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-applications",
+                "{{schemeApplicationId}}"
+              ]
             },
             "description": "Soft deletes the application (status=0)."
           },
@@ -3081,8 +3562,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ]
             },
             "description": "Create a new member with full name, contact number, and email"
           },
@@ -3095,8 +3581,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3127,8 +3618,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?search=John&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -3156,8 +3652,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3186,8 +3688,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3216,8 +3724,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3237,8 +3751,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3276,8 +3796,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ]
             },
             "description": "Create a new community with all details"
           },
@@ -3290,8 +3815,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3340,8 +3870,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?search=Tech&communityTypeId=1&isRegistered=1&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -3379,8 +3914,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3413,8 +3954,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3447,8 +3994,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3481,8 +4035,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/member-count",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id", "member-count"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id",
+                "member-count"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3507,8 +4068,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3548,8 +4115,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/businesses",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ]
             },
             "description": "Create a new business"
           },
@@ -3562,8 +4134,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3598,8 +4175,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3633,8 +4216,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3659,8 +4248,15 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3685,8 +4281,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3723,8 +4325,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members"
+              ]
             },
             "description": "Create a new family member"
           },
@@ -3737,8 +4344,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3781,8 +4393,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3814,8 +4432,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3847,8 +4471,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3872,8 +4503,14 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3915,8 +4552,13 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "business-types"]
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "business-types"
+                  ]
                 },
                 "description": "Create a new business type"
               },
@@ -3929,8 +4571,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types?page=1&limit=10&search=&status=1",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "business-types"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "business-types"
+                  ],
                   "query": [
                     {
                       "key": "page",
@@ -3961,8 +4608,14 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "business-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "business-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -3996,8 +4649,14 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "business-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "business-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4022,8 +4681,15 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id/status",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "business-types", ":id", "status"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "business-types",
+                    ":id",
+                    "status"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4048,8 +4714,14 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/business-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "business-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "business-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4086,8 +4758,13 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types"]
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types"
+                  ]
                 },
                 "description": "Create a new community type with display name, description, and status"
               },
@@ -4100,8 +4777,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types?page=1&limit=25",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types"
+                  ],
                   "query": [
                     {
                       "key": "page",
@@ -4138,8 +4820,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types?search=Sports&status=1&page=1&limit=25",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types"
+                  ],
                   "query": [
                     {
                       "key": "search",
@@ -4172,8 +4859,14 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4206,8 +4899,14 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4240,8 +4939,15 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id/status",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types", ":id", "status"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types",
+                    ":id",
+                    "status"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4266,8 +4972,14 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/community-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "community-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "community-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4305,8 +5017,13 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "relation-types"]
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "relation-types"
+                  ]
                 },
                 "description": "Create a new relation type"
               },
@@ -4319,8 +5036,13 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types?page=1&limit=25",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "relation-types"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "relation-types"
+                  ],
                   "query": [
                     {
                       "key": "page",
@@ -4353,8 +5075,14 @@
                 "header": [],
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "relation-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "relation-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4386,8 +5114,14 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "relation-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "relation-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4419,8 +5153,15 @@
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id/status",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "relation-types", ":id", "status"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "relation-types",
+                    ":id",
+                    "status"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4444,8 +5185,14 @@
                 ],
                 "url": {
                   "raw": "{{baseUrl}}/api/relation-types/:id",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "relation-types", ":id"],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "relation-types",
+                    ":id"
+                  ],
                   "variable": [
                     {
                       "key": "id",
@@ -4507,8 +5254,13 @@
                     ],
                     "url": {
                       "raw": "{{baseUrl}}/api/business-types",
-                      "host": ["{{baseUrl}}"],
-                      "path": ["api", "business-types"]
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "business-types"
+                      ]
                     },
                     "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
                   },
@@ -4575,8 +5327,13 @@
                     },
                     "url": {
                       "raw": "{{baseUrl}}/api/business-types",
-                      "host": ["{{baseUrl}}"],
-                      "path": ["api", "business-types"]
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "business-types"
+                      ]
                     },
                     "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
                   },
@@ -4629,8 +5386,13 @@
                     ],
                     "url": {
                       "raw": "{{baseUrl}}/api/community-types",
-                      "host": ["{{baseUrl}}"],
-                      "path": ["api", "community-types"]
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "community-types"
+                      ]
                     },
                     "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
                   },
@@ -4697,8 +5459,13 @@
                     },
                     "url": {
                       "raw": "{{baseUrl}}/api/community-types",
-                      "host": ["{{baseUrl}}"],
-                      "path": ["api", "community-types"]
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "community-types"
+                      ]
                     },
                     "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
                   },
@@ -4751,8 +5518,13 @@
                     ],
                     "url": {
                       "raw": "{{baseUrl}}/api/relation-types",
-                      "host": ["{{baseUrl}}"],
-                      "path": ["api", "relation-types"]
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "relation-types"
+                      ]
                     },
                     "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
                   },
@@ -4819,8 +5591,13 @@
                     },
                     "url": {
                       "raw": "{{baseUrl}}/api/relation-types",
-                      "host": ["{{baseUrl}}"],
-                      "path": ["api", "relation-types"]
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "relation-types"
+                      ]
                     },
                     "description": "Lists active posts with optional tag and location filters. Pass `sort=ASC` for oldest-first; default is `DESC`. Reaction counts and active media entries are embedded in each record."
                   },
@@ -4842,8 +5619,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/ward-numbers",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ward-numbers"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers"
+              ]
             },
             "description": "Retrieves all ward numbers"
           },
@@ -4861,8 +5643,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers?wardNumberId=145",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "booth-numbers"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers"
+              ],
               "query": [
                 {
                   "key": "wardNumberId",
@@ -4906,8 +5693,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types"
+              ]
             }
           },
           "response": []
@@ -4929,8 +5721,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -4959,8 +5756,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4988,8 +5791,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5026,8 +5835,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5099,8 +5914,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaints",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ]
             }
           },
           "response": []
@@ -5122,8 +5942,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaints?page=2&pageSize=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -5155,8 +5980,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaints/13",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", "13"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                "13"
+              ]
             }
           },
           "response": []
@@ -5208,8 +6039,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaints/13",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", "13"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                "13"
+              ]
             }
           },
           "response": []
@@ -5231,8 +6068,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaints/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5270,8 +6113,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaints/13/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", "13", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                "13",
+                "media"
+              ]
             }
           },
           "response": []
@@ -5307,8 +6157,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaints/13/media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", "13", "media"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                "13",
+                "media"
+              ]
             }
           },
           "response": []
@@ -5349,8 +6206,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/pa-events",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events"
+              ]
             }
           },
           "response": []
@@ -5372,8 +6234,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pa-events?search=Update",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -5401,8 +6268,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pa-events/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events", "2"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events",
+                "2"
+              ]
             }
           },
           "response": []
@@ -5438,8 +6311,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/pa-events/2",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events", "2"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events",
+                "2"
+              ]
             }
           },
           "response": []
@@ -5461,8 +6340,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pa-events/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events",
+                "1"
+              ]
             }
           },
           "response": []
@@ -5489,8 +6374,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables"
+              ]
             },
             "description": "Returns metadata describing every manageable lookup table. Newly added entries include `governmentLevel`, `sector`, `schemeTypeLookup`, `ownershipType`, `genderOption`, `widowStatus`, `disabilityStatus`, and `employmentStatus` in addition to existing meta tables. Use the `name` value from this response with the other `/meta-tables/:tableName/*` endpoints."
           },
@@ -5513,8 +6403,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -5562,8 +6459,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5595,8 +6500,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/schema",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "schema"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "schema"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5624,8 +6536,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/stats",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "stats"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "stats"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5662,8 +6581,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5700,8 +6626,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5733,8 +6667,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5775,8 +6717,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/bulk-status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "bulk-status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "bulk-status"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5809,8 +6758,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/forms",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "forms"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "forms"
+              ]
             },
             "description": "Returns paginated forms along with their fields, options, and any ward/booth mappings attached to each form. Requires authentication so the backend can determine the caller's ward/booth mapping."
           },
@@ -5842,8 +6796,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/forms",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "forms"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "forms"
+              ]
             },
             "description": "Creates a form. Provide optional `wardNumberId` and/or `boothNumberId` to automatically create a tbl_form_mapping record. Omit those fields or send them as null to leave the form unmapped."
           },
@@ -5863,11 +6822,940 @@
         ],
         "url": {
           "raw": "{{baseUrl}}/api/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
         }
       },
       "response": []
+    },
+    {
+      "name": "Scheme Categories",
+      "item": [
+        {
+          "name": "Create Scheme Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \"dispName\": \"Education\",\\n  \"description\": \"Educational schemes and programs\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories"
+              ]
+            },
+            "description": "Create a new scheme category"
+          },
+          "response": []
+        },
+        {
+          "name": "List Scheme Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-categories?page=1&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page (default: 25, max: 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by category name",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status (1=active, 0=inactive)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all scheme categories with pagination and optional search/status filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scheme Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Category ID"
+                }
+              ]
+            },
+            "description": "Get a single scheme category by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Scheme Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \"dispName\": \"Education Updated\",\\n  \"description\": \"Updated educational schemes\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Category ID"
+                }
+              ]
+            },
+            "description": "Update scheme category details"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Scheme Category Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-categories/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Category ID"
+                }
+              ]
+            },
+            "description": "Toggle scheme category status (1=active, 0=inactive)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scheme Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Category ID"
+                }
+              ]
+            },
+            "description": "Delete a scheme category by ID"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Scheme Sectors",
+      "item": [
+        {
+          "name": "Create Scheme Sector",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \"dispName\": \"Agriculture\",\\n  \"description\": \"Agricultural and farming sector\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-sectors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors"
+              ]
+            },
+            "description": "Create a new scheme sector"
+          },
+          "response": []
+        },
+        {
+          "name": "List Scheme Sectors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-sectors?page=1&limit=25",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page (default: 25, max: 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by sector name",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status (1=active, 0=inactive)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all scheme sectors with pagination and optional search/status filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scheme Sector by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-sectors/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Sector ID"
+                }
+              ]
+            },
+            "description": "Get a single scheme sector by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Scheme Sector",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \"dispName\": \"Agriculture Updated\",\\n  \"description\": \"Updated agricultural sector\"\\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-sectors/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Sector ID"
+                }
+              ]
+            },
+            "description": "Update scheme sector details"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Scheme Sector Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-sectors/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Sector ID"
+                }
+              ]
+            },
+            "description": "Toggle scheme sector status (1=active, 0=inactive)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scheme Sector",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scheme-sectors/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Scheme Sector ID"
+                }
+              ]
+            },
+            "description": "Delete a scheme sector by ID"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complaint-Sector-Department",
+      "item": [
+        {
+          "name": "Create Sector/Department",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Electrical Department\",\n  \"description\": \"Handles all electrical related complaints\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sector-departments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Sector/Departments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sector-departments?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sector/Department By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sector-departments/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Sector/Department",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Water Supply Department\",\n  \"description\": \"Manages water supply and sanitation complaints\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sector-departments/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Sector/Department",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sector-departments/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complaint-Status",
+      "item": [
+        {
+          "name": "Create Complaint Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Submitted\",\n  \"description\": \"Complaint has been submitted\",\n  \"colorCode\": \"#808080\",\n  \"displayOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaint-statuses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Complaint Statuses",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/complaint-statuses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Complaint Status By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/complaint-statuses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Complaint Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"In Progress\",\n  \"description\": \"Complaint is being worked on\",\n  \"colorCode\": \"#0000FF\",\n  \"displayOrder\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaint-statuses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Complaint Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/complaint-statuses/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Complaint Status (without media)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"complaintStatusId\": 2,\n  \"remarks\": \"Complaint reviewed and assigned to electrical department\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaints/:complaintId/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":complaintId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Complaint Status (with media)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "complaintStatusId",
+                  "value": "4",
+                  "type": "text",
+                  "description": "Status ID - Required"
+                },
+                {
+                  "key": "remarks",
+                  "value": "Street light has been repaired and tested. Work completed successfully.",
+                  "type": "text",
+                  "description": "Optional remarks"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "description": "Optional photos/videos/documents",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/complaints/:complaintId/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":complaintId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Complaint Status History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/complaints/:complaintId/status-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":complaintId",
+                "status-history"
+              ],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -5887,7 +7775,9 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     },
     {
@@ -5896,7 +7786,9 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     }
   ],
