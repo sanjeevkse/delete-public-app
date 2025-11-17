@@ -60,6 +60,8 @@ import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
 import FormMapping from "./FormMapping";
 import DeviceToken from "./DeviceToken";
+import PaEvent from "./PaEvent";
+import PaEventLog from "./PaEventLog";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -170,6 +172,15 @@ const establishAssociations = (): void => {
   PostReaction.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(PostReaction, { foreignKey: "userId", as: "postReactions" });
 
+  PaEvent.belongsTo(User, { foreignKey: "bossId", as: "boss" });
+  User.hasMany(PaEvent, { foreignKey: "bossId", as: "bossEvents" });
+  PaEvent.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
+  User.hasMany(PaEvent, { foreignKey: "createdBy", as: "createdPaEvents" });
+  PaEvent.hasMany(PaEventLog, { foreignKey: "eventId", as: "logs" });
+  PaEventLog.belongsTo(PaEvent, { foreignKey: "eventId", as: "event" });
+  PaEventLog.belongsTo(User, { foreignKey: "createdBy", as: "actor" });
+  User.hasMany(PaEventLog, { foreignKey: "createdBy", as: "paEventLogs" });
+
   Job.belongsTo(User, { foreignKey: "applicantUserId", as: "applicant" });
   User.hasMany(Job, { foreignKey: "applicantUserId", as: "jobApplications" });
 
@@ -223,6 +234,8 @@ const establishAssociations = (): void => {
     foreignKey: "schemeTypeId",
     as: "schemeApplications"
   });
+  MetaSchemeType.hasMany(MetaSchemeTypeStep, { foreignKey: "schemeTypeId", as: "steps" });
+  MetaSchemeTypeStep.belongsTo(MetaSchemeType, { foreignKey: "schemeTypeId", as: "schemeType" });
 
   UserSchemeApplication.belongsTo(MetaOwnershipType, {
     foreignKey: "ownershipTypeId",

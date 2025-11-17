@@ -1053,25 +1053,53 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     return sendBadRequest(res, "Event registration is only allowed during the event window");
   }
 
-  // Parse and validate all fields - fullName and contactNumber are mandatory
-  const parsedUserId = req.body.userId !== undefined && req.body.userId !== null && req.body.userId !== "" 
-    ? parseRequiredNumber(req.body.userId, "userId") 
-    : null;
-  
-  const parsedFullName = parseRequiredString(req.body.fullName, "fullName");
-  const parsedContactNumber = parseRequiredString(req.body.contactNumber, "contactNumber");
-  const parsedEmail = parseOptionalString(req.body.email, "email", 255);
-  const parsedRegisteredBy = parseOptionalString(req.body.registeredBy, "registeredBy");
-  const parsedFullAddress = parseOptionalString(req.body.fullAddress, "fullAddress");
-  const parsedWardNumberId = parseOptionalNumber(req.body.wardNumberId, "wardNumberId");
-  const parsedBoothNumberId = parseOptionalNumber(req.body.boothNumberId, "boothNumberId");
-  const parsedDateOfBirth = parseOptionalDateOnly(req.body.dateOfBirth, "dateOfBirth");
-  const parsedAge = parseOptionalNumber(req.body.age, "age");
+  const body = (req.body ?? {}) as Record<string, any>;
+  const hasField = (field: string): boolean => Object.prototype.hasOwnProperty.call(body, field);
+  const pickFieldValue = (...fields: string[]): { value: unknown; field: string } => {
+    for (const field of fields) {
+      if (hasField(field)) {
+        return { value: body[field], field };
+      }
+    }
+    return { value: undefined, field: fields[0] };
+  };
+
+  const parsedUserId =
+    body.userId !== undefined && body.userId !== null && body.userId !== ""
+      ? parseRequiredNumber(body.userId, "userId")
+      : null;
+
+  const { value: fullNameValue, field: fullNameField } = pickFieldValue("fullName", "guestName");
+  const parsedFullName = parseOptionalString(fullNameValue, fullNameField, 255);
+  if (parsedUserId === null && !parsedFullName) {
+    throw new ApiError("fullName (or guestName) is required for guest registrations", 400);
+  }
+
+  const { value: contactNumberValue, field: contactField } = pickFieldValue(
+    "contactNumber",
+    "guestContactNumber"
+  );
+  const parsedContactNumber = parseOptionalString(contactNumberValue, contactField, 255);
+  if (parsedUserId === null && !parsedContactNumber) {
+    throw new ApiError(
+      "contactNumber (or guestContactNumber) is required for guest registrations",
+      400
+    );
+  }
+
+  const { value: emailValue, field: emailField } = pickFieldValue("email", "guestEmail");
+  const parsedEmail = parseOptionalString(emailValue, emailField, 255);
+  const parsedRegisteredBy = parseOptionalString(body.registeredBy, "registeredBy");
+  const parsedFullAddress = parseOptionalString(body.fullAddress, "fullAddress");
+  const parsedWardNumberId = parseOptionalNumber(body.wardNumberId, "wardNumberId");
+  const parsedBoothNumberId = parseOptionalNumber(body.boothNumberId, "boothNumberId");
+  const parsedDateOfBirth = parseOptionalDateOnly(body.dateOfBirth, "dateOfBirth");
+  const parsedAge = parseOptionalNumber(body.age, "age");
 
   // Check for existing registration - uniqueness by eventId + userId OR eventId + contactNumber
   let existingRegistration = null;
 
-  if (parsedUserId) {
+  if (parsedUserId !== null) {
     existingRegistration = await EventRegistration.findOne({
       where: { eventId, userId: parsedUserId }
     });
@@ -1114,7 +1142,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
       {
         id: existingRegistration.id,
         eventId: existingRegistration.eventId,
-        isGuest: !parsedUserId
+        isGuest: parsedUserId === null
       },
       "Registration reactivated"
     );
@@ -1128,7 +1156,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     {
       id: registration.id,
       eventId: registration.eventId,
-      isGuest: !parsedUserId
+      isGuest: parsedUserId === null
     },
     "Registered successfully"
   );
@@ -1216,8 +1244,8 @@ export const unregisterRegistration = asyncHandler(
     // 2. For guest registrations, check if registeredBy matches (if registeredBy is numeric)
     const canUnregister =
       (registration.userId !== null && registration.userId === userId) ||
-      (registration.userId === null && 
-        registration.registeredBy && 
+      (registration.userId === null &&
+        registration.registeredBy &&
         !Number.isNaN(Number(registration.registeredBy)) &&
         Number(registration.registeredBy) === userId);
 
