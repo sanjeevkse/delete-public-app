@@ -12,7 +12,8 @@ import {
   getRoleByName,
   parseRoleIdsInput,
   resolveRoleIdsOrDefault,
-  setUserRoles
+  setUserRoles,
+  enrichAdminRolePermissions
 } from "../services/rbacService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import {
@@ -41,6 +42,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     100
   );
   const search = (req.query.search as string) ?? "";
+  const roleId = req.query.roleId ? Number(req.query.roleId) : undefined;
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const { rows, count } = await User.findAndCountAll({
@@ -56,7 +58,11 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
     include: [
       { model: UserProfile, as: "profile" },
-      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        association: "roles",
+        include: [{ association: "permissions" }],
+        ...(roleId && { where: { id: roleId }, required: true })
+      },
       {
         model: UserAccess,
         as: "accessProfiles",
@@ -75,9 +81,23 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     order: [["createdAt", "DESC"]]
   });
 
+  // Enrich Admin roles with all permissions
+  const enrichedRows = await Promise.all(
+    rows.map(async (user) => {
+      if (user.roles && user.roles.length > 0) {
+        const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+        return {
+          ...user.toJSON(),
+          roles: enrichedRoles
+        };
+      }
+      return user;
+    })
+  );
+
   const pagination = calculatePagination(count, page, limit);
 
-  return sendSuccessWithPagination(res, rows, pagination, "Users retrieved successfully");
+  return sendSuccessWithPagination(res, enrichedRows, pagination, "Users retrieved successfully");
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
@@ -146,6 +166,16 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
+  // Enrich Admin roles with all permissions
+  if (created && created.roles && created.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(created.roles);
+    const enrichedUser = {
+      ...created.toJSON(),
+      roles: enrichedRoles
+    };
+    return sendCreated(res, enrichedUser, "User created successfully");
+  }
+
   return sendCreated(res, created, "User created successfully");
 });
 
@@ -174,6 +204,16 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
 
   if (!user) {
     return sendNotFound(res, "User not found", "user");
+  }
+
+  // Enrich Admin roles with all permissions
+  if (user.roles && user.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+    const enrichedUser = {
+      ...user.toJSON(),
+      roles: enrichedRoles
+    };
+    return sendSuccess(res, enrichedUser, "User retrieved successfully");
   }
 
   return sendSuccess(res, user, "User retrieved successfully");
@@ -259,6 +299,16 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
+  // Enrich Admin roles with all permissions
+  if (updated && updated.roles && updated.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updated.roles);
+    const enrichedUser = {
+      ...updated.toJSON(),
+      roles: enrichedRoles
+    };
+    return sendSuccess(res, enrichedUser, "User updated successfully");
+  }
+
   return sendSuccess(res, updated, "User updated successfully");
 });
 
@@ -299,6 +349,17 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
 
     const message =
       targetStatus === 1 ? "User is already active" : "User is already inactive/deactivated";
+
+    // Enrich Admin roles with all permissions
+    if (hydrated && hydrated.roles && hydrated.roles.length > 0) {
+      const enrichedRoles = await enrichAdminRolePermissions(hydrated.roles);
+      const enrichedUser = {
+        ...hydrated.toJSON(),
+        roles: enrichedRoles
+      };
+      return sendSuccess(res, enrichedUser, message);
+    }
+
     return sendSuccess(res, hydrated, message);
   }
 
@@ -327,6 +388,17 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
 
   const message =
     targetStatus === 1 ? "User activated successfully" : "User deactivated successfully";
+
+  // Enrich Admin roles with all permissions
+  if (updated && updated.roles && updated.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updated.roles);
+    const enrichedUser = {
+      ...updated.toJSON(),
+      roles: enrichedRoles
+    };
+    return sendSuccess(res, enrichedUser, message);
+  }
+
   return sendSuccess(res, updated, message);
 });
 

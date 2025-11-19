@@ -62,6 +62,7 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         complaintTypeId,
         wardNumberId: wardNumberId || null,
         boothNumberId: boothNumberId || null,
+        currentStatusId: 1, // Default status is "Pending"
         title,
         description,
         locationText,
@@ -126,7 +127,7 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         model: MetaComplaintStatus,
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
-        required: false
+        required: true
       }
     ]
   });
@@ -138,14 +139,14 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
   const { id } = req.params;
 
   const complaint = await Complaint.findByPk(id, {
-    attributes: { exclude: excludeFields },
+    attributes: { exclude: ["createdBy", "updatedBy", "status", "updatedAt"] },
     include: [
       {
         model: ComplaintMedia,
         as: "media",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields }
+        attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
       },
       {
         model: ComplaintType,
@@ -169,7 +170,7 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
         model: MetaComplaintStatus,
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
-        required: false
+        required: true
       }
     ]
   });
@@ -252,7 +253,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 
   const { rows, count } = await Complaint.findAndCountAll({
     where,
-    attributes: { exclude: excludeFields },
+    attributes: { exclude: ["createdBy", "updatedBy", "status", "updatedAt"] },
     include: [
       {
         model: ComplaintMedia,
@@ -286,7 +287,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         model: MetaComplaintStatus,
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
-        required: false
+        required: true
       }
     ],
     order: [["id", sortDirection]],
@@ -326,7 +327,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       boothNumberId: c.boothNumberId,
       boothNumber: c.boothNumber || null,
       currentStatusId: c.currentStatusId,
-      currentStatus: c.currentStatus || null,
+      currentStatus: c.currentStatus, // Now always present, no need for || null
       title: c.title,
       description: c.description,
       locationText: c.locationText,
@@ -338,7 +339,8 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       alternateContactNumber: c.alternateContactNumber,
       email: c.email,
       fullAddress: c.fullAddress,
-      media: formattedMedia
+      media: formattedMedia,
+      createdAt: c.createdAt
     };
   });
 
@@ -424,7 +426,7 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         model: MetaComplaintStatus,
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
-        required: false
+        required: true
       }
     ]
   });
@@ -526,6 +528,12 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
         model: ComplaintType,
         as: "complaintType",
         attributes: ["id", "dispName"]
+      },
+      {
+        model: MetaComplaintStatus,
+        as: "currentStatus",
+        attributes: ["id", "dispName", "description", "colorCode"],
+        required: true
       }
     ]
   });
@@ -618,6 +626,12 @@ export const removeComplaintMedia = asyncHandler(
           model: ComplaintType,
           as: "complaintType",
           attributes: ["id", "dispName"]
+        },
+        {
+          model: MetaComplaintStatus,
+          as: "currentStatus",
+          attributes: ["id", "dispName", "description", "colorCode"],
+          required: true
         }
       ]
     });

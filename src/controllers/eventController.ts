@@ -28,6 +28,7 @@ import {
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
+import { emitEvent, AppEvent } from "../events/eventBus";
 
 type NormalizedMediaInput = {
   mediaType: MediaType;
@@ -497,7 +498,7 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const title = parseRequiredString(req.body?.title, "title");
   const description = parseRequiredString(req.body?.description, "description");
   const place = parseRequiredString(req.body?.place, "place");
-  const googleMapLink = parseRequiredString(req.body?.googleMapLink, "googleMapLink");
+  const googleMapLink = parseOptionalString(req.body?.googleMapLink, "googleMapLink");
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
   const startDate = parseRequiredDateOnly(req.body?.startDate, "startDate");
@@ -553,6 +554,18 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   });
 
   const created = await fetchEventById(createdEventId);
+
+  // Emit event for push notifications
+  console.log("🔔 Emitting EVENT_PUBLISHED event for:", { eventId: createdEventId, title });
+  emitEvent(AppEvent.EVENT_PUBLISHED, {
+    entityId: createdEventId,
+    userId,
+    title,
+    description,
+    place
+  });
+  console.log("✅ EVENT_PUBLISHED event emitted successfully");
+
   return sendCreated(res, created, "Event created successfully");
 });
 
@@ -808,7 +821,7 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
     updates.place = parseRequiredString(req.body.place, "place");
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "googleMapLink")) {
-    updates.googleMapLink = parseRequiredString(req.body.googleMapLink, "googleMapLink");
+    updates.googleMapLink = parseOptionalString(req.body.googleMapLink, "googleMapLink");
   }
   if (Object.prototype.hasOwnProperty.call(req.body, "latitude")) {
     updates.latitude = parseRequiredNumber(req.body.latitude, "latitude");
@@ -1053,48 +1066,21 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     return sendBadRequest(res, "Event registration is only allowed during the event window");
   }
 
-  const body = (req.body ?? {}) as Record<string, any>;
-  const hasField = (field: string): boolean => Object.prototype.hasOwnProperty.call(body, field);
-  const pickFieldValue = (...fields: string[]): { value: unknown; field: string } => {
-    for (const field of fields) {
-      if (hasField(field)) {
-        return { value: body[field], field };
-      }
-    }
-    return { value: undefined, field: fields[0] };
-  };
-
+  // Parse and validate all fields - fullName and contactNumber are mandatory
   const parsedUserId =
-    body.userId !== undefined && body.userId !== null && body.userId !== ""
-      ? parseRequiredNumber(body.userId, "userId")
+    req.body.userId !== undefined && req.body.userId !== null && req.body.userId !== ""
+      ? parseRequiredNumber(req.body.userId, "userId")
       : null;
 
-  const { value: fullNameValue, field: fullNameField } = pickFieldValue("fullName", "guestName");
-  const parsedFullName = parseOptionalString(fullNameValue, fullNameField, 255);
-  if (parsedUserId === null && !parsedFullName) {
-    throw new ApiError("fullName (or guestName) is required for guest registrations", 400);
-  }
-
-  const { value: contactNumberValue, field: contactField } = pickFieldValue(
-    "contactNumber",
-    "guestContactNumber"
-  );
-  const parsedContactNumber = parseOptionalString(contactNumberValue, contactField, 255);
-  if (parsedUserId === null && !parsedContactNumber) {
-    throw new ApiError(
-      "contactNumber (or guestContactNumber) is required for guest registrations",
-      400
-    );
-  }
-
-  const { value: emailValue, field: emailField } = pickFieldValue("email", "guestEmail");
-  const parsedEmail = parseOptionalString(emailValue, emailField, 255);
-  const parsedRegisteredBy = parseOptionalString(body.registeredBy, "registeredBy");
-  const parsedFullAddress = parseOptionalString(body.fullAddress, "fullAddress");
-  const parsedWardNumberId = parseOptionalNumber(body.wardNumberId, "wardNumberId");
-  const parsedBoothNumberId = parseOptionalNumber(body.boothNumberId, "boothNumberId");
-  const parsedDateOfBirth = parseOptionalDateOnly(body.dateOfBirth, "dateOfBirth");
-  const parsedAge = parseOptionalNumber(body.age, "age");
+  const parsedFullName = parseRequiredString(req.body.fullName, "fullName");
+  const parsedContactNumber = parseRequiredString(req.body.contactNumber, "contactNumber");
+  const parsedEmail = parseOptionalString(req.body.email, "email", 255);
+  const parsedRegisteredBy = parseOptionalString(req.body.registeredBy, "registeredBy");
+  const parsedFullAddress = parseOptionalString(req.body.fullAddress, "fullAddress");
+  const parsedWardNumberId = parseOptionalNumber(req.body.wardNumberId, "wardNumberId");
+  const parsedBoothNumberId = parseOptionalNumber(req.body.boothNumberId, "boothNumberId");
+  const parsedDateOfBirth = parseOptionalDateOnly(req.body.dateOfBirth, "dateOfBirth");
+  const parsedAge = parseOptionalNumber(req.body.age, "age");
 
   // Check for existing registration - uniqueness by eventId + userId OR eventId + contactNumber
   let existingRegistration = null;

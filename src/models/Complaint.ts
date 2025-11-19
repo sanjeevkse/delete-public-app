@@ -14,7 +14,7 @@ class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttribute
   declare complaintTypeId: number;
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
-  declare currentStatusId: number | null;
+  declare currentStatusId: CreationOptional<number>;
   declare title: string;
   declare description: string | null;
   declare locationText: string | null;
@@ -67,8 +67,10 @@ Complaint.init(
     },
     currentStatusId: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true,
-      field: "current_status_id"
+      allowNull: false,
+      defaultValue: 1,
+      field: "current_status_id",
+      comment: "Default status is 1 (Pending) from meta_complaint_status table"
     },
     title: {
       type: DataTypes.STRING(255),

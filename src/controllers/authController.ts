@@ -12,7 +12,12 @@ import MetaPermissionGroup from "../models/MetaPermissionGroup";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
 import UserProfile from "../models/UserProfile";
-import { getRoleByName, getUserAccessProfile, setUserRoles } from "../services/rbacService";
+import {
+  getRoleByName,
+  getUserAccessProfile,
+  setUserRoles,
+  enrichAdminRolePermissions
+} from "../services/rbacService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessToken, generateNumericOtp } from "../utils/auth";
@@ -223,12 +228,22 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const profileExists = Boolean(sanitizedUser?.profile);
   const resolvedUserExists = userExists && profileExists;
 
+  // Enrich Admin roles with all permissions
+  let userForResponse = sanitizedUser;
+  if (sanitizedUser && sanitizedUser.roles && sanitizedUser.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(sanitizedUser.roles);
+    userForResponse = {
+      ...sanitizedUser.toJSON(),
+      roles: enrichedRoles
+    } as any;
+  }
+
   return sendSuccess(
     res,
     {
       userExists: resolvedUserExists,
       token,
-      user: sanitizedUser,
+      user: userForResponse,
       access: accessProfile
     },
     "Login successful"
@@ -249,7 +264,17 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw new ApiError("User not found", 404);
   }
 
-  return sendSuccess(res, { user }, "Profile retrieved successfully");
+  // Enrich Admin roles with all permissions
+  let userForResponse = user;
+  if (user.roles && user.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+    userForResponse = {
+      ...user.toJSON(),
+      roles: enrichedRoles
+    } as any;
+  }
+
+  return sendSuccess(res, { user: userForResponse }, "Profile retrieved successfully");
 });
 
 export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -384,7 +409,17 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     ]
   });
 
-  return sendSuccess(res, { user: updatedUser }, "Profile updated successfully");
+  // Enrich Admin roles with all permissions
+  let userForResponse = updatedUser;
+  if (updatedUser && updatedUser.roles && updatedUser.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updatedUser.roles);
+    userForResponse = {
+      ...updatedUser.toJSON(),
+      roles: enrichedRoles
+    } as any;
+  }
+
+  return sendSuccess(res, { user: userForResponse }, "Profile updated successfully");
 });
 
 export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -425,7 +460,17 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
     throw new ApiError("User not found", 404);
   }
 
-  return sendSuccess(res, { user: updatedUser }, "Profile image updated successfully");
+  // Enrich Admin roles with all permissions
+  let userForResponse = updatedUser;
+  if (updatedUser.roles && updatedUser.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updatedUser.roles);
+    userForResponse = {
+      ...updatedUser.toJSON(),
+      roles: enrichedRoles
+    } as any;
+  }
+
+  return sendSuccess(res, { user: userForResponse }, "Profile image updated successfully");
 });
 
 export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

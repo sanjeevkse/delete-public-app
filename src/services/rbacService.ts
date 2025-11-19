@@ -1,7 +1,7 @@
 import type { Transaction } from "sequelize";
 import { Op } from "sequelize";
 
-import { PUBLIC_ROLE_NAME } from "../config/rbac";
+import { PUBLIC_ROLE_NAME, ADMIN_ROLE_NAME } from "../config/rbac";
 import { ApiError } from "../middlewares/errorHandler";
 import MetaPermission from "../models/MetaPermission";
 import MetaUserRole from "../models/MetaUserRole";
@@ -109,6 +109,56 @@ export const ensurePermissionsLoaded = async (roles: MetaUserRole[]): Promise<Me
   return resolvedRoles;
 };
 
+/**
+ * Check if any of the given roles is the Admin role
+ */
+export const hasAdminRole = (roles: MetaUserRole[] | string[]): boolean => {
+  if (roles.length === 0) {
+    return false;
+  }
+
+  // Handle both MetaUserRole objects and string arrays
+  const roleNames = roles.map((role) => (typeof role === "string" ? role : role.dispName));
+
+  const normalizedRoles = roleNames.map((name) => name.toLowerCase());
+  return normalizedRoles.includes(ADMIN_ROLE_NAME.toLowerCase());
+};
+
+/**
+ * Ensure Admin roles have all permissions loaded
+ * Replaces permissions for Admin roles with all available permissions
+ */
+export const enrichAdminRolePermissions = async (
+  roles: MetaUserRole[]
+): Promise<MetaUserRole[]> => {
+  if (roles.length === 0) {
+    return roles;
+  }
+
+  let allPermissions: MetaPermission[] | null = null;
+
+  const enrichedRoles = await Promise.all(
+    roles.map(async (role) => {
+      if (hasAdminRole([role])) {
+        // Lazy load all permissions only if we encounter an Admin role
+        if (!allPermissions) {
+          allPermissions = await MetaPermission.findAll({
+            where: { status: 1 }
+          });
+        }
+        // Return a new object with all permissions
+        return {
+          ...role.toJSON(),
+          permissions: allPermissions
+        } as any as MetaUserRole;
+      }
+      return role;
+    })
+  );
+
+  return enrichedRoles;
+};
+
 export const getUserAccessProfile = async (userId: number): Promise<UserAccessProfile> => {
   const user = await User.findByPk(userId, {
     include: [
@@ -124,6 +174,21 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
   }
 
   const roles = user.roles ?? [];
+  const roleNames = roles.map((role) => role.dispName);
+
+  // If user has Admin role, grant all permissions
+  if (hasAdminRole(roles)) {
+    const allPermissions = await MetaPermission.findAll({
+      where: { status: 1 }
+    });
+
+    return {
+      roles: roleNames,
+      permissions: allPermissions.map((permission) => permission.dispName)
+    };
+  }
+
+  // For non-admin users, collect permissions from their roles
   const permissionsSet = new Set<string>();
 
   roles.forEach((role) => {
@@ -133,7 +198,7 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
   });
 
   return {
-    roles: roles.map((role) => role.dispName),
+    roles: roleNames,
     permissions: Array.from(permissionsSet)
   };
 };

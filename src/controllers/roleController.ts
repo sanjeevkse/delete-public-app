@@ -7,7 +7,13 @@ import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
 import User from "../models/User";
 import UserRole from "../models/UserRole";
-import { parseRoleIdsInput, resolveRoleIdsOrDefault, setUserRoles } from "../services/rbacService";
+import {
+  parseRoleIdsInput,
+  resolveRoleIdsOrDefault,
+  setUserRoles,
+  hasAdminRole,
+  enrichAdminRolePermissions
+} from "../services/rbacService";
 import {
   sendSuccess,
   sendCreated,
@@ -26,7 +32,23 @@ export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
     ]
   });
 
-  return sendSuccess(res, roles, "Roles retrieved successfully");
+  // For Admin role, replace permissions with all permissions
+  const rolesWithPermissions = await Promise.all(
+    roles.map(async (role) => {
+      if (hasAdminRole([role])) {
+        const allPermissions = await MetaPermission.findAll({
+          where: { status: 1 }
+        });
+        return {
+          ...role.toJSON(),
+          permissions: allPermissions
+        };
+      }
+      return role;
+    })
+  );
+
+  return sendSuccess(res, rolesWithPermissions, "Roles retrieved successfully");
 });
 
 export const getRole = asyncHandler(async (req: Request, res: Response) => {
@@ -40,6 +62,18 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
 
   if (!role) {
     return sendNotFound(res, "Role not found", "role");
+  }
+
+  // For Admin role, replace permissions with all permissions
+  if (hasAdminRole([role])) {
+    const allPermissions = await MetaPermission.findAll({
+      where: { status: 1 }
+    });
+    const roleWithAllPermissions = {
+      ...role.toJSON(),
+      permissions: allPermissions
+    };
+    return sendSuccess(res, roleWithAllPermissions, "Role retrieved successfully");
   }
 
   return sendSuccess(res, role, "Role retrieved successfully");
@@ -58,6 +92,15 @@ export const getRolePermissions = asyncHandler(async (req: Request, res: Respons
 
   if (!role) {
     return sendNotFound(res, "Role not found", "role");
+  }
+
+  // For Admin role, return all permissions
+  if (hasAdminRole([role])) {
+    const allPermissions = await MetaPermission.findAll({
+      where: { status: 1 },
+      include: [{ association: "group" }]
+    });
+    return sendSuccess(res, allPermissions, "Role permissions retrieved successfully");
   }
 
   return sendSuccess(res, role.permissions, "Role permissions retrieved successfully");
@@ -100,6 +143,18 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
       { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] }
     ]
   });
+
+  // For Admin role, replace permissions with all permissions
+  if (created && hasAdminRole([created])) {
+    const allPermissions = await MetaPermission.findAll({
+      where: { status: 1 }
+    });
+    const createdWithAllPermissions = {
+      ...created.toJSON(),
+      permissions: allPermissions
+    };
+    return sendCreated(res, createdWithAllPermissions, "Role created successfully");
+  }
 
   return sendCreated(res, created, "Role created successfully");
 });
@@ -153,6 +208,18 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
     ]
   });
 
+  // For Admin role, replace permissions with all permissions
+  if (updated && hasAdminRole([updated])) {
+    const allPermissions = await MetaPermission.findAll({
+      where: { status: 1 }
+    });
+    const updatedWithAllPermissions = {
+      ...updated.toJSON(),
+      permissions: allPermissions
+    };
+    return sendSuccess(res, updatedWithAllPermissions, "Role updated successfully");
+  }
+
   return sendSuccess(res, updated, "Role updated successfully");
 });
 
@@ -188,6 +255,16 @@ export const assignRoleToUser = asyncHandler(async (req: Request, res: Response)
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
+
+  // Enrich Admin roles with all permissions
+  if (updatedUser && updatedUser.roles && updatedUser.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updatedUser.roles);
+    const enrichedUser = {
+      ...updatedUser.toJSON(),
+      roles: enrichedRoles
+    };
+    return sendSuccess(res, enrichedUser, "Role assigned to user successfully");
+  }
 
   return sendSuccess(res, updatedUser, "Role assigned to user successfully");
 });
@@ -238,6 +315,16 @@ export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Respo
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
+
+  // Enrich Admin roles with all permissions
+  if (updatedUser && updatedUser.roles && updatedUser.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updatedUser.roles);
+    const enrichedUser = {
+      ...updatedUser.toJSON(),
+      roles: enrichedRoles
+    };
+    return sendSuccess(res, enrichedUser, "Role unassigned from user successfully");
+  }
 
   return sendSuccess(res, updatedUser, "Role unassigned from user successfully");
 });

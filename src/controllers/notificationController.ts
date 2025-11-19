@@ -5,23 +5,34 @@ import notificationService from "../services/notificationService";
 import { Op } from "sequelize";
 
 /**
- * Register a device token for push notifications
+ * Register FCM token for the authenticated user (Mobile App)
+ * This should be called when:
+ * - User logs in
+ * - App starts and user is already logged in
+ * - FCM token is refreshed
  */
 export const registerDeviceToken = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req.user as any)?.id || req.body.userId;
+
     if (!userId) {
-      res.status(401).json({ success: false, message: "Unauthorized" });
+      res.status(401).json({ success: false, message: "Authentication required" });
       return;
     }
 
     const { token, deviceId, platform } = req.body;
 
     if (!token) {
-      res.status(400).json({ success: false, message: "Token is required" });
+      res.status(400).json({ success: false, message: "FCM token is required" });
+      return;
+    }
+
+    // Validate platform
+    if (platform && !["ios", "android", "web"].includes(platform)) {
+      res.status(400).json({ success: false, message: "Platform must be ios, android, or web" });
       return;
     }
 
@@ -29,11 +40,11 @@ export const registerDeviceToken = async (
     let deviceToken = await DeviceToken.findOne({ where: { token } });
 
     if (deviceToken) {
-      // Update existing token
+      // Update existing token (might have changed userId/device)
       await deviceToken.update({
         userId,
-        deviceId,
-        platform,
+        deviceId: deviceId || deviceToken.deviceId,
+        platform: platform || deviceToken.platform,
         isActive: true,
         lastUsedAt: new Date(),
         updatedBy: userId
@@ -43,8 +54,8 @@ export const registerDeviceToken = async (
       deviceToken = await DeviceToken.create({
         userId,
         token,
-        deviceId,
-        platform,
+        deviceId: deviceId || null,
+        platform: platform || null,
         isActive: true,
         lastUsedAt: new Date(),
         status: 1,
@@ -55,8 +66,12 @@ export const registerDeviceToken = async (
 
     res.status(200).json({
       success: true,
-      message: "Device token registered successfully",
-      data: deviceToken
+      message: "Device registered successfully",
+      data: {
+        id: deviceToken.id,
+        platform: deviceToken.platform,
+        registeredAt: deviceToken.createdAt
+      }
     });
   } catch (error: unknown) {
     console.error("Error registering device token:", error);
@@ -68,18 +83,14 @@ export const registerDeviceToken = async (
 /**
  * Unregister a device token
  */
-export const unregisterDeviceToken = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const unregisterDeviceToken = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const { userId, token } = req.body;
+
     if (!userId) {
-      res.status(401).json({ success: false, message: "Unauthorized" });
+      res.status(400).json({ success: false, message: "userId is required" });
       return;
     }
-
-    const { token } = req.body;
 
     if (!token) {
       res.status(400).json({ success: false, message: "Token is required" });
@@ -102,16 +113,17 @@ export const unregisterDeviceToken = async (
 /**
  * Get all device tokens for the current user
  */
-export const getDeviceTokens = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getDeviceTokens = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const { userId } = req.query;
+
     if (!userId) {
-      res.status(401).json({ success: false, message: "Unauthorized" });
+      res.status(400).json({ success: false, message: "userId is required" });
       return;
     }
 
     const tokens = await DeviceToken.findAll({
-      where: { userId, isActive: true },
+      where: { userId: Number(userId), isActive: true },
       attributes: ["id", "deviceId", "platform", "lastUsedAt", "createdAt"]
     });
 
@@ -280,15 +292,14 @@ export const sendNotificationToTopic = async (req: Request, res: Response): Prom
 /**
  * Subscribe user to a topic
  */
-export const subscribeToTopic = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const subscribeToTopic = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const { userId, topic } = req.body;
+
     if (!userId) {
-      res.status(401).json({ success: false, message: "Unauthorized" });
+      res.status(400).json({ success: false, message: "userId is required" });
       return;
     }
-
-    const { topic } = req.body;
 
     if (!topic) {
       res.status(400).json({ success: false, message: "topic is required" });
@@ -325,18 +336,14 @@ export const subscribeToTopic = async (req: AuthenticatedRequest, res: Response)
 /**
  * Unsubscribe user from a topic
  */
-export const unsubscribeFromTopic = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const unsubscribeFromTopic = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const { userId, topic } = req.body;
+
     if (!userId) {
-      res.status(401).json({ success: false, message: "Unauthorized" });
+      res.status(400).json({ success: false, message: "userId is required" });
       return;
     }
-
-    const { topic } = req.body;
 
     if (!topic) {
       res.status(400).json({ success: false, message: "topic is required" });
@@ -366,6 +373,53 @@ export const unsubscribeFromTopic = async (
   } catch (error: unknown) {
     console.error("Error unsubscribing from topic:", error);
     const message = error instanceof Error ? error.message : "Failed to unsubscribe from topic";
+    res.status(500).json({ success: false, message });
+  }
+};
+
+/**
+ * Send broadcast notification to all active users
+ * Typically used for important announcements, new schemes, etc.
+ */
+export const sendBroadcastNotification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { title, body, data, imageUrl } = req.body;
+
+    if (!title || !body) {
+      res.status(400).json({
+        success: false,
+        message: "title and body are required"
+      });
+      return;
+    }
+
+    // TODO: Add admin role check here
+    // const user = req.user as any;
+    // if (!user?.role || user.role !== 'admin') {
+    //   res.status(403).json({ success: false, message: "Only admins can send broadcast notifications" });
+    //   return;
+    // }
+
+    const result = await notificationService.sendToAllUsers({
+      title,
+      body,
+      data,
+      imageUrl
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Broadcast notification sent successfully",
+      data: {
+        successCount: result.successCount,
+        failureCount: result.failureCount,
+        totalSent: result.successCount + result.failureCount
+      }
+    });
+  } catch (error: unknown) {
+    console.error("Error sending broadcast notification:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to send broadcast notification";
     res.status(500).json({ success: false, message });
   }
 };

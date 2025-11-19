@@ -233,6 +233,6 @@ export const checkMemberStatus = asyncHandler(async (req: AuthenticatedRequest, 
         createdAt: member.createdAt
       }
     },
-    "User is a member"
+    "You are already registered as a member with us."
   );
 });

@@ -62,6 +62,7 @@ import FormMapping from "./FormMapping";
 import DeviceToken from "./DeviceToken";
 import PaEvent from "./PaEvent";
 import PaEventLog from "./PaEventLog";
+import NotificationLog from "./NotificationLog";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -508,5 +509,6 @@ export {
   ComplaintTypeStep,
   ComplaintMedia,
   UserSchemeApplication,
-  DeviceToken
+  DeviceToken,
+  NotificationLog
 };

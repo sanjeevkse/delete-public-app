@@ -9,6 +9,7 @@ import Scheme from "../models/Scheme";
 import SchemeStep from "../models/SchemeStep";
 import MetaSchemeCategory from "../models/MetaSchemeCategory";
 import MetaSchemeSector from "../models/MetaSchemeSector";
+import notificationService from "../services/notificationService";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendCreated,
@@ -455,6 +456,25 @@ export const createScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
       return scheme;
     }
   );
+
+  // 🔥 Send notification to all users about the new scheme
+  try {
+    await notificationService.sendToAllUsers({
+      title: `New Scheme: ${createdScheme.dispName}`,
+      body:
+        createdScheme.description ||
+        `A new scheme "${createdScheme.dispName}" has been created. Check it out!`,
+      data: {
+        type: "scheme_created",
+        schemeId: createdScheme.id.toString(),
+        schemeName: createdScheme.dispName
+      }
+    });
+    console.log(`✅ Notification sent for new scheme: ${createdScheme.dispName}`);
+  } catch (notificationError) {
+    // Don't fail scheme creation if notification fails
+    console.error("⚠️ Failed to send scheme creation notification:", notificationError);
+  }
 
   return sendCreated(res, serializeScheme(createdScheme), "Scheme created successfully");
 });
