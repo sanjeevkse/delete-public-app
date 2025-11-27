@@ -30,6 +30,12 @@ export const listCommunities = asyncHandler(async (req: Request, res: Response) 
     25,
     100
   );
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "communityName", "contactPerson", "contactNumber", "email", "createdAt"],
+    "createdAt"
+  );
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
   const communityTypeId = req.query.communityTypeId as string;

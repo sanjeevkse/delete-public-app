@@ -28,6 +28,12 @@ export const listSchemeSectors = asyncHandler(async (req: Request, res: Response
     25,
     100
   );
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "dispName", "createdAt"],
+    "createdAt"
+  );
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
 
@@ -51,7 +57,7 @@ export const listSchemeSectors = asyncHandler(async (req: Request, res: Response
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [[sortColumn, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);

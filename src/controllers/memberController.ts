@@ -29,6 +29,12 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
     25,
     100
   );
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "fullName", "contactNumber", "email", "createdAt"],
+    "createdAt"
+  );
   const search = (req.query.search as string) ?? "";
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
@@ -47,7 +53,7 @@ export const listMembers = asyncHandler(async (req: Request, res: Response) => {
     attributes,
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [[sortColumn, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);

@@ -45,19 +45,25 @@ export const createComplaintStatus = asyncHandler(
 
 export const getAllComplaintStatuses = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 50;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationParams(
+      req.query.page as string,
+      req.query.limit as string,
+      50,
+      100
+    );
+    const sortDirection = parseSortDirection(req.query.sort, "ASC");
+    const sortColumn = validateSortColumn(
+      req.query.sortColumn,
+      ["id", "dispName", "displayOrder", "createdAt"],
+      "displayOrder"
+    );
 
     const { rows, count } = await MetaComplaintStatus.findAndCountAll({
       where: { status: 1 },
       attributes: ["id", "dispName", "description", "colorCode", "displayOrder"],
       limit,
       offset,
-      order: [
-        ["displayOrder", "ASC"],
-        ["dispName", "ASC"]
-      ]
+      order: [[sortColumn, sortDirection]]
     });
 
     const pagination = calculatePagination(count, page, limit);

@@ -46,10 +46,12 @@ export const createBoothNumber = asyncHandler(async (req: AuthenticatedRequest, 
 });
 
 export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { page, limit } = parsePaginationParams(
+  const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
     req.query.limit as string
   );
+  const sortDirection = parseSortDirection(req.query.sort, "ASC");
+  const sortColumn = validateSortColumn(req.query.sortColumn, ["id", "dispName", "createdAt"], "dispName");
   const { search, status, mlaConstituencyId, wardNumberId } = req.query;
 
   const whereClause: any = {};
@@ -84,8 +86,6 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     }
   }
 
-  const offset = (page - 1) * limit;
-
   const { count, rows } = await MetaBoothNumber.findAndCountAll({
     where: whereClause,
     include: [
@@ -97,7 +97,7 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     ],
     limit,
     offset,
-    order: [["dispName", "ASC"]]
+    order: [[sortColumn, sortDirection]]]]
   });
 
   const pagination = calculatePagination(count, page, limit);

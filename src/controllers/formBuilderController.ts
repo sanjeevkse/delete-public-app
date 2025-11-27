@@ -410,6 +410,12 @@ const formInclude: IncludeOptions[] = [
 
 export const listMetaFieldTypes = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = paginate(req.query);
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "fieldType", "dispName", "createdAt"],
+    "createdAt"
+  );
   const search = (req.query.search as string) ?? "";
   const status = parseStatusFilter(req.query.status);
 
@@ -435,7 +441,7 @@ export const listMetaFieldTypes = asyncHandler(async (req: Request, res: Respons
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [[sortColumn, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);
@@ -528,6 +534,12 @@ export const deleteMetaFieldType = asyncHandler(async (req: Request, res: Respon
 
 export const listMetaInputFormats = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = paginate(req.query);
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "fieldType", "dispName", "targetValue", "createdAt"],
+    "createdAt"
+  );
   const search = (req.query.search as string) ?? "";
   const status = parseStatusFilter(req.query.status);
   const fieldType = (req.query.fieldType as string) ?? "";
@@ -559,7 +571,7 @@ export const listMetaInputFormats = asyncHandler(async (req: Request, res: Respo
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [[sortColumn, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);
@@ -656,6 +668,12 @@ export const deleteMetaInputFormat = asyncHandler(async (req: Request, res: Resp
 
 export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { page, limit, offset } = paginate(req.query);
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "title", "slug", "createdAt"],
+    "createdAt"
+  );
   const search = (req.query.search as string) ?? "";
   const status = parseStatusFilter(req.query.status);
   const isPublic = parseBooleanLike(req.query.isPublic);
@@ -717,7 +735,7 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     include,
     distinct: true,
     order: [
-      ["createdAt", "DESC"],
+      [sortColumn, sortDirection],
       [{ model: FormField, as: "fields" }, "sortOrder", "ASC"],
       [
         { model: FormField, as: "fields" },

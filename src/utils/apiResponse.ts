@@ -260,6 +260,30 @@ export const parsePaginationParams = (
 };
 
 /**
+ * Validate and map sort column parameter to allowed fields
+ * @param requestedColumn - The column name from query parameter (sortColumn)
+ * @param allowedColumns - Array of allowed column names for this entity
+ * @param defaultColumn - Default column to sort by
+ * @returns The validated column name to use in database query
+ */
+export const validateSortColumn = (
+  requestedColumn: unknown,
+  allowedColumns: string[],
+  defaultColumn: string = "id"
+): string => {
+  if (!requestedColumn || typeof requestedColumn !== "string") {
+    return defaultColumn;
+  }
+
+  const trimmed = requestedColumn.trim();
+  if (allowedColumns.includes(trimmed)) {
+    return trimmed;
+  }
+
+  return defaultColumn;
+};
+
+/**
  * Type-safe response types for TypeScript
  */
 export type ApiSuccessResponse<T = unknown> = SuccessResponse<T>;

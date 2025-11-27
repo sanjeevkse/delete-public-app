@@ -23,13 +23,30 @@ import {
 } from "../utils/apiResponse";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
-export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
-  const roles = await MetaUserRole.findAll({
+export const listRoles = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string,
+    req.query.limit as string,
+    10,
+    100
+  );
+  const sortDirection = parseSortDirection(req.query.sort, "ASC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "dispName", "createdAt"],
+    "id"
+  );
+
+  const { rows: roles, count } = await MetaUserRole.findAndCountAll({
     include: [
       { model: MetaPermission, as: "permissions" },
       { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
       { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
-    ]
+    ],
+    limit,
+    offset,
+    order: [[sortColumn, sortDirection]],
+    distinct: true
   });
 
   // For Admin role, replace permissions with all permissions
@@ -48,7 +65,13 @@ export const listRoles = asyncHandler(async (_req: Request, res: Response) => {
     })
   );
 
-  return sendSuccess(res, rolesWithPermissions, "Roles retrieved successfully");
+  const pagination = calculatePagination(count, page, limit);
+  return sendSuccessWithPagination(
+    res,
+    rolesWithPermissions,
+    pagination,
+    "Roles retrieved successfully"
+  );
 });
 
 export const getRole = asyncHandler(async (req: Request, res: Response) => {

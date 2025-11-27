@@ -39,9 +39,15 @@ export const createWardNumber = asyncHandler(async (req: AuthenticatedRequest, r
 });
 
 export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { page, limit } = parsePaginationParams(
+  const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
     req.query.limit as string
+  );
+  const sortDirection = parseSortDirection(req.query.sort, "ASC");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "dispName", "createdAt"],
+    "dispName"
   );
   const { search, status } = req.query;
 
@@ -55,13 +61,11 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
     whereClause.status = status;
   }
 
-  const offset = (page - 1) * limit;
-
   const { count, rows } = await MetaWardNumber.findAndCountAll({
     where: whereClause,
     limit,
     offset,
-    order: [["dispName", "ASC"]]
+    order: [[sortColumn, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);

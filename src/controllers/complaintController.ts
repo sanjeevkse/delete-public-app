@@ -234,10 +234,15 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 
   const searchTerm = (req.query.search as string | undefined)?.trim();
   const complaintTypeId = req.query.complaintTypeId ? Number(req.query.complaintTypeId) : undefined;
+  const currentStatusId = req.query.currentStatusId ? Number(req.query.currentStatusId) : undefined;
   const selfOther = (req.query.selfOther as string | undefined)?.trim();
 
   if (complaintTypeId && !Number.isNaN(complaintTypeId)) {
     where.complaintTypeId = complaintTypeId;
+  }
+
+  if (currentStatusId && !Number.isNaN(currentStatusId)) {
+    where.currentStatusId = currentStatusId;
   }
 
   if (selfOther) {

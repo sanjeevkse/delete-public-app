@@ -15,6 +15,18 @@ import { assertNoRestrictedFields } from "../utils/payloadValidation";
  */
 export const listPermissionGroups = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
+    const { page, limit, offset } = parsePaginationParams(
+      req.query.page as string,
+      req.query.limit as string,
+      10,
+      100
+    );
+    const sortDirection = parseSortDirection(req.query.sort, "ASC");
+    const sortColumn = validateSortColumn(
+      req.query.sortColumn,
+      ["id", "dispName", "createdAt"],
+      "id"
+    );
     const { status, includePermissions } = req.query;
 
     const whereClause: any = {};
@@ -25,13 +37,22 @@ export const listPermissionGroups = asyncHandler(
     const include =
       includePermissions === "true" ? [{ model: MetaPermission, as: "permissions" }] : [];
 
-    const permissionGroups = await MetaPermissionGroup.findAll({
+    const { rows, count } = await MetaPermissionGroup.findAndCountAll({
       where: whereClause,
       include,
-      order: [["id", "ASC"]]
+      limit,
+      offset,
+      order: [[sortColumn, sortDirection]],
+      distinct: true
     });
 
-    return sendSuccess(res, permissionGroups, "Permission groups retrieved successfully");
+    const pagination = calculatePagination(count, page, limit);
+    return sendSuccessWithPagination(
+      res,
+      rows,
+      pagination,
+      "Permission groups retrieved successfully"
+    );
   }
 );
 

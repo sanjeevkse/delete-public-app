@@ -76,7 +76,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    }\n  }\n}"
+							"raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    },\n    \"citizenAge\": 35,\n    \"dateOfJoining\": \"2025-01-15\"\n  }\n}"
 						},
 						"url": "{{baseUrl}}/api/auth/profile",
 						"description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
@@ -129,7 +129,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/admin/users?page=1&limit=25&search=",
+							"raw": "{{baseUrl}}/api/admin/users?page=1&limit=25&search=&sort=ASC&sortColumn=id",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -153,6 +153,16 @@
 									"key": "search",
 									"value": "",
 									"description": "Search by contact number, full name, or email"
+								},
+								{
+									"key": "sort",
+									"value": "ASC",
+									"description": "Sort direction: ASC or DESC"
+								},
+								{
+									"key": "sortColumn",
+									"value": "id",
+									"description": "Column to sort by: id, contactNumber, fullName, email, createdAt"
 								}
 							]
 						},
@@ -2469,7 +2479,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"contactNumber\": \"+15550001111\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"address\": \"99 Demo Street, Springfield\"\n  }\n}"
+							"raw": "{\n  \"contactNumber\": \"+15550001111\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"address\": \"99 Demo Street, Springfield\",\n    \"citizenAge\": 28,\n    \"dateOfJoining\": \"2025-01-10\"\n  }\n}"
 						},
 						"url": "{{baseUrl}}/api/admin/users"
 					},
@@ -2525,7 +2535,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"Updated User\",\n  \"profile\": {\n    \"bio\": \"Updated bio\",\n    \"address\": \"100 Updated Street\"\n  }\n}"
+							"raw": "{\n  \"fullName\": \"Updated User\",\n  \"profile\": {\n    \"bio\": \"Updated bio\",\n    \"address\": \"100 Updated Street\",\n    \"citizenAge\": 30,\n    \"dateOfJoining\": \"2025-01-12\"\n  }\n}"
 						},
 						"url": "{{baseUrl}}/api/admin/users/{{userId}}"
 					},
@@ -2620,7 +2630,39 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "{{baseUrl}}/api/admin/roles"
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/roles?page=1&limit=10&sort=ASC&sortColumn=id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"roles"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of items per page (max 100)"
+								},
+								{
+									"key": "sort",
+									"value": "ASC",
+									"description": "Sort direction: ASC or DESC"
+								},
+								{
+									"key": "sortColumn",
+									"value": "id",
+									"description": "Column to sort by: id, dispName, createdAt"
+								}
+							]
+						}
 					},
 					"response": []
 				},
@@ -2668,7 +2710,39 @@
 					"request": {
 						"method": "GET",
 						"header": [],
-						"url": "{{baseUrl}}/api/admin/permissions",
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/permissions?page=1&limit=10&sort=ASC&sortColumn=id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"permissions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of items per page (max 100)"
+								},
+								{
+									"key": "sort",
+									"value": "ASC",
+									"description": "Sort direction: ASC or DESC"
+								},
+								{
+									"key": "sortColumn",
+									"value": "id",
+									"description": "Column to sort by: id, permissionKey, dispName, createdAt"
+								}
+							]
+						},
 						"description": "Lists every permission record (including wildcards such as posts:*). Requires the admin.permissions:list grant."
 					},
 					"response": []
@@ -4006,7 +4080,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/complaints?page=1&limit=10",
+							"raw": "{{baseUrl}}/api/complaints?page=1&limit=10&sort=DESC&sortColumn=createdAt&currentStatusId=1",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -4022,6 +4096,21 @@
 								{
 									"key": "limit",
 									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"description": "Sort direction: ASC or DESC"
+								},
+								{
+									"key": "sortColumn",
+									"value": "createdAt",
+									"description": "Column to sort by: createdAt, updatedAt, title"
+								},
+								{
+									"key": "currentStatusId",
+									"value": "1",
+									"description": "Filter by complaint status ID (e.g., 1=Pending, 2=In Progress, 3=Resolved)"
 								}
 							]
 						}
