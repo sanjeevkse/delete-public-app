@@ -6,7 +6,7 @@ import type MetaEducationalDetail from "./MetaEducationalDetail";
 interface MetaEducationalDetailGroupAttributes {
   id: number;
   dispName: string;
-  description?: string | null;
+  color?: string | null;
   status: number;
   createdBy?: number | null;
   updatedBy?: number | null;
@@ -16,7 +16,7 @@ interface MetaEducationalDetailGroupAttributes {
 
 type MetaEducationalDetailGroupCreationAttributes = Optional<
   MetaEducationalDetailGroupAttributes,
-  "id" | "description" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
+  "id" | "color" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
 >;
 
 class MetaEducationalDetailGroup
@@ -25,7 +25,7 @@ class MetaEducationalDetailGroup
 {
   declare id: number;
   declare dispName: string;
-  declare description?: string | null;
+  declare color?: string | null;
   declare status: number;
   declare createdBy?: number | null;
   declare updatedBy?: number | null;
@@ -38,6 +38,7 @@ MetaEducationalDetailGroup.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
       primaryKey: true,
       references: {
         model: "tbl_meta_educational_detail",
@@ -46,12 +47,11 @@ MetaEducationalDetailGroup.init(
     },
     dispName: {
       field: "disp_name",
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      unique: true
+      type: DataTypes.TEXT,
+      allowNull: false
     },
-    description: {
-      type: DataTypes.STRING(255),
+    color: {
+      type: DataTypes.STRING(8),
       allowNull: true
     },
     status: {
@@ -61,13 +61,13 @@ MetaEducationalDetailGroup.init(
     },
     createdBy: {
       field: "created_by",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false
     },
     updatedBy: {
       field: "updated_by",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false
     }
   },
   {

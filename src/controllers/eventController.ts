@@ -1079,7 +1079,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   }
 
   if (!isWithinEventWindow(event)) {
-    return sendBadRequest(res, "Event registration is only allowed during the event window");
+    return sendBadRequest(res, "Event registration window is closed for this event");
   }
 
   // Parse and validate all fields - fullName and contactNumber are mandatory

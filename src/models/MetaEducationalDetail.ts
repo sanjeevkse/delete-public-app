@@ -1,11 +1,13 @@
 import { DataTypes, Model, Optional } from "sequelize";
 
 import sequelize from "../config/database";
+import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 
 interface MetaEducationalDetailAttributes {
   id: number;
+  educationalDetailGroupId: number;
   dispName: string;
-  description?: string | null;
+  color?: string | null;
   status: number;
   createdBy?: number | null;
   updatedBy?: number | null;
@@ -15,7 +17,7 @@ interface MetaEducationalDetailAttributes {
 
 type MetaEducationalDetailCreationAttributes = Optional<
   MetaEducationalDetailAttributes,
-  "id" | "description" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
+  "id" | "color" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
 >;
 
 class MetaEducationalDetail
@@ -23,13 +25,15 @@ class MetaEducationalDetail
   implements MetaEducationalDetailAttributes
 {
   declare id: number;
+  declare educationalDetailGroupId: number;
   declare dispName: string;
-  declare description?: string | null;
+  declare color?: string | null;
   declare status: number;
   declare createdBy?: number | null;
   declare updatedBy?: number | null;
   declare readonly createdAt?: Date;
   declare readonly updatedAt?: Date;
+  declare educationalDetailGroup?: MetaEducationalDetailGroup;
 }
 
 MetaEducationalDetail.init(
@@ -39,14 +43,18 @@ MetaEducationalDetail.init(
       autoIncrement: true,
       primaryKey: true
     },
+    educationalDetailGroupId: {
+      field: "educational_detail_group_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false
+    },
     dispName: {
       field: "disp_name",
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      unique: true
+      type: DataTypes.TEXT,
+      allowNull: false
     },
-    description: {
-      type: DataTypes.STRING(255),
+    color: {
+      type: DataTypes.STRING(8),
       allowNull: true
     },
     status: {
@@ -56,13 +64,13 @@ MetaEducationalDetail.init(
     },
     createdBy: {
       field: "created_by",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false
     },
     updatedBy: {
       field: "updated_by",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false
     }
   },
   {
