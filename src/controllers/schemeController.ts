@@ -529,14 +529,22 @@ export const updateScheme = asyncHandler(async (req: AuthenticatedRequest, res: 
       }
 
       if (stepsPayload !== undefined) {
-        // Soft delete existing steps by setting status to 0
-        await SchemeStep.update(
-          { status: 0, updatedBy: userId },
-          {
-            where: { schemeId: scheme.id },
-            transaction
-          }
-        );
+        // Get existing steps and reset their stepOrder to negative values before soft-delete
+        const existingSteps = await SchemeStep.findAll({
+          where: { schemeId: scheme.id },
+          transaction
+        });
+
+        // Reset existing steps with negative stepOrder and status: 0
+        for (let i = 0; i < existingSteps.length; i++) {
+          await SchemeStep.update(
+            { stepOrder: -(i + 1), status: 0, updatedBy: userId },
+            {
+              where: { id: existingSteps[i].id },
+              transaction
+            }
+          );
+        }
 
         if (stepsPayload.length > 0) {
           await SchemeStep.bulkCreate(
