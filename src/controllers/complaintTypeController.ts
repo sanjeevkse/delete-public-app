@@ -232,6 +232,33 @@ export const updateComplaintType = asyncHandler(
       throw new ApiError("Invalid complaint type ID", 400);
     }
 
+    const rawSteps = Array.isArray(steps) ? steps : [];
+    const seenOrders = new Set<number>();
+    const sanitizedSteps = rawSteps.map((rawStep, index) => {
+      const normalizedOrder = Number.parseInt(String(rawStep.stepOrder), 10);
+      if (!Number.isFinite(normalizedOrder) || normalizedOrder <= 0) {
+        throw new ApiError(`Step ${index + 1}: stepOrder must be a positive number`, 400);
+      }
+      if (seenOrders.has(normalizedOrder)) {
+        throw new ApiError(`Duplicate stepOrder '${normalizedOrder}' detected`, 400);
+      }
+      seenOrders.add(normalizedOrder);
+
+      const normalizedId =
+        rawStep.id !== undefined && rawStep.id !== null && rawStep.id !== ""
+          ? Number.parseInt(String(rawStep.id), 10)
+          : undefined;
+      if (normalizedId !== undefined && (!Number.isFinite(normalizedId) || normalizedId <= 0)) {
+        throw new ApiError(`Step ${index + 1}: invalid step id`, 400);
+      }
+
+      return {
+        ...rawStep,
+        id: normalizedId,
+        stepOrder: normalizedOrder
+      };
+    });
+
     const updatedComplaintType = await sequelize.transaction(async (transaction) => {
       const complaintType = await ComplaintType.findByPk(id, { transaction });
 
@@ -241,13 +268,20 @@ export const updateComplaintType = asyncHandler(
 
       await complaintType.update({ dispName, description, updatedBy: userId }, { transaction });
 
-      await ComplaintTypeStep.update(
-        { status: 0 },
-        { where: { complaintTypeId: id }, transaction }
-      );
+      const stepIdsToKeep = sanitizedSteps
+        .map((step: any) => step.id)
+        .filter((value: number | undefined): value is number => typeof value === "number");
+
+      await ComplaintTypeStep.destroy({
+        where: {
+          complaintTypeId: id,
+          ...(stepIdsToKeep.length ? { id: { [Op.notIn]: stepIdsToKeep } } : {})
+        },
+        transaction
+      });
 
       // 4️⃣ Upsert steps
-      for (const step of steps) {
+      for (const step of sanitizedSteps) {
         if (step.id) {
           const [affectedCount] = await ComplaintTypeStep.update(
             {

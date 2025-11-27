@@ -22,6 +22,9 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "country",
   "wardNumberId",
   "boothNumberId",
+  "emergencyContact",
+  "education",
+  "dateOfJoining",
   "isRegistrationAgreed",
   "latitude",
   "longitude",
@@ -44,6 +47,61 @@ export const buildProfileAttributes = (
 
   const payload: Partial<CreationAttributes<UserProfile>> = {};
   const asRecord = input as Record<string, unknown>;
+  const hasOwn = (obj: object, key: string) => Object.prototype.hasOwnProperty.call(obj, key);
+
+  const parseOptionalInt = (
+    value: unknown,
+    { allowZero = false }: { allowZero?: boolean } = {}
+  ): number | null | undefined => {
+    if (value === undefined) {
+      return undefined;
+    }
+    if (value === null) {
+      return null;
+    }
+    const normalized =
+      typeof value === "number" ? value : Number.parseInt(String(value).trim(), 10);
+
+    if (Number.isNaN(normalized) || !Number.isFinite(normalized)) {
+      return null;
+    }
+
+    const truncated = Math.trunc(normalized);
+    if (!allowZero && truncated <= 0) {
+      return null;
+    }
+
+    return truncated;
+  };
+
+  const normalizeString = (value: unknown): string | null | undefined => {
+    if (value === undefined) {
+      return undefined;
+    }
+    if (value === null) {
+      return null;
+    }
+
+    const raw = typeof value === "string" ? value : String(value);
+    const trimmed = raw.trim();
+    return trimmed === "" ? null : trimmed;
+  };
+
+  const normalizeDateOnly = (value: unknown): string | Date | null | undefined => {
+    if (value === undefined) {
+      return undefined;
+    }
+    if (value === null) {
+      return null;
+    }
+
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    const raw = String(value).trim();
+    return raw === "" ? null : raw;
+  };
 
   DIRECT_PROFILE_FIELDS.forEach((field) => {
     if (field in asRecord) {
@@ -103,6 +161,68 @@ export const buildProfileAttributes = (
 
   if (preferencesChanged) {
     payload.preferencesJson = preferences as never;
+  }
+
+  if (hasOwn(asRecord, "wardNumberId")) {
+    const wardValue = parseOptionalInt(asRecord["wardNumberId"]);
+    if (wardValue !== undefined) {
+      payload.wardNumberId = wardValue as never;
+    }
+  }
+
+  if (hasOwn(asRecord, "boothNumberId")) {
+    const boothValue = parseOptionalInt(asRecord["boothNumberId"]);
+    if (boothValue !== undefined) {
+      payload.boothNumberId = boothValue as never;
+    }
+  }
+
+  const emergencySource =
+    asRecord["emergencyContact"] ??
+    asRecord["emergencyContactNumber"] ??
+    asRecord["emergencyContactName"] ??
+    asRecord["emergencyContactPhone"];
+  if (emergencySource !== undefined) {
+    const emergencyValue = normalizeString(emergencySource);
+    if (emergencyValue !== undefined) {
+      payload.emergencyContact = emergencyValue as never;
+    }
+  } else if (hasOwn(payload, "emergencyContact") && payload.emergencyContact !== undefined) {
+    const emergencyValue = normalizeString(payload.emergencyContact);
+    if (emergencyValue !== undefined) {
+      payload.emergencyContact = emergencyValue as never;
+    }
+  }
+
+  const educationSource = asRecord["education"] ?? asRecord["educationLevel"];
+  if (educationSource !== undefined) {
+    const educationValue = normalizeString(educationSource);
+    if (educationValue !== undefined) {
+      payload.education = educationValue as never;
+    }
+  } else if (hasOwn(payload, "education") && payload.education !== undefined) {
+    const educationValue = normalizeString(payload.education);
+    if (educationValue !== undefined) {
+      payload.education = educationValue as never;
+    }
+  }
+
+  const dateOfBirthValue = normalizeDateOnly(asRecord["dateOfBirth"]);
+  if (dateOfBirthValue !== undefined) {
+    payload.dateOfBirth = dateOfBirthValue as never;
+  }
+
+  const joiningSource = asRecord["dateOfJoining"] ?? asRecord["joiningDate"] ?? asRecord["doj"];
+  if (joiningSource !== undefined) {
+    const joiningValue = normalizeDateOnly(joiningSource);
+    if (joiningValue !== undefined) {
+      payload.dateOfJoining = joiningValue as never;
+    }
+  } else if (hasOwn(payload, "dateOfJoining") && payload.dateOfJoining !== undefined) {
+    const joiningValue = normalizeDateOnly(payload.dateOfJoining);
+    if (joiningValue !== undefined) {
+      payload.dateOfJoining = joiningValue as never;
+    }
   }
 
   if (payload.referredBy !== undefined) {

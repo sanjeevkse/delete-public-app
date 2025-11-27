@@ -51,6 +51,7 @@ interface MetaTableConfig {
   searchableFields: string[];
   hasStatus?: boolean;
   customIncludes?: any[];
+  fieldAliases?: Record<string, string>;
 }
 
 /**
@@ -115,6 +116,41 @@ const getFieldsWithRelations = (model: ModelStatic<any>, config: MetaTableConfig
   return fields;
 };
 
+const normalizeKey = (value: string): string => value.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+
+const normalizeMetaPayload = (
+  payload: Record<string, unknown> | undefined,
+  config: MetaTableConfig
+) => {
+  if (!payload || typeof payload !== "object") {
+    return {};
+  }
+
+  const attributes = config.model.getAttributes();
+  const lookup = new Map<string, string>();
+
+  for (const [attrName, attribute] of Object.entries(attributes)) {
+    lookup.set(normalizeKey(attrName), attrName);
+    const dbField = (attribute as any).field ?? attrName;
+    if (dbField) {
+      lookup.set(normalizeKey(String(dbField)), attrName);
+    }
+  }
+
+  if (config.fieldAliases) {
+    for (const [alias, target] of Object.entries(config.fieldAliases)) {
+      lookup.set(normalizeKey(alias), target);
+    }
+  }
+
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    const targetKey = lookup.get(normalizeKey(key)) ?? key;
+    normalized[targetKey] = value;
+  }
+  return normalized;
+};
+
 // Registry of all meta tables
 const META_TABLES: Record<string, MetaTableConfig> = {
   businessType: {
@@ -170,12 +206,12 @@ const META_TABLES: Record<string, MetaTableConfig> = {
     model: MetaPermission,
     description: "System permissions",
     primaryKey: "id",
-    searchableFields: ["dispName", "name"],
+    searchableFields: ["dispName"],
     hasStatus: true,
     customIncludes: [
       {
         association: "group",
-        attributes: ["id", "dispName"]
+        attributes: ["id", ["label", "dispName"], "sidebar"]
       }
     ]
   },
@@ -186,8 +222,12 @@ const META_TABLES: Record<string, MetaTableConfig> = {
     model: MetaPermissionGroup,
     description: "Groups for organizing permissions",
     primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
+    searchableFields: ["label", "sidebar"],
+    hasStatus: true,
+    fieldAliases: {
+      dispName: "label",
+      action: "sidebar"
+    }
   },
   relationType: {
     name: "relationType",
@@ -481,9 +521,11 @@ export const createMetaTableRecord = asyncHandler(
       return sendNotFound(res, `Meta table '${tableName}' not found`);
     }
 
+    const normalizedPayload = normalizeMetaPayload(req.body as Record<string, unknown>, config);
+
     // Add audit fields
     const recordData = {
-      ...req.body,
+      ...normalizedPayload,
       createdBy: userId,
       updatedBy: userId
     };
@@ -521,9 +563,11 @@ export const updateMetaTableRecord = asyncHandler(
       return sendNotFound(res, `Record not found in ${config.displayName}`);
     }
 
+    const normalizedPayload = normalizeMetaPayload(req.body as Record<string, unknown>, config);
+
     // Add audit fields
     const updateData = {
-      ...req.body,
+      ...normalizedPayload,
       updatedBy: userId
     };
 

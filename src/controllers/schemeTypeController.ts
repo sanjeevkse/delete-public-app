@@ -47,6 +47,7 @@ type NormalizedSchemeTypePayload = {
 };
 
 type NormalizedStepPayload = {
+  id?: number;
   stepOrder: number;
   dispName: string;
   description: string | null;
@@ -181,6 +182,15 @@ const normalizeStepsPayload = (
       throw new ApiError("Each step must be an object", 400);
     }
     const record = entry as Record<string, unknown>;
+    const idValue = record.id ?? record.stepId ?? record.step_id;
+    let normalizedId: number | undefined;
+    if (idValue !== undefined && idValue !== null && idValue !== "") {
+      const parsedId = Number.parseInt(String(idValue), 10);
+      if (!Number.isFinite(parsedId) || parsedId <= 0) {
+        throw new ApiError(`Step ${index + 1}: id must be a positive number`, 400);
+      }
+      normalizedId = parsedId;
+    }
     const dispNameValue = record.dispName ?? record.disp_name;
     if (typeof dispNameValue !== "string" || !dispNameValue.trim()) {
       throw new ApiError(`Step ${index + 1}: dispName is required`, 400);
@@ -207,6 +217,7 @@ const normalizeStepsPayload = (
     const statusValue = record.status;
 
     return {
+      id: normalizedId,
       stepOrder: parsedOrder,
       dispName: dispNameValue.trim(),
       description: normalizedDescription,
@@ -377,12 +388,65 @@ export const updateSchemeType = asyncHandler(async (req: AuthenticatedRequest, r
     }
 
     if (stepsPayload !== undefined) {
-      await MetaSchemeTypeStep.destroy({ where: { schemeTypeId }, transaction });
-      if (stepsPayload.length > 0) {
-        await MetaSchemeTypeStep.bulkCreate(
-          buildStepsCreatePayload(schemeTypeId, stepsPayload, userId),
-          { transaction }
-        );
+      const seenOrders = new Set<number>();
+      stepsPayload.forEach((step, idx) => {
+        if (seenOrders.has(step.stepOrder)) {
+          throw new ApiError(
+            `Duplicate stepOrder '${step.stepOrder}' detected at position ${idx + 1}`,
+            400
+          );
+        }
+        seenOrders.add(step.stepOrder);
+      });
+
+      const incomingStepIds = stepsPayload
+        .map((step) => step.id)
+        .filter((value): value is number => typeof value === "number");
+
+      if (incomingStepIds.length > 0) {
+        const validCount = await MetaSchemeTypeStep.count({
+          where: { schemeTypeId, id: { [Op.in]: incomingStepIds } },
+          transaction
+        });
+        if (validCount !== incomingStepIds.length) {
+          throw new ApiError("One or more step ids do not belong to this scheme type", 400);
+        }
+      }
+
+      await MetaSchemeTypeStep.destroy({
+        where: {
+          schemeTypeId,
+          ...(incomingStepIds.length ? { id: { [Op.notIn]: incomingStepIds } } : {})
+        },
+        transaction
+      });
+
+      for (const step of stepsPayload) {
+        if (step.id) {
+          await MetaSchemeTypeStep.update(
+            {
+              stepOrder: step.stepOrder,
+              dispName: step.dispName,
+              description: step.description,
+              status: step.status,
+              updatedBy: userId
+            },
+            { where: { id: step.id, schemeTypeId }, transaction }
+          );
+        } else {
+          await MetaSchemeTypeStep.create(
+            {
+              schemeTypeId,
+              stepOrder: step.stepOrder,
+              dispName: step.dispName,
+              description: step.description,
+              status: step.status,
+              createdBy: userId,
+              updatedBy: userId
+            },
+            { transaction }
+          );
+        }
       }
     }
 

@@ -36,6 +36,9 @@ class UserProfile extends Model<
   declare country: CreationOptional<string | null>;
   declare wardNumberId: CreationOptional<number | null>;
   declare boothNumberId: CreationOptional<number | null>;
+  declare emergencyContact: CreationOptional<string | null>;
+  declare education: CreationOptional<string | null>;
+  declare dateOfJoining: CreationOptional<Date | null>;
   declare isRegistrationAgreed: CreationOptional<number>;
   declare latitude: CreationOptional<number | null>;
   declare longitude: CreationOptional<number | null>;
@@ -155,6 +158,20 @@ UserProfile.init(
     boothNumberId: {
       field: "booth_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    emergencyContact: {
+      field: "emergency_contact",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    education: {
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    dateOfJoining: {
+      field: "date_of_joining",
+      type: DataTypes.DATEONLY,
       allowNull: true
     },
     isRegistrationAgreed: {
