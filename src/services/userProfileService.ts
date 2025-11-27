@@ -15,6 +15,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "genderId",
   "educationDetailId",
   "educationalDetailGroupId",
+  "dateOfJoining",
   "occupation",
   "referredBy",
   "fullAddress",

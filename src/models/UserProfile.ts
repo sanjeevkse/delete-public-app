@@ -33,6 +33,7 @@ class UserProfile extends Model<
   declare genderId: CreationOptional<number | null>;
   declare educationDetailId: CreationOptional<number | null>;
   declare educationalDetailGroupId: CreationOptional<number | null>;
+  declare dateOfJoining: CreationOptional<Date | null>;
   declare maritalStatusId: CreationOptional<number | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
@@ -134,6 +135,11 @@ UserProfile.init(
     educationalDetailGroupId: {
       field: "educational_detail_group_id",
       type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    dateOfJoining: {
+      field: "date_of_joining",
+      type: DataTypes.DATEONLY,
       allowNull: true
     },
     maritalStatusId: {
