@@ -8,6 +8,8 @@ import {
 } from "sequelize";
 
 import type Event from "./Event";
+import type MetaBoothNumber from "./MetaBoothNumber";
+import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
 
 import sequelize from "../config/database";
@@ -37,6 +39,8 @@ class EventRegistration extends Model<
   declare updatedAt: CreationOptional<Date>;
   declare event?: NonAttribute<Event>;
   declare user?: NonAttribute<User>;
+  declare wardNumber?: NonAttribute<MetaWardNumber | null>;
+  declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
 }
 
 EventRegistration.init(

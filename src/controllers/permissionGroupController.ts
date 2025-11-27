@@ -81,7 +81,7 @@ export const createPermissionGroup = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     assertNoRestrictedFields(req.body);
 
-    const { label, description, sidebar } = req.body;
+    const { label, description, sidebar, icon } = req.body;
     const userId = req.user!.id;
 
     // Validate required fields
@@ -102,6 +102,7 @@ export const createPermissionGroup = asyncHandler(
       label,
       description,
       sidebar,
+      icon,
       status: 1,
       createdBy: userId,
       updatedBy: userId
@@ -120,7 +121,7 @@ export const updatePermissionGroup = asyncHandler(
     const { id } = req.params;
     assertNoRestrictedFields(req.body);
 
-    const { label, description, sidebar } = req.body;
+    const { label, description, sidebar, icon } = req.body;
     const userId = req.user!.id;
 
     const permissionGroup = await MetaPermissionGroup.findByPk(id);
@@ -147,6 +148,7 @@ export const updatePermissionGroup = asyncHandler(
     if (label !== undefined) permissionGroup.label = label;
     if (description !== undefined) permissionGroup.description = description;
     if (sidebar !== undefined) permissionGroup.sidebar = sidebar;
+    if (icon !== undefined) permissionGroup.icon = icon;
     permissionGroup.updatedBy = userId;
 
     await permissionGroup.save();

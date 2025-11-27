@@ -174,10 +174,18 @@ const loadRegisteredUsersForEventIds = async (
           {
             association: "profile",
             attributes: ["profileImageUrl"],
-            required: false
+            required: false,
+            include: [
+              { association: "gender", attributes: ["id", "dispName"], required: false },
+              { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+              { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+              { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+            ]
           }
         ]
-      }
+      },
+      { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+      { association: "boothNumber", attributes: ["id", "dispName"], required: false }
     ]
   });
 
@@ -738,10 +746,18 @@ export const listEventRegistrations = asyncHandler(
             {
               association: "profile",
               attributes: ["profileImageUrl"],
-              required: false
+              required: false,
+              include: [
+                { association: "gender", attributes: ["id", "dispName"], required: false },
+                { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+                { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+                { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+              ]
             }
           ]
-        }
+        },
+        { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+        { association: "boothNumber", attributes: ["id", "dispName"], required: false }
       ],
       limit,
       offset,
@@ -1085,13 +1101,13 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   // Check for existing registration - uniqueness by eventId + userId OR eventId + contactNumber
   let existingRegistration = null;
 
-  if (parsedUserId !== null) {
+  if (parsedUserId) {
     existingRegistration = await EventRegistration.findOne({
       where: { eventId, userId: parsedUserId }
     });
   } else if (parsedContactNumber) {
     existingRegistration = await EventRegistration.findOne({
-      where: { eventId, contactNumber: parsedContactNumber, userId: null }
+      where: { eventId, contactNumber: parsedContactNumber }
     });
   }
 
@@ -1128,7 +1144,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
       {
         id: existingRegistration.id,
         eventId: existingRegistration.eventId,
-        isGuest: parsedUserId === null
+        isGuest: !parsedUserId
       },
       "Registration reactivated"
     );
@@ -1142,7 +1158,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     {
       id: registration.id,
       eventId: registration.eventId,
-      isGuest: parsedUserId === null
+      isGuest: !parsedUserId
     },
     "Registered successfully"
   );

@@ -20,13 +20,12 @@ import MetaSectorDepartment from "./MetaSectorDepartment";
 import MetaSchemeCategory from "./MetaSchemeCategory";
 import MetaSchemeSector from "./MetaSchemeSector";
 import SchemeStep from "./SchemeStep";
-import MetaSchemeType from "./MetaSchemeType";
-import MetaSchemeTypeStep from "./MetaSchemeTypeStep";
 import MetaGovernmentLevel from "./MetaGovernmentLevel";
 import MetaSector from "./MetaSector";
 import MetaSchemeTypeLookup from "./MetaSchemeTypeLookup";
 import MetaOwnershipType from "./MetaOwnershipType";
 import MetaGenderOption from "./MetaGenderOption";
+import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
 import MetaEmploymentStatus from "./MetaEmploymentStatus";
@@ -60,8 +59,6 @@ import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
 import FormMapping from "./FormMapping";
 import DeviceToken from "./DeviceToken";
-import PaEvent from "./PaEvent";
-import PaEventLog from "./PaEventLog";
 import NotificationLog from "./NotificationLog";
 
 const establishAssociations = (): void => {
@@ -108,6 +105,24 @@ const establishAssociations = (): void => {
   EventRegistration.belongsTo(Event, { foreignKey: "eventId", as: "event" });
   EventRegistration.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(EventRegistration, { foreignKey: "userId", as: "eventRegistrations" });
+
+  EventRegistration.belongsTo(MetaWardNumber, {
+    foreignKey: "wardNumberId",
+    as: "wardNumber"
+  });
+  MetaWardNumber.hasMany(EventRegistration, {
+    foreignKey: "wardNumberId",
+    as: "eventRegistrations"
+  });
+
+  EventRegistration.belongsTo(MetaBoothNumber, {
+    foreignKey: "boothNumberId",
+    as: "boothNumber"
+  });
+  MetaBoothNumber.hasMany(EventRegistration, {
+    foreignKey: "boothNumberId",
+    as: "eventRegistrations"
+  });
 
   MetaUserRole.belongsToMany(MetaPermission, {
     through: RolePermission,
@@ -173,15 +188,6 @@ const establishAssociations = (): void => {
   PostReaction.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(PostReaction, { foreignKey: "userId", as: "postReactions" });
 
-  PaEvent.belongsTo(User, { foreignKey: "bossId", as: "boss" });
-  User.hasMany(PaEvent, { foreignKey: "bossId", as: "bossEvents" });
-  PaEvent.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
-  User.hasMany(PaEvent, { foreignKey: "createdBy", as: "createdPaEvents" });
-  PaEvent.hasMany(PaEventLog, { foreignKey: "eventId", as: "logs" });
-  PaEventLog.belongsTo(PaEvent, { foreignKey: "eventId", as: "event" });
-  PaEventLog.belongsTo(User, { foreignKey: "createdBy", as: "actor" });
-  User.hasMany(PaEventLog, { foreignKey: "createdBy", as: "paEventLogs" });
-
   Job.belongsTo(User, { foreignKey: "applicantUserId", as: "applicant" });
   User.hasMany(Job, { foreignKey: "applicantUserId", as: "jobApplications" });
 
@@ -235,8 +241,6 @@ const establishAssociations = (): void => {
     foreignKey: "schemeTypeId",
     as: "schemeApplications"
   });
-  MetaSchemeType.hasMany(MetaSchemeTypeStep, { foreignKey: "schemeTypeId", as: "steps" });
-  MetaSchemeTypeStep.belongsTo(MetaSchemeType, { foreignKey: "schemeTypeId", as: "schemeType" });
 
   UserSchemeApplication.belongsTo(MetaOwnershipType, {
     foreignKey: "ownershipTypeId",
@@ -285,6 +289,42 @@ const establishAssociations = (): void => {
 
   User.hasOne(UserProfile, { foreignKey: "userId", as: "profile" });
   UserProfile.belongsTo(User, { foreignKey: "userId", as: "user" });
+
+  UserProfile.belongsTo(MetaGenderOption, {
+    foreignKey: "genderId",
+    as: "gender"
+  });
+  MetaGenderOption.hasMany(UserProfile, {
+    foreignKey: "genderId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaMaritalStatus, {
+    foreignKey: "maritalStatusId",
+    as: "maritalStatus"
+  });
+  MetaMaritalStatus.hasMany(UserProfile, {
+    foreignKey: "maritalStatusId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaWardNumber, {
+    foreignKey: "wardNumberId",
+    as: "wardNumber"
+  });
+  MetaWardNumber.hasMany(UserProfile, {
+    foreignKey: "wardNumberId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaBoothNumber, {
+    foreignKey: "boothNumberId",
+    as: "boothNumber"
+  });
+  MetaBoothNumber.hasMany(UserProfile, {
+    foreignKey: "boothNumberId",
+    as: "userProfiles"
+  });
 
   User.hasMany(UserToken, { foreignKey: "userId", as: "tokens" });
   UserToken.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -480,13 +520,12 @@ export {
   MetaRelationType,
   MetaUserRole,
   MetaWardNumber,
-  MetaSchemeType,
-  MetaSchemeTypeStep,
   MetaGovernmentLevel,
   MetaSector,
   MetaSchemeTypeLookup,
   MetaOwnershipType,
   MetaGenderOption,
+  MetaMaritalStatus,
   MetaWidowStatus,
   MetaDisabilityStatus,
   MetaEmploymentStatus,

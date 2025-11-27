@@ -42,7 +42,25 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     100
   );
   const search = (req.query.search as string) ?? "";
-  const roleId = req.query.roleId ? Number(req.query.roleId) : undefined;
+
+  // Parse roleId - accepts array format like roleId=[1,2,3]
+  let roleIds: number[] | undefined;
+  const roleIdInput = req.query.roleId;
+
+  if (roleIdInput) {
+    try {
+      // Handle array format: roleId=[1,2,3] or roleId=1 or roleId=1&roleId=2
+      const parsedIds = parseRoleIdsInput(roleIdInput);
+      roleIds = parsedIds ?? undefined;
+    } catch (error) {
+      // If parsing fails, try single number conversion as fallback
+      const singleId = Number(roleIdInput);
+      if (!Number.isNaN(singleId) && singleId > 0) {
+        roleIds = [singleId];
+      }
+    }
+  }
+
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const { rows, count } = await User.findAndCountAll({
@@ -57,11 +75,21 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       : undefined,
     attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
     include: [
-      { model: UserProfile, as: "profile" },
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       {
         association: "roles",
         include: [{ association: "permissions" }],
-        ...(roleId && { where: { id: roleId }, required: true })
+        ...(roleIds &&
+          roleIds.length > 0 && { where: { id: { [Op.in]: roleIds } }, required: true })
       },
       {
         model: UserAccess,
@@ -108,6 +136,14 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("contactNumber is required", 400);
   }
 
+  if (!profile?.wardNumberId) {
+    throw new ApiError("profile.wardNumberId is required", 400);
+  }
+
+  if (!profile?.boothNumberId) {
+    throw new ApiError("profile.boothNumberId is required", 400);
+  }
+
   const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
   const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
   if (!publicRole) {
@@ -124,8 +160,16 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   if (profile) {
     const profileAttributes = buildProfileAttributes(profile);
     if (Object.keys(profileAttributes).length > 0) {
+      if (!profileAttributes.wardNumberId) {
+        throw new ApiError("profile.wardNumberId is required", 400);
+      }
+      if (!profileAttributes.boothNumberId) {
+        throw new ApiError("profile.boothNumberId is required", 400);
+      }
       await UserProfile.create({
         userId: user.id,
+        wardNumberId: profileAttributes.wardNumberId,
+        boothNumberId: profileAttributes.boothNumberId,
         ...profileAttributes
       });
     }
@@ -149,7 +193,16 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 
   const created = await User.findByPk(user.id, {
     include: [
-      { model: UserProfile, as: "profile" },
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
@@ -185,7 +238,16 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findByPk(req.params.id, {
     attributes: buildQueryAttributes({ includeAuditFields }),
     include: [
-      { model: UserProfile, as: "profile" },
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
@@ -254,7 +316,19 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
       if (user.profile) {
         await user.profile.update(profileAttributes);
       } else {
-        await UserProfile.create({ userId: user.id, ...profileAttributes });
+        // When creating a new profile, wardNumberId and boothNumberId are required
+        if (!profileAttributes.wardNumberId) {
+          throw new ApiError("profile.wardNumberId is required when creating profile", 400);
+        }
+        if (!profileAttributes.boothNumberId) {
+          throw new ApiError("profile.boothNumberId is required when creating profile", 400);
+        }
+        await UserProfile.create({
+          userId: user.id,
+          wardNumberId: profileAttributes.wardNumberId,
+          boothNumberId: profileAttributes.boothNumberId,
+          ...profileAttributes
+        });
       }
     }
   }
@@ -282,7 +356,16 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 
   const updated = await User.findByPk(user.id, {
     include: [
-      { model: UserProfile, as: "profile" },
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
@@ -330,7 +413,16 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
   if (user.status === targetStatus) {
     const hydrated = await User.findByPk(user.id, {
       include: [
-        { model: UserProfile, as: "profile" },
+        {
+          model: UserProfile,
+          as: "profile",
+          include: [
+            { association: "gender", attributes: ["id", "dispName"], required: false },
+            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          ]
+        },
         { association: "roles", include: [{ association: "permissions" }] },
         {
           model: UserAccess,
@@ -369,7 +461,16 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
 
   const updated = await User.findByPk(user.id, {
     include: [
-      { model: UserProfile, as: "profile" },
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
@@ -422,7 +523,16 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
   const fetchUserDetails = () =>
     User.findByPk(user.id, {
       include: [
-        { model: UserProfile, as: "profile" },
+        {
+          model: UserProfile,
+          as: "profile",
+          include: [
+            { association: "gender", attributes: ["id", "dispName"], required: false },
+            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          ]
+        },
         { association: "roles", include: [{ association: "permissions" }] },
         {
           model: UserAccess,
@@ -445,8 +555,17 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
       return sendSuccess(res, hydrated, "User posts are already unblocked");
     }
 
+    // When creating profile for post blocking, ward and booth numbers are still required
+    // You may want to get these from request body or user data
+    const { wardNumberId, boothNumberId } = req.body;
+    if (!wardNumberId || !boothNumberId) {
+      throw new ApiError("wardNumberId and boothNumberId are required to create user profile", 400);
+    }
+
     await UserProfile.create({
       userId: user.id,
+      wardNumberId,
+      boothNumberId,
       postsBlocked: true,
       createdBy: actorId,
       updatedBy: actorId

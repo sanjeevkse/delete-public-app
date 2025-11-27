@@ -251,7 +251,15 @@ export const assignRoleToUser = asyncHandler(async (req: Request, res: Response)
 
   const updatedUser = await User.findByPk(user.id, {
     include: [
-      { association: "profile" },
+      {
+        association: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
@@ -311,7 +319,15 @@ export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Respo
 
   const updatedUser = await User.findByPk(userId, {
     include: [
-      { association: "profile" },
+      {
+        association: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });

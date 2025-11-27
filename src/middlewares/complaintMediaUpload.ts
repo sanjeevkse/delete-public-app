@@ -24,7 +24,10 @@ const COMPLAINT_MEDIA_MAX_FILE_SIZE_BYTES = Math.max(
 );
 
 // ✅ Combined allowed MIME types
-const ALLOWED_MEDIA_MIME_TYPES = [...ALLOWED_IMAGE_MIME_TYPES, ...ALLOWED_VIDEO_MIME_TYPES];
+const ALLOWED_MEDIA_MIME_TYPES = [
+  ...ALLOWED_IMAGE_MIME_TYPES,
+  ...ALLOWED_VIDEO_MIME_TYPES
+];
 
 // ✅ Validation function (same as for posts)
 const validateComplaintMediaFiles = (files: Express.Multer.File[]) => {
@@ -47,11 +50,17 @@ const validateComplaintMediaFiles = (files: Express.Multer.File[]) => {
   }
 
   if (imageCount > MAX_COMPLAINT_IMAGE_COUNT) {
-    throw new ApiError(`A complaint can include at most ${MAX_COMPLAINT_IMAGE_COUNT} images`, 400);
+    throw new ApiError(
+      `A complaint can include at most ${MAX_COMPLAINT_IMAGE_COUNT} images`,
+      400
+    );
   }
 
   if (videoCount > MAX_COMPLAINT_VIDEO_COUNT) {
-    throw new ApiError(`A complaint can include at most ${MAX_COMPLAINT_VIDEO_COUNT} videos`, 400);
+    throw new ApiError(
+      `A complaint can include at most ${MAX_COMPLAINT_VIDEO_COUNT} videos`,
+      400
+    );
   }
 };
 

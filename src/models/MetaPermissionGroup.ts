@@ -18,6 +18,7 @@ class MetaPermissionGroup extends Model<
   declare label: string;
   declare description: CreationOptional<string | null>;
   declare sidebar: string;
+  declare icon: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -45,6 +46,10 @@ MetaPermissionGroup.init(
       type: DataTypes.STRING(150),
       allowNull: false,
       unique: true
+    },
+    icon: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

@@ -16,7 +16,8 @@ import {
   getRoleByName,
   getUserAccessProfile,
   setUserRoles,
-  enrichAdminRolePermissions
+  enrichAdminRolePermissions,
+  filterUserRolePermissions
 } from "../services/rbacService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
@@ -220,7 +221,15 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const sanitizedUser = await User.findByPk(user.id, {
     include: [
-      { association: "profile" },
+      {
+        association: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
@@ -228,13 +237,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const profileExists = Boolean(sanitizedUser?.profile);
   const resolvedUserExists = userExists && profileExists;
 
-  // Enrich Admin roles with all permissions
+  // Enrich Admin roles with all permissions, then filter based on user restrictions
   let userForResponse = sanitizedUser;
   if (sanitizedUser && sanitizedUser.roles && sanitizedUser.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(sanitizedUser.roles);
+    const filteredRoles = await filterUserRolePermissions(user.id, enrichedRoles);
     userForResponse = {
       ...sanitizedUser.toJSON(),
-      roles: enrichedRoles
+      roles: filteredRoles
     } as any;
   }
 
@@ -255,7 +265,15 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const user = await User.findByPk(userId, {
     include: [
-      { association: "profile" },
+      {
+        association: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
@@ -264,17 +282,25 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw new ApiError("User not found", 404);
   }
 
-  // Enrich Admin roles with all permissions
+  // Get user access profile with blocked user permissions filtered
+  const accessProfile = await getUserAccessProfile(userId);
+
+  // Enrich Admin roles with all permissions, then filter based on user restrictions
   let userForResponse = user;
   if (user.roles && user.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+    const filteredRoles = await filterUserRolePermissions(userId, enrichedRoles);
     userForResponse = {
       ...user.toJSON(),
-      roles: enrichedRoles
+      roles: filteredRoles
     } as any;
   }
 
-  return sendSuccess(res, { user: userForResponse }, "Profile retrieved successfully");
+  return sendSuccess(
+    res,
+    { user: userForResponse, access: accessProfile },
+    "Profile retrieved successfully"
+  );
 });
 
 export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -404,7 +430,15 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
 
   const updatedUser = await User.findByPk(user.id, {
     include: [
-      { association: "profile" },
+      {
+        association: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
@@ -451,7 +485,15 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
 
   const updatedUser = await User.findByPk(userId, {
     include: [
-      { association: "profile" },
+      {
+        association: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
@@ -535,25 +577,20 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const publicSidebars = [
     {
-      id: 900,
-      label: "Feeds",
-      description: "Feeds and updates",
-      sidebar: "FEEDS_SCREEN",
-      status: 1
-    },
-    {
       id: 901,
       label: "Requets",
       description: "User requests and submissions",
       sidebar: "REQUESTS_SCREEN",
-      status: 1
+      status: 1,
+      icon: "copy"
     },
     {
       id: 902,
       label: "Profile",
       description: "User profile and settings",
       sidebar: "PROFILE_SCREEN",
-      status: 1
+      status: 1,
+      icon: "id-card"
     }
   ];
 
@@ -565,7 +602,8 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
       label: "Dashboard",
       description: "Administrative dashboard",
       sidebar: "DASHBOARD_SCREEN",
-      status: 1
+      status: 1,
+      icon: "tachometer-alt"
     }
   ];
 

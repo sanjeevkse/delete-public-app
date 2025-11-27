@@ -1,5 +1,6 @@
 import { getMessaging } from "../config/firebase";
 import type { Message, MulticastMessage, BatchResponse } from "firebase-admin/messaging";
+import logger from "../utils/logger";
 
 export interface NotificationPayload {
   title: string;
@@ -54,10 +55,10 @@ class NotificationService {
       };
 
       const response = await messaging.send(message);
-      console.log("Successfully sent notification:", response);
+      logger.info({ response }, "Successfully sent notification");
       return response;
     } catch (error) {
-      console.error("Error sending notification:", error);
+      logger.error({ err: error }, "Error sending notification");
       throw error;
     }
   }
@@ -95,18 +96,21 @@ class NotificationService {
       };
 
       const response = await messaging.sendEachForMulticast(message);
-      console.log(`Successfully sent ${response.successCount} notifications`);
+      logger.info({ successCount: response.successCount }, "Multicast notification sent");
       if (response.failureCount > 0) {
-        console.log(`Failed to send ${response.failureCount} notifications`);
+        logger.warn({ failureCount: response.failureCount }, "Some multicast notifications failed");
         response.responses.forEach((resp, idx) => {
           if (!resp.success) {
-            console.error(`Error for token ${options.tokens[idx]}:`, resp.error);
+            logger.error(
+              { token: options.tokens[idx], error: resp.error },
+              "Failed to send to token"
+            );
           }
         });
       }
       return response;
     } catch (error) {
-      console.error("Error sending multicast notification:", error);
+      logger.error({ err: error }, "Error sending multicast notification");
       throw error;
     }
   }
@@ -144,10 +148,10 @@ class NotificationService {
       };
 
       const response = await messaging.send(message);
-      console.log(`Successfully sent notification to topic ${topic}:`, response);
+      logger.info({ topic, response }, "Successfully sent notification to topic");
       return response;
     } catch (error) {
-      console.error(`Error sending notification to topic ${topic}:`, error);
+      logger.error({ topic, err: error }, "Error sending notification to topic");
       throw error;
     }
   }
@@ -159,12 +163,15 @@ class NotificationService {
     try {
       const messaging = getMessaging();
       const response = await messaging.subscribeToTopic(tokens, topic);
-      console.log(`Successfully subscribed ${response.successCount} tokens to topic ${topic}`);
+      logger.info({ topic, successCount: response.successCount }, "Tokens subscribed to topic");
       if (response.failureCount > 0) {
-        console.log(`Failed to subscribe ${response.failureCount} tokens`);
+        logger.warn(
+          { topic, failureCount: response.failureCount },
+          "Failed to subscribe some tokens"
+        );
       }
     } catch (error) {
-      console.error(`Error subscribing to topic ${topic}:`, error);
+      logger.error({ topic, err: error }, "Error subscribing to topic");
       throw error;
     }
   }
@@ -176,12 +183,15 @@ class NotificationService {
     try {
       const messaging = getMessaging();
       const response = await messaging.unsubscribeFromTopic(tokens, topic);
-      console.log(`Successfully unsubscribed ${response.successCount} tokens from topic ${topic}`);
+      logger.info({ topic, successCount: response.successCount }, "Tokens unsubscribed from topic");
       if (response.failureCount > 0) {
-        console.log(`Failed to unsubscribe ${response.failureCount} tokens`);
+        logger.warn(
+          { topic, failureCount: response.failureCount },
+          "Failed to unsubscribe some tokens"
+        );
       }
     } catch (error) {
-      console.error(`Error unsubscribing from topic ${topic}:`, error);
+      logger.error({ topic, err: error }, "Error unsubscribing from topic");
       throw error;
     }
   }
@@ -203,7 +213,7 @@ class NotificationService {
     let logId: number | null = null;
 
     try {
-      console.log("🔍 sendToAllUsers called with notification:", notification.title);
+      logger.info({ title: notification.title }, "sendToAllUsers called with notification");
 
       // Import models
       const { default: DeviceToken } = await import("../models/DeviceToken");
@@ -215,7 +225,7 @@ class NotificationService {
         attributes: ["token"]
       });
 
-      console.log(`📊 Found ${deviceTokens.length} active device tokens`);
+      logger.info({ count: deviceTokens.length }, "Active device tokens found");
 
       if (deviceTokens.length === 0) {
         // Log failed attempt
@@ -234,7 +244,7 @@ class NotificationService {
           status: 1
         });
 
-        console.warn("⚠️ No active device tokens found - cannot send notifications");
+        logger.warn("No active device tokens found - cannot send notifications");
         throw new Error("No active device tokens found");
       }
 
@@ -295,8 +305,9 @@ class NotificationService {
         );
       }
 
-      console.log(
-        `Broadcast notification sent: ${totalSuccess} success, ${totalFailure} failed out of ${tokens.length} total tokens`
+      logger.info(
+        { successCount: totalSuccess, failureCount: totalFailure, totalTokens: tokens.length },
+        "Broadcast notification sent"
       );
 
       return {
@@ -317,11 +328,11 @@ class NotificationService {
             { where: { id: logId } }
           );
         } catch (logError) {
-          console.error("Failed to update notification log with error:", logError);
+          logger.error({ err: logError }, "Failed to update notification log with error");
         }
       }
 
-      console.error("Error sending broadcast notification:", error);
+      logger.error({ err: error }, "Error sending broadcast notification");
       throw error;
     }
   }

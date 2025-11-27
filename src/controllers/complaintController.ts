@@ -22,7 +22,7 @@ import { Sequelize, Op } from "sequelize";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 
 // ✅ Common attributes to exclude
-const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
+const excludeFields = ["updatedBy", "status", "updatedAt"];
 
 export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
@@ -100,14 +100,14 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   });
 
   const result = await Complaint.findByPk(complaint.id, {
-    attributes: { exclude: excludeFields },
+    attributes: { exclude: ["updatedBy", "status", "updatedAt"] },
     include: [
       {
         model: ComplaintMedia,
         as: "media",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields }
+        attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
       },
       { model: ComplaintType, as: "complaintType", attributes: ["id", "dispName", "description"] },
       {
@@ -139,7 +139,7 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
   const { id } = req.params;
 
   const complaint = await Complaint.findByPk(id, {
-    attributes: { exclude: ["createdBy", "updatedBy", "status", "updatedAt"] },
+    attributes: { exclude: ["updatedBy", "status", "updatedAt"] },
     include: [
       {
         model: ComplaintMedia,
@@ -253,7 +253,7 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 
   const { rows, count } = await Complaint.findAndCountAll({
     where,
-    attributes: { exclude: ["createdBy", "updatedBy", "status", "updatedAt"] },
+    attributes: { exclude: ["updatedBy", "status", "updatedAt"] },
     include: [
       {
         model: ComplaintMedia,
@@ -395,14 +395,14 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   });
 
   const updatedComplaint = await Complaint.findByPk(id, {
-    attributes: { exclude: excludeFields },
+    attributes: { exclude: ["updatedBy", "status", "updatedAt"] },
     include: [
       {
         model: ComplaintMedia,
         as: "media",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields }
+        attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
       },
       {
         model: ComplaintType,
@@ -522,7 +522,7 @@ export const addComplaintMedia = asyncHandler(async (req: AuthenticatedRequest, 
         as: "media",
         where: { status: 1 },
         required: false,
-        attributes: { exclude: excludeFields }
+        attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
       },
       {
         model: ComplaintType,

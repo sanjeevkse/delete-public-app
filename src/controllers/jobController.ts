@@ -270,7 +270,13 @@ const buildJobInclude = () => [
       {
         association: "profile",
         attributes: ["profileImageUrl"],
-        required: false
+        required: false,
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
       }
     ]
   }
@@ -311,7 +317,13 @@ const normalizeJobPayload = async (
       include: [
         {
           association: "profile",
-          attributes: ["fullAddress", "alernativeContactNumber"]
+          attributes: ["fullAddress", "alernativeContactNumber"],
+          include: [
+            { association: "gender", attributes: ["id", "dispName"], required: false },
+            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          ]
         }
       ]
     });
@@ -467,7 +479,10 @@ export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   const sortDirection = parseSortDirection(req.query.sort ?? req.query.sortDirection);
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
-  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] });
+  const attributes = buildQueryAttributes({
+    includeAuditFields,
+    keepFields: ["createdAt", "createdBy", "updatedBy"]
+  });
 
   const where: WhereOptions = {};
 
@@ -514,7 +529,10 @@ export const getJob = asyncHandler(async (req: AuthenticatedRequest, res: Respon
   }
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
-  const attributes = buildQueryAttributes({ includeAuditFields });
+  const attributes = buildQueryAttributes({
+    includeAuditFields,
+    keepFields: ["createdBy", "updatedBy"]
+  });
 
   const job = await Job.findOne({
     where: { id, status: 1 },

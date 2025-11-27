@@ -150,6 +150,9 @@ class TelescopeService {
       statusCode?: number;
       userId?: number;
       search?: string;
+      path?: string;
+      startDate?: string;
+      endDate?: string;
     } = {}
   ): Promise<{ rows: TelescopeRequest[]; count: number }> {
     const where: any = {};
@@ -157,6 +160,29 @@ class TelescopeService {
     if (filters.method) where.method = filters.method;
     if (filters.statusCode) where.statusCode = filters.statusCode;
     if (filters.userId) where.userId = filters.userId;
+
+    // Add path filter with LIKE support
+    if (filters.path) {
+      const { Op } = require("sequelize");
+      where.path = { [Op.like]: `%${filters.path}%` };
+    }
+
+    // Add date range filter
+    if (filters.startDate || filters.endDate) {
+      const { Op } = require("sequelize");
+      where.createdAt = {};
+
+      if (filters.startDate) {
+        where.createdAt[Op.gte] = new Date(filters.startDate);
+      }
+
+      if (filters.endDate) {
+        // Set to end of day
+        const endDate = new Date(filters.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        where.createdAt[Op.lte] = endDate;
+      }
+    }
 
     const { rows, count } = await TelescopeRequest.findAndCountAll({
       where,

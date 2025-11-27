@@ -77,7 +77,7 @@
       .controls {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         margin-bottom: 1.5rem;
         gap: 1rem;
         flex-wrap: wrap;
@@ -87,17 +87,48 @@
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+        align-items: center;
+        flex: 1;
       }
 
-      .filter-select {
+      .filter-select,
+      .filter-input {
         padding: 0.5rem 1rem;
         border: 1px solid #cbd5e0;
         border-radius: 6px;
         background: white;
         color: #2d3748;
         font-size: 0.9rem;
-        cursor: pointer;
         transition: border-color 0.3s;
+      }
+
+      .filter-select {
+        cursor: pointer;
+      }
+
+      .filter-input {
+        min-width: 150px;
+      }
+
+      .filter-input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .filter-input::placeholder {
+        color: #a0aec0;
+      }
+
+      .date-range-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .date-range-label {
+        font-size: 0.85rem;
+        color: #718096;
+        white-space: nowrap;
       }
 
       .filter-select:hover {
@@ -484,6 +515,20 @@
               <option value="404">404 Not Found</option>
               <option value="500">500 Server Error</option>
             </select>
+            <input
+              type="text"
+              class="filter-input"
+              id="path-filter"
+              placeholder="Filter by path..."
+            />
+            <div class="date-range-container">
+              <span class="date-range-label">From:</span>
+              <input type="date" class="filter-input" id="start-date-filter" />
+            </div>
+            <div class="date-range-container">
+              <span class="date-range-label">To:</span>
+              <input type="date" class="filter-input" id="end-date-filter" />
+            </div>
           </div>
           <div>
             <button class="btn btn-primary" onclick="loadRequests()">🔄 Refresh</button>
@@ -581,10 +626,41 @@
         loadRequests();
       });
 
+      document.getElementById("path-filter").addEventListener(
+        "input",
+        debounce(() => {
+          currentPage = 1;
+          loadRequests();
+        }, 500)
+      );
+
+      document.getElementById("start-date-filter").addEventListener("change", () => {
+        currentPage = 1;
+        loadRequests();
+      });
+
+      document.getElementById("end-date-filter").addEventListener("change", () => {
+        currentPage = 1;
+        loadRequests();
+      });
+
       document.getElementById("exception-type-filter").addEventListener("change", () => {
         currentPage = 1;
         loadExceptions();
       });
+
+      // Debounce helper function
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
 
       // Load requests
       async function loadRequests() {
@@ -597,11 +673,17 @@
         try {
           const method = document.getElementById("method-filter").value;
           const statusCode = document.getElementById("status-filter").value;
+          const path = document.getElementById("path-filter").value;
+          const startDate = document.getElementById("start-date-filter").value;
+          const endDate = document.getElementById("end-date-filter").value;
           const offset = (currentPage - 1) * itemsPerPage;
 
           let url = `/telescope/api/requests?limit=${itemsPerPage}&offset=${offset}`;
           if (method) url += `&method=${method}`;
           if (statusCode) url += `&statusCode=${statusCode}`;
+          if (path) url += `&path=${encodeURIComponent(path)}`;
+          if (startDate) url += `&startDate=${startDate}`;
+          if (endDate) url += `&endDate=${endDate}`;
 
           const response = await fetch(url);
           const data = await response.json();

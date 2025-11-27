@@ -7,6 +7,7 @@ import MetaPermission from "../models/MetaPermission";
 import MetaUserRole from "../models/MetaUserRole";
 import User from "../models/User";
 import UserRole from "../models/UserRole";
+import UserProfile from "../models/UserProfile";
 
 export type UserAccessProfile = {
   roles: string[];
@@ -159,12 +160,59 @@ export const enrichAdminRolePermissions = async (
   return enrichedRoles;
 };
 
+/**
+ * Filter permissions from user roles based on user-specific restrictions
+ * Removes blocked permissions (like posts:create for blocked users)
+ */
+export const filterUserRolePermissions = async (
+  userId: number,
+  roles: MetaUserRole[]
+): Promise<MetaUserRole[]> => {
+  if (roles.length === 0) {
+    return roles;
+  }
+
+  // Get user profile to check blocking status
+  const profile = await UserProfile.findOne({
+    where: { userId },
+    attributes: ["postsBlocked"]
+  });
+
+  const isPostsBlocked = Boolean(profile?.postsBlocked);
+
+  // If user is not blocked, return roles as-is
+  if (!isPostsBlocked) {
+    return roles;
+  }
+
+  // Filter out posts:create permission from each role
+  const filteredRoles = roles.map((role) => {
+    const roleData: any = role.toJSON ? role.toJSON() : role;
+
+    if (!roleData.permissions || !Array.isArray(roleData.permissions)) {
+      return roleData as MetaUserRole;
+    }
+
+    return {
+      ...roleData,
+      permissions: roleData.permissions.filter(
+        (permission: any) => permission.dispName !== "posts:create"
+      )
+    } as MetaUserRole;
+  });
+
+  return filteredRoles;
+};
+
 export const getUserAccessProfile = async (userId: number): Promise<UserAccessProfile> => {
   const user = await User.findByPk(userId, {
     include: [
       {
         association: "roles",
         include: [{ model: MetaPermission, as: "permissions" }]
+      },
+      {
+        association: "profile"
       }
     ]
   });
@@ -175,6 +223,7 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
 
   const roles = user.roles ?? [];
   const roleNames = roles.map((role) => role.dispName);
+  const isPostsBlocked = user.profile?.postsBlocked ?? false;
 
   // If user has Admin role, grant all permissions
   if (hasAdminRole(roles)) {
@@ -182,9 +231,16 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
       where: { status: 1 }
     });
 
+    let permissions = allPermissions.map((permission) => permission.dispName);
+
+    // Filter out posts:create permission if user is blocked
+    if (isPostsBlocked) {
+      permissions = permissions.filter((permission) => permission !== "posts:create");
+    }
+
     return {
       roles: roleNames,
-      permissions: allPermissions.map((permission) => permission.dispName)
+      permissions
     };
   }
 
@@ -197,8 +253,15 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
     });
   });
 
+  let permissions = Array.from(permissionsSet);
+
+  // Filter out posts:create permission if user is blocked
+  if (isPostsBlocked) {
+    permissions = permissions.filter((permission) => permission !== "posts:create");
+  }
+
   return {
     roles: roleNames,
-    permissions: Array.from(permissionsSet)
+    permissions
   };
 };

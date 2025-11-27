@@ -4,27 +4,7 @@ import type { Model, ModelStatic } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
-import MetaBusinessType from "../models/MetaBusinessType";
-import MetaBoothNumber from "../models/MetaBoothNumber";
-import MetaCommunityType from "../models/MetaCommunityType";
-import MetaMlaConstituency from "../models/MetaMlaConstituency";
-import MetaPermission from "../models/MetaPermission";
-import MetaPermissionGroup from "../models/MetaPermissionGroup";
-import MetaRelationType from "../models/MetaRelationType";
-import MetaUserRole from "../models/MetaUserRole";
-import MetaWardNumber from "../models/MetaWardNumber";
-import MetaSchemeType from "../models/MetaSchemeType";
-import MetaSchemeTypeStep from "../models/MetaSchemeTypeStep";
-import MetaFieldType from "../models/MetaFieldType";
-import MetaInputFormat from "../models/MetaInputFormat";
-import MetaGovernmentLevel from "../models/MetaGovernmentLevel";
-import MetaSector from "../models/MetaSector";
-import MetaSchemeTypeLookup from "../models/MetaSchemeTypeLookup";
-import MetaOwnershipType from "../models/MetaOwnershipType";
-import MetaGenderOption from "../models/MetaGenderOption";
-import MetaWidowStatus from "../models/MetaWidowStatus";
-import MetaDisabilityStatus from "../models/MetaDisabilityStatus";
-import MetaEmploymentStatus from "../models/MetaEmploymentStatus";
+import MetaTableRegistry from "../models/MetaTableRegistry";
 import asyncHandler from "../utils/asyncHandler";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
@@ -52,6 +32,81 @@ interface MetaTableConfig {
   hasStatus?: boolean;
   customIncludes?: any[];
 }
+
+/**
+ * Cache for loaded models to avoid repeated imports
+ */
+const modelCache = new Map<string, ModelStatic<any>>();
+
+/**
+ * Dynamically import a model by name
+ */
+const loadModel = async (modelName: string): Promise<ModelStatic<any>> => {
+  if (modelCache.has(modelName)) {
+    return modelCache.get(modelName)!;
+  }
+
+  try {
+    const modelModule = await import(`../models/${modelName}`);
+    const model = modelModule.default;
+    modelCache.set(modelName, model);
+    return model;
+  } catch (error) {
+    throw new ApiError(`Failed to load model ${modelName}: ${error}`, 500);
+  }
+};
+
+/**
+ * Build META_TABLES registry with loaded models from database
+ */
+const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig>> => {
+  const registry: Record<string, MetaTableConfig> = {};
+
+  // Fetch all active meta table configurations from database
+  const configs = await MetaTableRegistry.findAll({
+    where: { status: 1 },
+    attributes: { exclude: ["createdBy", "updatedBy", "createdAt", "updatedAt"] }
+  });
+
+  for (const config of configs) {
+    const model = await loadModel(config.modelName);
+    registry[config.name] = {
+      name: config.name,
+      tableName: config.tableName,
+      displayName: config.displayName,
+      description: config.description || "",
+      primaryKey: config.primaryKey,
+      searchableFields: config.searchableFields,
+      hasStatus: config.hasStatus === 1,
+      customIncludes: config.customIncludes || undefined,
+      model
+    };
+  }
+
+  return registry;
+};
+
+// Initialize the registry (will be populated on first use)
+let META_TABLES: Record<string, MetaTableConfig> | null = null;
+
+/**
+ * Get the initialized META_TABLES registry
+ */
+const getMetaTables = async (): Promise<Record<string, MetaTableConfig>> => {
+  if (!META_TABLES) {
+    META_TABLES = await buildMetaTablesRegistry();
+  }
+  return META_TABLES;
+};
+
+/**
+ * Invalidate the registry cache (called when registry is updated)
+ */
+export const invalidateRegistryCache = (): void => {
+  META_TABLES = null;
+  // Optionally clear model cache too if models change
+  // modelCache.clear();
+};
 
 /**
  * Get all fields from a model excluding audit fields
@@ -115,250 +170,13 @@ const getFieldsWithRelations = (model: ModelStatic<any>, config: MetaTableConfig
   return fields;
 };
 
-// Registry of all meta tables
-const META_TABLES: Record<string, MetaTableConfig> = {
-  businessType: {
-    name: "businessType",
-    tableName: "meta_business_types",
-    displayName: "Business Types",
-    model: MetaBusinessType,
-    description: "Types of businesses",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  boothNumber: {
-    name: "boothNumber",
-    tableName: "meta_booth_numbers",
-    displayName: "Booth Numbers",
-    model: MetaBoothNumber,
-    description: "Booth numbers for voting",
-    primaryKey: "id",
-    searchableFields: ["dispName", "num"],
-    hasStatus: true,
-    customIncludes: [
-      {
-        association: "mlaConstituency",
-        attributes: ["id", "dispName"]
-      }
-    ]
-  },
-  communityType: {
-    name: "communityType",
-    tableName: "meta_community_types",
-    displayName: "Community Types",
-    model: MetaCommunityType,
-    description: "Types of communities",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  mlaConstituency: {
-    name: "mlaConstituency",
-    tableName: "meta_mla_constituencies",
-    displayName: "MLA Constituencies",
-    model: MetaMlaConstituency,
-    description: "MLA constituency details",
-    primaryKey: "id",
-    searchableFields: ["dispName", "num"],
-    hasStatus: true
-  },
-  permission: {
-    name: "permission",
-    tableName: "meta_permissions",
-    displayName: "Permissions",
-    model: MetaPermission,
-    description: "System permissions",
-    primaryKey: "id",
-    searchableFields: ["dispName", "name"],
-    hasStatus: true,
-    customIncludes: [
-      {
-        association: "group",
-        attributes: ["id", "dispName"]
-      }
-    ]
-  },
-  permissionGroup: {
-    name: "permissionGroup",
-    tableName: "meta_permission_groups",
-    displayName: "Permission Groups",
-    model: MetaPermissionGroup,
-    description: "Groups for organizing permissions",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  relationType: {
-    name: "relationType",
-    tableName: "meta_relation_types",
-    displayName: "Relation Types",
-    model: MetaRelationType,
-    description: "Types of family relations",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  userRole: {
-    name: "userRole",
-    tableName: "meta_user_roles",
-    displayName: "User Roles",
-    model: MetaUserRole,
-    description: "User role definitions",
-    primaryKey: "id",
-    searchableFields: ["dispName", "name"],
-    hasStatus: true,
-    customIncludes: [
-      {
-        association: "parentRole",
-        attributes: ["id", "dispName"]
-      }
-    ]
-  },
-  wardNumber: {
-    name: "wardNumber",
-    tableName: "meta_ward_numbers",
-    displayName: "Ward Numbers",
-    model: MetaWardNumber,
-    description: "Ward number details",
-    primaryKey: "id",
-    searchableFields: ["dispName", "num"],
-    hasStatus: true
-  },
-  schemeType: {
-    name: "schemeType",
-    tableName: "meta_scheme_types",
-    displayName: "Scheme Types",
-    model: MetaSchemeType,
-    description: "Types of schemes",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  schemeTypeStep: {
-    name: "schemeTypeStep",
-    tableName: "meta_scheme_type_steps",
-    displayName: "Scheme Type Steps",
-    model: MetaSchemeTypeStep,
-    description: "Steps for scheme types",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true,
-    customIncludes: [
-      {
-        association: "schemeType",
-        attributes: ["id", "dispName"]
-      }
-    ]
-  },
-  governmentLevel: {
-    name: "governmentLevel",
-    tableName: "meta_government_levels",
-    displayName: "Government Levels",
-    model: MetaGovernmentLevel,
-    description: "Government hierarchy levels for scheme eligibility (e.g., State, Central).",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  sector: {
-    name: "sector",
-    tableName: "meta_sectors",
-    displayName: "Sectors",
-    model: MetaSector,
-    description: "Sectors associated with schemes (public, private, etc.).",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  schemeTypeLookup: {
-    name: "schemeTypeLookup",
-    tableName: "meta_scheme_type_lookup",
-    displayName: "Scheme Type Lookup",
-    model: MetaSchemeTypeLookup,
-    description: "Meta list that powers the scheme type dropdown for user applications.",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  ownershipType: {
-    name: "ownershipType",
-    tableName: "meta_ownership_types",
-    displayName: "Ownership Types",
-    model: MetaOwnershipType,
-    description: "Property ownership categories for applicant residences.",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  genderOption: {
-    name: "genderOption",
-    tableName: "meta_gender_options",
-    displayName: "Gender Options",
-    model: MetaGenderOption,
-    description: "Allowed gender selections for applications.",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  widowStatus: {
-    name: "widowStatus",
-    tableName: "meta_widow_statuses",
-    displayName: "Widow Status",
-    model: MetaWidowStatus,
-    description: "Widow/Widower response options.",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  disabilityStatus: {
-    name: "disabilityStatus",
-    tableName: "meta_disability_statuses",
-    displayName: "Disability Status",
-    model: MetaDisabilityStatus,
-    description: "Disability declaration options used in scheme applications.",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  employmentStatus: {
-    name: "employmentStatus",
-    tableName: "meta_employment_statuses",
-    displayName: "Employment Status",
-    model: MetaEmploymentStatus,
-    description: "Employment status choices (employed, student, unemployed, etc.).",
-    primaryKey: "id",
-    searchableFields: ["dispName"],
-    hasStatus: true
-  },
-  fieldType: {
-    name: "fieldType",
-    tableName: "meta_field_types",
-    displayName: "Field Types",
-    model: MetaFieldType,
-    description: "Types of form fields",
-    primaryKey: "id",
-    searchableFields: ["dispName", "type"],
-    hasStatus: true
-  },
-  inputFormat: {
-    name: "inputFormat",
-    tableName: "meta_input_formats",
-    displayName: "Input Formats",
-    model: MetaInputFormat,
-    description: "Input format definitions",
-    primaryKey: "id",
-    searchableFields: ["dispName", "format"],
-    hasStatus: true
-  }
-};
-
 /**
  * List all available meta tables
  * GET /api/meta-tables
  */
 export const listMetaTables = asyncHandler(async (_req: Request, res: Response) => {
-  const tables = Object.values(META_TABLES).map((config) => ({
+  const metaTables = await getMetaTables();
+  const tables = Object.values(metaTables).map((config) => ({
     name: config.name,
     tableName: config.tableName,
     displayName: config.displayName,
@@ -387,7 +205,8 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
 
-  const config = META_TABLES[tableName];
+  const metaTables = await getMetaTables();
+  const config = metaTables[tableName];
   if (!config) {
     return sendNotFound(res, `Meta table '${tableName}' not found`);
   }
@@ -441,7 +260,8 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
 export const getMetaTableRecord = asyncHandler(async (req: Request, res: Response) => {
   const { tableName, id } = req.params;
 
-  const config = META_TABLES[tableName];
+  const metaTables = await getMetaTables();
+  const config = metaTables[tableName];
   if (!config) {
     return sendNotFound(res, `Meta table '${tableName}' not found`);
   }
@@ -476,7 +296,8 @@ export const createMetaTableRecord = asyncHandler(
     const { tableName } = req.params;
     const userId = req.user?.id;
 
-    const config = META_TABLES[tableName];
+    const metaTables = await getMetaTables();
+    const config = metaTables[tableName];
     if (!config) {
       return sendNotFound(res, `Meta table '${tableName}' not found`);
     }
@@ -510,7 +331,8 @@ export const updateMetaTableRecord = asyncHandler(
     const { tableName, id } = req.params;
     const userId = req.user?.id;
 
-    const config = META_TABLES[tableName];
+    const metaTables = await getMetaTables();
+    const config = metaTables[tableName];
     if (!config) {
       return sendNotFound(res, `Meta table '${tableName}' not found`);
     }
@@ -546,7 +368,8 @@ export const deleteMetaTableRecord = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { tableName, id } = req.params;
 
-    const config = META_TABLES[tableName];
+    const metaTables = await getMetaTables();
+    const config = metaTables[tableName];
     if (!config) {
       return sendNotFound(res, `Meta table '${tableName}' not found`);
     }
@@ -570,7 +393,8 @@ export const deleteMetaTableRecord = asyncHandler(
 export const getMetaTableSchema = asyncHandler(async (req: Request, res: Response) => {
   const { tableName } = req.params;
 
-  const config = META_TABLES[tableName];
+  const metaTables = await getMetaTables();
+  const config = metaTables[tableName];
   if (!config) {
     return sendNotFound(res, `Meta table '${tableName}' not found`);
   }
@@ -608,7 +432,8 @@ export const bulkUpdateStatus = asyncHandler(async (req: AuthenticatedRequest, r
   const { ids, status } = req.body;
   const userId = req.user?.id;
 
-  const config = META_TABLES[tableName];
+  const metaTables = await getMetaTables();
+  const config = metaTables[tableName];
   if (!config) {
     return sendNotFound(res, `Meta table '${tableName}' not found`);
   }
@@ -644,7 +469,8 @@ export const bulkUpdateStatus = asyncHandler(async (req: AuthenticatedRequest, r
 export const getMetaTableStats = asyncHandler(async (req: Request, res: Response) => {
   const { tableName } = req.params;
 
-  const config = META_TABLES[tableName];
+  const metaTables = await getMetaTables();
+  const config = metaTables[tableName];
   if (!config) {
     return sendNotFound(res, `Meta table '${tableName}' not found`);
   }

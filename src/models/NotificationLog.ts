@@ -166,7 +166,7 @@ NotificationLog.init(
   },
   {
     sequelize,
-    tableName: "notification_logs",
+    tableName: "tbl_notification_logs",
     timestamps: true,
     underscored: true
   }

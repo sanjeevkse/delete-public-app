@@ -10,7 +10,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "aadhaarNumber",
   "bio",
   "dateOfBirth",
-  "gender",
+  "genderId",
   "occupation",
   "referredBy",
   "fullAddress",

@@ -168,7 +168,13 @@ const basePostInclude = [
       {
         association: "profile",
         attributes: [],
-        required: false
+        required: false,
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
       }
     ],
     required: false

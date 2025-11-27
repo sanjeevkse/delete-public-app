@@ -12,8 +12,12 @@ import {
   bulkUpdateStatus,
   getMetaTableStats
 } from "../controllers/metaTablesController";
+import metaTableRegistryRoutes from "./metaTableRegistryRoutes";
 
 const router = Router();
+
+// Meta Table Registry Management Routes (admin only)
+router.use("/meta-table-registry", metaTableRegistryRoutes);
 
 // All routes require authentication - list all meta tables
 router.get("/meta-tables", authenticate(), listMetaTables);

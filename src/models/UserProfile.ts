@@ -9,7 +9,10 @@ import {
 
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
-import { UserProfileGender } from "../types/enums";
+import type MetaBoothNumber from "./MetaBoothNumber";
+import type MetaGenderOption from "./MetaGenderOption";
+import type MetaMaritalStatus from "./MetaMaritalStatus";
+import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
 
 class UserProfile extends Model<
@@ -23,7 +26,8 @@ class UserProfile extends Model<
   declare aadhaarNumber: CreationOptional<string | null>;
   declare bio: CreationOptional<string | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
-  declare gender: CreationOptional<UserProfileGender | null>;
+  declare genderId: CreationOptional<number | null>;
+  declare maritalStatusId: CreationOptional<number | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
   declare referredBy: CreationOptional<string | null>;
@@ -34,8 +38,8 @@ class UserProfile extends Model<
   declare state: CreationOptional<string | null>;
   declare postalCode: CreationOptional<string | null>;
   declare country: CreationOptional<string | null>;
-  declare wardNumberId: CreationOptional<number | null>;
-  declare boothNumberId: CreationOptional<number | null>;
+  declare wardNumberId: number;
+  declare boothNumberId: number;
   declare isRegistrationAgreed: CreationOptional<number>;
   declare latitude: CreationOptional<number | null>;
   declare longitude: CreationOptional<number | null>;
@@ -48,6 +52,10 @@ class UserProfile extends Model<
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare user?: NonAttribute<User>;
+  declare gender?: NonAttribute<MetaGenderOption | null>;
+  declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
+  declare wardNumber?: NonAttribute<MetaWardNumber | null>;
+  declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
 }
 
 UserProfile.init(
@@ -91,14 +99,14 @@ UserProfile.init(
       type: DataTypes.DATEONLY,
       allowNull: true
     },
-    gender: {
-      type: DataTypes.ENUM(
-        UserProfileGender.MALE,
-        UserProfileGender.FEMALE,
-        UserProfileGender.NON_BINARY,
-        UserProfileGender.OTHER,
-        UserProfileGender.PREFER_NOT
-      ),
+    genderId: {
+      field: "gender_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    maritalStatusId: {
+      field: "marital_status_id",
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
     occupation: {
@@ -150,12 +158,12 @@ UserProfile.init(
     wardNumberId: {
       field: "ward_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      allowNull: false
     },
     boothNumberId: {
       field: "booth_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true
+      allowNull: false
     },
     isRegistrationAgreed: {
       field: "is_registration_agreed",

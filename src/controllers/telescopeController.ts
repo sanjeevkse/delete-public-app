@@ -4,7 +4,8 @@ import path from "path";
 
 export const getRequests = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit, offset, method, statusCode, userId, search } = req.query;
+    const { limit, offset, method, statusCode, userId, search, path, startDate, endDate } =
+      req.query;
 
     const filters: any = {
       limit: limit ? parseInt(limit as string) : 50,
@@ -15,6 +16,9 @@ export const getRequests = async (req: Request, res: Response): Promise<void> =>
     if (statusCode) filters.statusCode = parseInt(statusCode as string);
     if (userId) filters.userId = parseInt(userId as string);
     if (search) filters.search = search as string;
+    if (path) filters.path = path as string;
+    if (startDate) filters.startDate = startDate as string;
+    if (endDate) filters.endDate = endDate as string;
 
     const result = await telescopeService.getRequests(filters);
 

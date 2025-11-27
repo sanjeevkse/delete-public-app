@@ -1,5 +1,6 @@
 import admin from "firebase-admin";
 import env from "./env";
+import logger from "../utils/logger";
 
 let firebaseApp: admin.app.App | null = null;
 
@@ -11,24 +12,28 @@ export const initializeFirebase = (): void => {
   try {
     // Initialize with service account credentials
     if (env.firebase.serviceAccountPath) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const serviceAccount = require(env.firebase.serviceAccountPath);
       firebaseApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
+      logger.info("Firebase Admin SDK initialized successfully with service account path");
     } else if (env.firebase.serviceAccountJson) {
       // Alternative: Initialize with JSON string from environment variable
       const serviceAccount = JSON.parse(env.firebase.serviceAccountJson);
       firebaseApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
+      logger.info("Firebase Admin SDK initialized successfully with service account JSON");
     } else {
-      console.warn("Firebase credentials not configured. Push notifications will not work.");
+      logger.warn("Firebase credentials not configured. Push notifications will not work.");
+      logger.warn(
+        "Please set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON environment variable"
+      );
       return;
     }
-
-    console.log("Firebase Admin SDK initialized successfully");
   } catch (error) {
-    console.error("Failed to initialize Firebase Admin SDK:", error);
+    logger.error({ err: error }, "Failed to initialize Firebase Admin SDK");
     throw error;
   }
 };
