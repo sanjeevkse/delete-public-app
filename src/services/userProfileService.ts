@@ -7,10 +7,13 @@ type ProfileInput = Record<string, unknown> | undefined | null;
 const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "displayName",
   "alernativeContactNumber",
+  "emergencyContactNumber",
   "aadhaarNumber",
   "bio",
   "dateOfBirth",
   "genderId",
+  "educationDetailId",
+  "educationalDetailGroupId",
   "occupation",
   "referredBy",
   "fullAddress",

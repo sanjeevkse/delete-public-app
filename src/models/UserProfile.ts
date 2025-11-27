@@ -10,6 +10,8 @@ import {
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import type MetaBoothNumber from "./MetaBoothNumber";
+import type MetaEducationalDetail from "./MetaEducationalDetail";
+import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
 import type MetaWardNumber from "./MetaWardNumber";
@@ -23,10 +25,13 @@ class UserProfile extends Model<
   declare userId: number;
   declare displayName: CreationOptional<string | null>;
   declare alernativeContactNumber: CreationOptional<string | null>;
+  declare emergencyContactNumber: CreationOptional<string | null>;
   declare aadhaarNumber: CreationOptional<string | null>;
   declare bio: CreationOptional<string | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
   declare genderId: CreationOptional<number | null>;
+  declare educationDetailId: CreationOptional<number | null>;
+  declare educationalDetailGroupId: CreationOptional<number | null>;
   declare maritalStatusId: CreationOptional<number | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
@@ -53,6 +58,8 @@ class UserProfile extends Model<
   declare updatedAt: CreationOptional<Date>;
   declare user?: NonAttribute<User>;
   declare gender?: NonAttribute<MetaGenderOption | null>;
+  declare educationalDetail?: NonAttribute<MetaEducationalDetail | null>;
+  declare educationalDetailGroup?: NonAttribute<MetaEducationalDetailGroup | null>;
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
@@ -85,6 +92,15 @@ UserProfile.init(
         this.setDataValue("alernativeContactNumber", normalized);
       }
     },
+    emergencyContactNumber: {
+      field: "emergency_contact_number",
+      type: DataTypes.STRING(191),
+      allowNull: true,
+      set(value: string | null) {
+        const normalized = normalizeOptionalPhoneNumber(value, "emergencyContactNumber");
+        this.setDataValue("emergencyContactNumber", normalized);
+      }
+    },
     aadhaarNumber: {
       field: "aadhaar_number",
       type: DataTypes.STRING(12),
@@ -101,6 +117,16 @@ UserProfile.init(
     },
     genderId: {
       field: "gender_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    educationDetailId: {
+      field: "education_detail_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    educationalDetailGroupId: {
+      field: "educational_detail_group_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
