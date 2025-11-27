@@ -136,11 +136,11 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("contactNumber is required", 400);
   }
 
-  if (!profile?.wardNumberId) {
+  if (profile && !profile?.wardNumberId) {
     throw new ApiError("profile.wardNumberId is required", 400);
   }
 
-  if (!profile?.boothNumberId) {
+  if (profile && !profile?.boothNumberId) {
     throw new ApiError("profile.boothNumberId is required", 400);
   }
 

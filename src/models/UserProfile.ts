@@ -29,6 +29,7 @@ class UserProfile extends Model<
   declare aadhaarNumber: CreationOptional<string | null>;
   declare bio: CreationOptional<string | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
+  declare citizenAge: CreationOptional<number | null>;
   declare genderId: CreationOptional<number | null>;
   declare educationDetailId: CreationOptional<number | null>;
   declare educationalDetailGroupId: CreationOptional<number | null>;
@@ -113,6 +114,11 @@ UserProfile.init(
     dateOfBirth: {
       field: "date_of_birth",
       type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+    citizenAge: {
+      field: "citizen_age",
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
     genderId: {

@@ -11,6 +11,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "aadhaarNumber",
   "bio",
   "dateOfBirth",
+  "citizenAge",
   "genderId",
   "educationDetailId",
   "educationalDetailGroupId",
