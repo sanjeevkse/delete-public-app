@@ -185,6 +185,149 @@
             "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups. (Legacy sidebar access)"
           },
           "response": []
+        },
+        {
+          "name": "Sidebar",
+          "item": [
+            {
+              "name": "List Sidebar Entries",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/sidebar?page=1&limit=25&dispName=&screenName=&userRoleId=",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "sidebar"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Page number"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25",
+                      "description": "Items per page"
+                    },
+                    {
+                      "key": "dispName",
+                      "value": "",
+                      "description": "Filter by display name (optional)"
+                    },
+                    {
+                      "key": "screenName",
+                      "value": "",
+                      "description": "Filter by screen name (optional)"
+                    },
+                    {
+                      "key": "userRoleId",
+                      "value": "",
+                      "description": "Filter by linked role id (optional)"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "Filter by status (optional)"
+                    }
+                  ]
+                },
+                "description": "Fetch sidebar entries with pagination and optional filters for disp_name, screen_name, and user_role_id."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Sidebar Entry",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/sidebar/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "sidebar", "1"]
+                },
+                "description": "Retrieve a single sidebar entry by id."
+              },
+              "response": []
+            },
+            {
+              "name": "Create Sidebar Entry",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dispName\": \"Dashboard\",\n  \"screenName\": \"dashboard\",\n  \"userRoleId\": 1,\n  \"icon\": \"home\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/sidebar",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "sidebar"]
+                },
+                "description": "Create a sidebar entry. Requires authentication."
+              },
+              "response": []
+            },
+            {
+              "name": "Update Sidebar Entry",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dispName\": \"Dashboard\",\n  \"userRoleId\": 2,\n  \"icon\": \"gov\",\n  \"status\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/sidebar/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "sidebar", "1"]
+                },
+                "description": "Update display metadata, linked role, icon, or status for a sidebar entry. Requires authentication."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Sidebar Entry",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/sidebar/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "auth", "sidebar", "1"]
+                },
+                "description": "Soft delete (status=0) a sidebar entry. Requires authentication."
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },
@@ -3784,149 +3927,6 @@
               ]
             },
             "description": "Delete business"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Sidebar",
-      "item": [
-        {
-          "name": "List Sidebar Entries",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/sidebar?page=1&limit=25&dispName=&screenName=&userRoleId=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sidebar"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1",
-                  "description": "Page number"
-                },
-                {
-                  "key": "limit",
-                  "value": "25",
-                  "description": "Items per page"
-                },
-                {
-                  "key": "dispName",
-                  "value": "",
-                  "description": "Filter by display name (optional)"
-                },
-                {
-                  "key": "screenName",
-                  "value": "",
-                  "description": "Filter by screen name (optional)"
-                },
-                {
-                  "key": "userRoleId",
-                  "value": "",
-                  "description": "Filter by linked role id (optional)"
-                },
-                {
-                  "key": "status",
-                  "value": "",
-                  "description": "Filter by status (optional)"
-                }
-              ]
-            },
-            "description": "Fetch sidebar entries with pagination and optional filters for disp_name, screen_name, and user_role_id."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Sidebar Entry",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/sidebar/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sidebar", "1"]
-            },
-            "description": "Retrieve a single sidebar entry by id."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Sidebar Entry",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"dispName\": \"Dashboard\",\n  \"screenName\": \"dashboard\",\n  \"userRoleId\": 1,\n  \"icon\": \"home\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/sidebar",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sidebar"]
-            },
-            "description": "Create a sidebar entry. Requires authentication."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Sidebar Entry",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"dispName\": \"Dashboard\",\n  \"userRoleId\": 2,\n  \"icon\": \"gov\",\n  \"status\": 1\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/sidebar/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sidebar", "1"]
-            },
-            "description": "Update display metadata, linked role, icon, or status for a sidebar entry. Requires authentication."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Sidebar Entry",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/sidebar/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sidebar", "1"]
-            },
-            "description": "Soft delete (status=0) a sidebar entry. Requires authentication."
           },
           "response": []
         }

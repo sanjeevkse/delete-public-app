@@ -29,6 +29,7 @@ import notificationRoutes from "./notificationRoutes";
 const router = Router();
 
 router.use("/auth", authRoutes);
+router.use("/auth", sidebarRoutes);
 
 router.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -45,7 +46,6 @@ router.use("/", memberRoutes);
 router.use("/", communityRoutes);
 router.use("/", familyMemberRoutes);
 router.use("/", businessRoutes);
-router.use("/", sidebarRoutes);
 router.use("/", wardNumberRoutes);
 router.use("/", mlaConstituencyRoutes);
 router.use("/", boothNumberRoutes);
