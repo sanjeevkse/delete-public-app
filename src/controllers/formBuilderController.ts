@@ -12,7 +12,10 @@ import {
   sendNoContent,
   sendNotFound,
   sendSuccess,
-  sendSuccessWithPagination
+  sendSuccessWithPagination,
+  parseStatusFilter,
+  parseSortDirection,
+  validateSortColumn
 } from "../utils/apiResponse";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaFieldType from "../models/MetaFieldType";
@@ -40,14 +43,6 @@ const paginate = (query: PaginationQuery, defaultLimit = 25, maxLimit = 100) => 
   );
 
   return { page, limit, offset };
-};
-
-const parseStatusFilter = (status: unknown): number | undefined => {
-  if (status === undefined || status === null || status === "") {
-    return undefined;
-  }
-  const num = Number(status);
-  return Number.isNaN(num) ? undefined : num;
 };
 
 const parseBooleanLike = (value: unknown): number | undefined => {
@@ -430,7 +425,7 @@ export const listMetaFieldTypes = asyncHandler(async (req: Request, res: Respons
     });
   }
 
-  if (status !== undefined) {
+  if (status !== undefined && status !== null) {
     filters.push({ status });
   }
 
@@ -556,7 +551,7 @@ export const listMetaInputFormats = asyncHandler(async (req: Request, res: Respo
     });
   }
 
-  if (status !== undefined) {
+  if (status !== undefined && status !== null) {
     filters.push({ status });
   }
 
@@ -704,7 +699,7 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     });
   }
 
-  if (status !== undefined) {
+  if (status !== undefined && status !== null) {
     filters.push({ status });
   }
 

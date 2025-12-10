@@ -4,7 +4,9 @@ import {
   sendCreated,
   sendSuccess,
   calculatePagination,
-  sendSuccessWithPagination
+  sendSuccessWithPagination,
+  parseSortDirection,
+  parsePaginationParams
 } from "../utils/apiResponse";
 import { ApiError } from "../middlewares/errorHandler";
 import sequelize from "../config/database";
@@ -194,40 +196,13 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
   return sendSuccess(res, complaintJson, "Complaint fetched successfully");
 });
 
-const parseSortDirection = (
-  value: unknown,
-  defaultDirection: "ASC" | "DESC" = "DESC"
-): "ASC" | "DESC" => {
-  if (typeof value !== "string") {
-    return defaultDirection;
-  }
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "ASC" || normalized === "DESC") {
-    return normalized;
-  }
-  return defaultDirection;
-};
-
-const PAGE_DEFAULT = 1;
-const LIMIT_DEFAULT = 10;
-const LIMIT_MAX = 100;
-
-const parsePagination = (req: Request) => {
-  const page = Number.parseInt((req.query.page as string) ?? `${PAGE_DEFAULT}`, 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? `${LIMIT_DEFAULT}`, 10);
-
-  const safePage = Number.isNaN(page) || page <= 0 ? PAGE_DEFAULT : page;
-  const safeLimit = Number.isNaN(limit) || limit <= 0 ? LIMIT_DEFAULT : Math.min(limit, LIMIT_MAX);
-
-  return {
-    page: safePage,
-    limit: safeLimit,
-    offset: (safePage - 1) * safeLimit
-  };
-};
-
 export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    10,
+    100
+  );
   const sortDirection = parseSortDirection(req.query.sort, "DESC");
 
   const where: any = { status: 1 };

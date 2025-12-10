@@ -9,14 +9,17 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "alernativeContactNumber",
   "emergencyContactNumber",
   "aadhaarNumber",
+  "panNumber",
   "bio",
   "dateOfBirth",
   "citizenAge",
   "genderId",
-  "educationDetailId",
+  "educationalDetailId",
   "educationalDetailGroupId",
   "dateOfJoining",
+  "maritalStatusId",
   "occupation",
+  "profileImageUrl",
   "referredBy",
   "fullAddress",
   "addressLine1",
@@ -27,17 +30,15 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "country",
   "wardNumberId",
   "boothNumberId",
+  "sectorId",
   "isRegistrationAgreed",
   "latitude",
   "longitude",
   "socialLinksJson",
   "preferencesJson",
+  "postsBlocked",
   "status"
 ];
-
-const OPTIONAL_ALIASES: Record<string, keyof CreationAttributes<UserProfile>> = {
-  address: "fullAddress"
-};
 
 export const buildProfileAttributes = (
   input: ProfileInput,
@@ -53,12 +54,6 @@ export const buildProfileAttributes = (
   DIRECT_PROFILE_FIELDS.forEach((field) => {
     if (field in asRecord) {
       payload[field] = asRecord[field] as never;
-    }
-  });
-
-  Object.entries(OPTIONAL_ALIASES).forEach(([alias, targetField]) => {
-    if (alias in asRecord) {
-      payload[targetField] = asRecord[alias] as never;
     }
   });
 

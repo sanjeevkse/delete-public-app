@@ -14,6 +14,7 @@ import type MetaEducationalDetail from "./MetaEducationalDetail";
 import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
+import type MetaSectorDepartment from "./MetaSectorDepartment";
 import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
 
@@ -27,11 +28,12 @@ class UserProfile extends Model<
   declare alernativeContactNumber: CreationOptional<string | null>;
   declare emergencyContactNumber: CreationOptional<string | null>;
   declare aadhaarNumber: CreationOptional<string | null>;
+  declare panNumber: CreationOptional<string | null>;
   declare bio: CreationOptional<string | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
   declare citizenAge: CreationOptional<number | null>;
   declare genderId: CreationOptional<number | null>;
-  declare educationDetailId: CreationOptional<number | null>;
+  declare educationalDetailId: CreationOptional<number | null>;
   declare educationalDetailGroupId: CreationOptional<number | null>;
   declare dateOfJoining: CreationOptional<Date | null>;
   declare maritalStatusId: CreationOptional<number | null>;
@@ -45,8 +47,9 @@ class UserProfile extends Model<
   declare state: CreationOptional<string | null>;
   declare postalCode: CreationOptional<string | null>;
   declare country: CreationOptional<string | null>;
-  declare wardNumberId: number;
-  declare boothNumberId: number;
+  declare wardNumberId: number | null;
+  declare boothNumberId: number | null;
+  declare sectorId: CreationOptional<number | null>;
   declare isRegistrationAgreed: CreationOptional<number>;
   declare latitude: CreationOptional<number | null>;
   declare longitude: CreationOptional<number | null>;
@@ -65,6 +68,7 @@ class UserProfile extends Model<
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
+  declare sector?: NonAttribute<MetaSectorDepartment | null>;
 }
 
 UserProfile.init(
@@ -108,6 +112,11 @@ UserProfile.init(
       type: DataTypes.STRING(12),
       allowNull: true
     },
+    panNumber: {
+      field: "pan_number",
+      type: DataTypes.STRING(10),
+      allowNull: true
+    },
     bio: {
       type: DataTypes.TEXT,
       allowNull: true
@@ -127,8 +136,8 @@ UserProfile.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
-    educationDetailId: {
-      field: "education_detail_id",
+    educationalDetailId: {
+      field: "educational_detail_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
@@ -196,12 +205,17 @@ UserProfile.init(
     wardNumberId: {
       field: "ward_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false
+      allowNull: true
     },
     boothNumberId: {
       field: "booth_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false
+      allowNull: true
+    },
+    sectorId: {
+      field: "sector_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     isRegistrationAgreed: {
       field: "is_registration_agreed",

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ee7655a5-be42-48d8-a4f0-eb74ad8da20c",
+		"_postman_id": "2ba50668-3686-4186-ab67-847cdf355b19",
 		"name": "feed-backend",
 		"description": "Postman collection covering feed-backend REST APIs.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
@@ -12,6 +12,40 @@
 			"item": [
 				{
 					"name": "Request OTP",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set('contactNumber', '9898989898');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const responseBody = pm.response.json();",
+									"    if (responseBody.data && responseBody.data.otp) {",
+									"        pm.collectionVariables.set('otpCode', responseBody.data.otp);",
+									"        console.log('OTP extracted:', responseBody.data.otp);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -25,7 +59,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"contactNumber\": \"+15551234567\"\n}"
+							"raw": "{\n  \"contactNumber\": \"{{contactNumber}}\"\n}"
 						},
 						"url": "{{baseUrl}}/api/auth/request-otp",
 						"description": "Generates a one-time password for the provided contact number and returns it in the response for testing. The response includes the remaining attemptsLeft; calling again before the OTP expires decrements attemptsLeft until it reaches zero."
@@ -34,6 +68,30 @@
 				},
 				{
 					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const responseBody = pm.response.json();",
+									"    if (responseBody.data && responseBody.data.token) {",
+									"        pm.collectionVariables.set('authToken', responseBody.data.token);",
+									"        pm.collectionVariables.set('userId', responseBody.data.user.id);",
+									"        console.log('Auth token stored');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -47,7 +105,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"contactNumber\": \"+15551234567\",\n  \"otp\": \"196781\"\n}"
+							"raw": "{\n  \"contactNumber\": \"{{contactNumber}}\",\n  \"otp\": \"{{otpCode}}\"\n}"
 						},
 						"url": "{{baseUrl}}/api/auth/login",
 						"description": "Verifies the OTP (or the master OTP) for the supplied mobile number. If the contact number has not been seen before, a new user is provisioned automatically. Returns the JWT, the user profile + access details, and a userExists flag to indicate whether the user pre-existed."
@@ -57,6 +115,12 @@
 				{
 					"name": "Get Profile",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
 						"method": "GET",
 						"header": [],
 						"url": "{{baseUrl}}/api/auth/profile",
@@ -76,7 +140,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"gender\": \"FEMALE\",\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alternateMobileNumber\": \"+15559870000\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"instagramId\": \"demo.insta\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true\n    },\n    \"citizenAge\": 35,\n    \"dateOfJoining\": \"2025-01-15\"\n  }\n}"
+							"raw": "{\n  \"email\": \"demo@example.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"genderId\": 2,\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street, Marylebone, London, England NW1 6XE, UK\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"educationDetailId\": 2,\n    \"maritalStatusId\": 1,\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"profileImageUrl\": \"https://example.com/profile.jpg\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\",\n      \"instagram\": \"demo.insta\",\n      \"facebook\": \"demo.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"citizenAge\": 35,\n    \"dateOfJoining\": \"2025-01-15\",\n    \"isRegistrationAgreed\": 1,\n    \"postsBlocked\": false,\n    \"status\": 1\n  }\n}"
 						},
 						"url": "{{baseUrl}}/api/auth/profile",
 						"description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
@@ -111,6 +175,12 @@
 				{
 					"name": "Sidebar Permissions",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
 						"method": "GET",
 						"header": [],
 						"url": "{{baseUrl}}/api/auth/sidebar",
@@ -954,7 +1024,7 @@
 							]
 						},
 						"url": "{{baseUrl}}/api/events/{{eventId}}/media",
-						"description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each \u2264 5MB). Update the file path before sending."
+						"description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
 					},
 					"response": []
 				},
@@ -1487,12 +1557,12 @@
 								},
 								{
 									"key": "contactNumber",
-									"value": "+15551234567",
+									"value": "9876543210",
 									"type": "text"
 								},
 								{
 									"key": "alternativeContactNumber",
-									"value": "+15559876543",
+									"value": "9876543211",
 									"type": "text"
 								},
 								{
@@ -1582,7 +1652,7 @@
 								},
 								{
 									"key": "contactNumber",
-									"value": "+15557654321",
+									"value": "9876543212",
 									"type": "text"
 								},
 								{
@@ -2479,7 +2549,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"contactNumber\": \"+15550001111\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"address\": \"99 Demo Street, Springfield\",\n    \"citizenAge\": 28,\n    \"dateOfJoining\": \"2025-01-10\"\n  }\n}"
+							"raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
 						},
 						"url": "{{baseUrl}}/api/admin/users"
 					},
@@ -2488,6 +2558,12 @@
 				{
 					"name": "List Users",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -2517,6 +2593,12 @@
 				{
 					"name": "Get User",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
 						"method": "GET",
 						"header": [],
 						"url": "{{baseUrl}}/api/admin/users/{{userId}}"
@@ -2535,7 +2617,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"Updated User\",\n  \"profile\": {\n    \"bio\": \"Updated bio\",\n    \"address\": \"100 Updated Street\",\n    \"citizenAge\": 30,\n    \"dateOfJoining\": \"2025-01-12\"\n  }\n}"
+							"raw": "{\n  \"fullName\": \"Updated User\",\n  \"profile\": {\n    \"displayName\": \"UpdatedUser\",\n    \"bio\": \"Updated bio\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560002\",\n    \"citizenAge\": 30,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"genderId\": 1,\n    \"educationDetailId\": 3,\n    \"occupation\": \"Senior Engineer\"\n  }\n}"
 						},
 						"url": "{{baseUrl}}/api/admin/users/{{userId}}"
 					},
@@ -2913,7 +2995,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"+1234567890\",\n  \"email\": \"john.doe@example.com\"\n}"
+							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"john.doe@example.com\"\n}"
 						},
 						"url": "{{baseUrl}}/api/members",
 						"description": "Create a new member with full name, contact number, and email"
@@ -3030,7 +3112,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"John Doe Updated\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"john.doe.updated@example.com\"\n}"
+							"raw": "{\n  \"fullName\": \"John Doe Updated\",\n  \"contactNumber\": \"9876543211\",\n  \"email\": \"john.doe.updated@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/members/:id",
@@ -3134,7 +3216,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\\n  \"communityTypeId\": 1,\\n  \"communityName\": \"Tech Innovators Club\",\\n  \"isRegistered\": 1,\\n  \"registrationDate\": \"2024-10-01T00:00:00.000Z\",\\n  \"contactPerson\": \"John Doe\",\\n  \"contactNumber\": \"+1234567890\",\\n  \"email\": \"contact@techinnovators.com\",\\n  \"totalMember\": 50,\\n  \"fullAddress\": \"123 Tech Street, Innovation City, IC 12345\"\\n}"
+							"raw": "{\\n  \"communityTypeId\": 1,\\n  \"communityName\": \"Tech Innovators Club\",\\n  \"isRegistered\": 1,\\n  \"registrationDate\": \"2024-10-01T00:00:00.000Z\",\\n  \"contactPerson\": \"John Doe\",\\n  \"contactNumber\": \"9876543210\",\\n  \"email\": \"contact@techinnovators.com\",\\n  \"totalMember\": 50,\\n  \"fullAddress\": \"123 Tech Street, Innovation City, IC 12345\"\\n}"
 						},
 						"url": "{{baseUrl}}/api/communities",
 						"description": "Create a new community with all details"
@@ -3279,7 +3361,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"communityName\": \"Tech Innovators Club - Updated\",\n  \"contactPerson\": \"Jane Doe\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"newemail@techinnovators.com\",\n  \"totalMember\": 75,\n  \"fullAddress\": \"456 Innovation Avenue, Tech City, TC 54321\"\n}"
+							"raw": "{\n  \"communityName\": \"Tech Innovators Club - Updated\",\n  \"contactPerson\": \"Jane Doe\",\n  \"contactNumber\": \"9876543211\",\n  \"email\": \"newemail@techinnovators.com\",\n  \"totalMember\": 75,\n  \"fullAddress\": \"456 Innovation Avenue, Tech City, TC 54321\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/communities/:id",
@@ -3600,7 +3682,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\\n  \"userId\": 1,\\n  \"fullName\": \"John Doe Sr.\",\\n  \"contactNumber\": \"+1234567890\",\\n  \"email\": \"john.sr@example.com\",\\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\\n  \"aadhaarNumber\": \"123456789012\",\\n  \"relationTypeId\": 1\\n}"
+							"raw": "{\\n  \"userId\": 1,\\n  \"fullName\": \"John Doe Sr.\",\\n  \"contactNumber\": \"9876543210\",\\n  \"email\": \"john.sr@example.com\",\\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\\n  \"aadhaarNumber\": \"123456789012\",\\n  \"relationTypeId\": 1\\n}"
 						},
 						"url": "{{baseUrl}}/api/family-members",
 						"description": "Create a new family member"
@@ -3694,7 +3776,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"fullName\": \"John Doe Sr. Updated\",\n  \"contactNumber\": \"+1234567891\",\n  \"email\": \"john.sr.updated@example.com\"\n}"
+							"raw": "{\n  \"fullName\": \"John Doe Sr. Updated\",\n  \"contactNumber\": \"9876543211\",\n  \"email\": \"john.sr.updated@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/family-members/:id",
@@ -4829,13 +4911,13 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [
-								{
+							"bearer": {
+								"0": {
 									"key": "token",
 									"value": "{{authToken}}",
 									"type": "string"
 								}
-							]
+							}
 						},
 						"method": "GET",
 						"header": [],
@@ -4869,27 +4951,17 @@
 					"request": {
 						"auth": {
 							"type": "bearer",
-							"bearer": [
-								{
+							"bearer": {
+								"0": {
 									"key": "token",
 									"value": "{{authToken}}",
 									"type": "string"
 								}
-							]
+							}
 						},
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/pa-event-logs/5",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"pa-event-logs",
-								"5"
-							]
-						}
+						"url": "{{baseUrl}}/api/pa-event-logs/5"
 					},
 					"response": []
 				}
@@ -5718,16 +5790,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"name\": \"complaintCategory\",\n  \"tableName\": \"meta_complaint_categories\",\n  \"displayName\": \"Complaint Categories\",\n  \"modelName\": \"MetaComplaintCategory\",\n  \"description\": \"Categories for organizing complaints\",\n  \"primaryKey\": \"id\",\n  \"searchableFields\": [\"dispName\", \"categoryCode\"],\n  \"hasStatus\": 1,\n  \"customIncludes\": null\n}"
 						},
-						"url": {
-							"raw": "{{baseUrl}}/api/meta-table-registry",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"meta-table-registry"
-							]
-						},
+						"url": "{{baseUrl}}/api/meta-table-registry",
 						"description": "Create a new meta table registry entry. Cache is automatically invalidated."
 					},
 					"response": []
@@ -5816,17 +5879,7 @@
 						},
 						"method": "POST",
 						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/meta-table-registry/reload",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"meta-table-registry",
-								"reload"
-							]
-						},
+						"url": "{{baseUrl}}/api/meta-table-registry/reload",
 						"description": "Manually reload the registry cache. Useful after direct database changes."
 					},
 					"response": []
@@ -5842,17 +5895,7 @@
 						},
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/meta-table-registry/stats",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"meta-table-registry",
-								"stats"
-							]
-						},
+						"url": "{{baseUrl}}/api/meta-table-registry/stats",
 						"description": "Get statistics about registry entries (total, active, inactive counts)"
 					},
 					"response": []
@@ -6114,7 +6157,7 @@
 								},
 								{
 									"key": "mobilePrimary",
-									"value": "+919876543210",
+									"value": "9876543210",
 									"type": "text"
 								},
 								{
@@ -6257,7 +6300,7 @@
 								},
 								{
 									"key": "mobilePrimary",
-									"value": "+919111223344",
+									"value": "9111223344",
 									"type": "text"
 								},
 								{
@@ -6390,6 +6433,10 @@
 		},
 		{
 			"key": "jobId",
+			"value": ""
+		},
+		{
+			"key": "contactNumber",
 			"value": ""
 		}
 	]

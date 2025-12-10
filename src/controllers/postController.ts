@@ -24,7 +24,12 @@ import {
   sendForbidden,
   sendSuccessWithPagination,
   parsePaginationParams,
-  calculatePagination
+  calculatePagination,
+  parseSortDirection,
+  parseRequiredString,
+  parseRequiredNumber,
+  parseOptionalNumber,
+  parseBooleanQuery
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
@@ -186,20 +191,6 @@ const isAdmin = (roles: string[]): boolean => {
   return normalizedRoles.includes(ADMIN_ROLE_NAME.toLowerCase());
 };
 
-const parsePagination = (req: Request) => {
-  const page = Number.parseInt((req.query.page as string) ?? "1", 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? "20", 10);
-
-  const safePage = Number.isNaN(page) || page <= 0 ? 1 : page;
-  const safeLimit = Number.isNaN(limit) || limit <= 0 ? 20 : Math.min(limit, 100);
-
-  return {
-    page: safePage,
-    limit: safeLimit,
-    offset: (safePage - 1) * safeLimit
-  };
-};
-
 const normalizeTagsInput = (tagsInput: unknown): string | null => {
   if (tagsInput === undefined) {
     return null;
@@ -222,56 +213,6 @@ const normalizeTagsInput = (tagsInput: unknown): string | null => {
   }
 
   throw new ApiError("tags must be a string or an array of strings", 400);
-};
-
-const parseRequiredString = (value: unknown, field: string): string => {
-  if (typeof value !== "string") {
-    throw new ApiError(`${field} is required`, 400);
-  }
-  const trimmed = value.trim();
-  if (!trimmed) {
-    throw new ApiError(`${field} cannot be empty`, 400);
-  }
-  return trimmed;
-};
-
-const parseRequiredNumber = (value: unknown, field: string): number => {
-  if (value === undefined || value === null || value === "") {
-    throw new ApiError(`${field} is required`, 400);
-  }
-  const numberValue = typeof value === "number" ? value : Number.parseFloat(String(value));
-  if (!Number.isFinite(numberValue)) {
-    throw new ApiError(`${field} must be a valid number`, 400);
-  }
-  return numberValue;
-};
-
-const parseOptionalNumber = (value: unknown, field: string): number | undefined => {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value === null || value === "") {
-    return undefined;
-  }
-  const numberValue = typeof value === "number" ? value : Number.parseFloat(String(value));
-  if (!Number.isFinite(numberValue)) {
-    throw new ApiError(`${field} must be a valid number`, 400);
-  }
-  return numberValue;
-};
-
-const parseSortDirection = (
-  value: unknown,
-  defaultDirection: "ASC" | "DESC" = "DESC"
-): "ASC" | "DESC" => {
-  if (typeof value !== "string") {
-    return defaultDirection;
-  }
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "ASC" || normalized === "DESC") {
-    return normalized;
-  }
-  return defaultDirection;
 };
 
 const parseLegacyMediaInput = (mediaInput: unknown): NormalizedPostMediaInput[] | null => {
@@ -510,7 +451,12 @@ export const getPost = asyncHandler(async (req: AuthenticatedRequest, res: Respo
 
 export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    20,
+    100
+  );
   const sortDirection = parseSortDirection(req.query.sort);
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
@@ -557,7 +503,12 @@ export const listPosts = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
 export const listMyPosts = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    20,
+    100
+  );
   const sortDirection = parseSortDirection(req.query.sort);
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 

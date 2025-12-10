@@ -7,7 +7,9 @@ import {
   sendSuccess,
   calculatePagination,
   sendSuccessWithPagination,
-  sendValidationError
+  sendValidationError,
+  parseSortDirection,
+  parsePaginationParams
 } from "../utils/apiResponse";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import PaEvent from "../models/PaEvent";
@@ -59,30 +61,18 @@ export const createPaEvent = asyncHandler(async (req: Request, res: Response) =>
   return sendCreated(res, responseData, "Event created successfully");
 });
 
-const parseSortDirection = (
-  value: unknown,
-  defaultDirection: "ASC" | "DESC" = "ASC"
-): "ASC" | "DESC" => {
-  if (typeof value !== "string") return defaultDirection;
-  const normalized = value.trim().toUpperCase();
-  return normalized === "ASC" || normalized === "DESC" ? normalized : defaultDirection;
-};
-
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 10;
 const LIMIT_MAX = 100;
 
-const parsePagination = (req: Request) => {
-  const page = Number.parseInt((req.query.page as string) ?? `${PAGE_DEFAULT}`, 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? `${LIMIT_DEFAULT}`, 10);
-  const safePage = Number.isNaN(page) || page <= 0 ? PAGE_DEFAULT : page;
-  const safeLimit = Number.isNaN(limit) || limit <= 0 ? LIMIT_DEFAULT : Math.min(limit, LIMIT_MAX);
-  return { page: safePage, limit: safeLimit, offset: (safePage - 1) * safeLimit };
-};
-
 export const listPaEvents = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, offset } = parsePagination(req);
-  const sortDirection = parseSortDirection(req.query.sort, "ASC");
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    10,
+    100
+  );
+  const sortDirection = parseSortDirection(req.query.sort as string | undefined, "ASC");
 
   const where: any = {};
 

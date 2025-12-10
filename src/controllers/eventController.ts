@@ -24,7 +24,11 @@ import {
   sendConflict,
   sendSuccessWithPagination,
   parsePaginationParams,
-  calculatePagination
+  calculatePagination,
+  parseSortDirection,
+  parseRequiredNumber,
+  parseOptionalNumber,
+  parseBooleanQuery
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
@@ -211,20 +215,6 @@ const isAdmin = (roles: string[]): boolean => {
   return normalizedRoles.includes(ADMIN_ROLE_NAME.toLowerCase());
 };
 
-const parsePagination = (req: Request) => {
-  const page = Number.parseInt((req.query.page as string) ?? "1", 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? "20", 10);
-
-  const safePage = Number.isNaN(page) || page <= 0 ? 1 : page;
-  const safeLimit = Number.isNaN(limit) || limit <= 0 ? 20 : Math.min(limit, 100);
-
-  return {
-    page: safePage,
-    limit: safeLimit,
-    offset: (safePage - 1) * safeLimit
-  };
-};
-
 const parseRequiredString = (value: unknown, field: string): string => {
   if (typeof value !== "string") {
     throw new ApiError(`${field} is required`, 400);
@@ -301,58 +291,6 @@ const _parseOptionalTime = (value: unknown, field: string): string | undefined =
     throw new ApiError(`${field} must be a valid time (HH:mm or HH:mm:ss)`, 400);
   }
   return value;
-};
-
-const parseOptionalNumber = (value: unknown, field: string): number | null => {
-  if (value === undefined || value === null || value === "") {
-    return null;
-  }
-  const numberValue = typeof value === "number" ? value : Number.parseFloat(String(value));
-  if (!Number.isFinite(numberValue)) {
-    throw new ApiError(`${field} must be a valid number`, 400);
-  }
-  return numberValue;
-};
-
-const parseRequiredNumber = (value: unknown, field: string): number => {
-  const parsed = parseOptionalNumber(value, field);
-  if (parsed === null) {
-    throw new ApiError(`${field} is required`, 400);
-  }
-  return parsed;
-};
-
-const parseBooleanQuery = (value: unknown, defaultValue = false): boolean => {
-  if (value === undefined || value === null) {
-    return defaultValue;
-  }
-  if (typeof value === "boolean") {
-    return value;
-  }
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["true", "1", "yes", "y"].includes(normalized)) {
-      return true;
-    }
-    if (["false", "0", "no", "n"].includes(normalized)) {
-      return false;
-    }
-  }
-  return defaultValue;
-};
-
-const parseSortDirection = (
-  value: unknown,
-  defaultDirection: "ASC" | "DESC" = "ASC"
-): "ASC" | "DESC" => {
-  if (typeof value !== "string") {
-    return defaultDirection;
-  }
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "ASC" || normalized === "DESC") {
-    return normalized;
-  }
-  return defaultDirection;
 };
 
 const isWithinEventWindow = (event: Event): boolean => {
@@ -612,7 +550,12 @@ export const getEvent = asyncHandler(async (req: AuthenticatedRequest, res: Resp
 });
 
 export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    20,
+    100
+  );
   const currentUserId = req.user?.id ?? null;
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
   const includeAuditFields = shouldIncludeAuditFields(req.query);
@@ -725,7 +668,12 @@ export const listEventRegistrations = asyncHandler(
       throw new ApiError("Event not found", 404);
     }
 
-    const { page, limit, offset } = parsePagination(req);
+    const { page, limit, offset } = parsePaginationParams(
+      req.query.page as string | undefined,
+      req.query.limit as string | undefined,
+      20,
+      100
+    );
 
     const where: WhereOptions = {
       eventId

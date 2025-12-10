@@ -284,6 +284,144 @@ export const validateSortColumn = (
 };
 
 /**
+ * Parse and validate sort direction parameter
+ * @param value - The sort direction from query parameter (sort)
+ * @param defaultDirection - Default sort direction to use
+ * @returns Validated sort direction: 'ASC' or 'DESC'
+ */
+export const parseSortDirection = (
+  value: unknown,
+  defaultDirection: "ASC" | "DESC" = "DESC"
+): "ASC" | "DESC" => {
+  if (typeof value !== "string") {
+    return defaultDirection;
+  }
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "ASC" || normalized === "DESC") {
+    return normalized;
+  }
+  return defaultDirection;
+};
+
+/**
+ * Parse required string parameter
+ * @param value - The value to parse
+ * @param field - Field name for error messages
+ * @returns Trimmed non-empty string
+ * @throws Error if value is not a string or is empty
+ */
+export const parseRequiredString = (value: unknown, field: string): string => {
+  if (typeof value !== "string") {
+    throw new Error(`${field} is required`);
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw new Error(`${field} cannot be empty`);
+  }
+  return trimmed;
+};
+
+/**
+ * Parse optional string parameter
+ * @param value - The value to parse
+ * @returns Trimmed string or null
+ */
+export const parseOptionalString = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new Error("Invalid input type");
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+/**
+ * Parse required number parameter
+ * @param value - The value to parse
+ * @param field - Field name for error messages
+ * @returns Parsed number
+ * @throws Error if value cannot be parsed as a number
+ */
+export const parseRequiredNumber = (value: unknown, field: string): number => {
+  if (value === undefined || value === null || value === "") {
+    throw new Error(`${field} is required`);
+  }
+  const numberValue = typeof value === "number" ? value : Number.parseFloat(String(value));
+  if (!Number.isFinite(numberValue)) {
+    throw new Error(`${field} must be a valid number`);
+  }
+  return numberValue;
+};
+
+/**
+ * Parse optional number parameter
+ * @param value - The value to parse
+ * @param field - Field name for error messages
+ * @returns Parsed number or undefined
+ * @throws Error if value cannot be parsed as a number (when provided)
+ */
+export const parseOptionalNumber = (value: unknown, field: string): number | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null || value === "") {
+    return undefined;
+  }
+  const numberValue = typeof value === "number" ? value : Number.parseFloat(String(value));
+  if (!Number.isFinite(numberValue)) {
+    throw new Error(`${field} must be a valid number`);
+  }
+  return numberValue;
+};
+
+/**
+ * Parse status filter parameter
+ * @param value - The value to parse
+ * @returns Parsed status (0 or 1), null (for "all"), or undefined
+ * @throws Error if value is not a valid status
+ */
+export const parseStatusFilter = (value: unknown): number | null | undefined => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  if (typeof value === "string" && value.trim().toLowerCase() === "all") {
+    return null;
+  }
+  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
+    throw new Error("Status must be 0 or 1");
+  }
+  return numericValue;
+};
+
+/**
+ * Parse boolean query parameter
+ * @param value - The value to parse
+ * @param defaultValue - Default value if not provided
+ * @returns Parsed boolean
+ */
+export const parseBooleanQuery = (value: unknown, defaultValue = false): boolean => {
+  if (value === undefined || value === null) {
+    return defaultValue;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true" || normalized === "1" || normalized === "yes") {
+      return true;
+    }
+    if (normalized === "false" || normalized === "0" || normalized === "no") {
+      return false;
+    }
+  }
+  return defaultValue;
+};
+
+/**
  * Type-safe response types for TypeScript
  */
 export type ApiSuccessResponse<T = unknown> = SuccessResponse<T>;

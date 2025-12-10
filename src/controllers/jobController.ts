@@ -12,7 +12,13 @@ import {
   sendCreated,
   sendNoContent,
   sendSuccess,
-  sendSuccessWithPagination
+  sendSuccessWithPagination,
+  parseSortDirection,
+  parseRequiredString,
+  parseOptionalString,
+  parseStatusFilter,
+  calculatePagination,
+  parsePaginationParams
 } from "../utils/apiResponse";
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
@@ -50,28 +56,6 @@ const parseSubmittedFor = (value: unknown): JobSubmissionFor => {
   return normalized as JobSubmissionFor;
 };
 
-const parseRequiredString = (value: unknown, field: string): string => {
-  if (typeof value !== "string") {
-    throw new ApiError(`${field} is required`, 400);
-  }
-  const trimmed = value.trim();
-  if (!trimmed) {
-    throw new ApiError(`${field} cannot be empty`, 400);
-  }
-  return trimmed;
-};
-
-const parseOptionalString = (value: unknown): string | null => {
-  if (value === undefined || value === null || value === "") {
-    return null;
-  }
-  if (typeof value !== "string") {
-    throw new ApiError("Invalid input type", 400);
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
 const parseEmail = (value: unknown, required: boolean): string | null => {
   if (value === undefined || value === null || value === "") {
     if (required) {
@@ -93,31 +77,6 @@ const parseEmail = (value: unknown, required: boolean): string | null => {
     throw new ApiError("email must be a valid email address", 400);
   }
   return trimmed.toLowerCase();
-};
-
-const parseStatusFilter = (value: unknown): number | null | undefined => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-  if (typeof value === "string" && value.trim().toLowerCase() === "all") {
-    return null;
-  }
-  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
-    throw new ApiError("status must be 0 or 1", 400);
-  }
-  return numericValue;
-};
-
-const parseSortDirection = (
-  value: unknown,
-  defaultDirection: "ASC" | "DESC" = "DESC"
-): "ASC" | "DESC" => {
-  if (typeof value !== "string") {
-    return defaultDirection;
-  }
-  const normalized = value.trim().toUpperCase();
-  return normalized === "ASC" || normalized === "DESC" ? normalized : defaultDirection;
 };
 
 const resolveRequiredStringField = (
@@ -244,20 +203,6 @@ const serializeJob = (job: Job) => {
           profilePhoto: plain.applicant.profile?.profileImageUrl ?? null
         }
       : null
-  };
-};
-
-const parsePagination = (req: Request) => {
-  const page = Number.parseInt((req.query.page as string) ?? `${PAGE_DEFAULT}`, 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? `${LIMIT_DEFAULT}`, 10);
-
-  const safePage = Number.isNaN(page) || page <= 0 ? PAGE_DEFAULT : page;
-  const safeLimit = Number.isNaN(limit) || limit <= 0 ? LIMIT_DEFAULT : Math.min(limit, LIMIT_MAX);
-
-  return {
-    page: safePage,
-    limit: safeLimit,
-    offset: (safePage - 1) * safeLimit
   };
 };
 
@@ -473,10 +418,17 @@ const normalizeJobPayload = async (
 export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   requireAuthenticatedUser(req);
 
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    20,
+    100
+  );
   const submittedForFilterValue = req.query.submittedFor ?? req.query.submitted_for;
   const statusFilter = parseStatusFilter(req.query.status);
-  const sortDirection = parseSortDirection(req.query.sort ?? req.query.sortDirection);
+  const sortDirection = parseSortDirection(
+    (req.query.sort ?? req.query.sortDirection) as string | undefined
+  );
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
   const attributes = buildQueryAttributes({

@@ -12,7 +12,9 @@ import {
   sendCreated,
   parsePaginationParams,
   sendSuccessWithPagination,
-  calculatePagination
+  calculatePagination,
+  validateSortColumn,
+  parseSortDirection
 } from "../utils/apiResponse";
 
 export const createBoothNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -51,7 +53,11 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     req.query.limit as string
   );
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
-  const sortColumn = validateSortColumn(req.query.sortColumn, ["id", "dispName", "createdAt"], "dispName");
+  const sortColumn = validateSortColumn(
+    req.query.sortColumn,
+    ["id", "dispName", "createdAt"],
+    "dispName"
+  );
   const { search, status, mlaConstituencyId, wardNumberId } = req.query;
 
   const whereClause: any = {};
@@ -97,7 +103,7 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     ],
     limit,
     offset,
-    order: [[sortColumn, sortDirection]]]]
+    order: [[sortColumn, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);

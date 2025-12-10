@@ -82,14 +82,15 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
-      },
-      {
-        association: "roles",
-        include: [{ association: "permissions" }],
-        ...(roleIds &&
-          roleIds.length > 0 && { where: { id: { [Op.in]: roleIds } }, required: true })
       },
       {
         model: UserAccess,
@@ -102,6 +103,12 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
           { association: "boothNumber" },
           { association: "mlaConstituency" }
         ]
+      },
+      {
+        association: "roles",
+        include: [{ association: "permissions" }],
+        ...(roleIds &&
+          roleIds.length > 0 && { where: { id: { [Op.in]: roleIds } }, required: true })
       }
     ],
     limit,
@@ -116,7 +123,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
         const enrichedRoles = await enrichAdminRolePermissions(user.roles);
         return {
           ...user.toJSON(),
-          roles: enrichedRoles
+          roles: enrichedRoles.reverse()
         };
       }
       return user;
@@ -136,13 +143,8 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("contactNumber is required", 400);
   }
 
-  if (profile && !profile?.wardNumberId) {
-    throw new ApiError("profile.wardNumberId is required", 400);
-  }
-
-  if (profile && !profile?.boothNumberId) {
-    throw new ApiError("profile.boothNumberId is required", 400);
-  }
+  // wardNumberId and boothNumberId can be provided either in profile or in accessible array
+  // so we don't require them here - validation happens per context
 
   const parsedRoleIds = parseRoleIdsInput(roleIdsInput);
   const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
@@ -160,18 +162,13 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   if (profile) {
     const profileAttributes = buildProfileAttributes(profile);
     if (Object.keys(profileAttributes).length > 0) {
-      if (!profileAttributes.wardNumberId) {
-        throw new ApiError("profile.wardNumberId is required", 400);
-      }
-      if (!profileAttributes.boothNumberId) {
-        throw new ApiError("profile.boothNumberId is required", 400);
-      }
-      await UserProfile.create({
+      // wardNumberId and boothNumberId are optional in profile
+      // they can be provided separately in the accessible array
+      const profileData: Record<string, unknown> = {
         userId: user.id,
-        wardNumberId: profileAttributes.wardNumberId,
-        boothNumberId: profileAttributes.boothNumberId,
         ...profileAttributes
-      });
+      };
+      await UserProfile.create(profileData as any);
     }
   }
 
@@ -200,10 +197,16 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
-      { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
         as: "accessProfiles",
@@ -215,7 +218,8 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
           { association: "boothNumber" },
           { association: "mlaConstituency" }
         ]
-      }
+      },
+      { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
 
@@ -224,7 +228,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     const enrichedRoles = await enrichAdminRolePermissions(created.roles);
     const enrichedUser = {
       ...created.toJSON(),
-      roles: enrichedRoles
+      roles: enrichedRoles.reverse()
     };
     return sendCreated(res, enrichedUser, "User created successfully");
   }
@@ -245,10 +249,16 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
-      { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
         as: "accessProfiles",
@@ -260,7 +270,8 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
           { association: "boothNumber" },
           { association: "mlaConstituency" }
         ]
-      }
+      },
+      { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
 
@@ -273,7 +284,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     const enrichedRoles = await enrichAdminRolePermissions(user.roles);
     const enrichedUser = {
       ...user.toJSON(),
-      roles: enrichedRoles
+      roles: enrichedRoles.reverse()
     };
     return sendSuccess(res, enrichedUser, "User retrieved successfully");
   }
@@ -363,10 +374,16 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
-      { association: "roles", include: [{ association: "permissions" }] },
       {
         model: UserAccess,
         as: "accessProfiles",
@@ -378,7 +395,8 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
           { association: "boothNumber" },
           { association: "mlaConstituency" }
         ]
-      }
+      },
+      { association: "roles", include: [{ association: "permissions" }] }
     ]
   });
 
@@ -387,7 +405,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     const enrichedRoles = await enrichAdminRolePermissions(updated.roles);
     const enrichedUser = {
       ...updated.toJSON(),
-      roles: enrichedRoles
+      roles: enrichedRoles.reverse()
     };
     return sendSuccess(res, enrichedUser, "User updated successfully");
   }
@@ -420,7 +438,14 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
             { association: "gender", attributes: ["id", "dispName"], required: false },
             { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
             { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-            { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+            {
+              association: "educationalDetailGroup",
+              attributes: ["id", "dispName"],
+              required: false
+            },
+            { association: "sector", attributes: ["id", "dispName"], required: false }
           ]
         },
         { association: "roles", include: [{ association: "permissions" }] },
@@ -447,7 +472,7 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
       const enrichedRoles = await enrichAdminRolePermissions(hydrated.roles);
       const enrichedUser = {
         ...hydrated.toJSON(),
-        roles: enrichedRoles
+        roles: enrichedRoles.reverse()
       };
       return sendSuccess(res, enrichedUser, message);
     }
@@ -468,7 +493,14 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] },
@@ -495,7 +527,7 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
     const enrichedRoles = await enrichAdminRolePermissions(updated.roles);
     const enrichedUser = {
       ...updated.toJSON(),
-      roles: enrichedRoles
+      roles: enrichedRoles.reverse()
     };
     return sendSuccess(res, enrichedUser, message);
   }
@@ -530,7 +562,14 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
             { association: "gender", attributes: ["id", "dispName"], required: false },
             { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
             { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-            { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+            {
+              association: "educationalDetailGroup",
+              attributes: ["id", "dispName"],
+              required: false
+            },
+            { association: "sector", attributes: ["id", "dispName"], required: false }
           ]
         },
         { association: "roles", include: [{ association: "permissions" }] },
@@ -589,6 +628,17 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
   const message = shouldBlock
     ? "User posts blocked successfully"
     : "User posts unblocked successfully";
+
+  // Reverse roles array
+  if (updated && updated.roles && updated.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updated.roles);
+    const enrichedUser = {
+      ...updated.toJSON(),
+      roles: enrichedRoles.reverse()
+    };
+    return sendSuccess(res, enrichedUser, message);
+  }
+
   return sendSuccess(res, updated, message);
 });
 

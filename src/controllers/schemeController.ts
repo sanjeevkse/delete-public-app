@@ -15,7 +15,9 @@ import {
   sendCreated,
   sendNoContent,
   sendSuccess,
-  sendSuccessWithPagination
+  sendSuccessWithPagination,
+  parseStatusFilter,
+  parsePaginationParams
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
@@ -29,45 +31,6 @@ const SORTABLE_FIELDS = new Map<string, string>([
   ["updatedAt", "updatedAt"],
   ["status", "status"]
 ]);
-
-const parseOptionalStatus = (value: unknown): number | undefined => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  const numericValue = typeof value === "number" ? value : Number.parseInt(String(value), 10);
-  if (!Number.isFinite(numericValue) || ![0, 1].includes(numericValue)) {
-    throw new ApiError("status must be 0 or 1", 400);
-  }
-
-  return numericValue;
-};
-
-const parseStatusFilter = (value: unknown): number | null | undefined => {
-  if (value === undefined || value === null || value === "") {
-    return undefined;
-  }
-
-  if (typeof value === "string" && value.trim().toLowerCase() === "all") {
-    return null;
-  }
-
-  return parseOptionalStatus(value) ?? undefined;
-};
-
-const parsePagination = (req: Request) => {
-  const page = Number.parseInt((req.query.page as string) ?? `${PAGE_DEFAULT}`, 10);
-  const limit = Number.parseInt((req.query.limit as string) ?? `${LIMIT_DEFAULT}`, 10);
-
-  const safePage = Number.isNaN(page) || page <= 0 ? PAGE_DEFAULT : page;
-  const safeLimit = Number.isNaN(limit) || limit <= 0 ? LIMIT_DEFAULT : Math.min(limit, LIMIT_MAX);
-
-  return {
-    page: safePage,
-    limit: safeLimit,
-    offset: (safePage - 1) * safeLimit
-  };
-};
 
 const parseSort = (req: Request) => {
   const rawSortBy = (req.query.sortBy as string) ?? (req.query.sort_by as string) ?? "createdAt";
@@ -329,7 +292,12 @@ const serializeScheme = (scheme: Scheme) => {
 export const listSchemes = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   requireAuthenticatedUser(req);
 
-  const { page, limit, offset } = parsePagination(req);
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    10,
+    100
+  );
   const { sortBy, direction } = parseSort(req);
   const statusFilter = parseStatusFilter(req.query.status);
   const search = typeof req.query.search === "string" ? req.query.search.trim() : "";

@@ -11,7 +11,9 @@ import {
   sendNotFound,
   parsePaginationParams,
   sendSuccessWithPagination,
-  calculatePagination
+  calculatePagination,
+  validateSortColumn,
+  parseSortDirection
 } from "../utils/apiResponse";
 
 export const createMlaConstituency = asyncHandler(

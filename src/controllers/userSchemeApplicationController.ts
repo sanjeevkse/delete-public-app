@@ -28,7 +28,8 @@ import {
   sendNoContent,
   sendSuccessWithPagination,
   parsePaginationParams,
-  calculatePagination
+  calculatePagination,
+  parseStatusFilter
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
@@ -616,24 +617,6 @@ const serializeApplication = (application: UserSchemeApplication) => {
     createdAt: plain.createdAt ?? null,
     updatedAt: plain.updatedAt ?? null
   };
-};
-
-const parseStatusFilter = (value: unknown): number | null | undefined => {
-  const normalizedValue = firstQueryValue(value);
-  if (normalizedValue === undefined || normalizedValue === null || normalizedValue === "") {
-    return undefined;
-  }
-  if (typeof normalizedValue === "string" && normalizedValue.trim().toLowerCase() === "all") {
-    return null;
-  }
-  const numeric =
-    typeof normalizedValue === "number"
-      ? normalizedValue
-      : Number.parseInt(String(normalizedValue), 10);
-  if (!Number.isFinite(numeric) || ![0, 1].includes(numeric)) {
-    throw new ApiError("status must be 0 or 1", 400);
-  }
-  return numeric;
 };
 
 const parseSort = (req: Request) => {

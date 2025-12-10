@@ -29,6 +29,8 @@ import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
 import MetaEmploymentStatus from "./MetaEmploymentStatus";
+import MetaEducationalDetail from "./MetaEducationalDetail";
+import MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 import Job from "./Job";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
@@ -323,6 +325,33 @@ const establishAssociations = (): void => {
   });
   MetaBoothNumber.hasMany(UserProfile, {
     foreignKey: "boothNumberId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaEducationalDetail, {
+    foreignKey: "educationalDetailId",
+    as: "educationalDetail"
+  });
+  MetaEducationalDetail.hasMany(UserProfile, {
+    foreignKey: "educationalDetailId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaEducationalDetailGroup, {
+    foreignKey: "educationalDetailGroupId",
+    as: "educationalDetailGroup"
+  });
+  MetaEducationalDetailGroup.hasMany(UserProfile, {
+    foreignKey: "educationalDetailGroupId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaSectorDepartment, {
+    foreignKey: "sectorId",
+    as: "sector"
+  });
+  MetaSectorDepartment.hasMany(UserProfile, {
+    foreignKey: "sectorId",
     as: "userProfiles"
   });
 

@@ -227,7 +227,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] }
@@ -271,7 +278,14 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] }
@@ -284,6 +298,8 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   // Get user access profile with blocked user permissions filtered
   const accessProfile = await getUserAccessProfile(userId);
+
+  const userExists = Boolean(user) && Boolean(user.profile);
 
   // Enrich Admin roles with all permissions, then filter based on user restrictions
   let userForResponse = user;
@@ -298,7 +314,7 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   return sendSuccess(
     res,
-    { user: userForResponse, access: accessProfile },
+    { userExists, user: userForResponse, access: accessProfile },
     "Profile retrieved successfully"
   );
 });
@@ -436,7 +452,14 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] }
@@ -491,7 +514,14 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
           { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] }

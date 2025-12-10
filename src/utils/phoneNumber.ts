@@ -70,6 +70,8 @@ export const normalizePhoneNumber = (
     throw new ApiError(`${fieldName} must contain only digits`, 400);
   }
 
+  // return digitsOnly;
+
   return sanitized;
 };
 

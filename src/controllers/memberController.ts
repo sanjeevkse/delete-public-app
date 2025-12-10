@@ -14,7 +14,9 @@ import {
   sendNotFound,
   sendSuccessWithPagination,
   parsePaginationParams,
-  calculatePagination
+  calculatePagination,
+  validateSortColumn,
+  parseSortDirection
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 

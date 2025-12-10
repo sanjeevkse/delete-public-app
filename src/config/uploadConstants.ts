@@ -32,7 +32,7 @@ export const UPLOAD_PATHS = {
 // File size limits (in bytes)
 export const UPLOAD_LIMITS = {
   MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5 MB
-  MAX_VIDEO_SIZE: 50 * 1024 * 1024, // 50 MB
+  MAX_VIDEO_SIZE: 20 * 1024 * 1024, // 20 MB
   MAX_RESUME_SIZE: 2 * 1024 * 1024 // 2 MB
 } as const;
 
@@ -40,13 +40,13 @@ export const UPLOAD_LIMITS = {
 export const UPLOAD_COUNTS = {
   POST: {
     MAX_IMAGES: 4,
-    MAX_VIDEOS: 1,
-    MAX_TOTAL: 5
+    MAX_VIDEOS: 4,
+    MAX_TOTAL: 4
   },
   EVENT: {
     MAX_IMAGES: 4,
-    MAX_VIDEOS: 1,
-    MAX_TOTAL: 5
+    MAX_VIDEOS: 4,
+    MAX_TOTAL: 4
   },
   PROFILE: {
     MAX_IMAGES: 1
@@ -58,9 +58,9 @@ export const UPLOAD_COUNTS = {
     MAX_DOCUMENTS: 5 // Mirror event MAX_TOTAL limit
   },
   COMPLAINT: {
-    MAX_IMAGES: 5,
-    MAX_VIDEOS: 2,
-    MAX_TOTAL: 7
+    MAX_IMAGES: 4,
+    MAX_VIDEOS: 4,
+    MAX_TOTAL: 4
   }
 } as const;
 
