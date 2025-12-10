@@ -120,6 +120,18 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
   const payload = req.body as { contactNumber?: unknown };
   const contactNumber = normalizePhoneNumber(payload.contactNumber);
 
+  // Check if user exists and is pending approval
+  const existingUser = await findUserByContactNumber(contactNumber);
+  if (existingUser) {
+    const userProfile = await UserProfile.findOne({ where: { userId: existingUser.id } });
+    const profileExists = Boolean(userProfile);
+    const resolvedUserExists = profileExists;
+
+    if (existingUser.status === 2 && resolvedUserExists) {
+      throw new ApiError("Account requires admin approval", 403);
+    }
+  }
+
   const now = new Date();
   const existingOtp = await UserOtp.findOne({
     where: {
@@ -241,10 +253,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const profileExists = Boolean(sanitizedUser?.profile);
   const resolvedUserExists = userExists && profileExists;
-
-  if (user.status === 2 && resolvedUserExists) {
-    throw new ApiError("Account requires admin approval", 403);
-  }
 
   // if (user.status !== 1) {
   //   throw new ApiError("Account is inactive", 403);
