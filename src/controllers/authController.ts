@@ -193,7 +193,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   if (!user) {
     user = await User.create({
       contactNumber,
-      status: 1
+      status: 2
     });
     await user.update({
       createdBy: user.id,
@@ -201,12 +201,18 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     });
     await ensureDefaultRole(user.id);
     emitEvent(AppEvent.USER_CREATED, { userId: user.id });
-  } else if (user.status !== 1) {
-    throw new ApiError("Account is inactive", 403);
   }
 
   if (!user) {
     throw new ApiError("Unable to resolve user", 500);
+  }
+
+  if (user.status === 2) {
+    throw new ApiError("Account pending admin approval", 403);
+  }
+
+  if (user.status !== 1) {
+    throw new ApiError("Account is inactive", 403);
   }
 
   emitEvent(AppEvent.USER_LOGGED_IN, { userId: user.id });

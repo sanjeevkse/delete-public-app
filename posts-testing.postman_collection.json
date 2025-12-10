@@ -16,9 +16,7 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": [
-                  "pm.collectionVariables.set('contactNumber', '9876543210');"
-                ],
+                "exec": ["pm.collectionVariables.set('contactNumber', '9876543210');"],
                 "type": "text/javascript"
               }
             },
@@ -56,14 +54,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/request-otp",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "request-otp"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "request-otp"]
             }
           },
           "response": []
@@ -99,14 +91,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
             }
           },
           "response": []
@@ -177,13 +163,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
             }
           },
           "response": []
@@ -230,14 +211,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
             }
           },
           "response": []
@@ -285,13 +260,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?page=1&limit=20&sort=DESC",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "page",
@@ -347,13 +317,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "my-posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "my-posts"],
               "query": [
                 {
                   "key": "page",
@@ -418,14 +383,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
             }
           },
           "response": []
@@ -459,14 +418,8 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}"]
             }
           },
           "response": []
@@ -512,13 +465,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?search=test",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "search",
@@ -563,13 +511,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?tags=bangalore",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "tags",
@@ -617,13 +560,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?latitude=12.9716&longitude=77.5946",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "latitude",
@@ -695,15 +633,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reactions"]
             }
           },
           "response": []
@@ -752,15 +683,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reactions"]
             }
           },
           "response": []
@@ -809,15 +733,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reactions"]
             }
           },
           "response": []
@@ -914,13 +831,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
             }
           },
           "response": []
@@ -977,15 +889,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postIdWithMedia}}/media",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postIdWithMedia}}",
-                "media"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postIdWithMedia}}", "media"]
             }
           },
           "response": []
@@ -1034,15 +939,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postIdWithMedia}}/media",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postIdWithMedia}}",
-                "media"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postIdWithMedia}}", "media"]
             }
           },
           "response": []
@@ -1096,13 +994,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
             }
           },
           "response": []
@@ -1151,13 +1044,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
             }
           },
           "response": []
@@ -1196,14 +1084,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts/99999",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "99999"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "99999"]
             }
           },
           "response": []
@@ -1247,15 +1129,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/99999/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "99999",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "99999", "reactions"]
             }
           },
           "response": []
@@ -1304,15 +1179,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{postId}}/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{postId}}",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{postId}}", "reactions"]
             }
           },
           "response": []
@@ -1356,13 +1224,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?page=1&limit=10",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "page",
@@ -1411,13 +1274,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?page=2&limit=10",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "page",
@@ -1471,13 +1329,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts?page=1&limit=5",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"],
               "query": [
                 {
                   "key": "page",
@@ -1541,13 +1394,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts"]
             }
           },
           "response": []
@@ -1586,14 +1434,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{flowPostId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{flowPostId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{flowPostId}}"]
             }
           },
           "response": []
@@ -1639,15 +1481,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{flowPostId}}/reactions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{flowPostId}}",
-                "reactions"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{flowPostId}}", "reactions"]
             }
           },
           "response": []
@@ -1693,14 +1528,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{flowPostId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{flowPostId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{flowPostId}}"]
             }
           },
           "response": []
@@ -1734,14 +1563,8 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/api/posts/{{flowPostId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "posts",
-                "{{flowPostId}}"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "posts", "{{flowPostId}}"]
             }
           },
           "response": []
@@ -1754,18 +1577,14 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     },
     {
       "listen": "test",
       "script": {
         "type": "text/javascript",
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     }
   ],

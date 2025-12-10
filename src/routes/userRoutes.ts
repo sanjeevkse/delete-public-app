@@ -5,7 +5,9 @@ import {
   deleteUser,
   getUser,
   listUsers,
+  listUsersPendingApproval,
   updateUser,
+  updateUserApprovalStatus,
   updateUserPostsBlockStatus,
   updateUserStatus
 } from "../controllers/userController";
@@ -17,8 +19,10 @@ const router = Router();
 router.post("/", createUser);
 
 router.get("/", listUsers);
+router.get("/pending-approval", listUsersPendingApproval);
 router.get("/:id", getUser);
 router.put("/:id", updateUser);
+router.patch("/:id/status", updateUserApprovalStatus);
 router.patch("/:id/posts-block", updateUserPostsBlockStatus);
 router.patch("/:id/update-status", updateUserStatus);
 router.delete("/:id", deleteUser);

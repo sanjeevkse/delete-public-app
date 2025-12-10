@@ -135,6 +135,94 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   return sendSuccessWithPagination(res, enrichedRows, pagination, "Users retrieved successfully");
 });
 
+export const listUsersPendingApproval = asyncHandler(async (req: Request, res: Response) => {
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string,
+    req.query.limit as string,
+    25,
+    100
+  );
+  const search = (req.query.search as string) ?? "";
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+
+  const whereClause: any = {
+    status: 2
+  };
+
+  if (search) {
+    whereClause[Op.or] = [
+      { contactNumber: { [Op.like]: `%${search}%` } },
+      { fullName: { [Op.like]: `%${search}%` } },
+      { email: { [Op.like]: `%${search}%` } }
+    ];
+  }
+
+  const { rows, count } = await User.findAndCountAll({
+    where: whereClause,
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
+    include: [
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
+        ]
+      },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      },
+      {
+        association: "roles",
+        include: [{ association: "permissions" }]
+      }
+    ],
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]]
+  });
+
+  const enrichedRows = await Promise.all(
+    rows.map(async (user) => {
+      if (user.roles && user.roles.length > 0) {
+        const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+        return {
+          ...user.toJSON(),
+          roles: enrichedRoles.reverse()
+        };
+      }
+      return user;
+    })
+  );
+
+  const pagination = calculatePagination(count, page, limit);
+
+  return sendSuccessWithPagination(
+    res,
+    enrichedRows,
+    pagination,
+    "Users pending approval retrieved successfully"
+  );
+});
+
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   assertNoRestrictedFields(req.body);
 
@@ -411,6 +499,114 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   return sendSuccess(res, updated, "User updated successfully");
+});
+
+export const updateUserApprovalStatus = asyncHandler(async (req: Request, res: Response) => {
+  const payload = req.body;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new ApiError("Request body must be an object", 400);
+  }
+
+  const payloadKeys = Object.keys(payload as Record<string, unknown>);
+  if (!payloadKeys.includes("status")) {
+    throw new ApiError("status is required", 400);
+  }
+
+  if (payloadKeys.some((key) => key !== "status")) {
+    throw new ApiError("Only status can be updated using this endpoint", 400);
+  }
+
+  const parsedStatus = Number((payload as any).status);
+  if (!Number.isInteger(parsedStatus) || ![0, 1, 2].includes(parsedStatus)) {
+    throw new ApiError("status must be 0, 1, or 2", 400);
+  }
+
+  const user = await User.findByPk(req.params.id);
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+
+  const fetchUserDetails = () =>
+    User.findByPk(user.id, {
+      include: [
+        {
+          model: UserProfile,
+          as: "profile",
+          include: [
+            { association: "gender", attributes: ["id", "dispName"], required: false },
+            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+            {
+              association: "educationalDetailGroup",
+              attributes: ["id", "dispName"],
+              required: false
+            },
+            { association: "sector", attributes: ["id", "dispName"], required: false }
+          ]
+        },
+        { association: "roles", include: [{ association: "permissions" }] },
+        {
+          model: UserAccess,
+          as: "accessProfiles",
+          where: { status: 1 },
+          required: false,
+          include: [
+            { association: "accessRole" },
+            { association: "wardNumber" },
+            { association: "boothNumber" },
+            { association: "mlaConstituency" }
+          ]
+        }
+      ]
+    });
+
+  const unchangedMessage =
+    parsedStatus === 1
+      ? "User is already approved"
+      : parsedStatus === 2
+        ? "User is already pending approval"
+        : "User is already inactive";
+
+  if (user.status === parsedStatus) {
+    const hydrated = await fetchUserDetails();
+    if (hydrated && hydrated.roles && hydrated.roles.length > 0) {
+      const enrichedRoles = await enrichAdminRolePermissions(hydrated.roles);
+      const enrichedUser = {
+        ...hydrated.toJSON(),
+        roles: enrichedRoles.reverse()
+      };
+      return sendSuccess(res, enrichedUser, unchangedMessage);
+    }
+
+    return sendSuccess(res, hydrated, unchangedMessage);
+  }
+
+  const actorId = (req as AuthenticatedRequest).user?.id ?? null;
+  await user.update({ status: parsedStatus, updatedBy: actorId });
+  emitEvent(AppEvent.USER_UPDATED, { userId: user.id, actorId: actorId ?? user.id });
+
+  const updated = await fetchUserDetails();
+
+  const message =
+    parsedStatus === 1
+      ? "User approved successfully"
+      : parsedStatus === 2
+        ? "User marked as pending approval"
+        : "User deactivated successfully";
+
+  if (updated && updated.roles && updated.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(updated.roles);
+    const enrichedUser = {
+      ...updated.toJSON(),
+      roles: enrichedRoles.reverse()
+    };
+    return sendSuccess(res, enrichedUser, message);
+  }
+
+  return sendSuccess(res, updated, message);
 });
 
 export const updateUserStatus = asyncHandler(async (req: Request, res: Response) => {
