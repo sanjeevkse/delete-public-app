@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { Op } from "sequelize";
 import TelescopeRequest from "../models/TelescopeRequest";
 import TelescopeException from "../models/TelescopeException";
 import TelescopeQuery from "../models/TelescopeQuery";
@@ -163,13 +164,11 @@ class TelescopeService {
 
     // Add path filter with LIKE support
     if (filters.path) {
-      const { Op } = require("sequelize");
       where.path = { [Op.like]: `%${filters.path}%` };
     }
 
     // Add date range filter
     if (filters.startDate || filters.endDate) {
-      const { Op } = require("sequelize");
       where.createdAt = {};
 
       if (filters.startDate) {
