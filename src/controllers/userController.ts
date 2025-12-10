@@ -34,6 +34,158 @@ import {
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
+type QueryRecord = Record<string, unknown>;
+
+const firstQueryValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value[0] : undefined;
+  }
+  return value;
+};
+
+const resolveNestedValue = (source: unknown, segments: string[]): unknown => {
+  let current: unknown = source;
+
+  for (const segment of segments) {
+    if (current === undefined || current === null) {
+      return undefined;
+    }
+
+    if (Array.isArray(current)) {
+      current = current[0];
+    }
+
+    if (typeof current !== "object") {
+      return undefined;
+    }
+
+    current = (current as QueryRecord)[segment];
+  }
+
+  return current;
+};
+
+const pickQueryValue = (query: QueryRecord, candidates: string[]): unknown => {
+  for (const candidate of candidates) {
+    if (Object.prototype.hasOwnProperty.call(query, candidate)) {
+      const direct = firstQueryValue(query[candidate]);
+      if (direct !== undefined) {
+        return direct;
+      }
+    }
+
+    const nested = resolveNestedValue(query, candidate.split("."));
+    const normalized = firstQueryValue(nested);
+    if (normalized !== undefined) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+};
+
+const parseStringFilter = (value: unknown): string | undefined => {
+  const normalized = firstQueryValue(value);
+  if (normalized === undefined || normalized === null) {
+    return undefined;
+  }
+
+  const result = String(normalized).trim();
+  return result ? result : undefined;
+};
+
+const parseNumberFilter = (value: unknown): number | undefined => {
+  const normalized = firstQueryValue(value);
+  if (normalized === undefined || normalized === null || normalized === "") {
+    return undefined;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const parseBooleanFilter = (value: unknown): boolean | undefined => {
+  const normalized = firstQueryValue(value);
+  if (normalized === undefined || normalized === null || normalized === "") {
+    return undefined;
+  }
+
+  if (typeof normalized === "boolean") {
+    return normalized;
+  }
+
+  if (typeof normalized === "number") {
+    if (normalized === 1) {
+      return true;
+    }
+    if (normalized === 0) {
+      return false;
+    }
+  }
+
+  const normalizedStr = String(normalized).trim().toLowerCase();
+  if (["true", "1", "yes", "y", "on"].includes(normalizedStr)) {
+    return true;
+  }
+  if (["false", "0", "no", "n", "off"].includes(normalizedStr)) {
+    return false;
+  }
+  return undefined;
+};
+
+const parseDateFilter = (value: unknown): string | undefined => {
+  const normalized = parseStringFilter(value);
+  if (!normalized) {
+    return undefined;
+  }
+
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+
+  return normalized;
+};
+
+const parseNumberListFilter = (value: unknown): number[] | undefined => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  const rawValues = Array.isArray(value)
+    ? value
+    : String(value)
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+
+  const numbers = rawValues
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry)) as number[];
+
+  if (numbers.length === 0) {
+    return undefined;
+  }
+
+  return Array.from(new Set(numbers));
+};
+
+const applyRangeFilter = (
+  target: Record<string, unknown>,
+  field: string,
+  start?: string | number,
+  end?: string | number
+): void => {
+  if (start === undefined && end === undefined) {
+    return;
+  }
+
+  target[field] = {
+    ...(start !== undefined ? { [Op.gte]: start } : {}),
+    ...(end !== undefined ? { [Op.lte]: end } : {})
+  };
+};
+
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
@@ -41,7 +193,72 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     25,
     100
   );
-  const search = (req.query.search as string) ?? "";
+  const queryParams = req.query as QueryRecord;
+  const search = parseStringFilter(pickQueryValue(queryParams, ["search"])) ?? "";
+
+  const contactNumberFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["contactNumber", "contact_number"])
+  );
+  const userIdFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["id", "userId", "user_id"])
+  );
+  const userEmailFilter = parseStringFilter(pickQueryValue(queryParams, ["email"]));
+  const userFullNameFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["fullName", "full_name"])
+  );
+  const userStatusFilters = parseNumberListFilter(queryParams.status);
+
+  const dateOfBirthStart = parseDateFilter(
+    pickQueryValue(queryParams, ["dateOfBirthStart", "date_of_birth_start"])
+  );
+  const dateOfBirthEnd = parseDateFilter(
+    pickQueryValue(queryParams, ["dateOfBirthEnd", "date_of_birth_end"])
+  );
+  const citizenAgeStart = parseNumberFilter(
+    pickQueryValue(queryParams, ["citizenAgeStart", "citizen_age_start"])
+  );
+  const citizenAgeEnd = parseNumberFilter(
+    pickQueryValue(queryParams, ["citizenAgeEnd", "citizen_age_end"])
+  );
+  const genderFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["genderId", "gender_id"])
+  );
+  const maritalStatusFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["maritalStatusId", "marital_status_id"])
+  );
+  const occupationFilter = parseStringFilter(pickQueryValue(queryParams, ["occupation"]));
+  const cityFilter = parseStringFilter(pickQueryValue(queryParams, ["city"]));
+  const stateFilter = parseStringFilter(pickQueryValue(queryParams, ["state"]));
+  const postalCodeFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["postalCode", "postal_code"])
+  );
+  const wardNumberFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["wardNumberId", "ward_number_id"])
+  );
+  const boothNumberFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["boothNumberId", "booth_number_id"])
+  );
+  const sectorFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["sectorId", "sector_id"])
+  );
+  const postsBlockedFilter = parseBooleanFilter(
+    pickQueryValue(queryParams, ["postsBlocked", "posts_blocked"])
+  );
+  const referredByFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["referredBy", "referred_by"])
+  );
+  const educationalDetailFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["educationalDetailId", "educational_detail_id"])
+  );
+  const educationalDetailGroupFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["educationalDetailGroupId", "educational_detail_group_id"])
+  );
+  const dateOfJoiningStart = parseDateFilter(
+    pickQueryValue(queryParams, ["dateOfJoiningStart", "date_of_joining_start"])
+  );
+  const dateOfJoiningEnd = parseDateFilter(
+    pickQueryValue(queryParams, ["dateOfJoiningEnd", "date_of_joining_end"])
+  );
 
   // Parse roleId - accepts array format like roleId=[1,2,3]
   let roleIds: number[] | undefined;
@@ -63,21 +280,100 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
+  const userFilters: Record<string, unknown> = {};
+  if (userIdFilter !== undefined) {
+    userFilters.id = userIdFilter;
+  }
+  if (contactNumberFilter) {
+    userFilters.contactNumber = contactNumberFilter;
+  }
+  if (userEmailFilter) {
+    userFilters.email = { [Op.like]: `%${userEmailFilter}%` };
+  }
+  if (userFullNameFilter) {
+    userFilters.fullName = { [Op.like]: `%${userFullNameFilter}%` };
+  }
+  if (userStatusFilters && userStatusFilters.length > 0) {
+    userFilters.status =
+      userStatusFilters.length === 1
+        ? userStatusFilters[0]
+        : { [Op.in]: userStatusFilters };
+  }
+
+  const profileFilters: Record<string, unknown> = {};
+  applyRangeFilter(profileFilters, "dateOfBirth", dateOfBirthStart, dateOfBirthEnd);
+  applyRangeFilter(profileFilters, "citizenAge", citizenAgeStart, citizenAgeEnd);
+  applyRangeFilter(profileFilters, "dateOfJoining", dateOfJoiningStart, dateOfJoiningEnd);
+
+  if (genderFilter !== undefined) {
+    profileFilters.genderId = genderFilter;
+  }
+  if (maritalStatusFilter !== undefined) {
+    profileFilters.maritalStatusId = maritalStatusFilter;
+  }
+  if (occupationFilter) {
+    profileFilters.occupation = { [Op.like]: `%${occupationFilter}%` };
+  }
+  if (cityFilter) {
+    profileFilters.city = { [Op.like]: `%${cityFilter}%` };
+  }
+  if (stateFilter) {
+    profileFilters.state = { [Op.like]: `%${stateFilter}%` };
+  }
+  if (postalCodeFilter) {
+    profileFilters.postalCode = { [Op.like]: `%${postalCodeFilter}%` };
+  }
+  if (wardNumberFilter !== undefined) {
+    profileFilters.wardNumberId = wardNumberFilter;
+  }
+  if (boothNumberFilter !== undefined) {
+    profileFilters.boothNumberId = boothNumberFilter;
+  }
+  if (sectorFilter !== undefined) {
+    profileFilters.sectorId = sectorFilter;
+  }
+  if (postsBlockedFilter !== undefined) {
+    profileFilters.postsBlocked = postsBlockedFilter;
+  }
+  if (referredByFilter) {
+    profileFilters.referredBy = { [Op.like]: `%${referredByFilter}%` };
+  }
+  if (educationalDetailFilter !== undefined) {
+    profileFilters.educationalDetailId = educationalDetailFilter;
+  }
+  if (educationalDetailGroupFilter !== undefined) {
+    profileFilters.educationalDetailGroupId = educationalDetailGroupFilter;
+  }
+
+  const profileFiltersApplied = Object.keys(profileFilters).length > 0;
+
+  const whereClauses: Record<string, unknown>[] = [];
+  if (Object.keys(userFilters).length > 0) {
+    whereClauses.push(userFilters);
+  }
+  if (search) {
+    whereClauses.push({
+      [Op.or]: [
+        { contactNumber: { [Op.like]: `%${search}%` } },
+        { fullName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ]
+    });
+  }
+
+  const userWhere =
+    whereClauses.length > 1
+      ? { [Op.and]: whereClauses }
+      : whereClauses[0] ?? undefined;
+
   const { rows, count } = await User.findAndCountAll({
-    where: search
-      ? {
-          [Op.or]: [
-            { contactNumber: { [Op.like]: `%${search}%` } },
-            { fullName: { [Op.like]: `%${search}%` } },
-            { email: { [Op.like]: `%${search}%` } }
-          ]
-        }
-      : undefined,
+    where: userWhere,
     attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
     include: [
       {
         model: UserProfile,
         as: "profile",
+        ...(profileFiltersApplied && { where: profileFilters, required: true }),
         include: [
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
@@ -113,7 +409,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     ],
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [["createdAt", "DESC"]],
+    distinct: true
   });
 
   // Enrich Admin roles with all permissions
@@ -197,7 +494,8 @@ export const listUsersPendingApproval = asyncHandler(async (req: Request, res: R
     ],
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [["createdAt", "DESC"]],
+    distinct: true
   });
 
   const enrichedRows = await Promise.all(

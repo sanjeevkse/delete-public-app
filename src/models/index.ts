@@ -62,6 +62,7 @@ import FormFieldOption from "./FormFieldOption";
 import FormMapping from "./FormMapping";
 import DeviceToken from "./DeviceToken";
 import NotificationLog from "./NotificationLog";
+import Sidebar from "./Sidebar";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -178,6 +179,9 @@ const establishAssociations = (): void => {
   });
   RolePermission.belongsTo(MetaUserRole, { foreignKey: "roleId", as: "role" });
   RolePermission.belongsTo(MetaPermission, { foreignKey: "permissionId", as: "permission" });
+
+  Sidebar.belongsTo(MetaUserRole, { foreignKey: "userRoleId", as: "userRole" });
+  MetaUserRole.hasMany(Sidebar, { foreignKey: "userRoleId", as: "sidebarItems" });
 
   Post.belongsTo(User, { foreignKey: "userId", as: "author" });
   User.hasMany(Post, { foreignKey: "userId", as: "posts" });

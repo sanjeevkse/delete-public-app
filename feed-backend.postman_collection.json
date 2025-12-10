@@ -16,7 +16,9 @@
             {
               "listen": "prerequest",
               "script": {
-                "exec": ["pm.collectionVariables.set('contactNumber', '9898989898');"],
+                "exec": [
+                  "pm.collectionVariables.set('contactNumber', '9898989898');"
+                ],
                 "type": "text/javascript",
                 "packages": {},
                 "requests": {}
@@ -181,8 +183,8 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/auth/sidebar",
-            "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups."
+            "url": "{{baseUrl}}/api/auth/sidebar_old",
+            "description": "Returns the permission groups and their accessible permissions for the authenticated user. Users with the wildcard (*) grant receive all groups. (Legacy sidebar access)"
           },
           "response": []
         }
@@ -198,8 +200,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25&search=&sort=ASC&sortColumn=id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -225,10 +233,154 @@
                   "key": "sortColumn",
                   "value": "id",
                   "description": "Column to sort by: id, contactNumber, fullName, email, createdAt"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "9898989898",
+                  "description": "Exact contact number filter",
+                  "disabled": true
+                },
+                {
+                  "key": "id",
+                  "value": "42",
+                  "description": "Filter by a specific user id",
+                  "disabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "demo@example.com",
+                  "description": "Filter users whose email contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "fullName",
+                  "value": "Demo",
+                  "description": "Filter users whose full name contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Filter by status (comma-separated to match multiple statuses; e.g., 1,2)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfBirthStart",
+                  "value": "1990-01-01",
+                  "description": "Inclusive lower bound for profile date of birth (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfBirthEnd",
+                  "value": "1995-12-31",
+                  "description": "Inclusive upper bound for profile date of birth (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "citizenAgeStart",
+                  "value": "25",
+                  "description": "Inclusive lower bound for citizenAge",
+                  "disabled": true
+                },
+                {
+                  "key": "citizenAgeEnd",
+                  "value": "45",
+                  "description": "Inclusive upper bound for citizenAge",
+                  "disabled": true
+                },
+                {
+                  "key": "genderId",
+                  "value": "2",
+                  "description": "Filter by gender id",
+                  "disabled": true
+                },
+                {
+                  "key": "maritalStatusId",
+                  "value": "1",
+                  "description": "Filter by marital status id",
+                  "disabled": true
+                },
+                {
+                  "key": "occupation",
+                  "value": "Engineer",
+                  "description": "Filter profiles whose occupation contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "Mumbai",
+                  "description": "Filter profiles whose city contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "state",
+                  "value": "Maharashtra",
+                  "description": "Filter profiles whose state contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "postalCode",
+                  "value": "400001",
+                  "description": "Filter profiles whose postalCode contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "12",
+                  "description": "Filter by ward number id",
+                  "disabled": true
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "4",
+                  "description": "Filter by booth number id",
+                  "disabled": true
+                },
+                {
+                  "key": "sectorId",
+                  "value": "3",
+                  "description": "Filter by sector id",
+                  "disabled": true
+                },
+                {
+                  "key": "postsBlocked",
+                  "value": "false",
+                  "description": "Filter by postsBlocked flag (true/false)",
+                  "disabled": true
+                },
+                {
+                  "key": "referredBy",
+                  "value": "Captain",
+                  "description": "Filter profiles whose referredBy contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "educationalDetailId",
+                  "value": "5",
+                  "description": "Filter by educational detail id",
+                  "disabled": true
+                },
+                {
+                  "key": "educationalDetailGroupId",
+                  "value": "2",
+                  "description": "Filter by educational detail group id",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfJoiningStart",
+                  "value": "2024-01-01",
+                  "description": "Inclusive lower bound for date of joining (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfJoiningEnd",
+                  "value": "2024-12-31",
+                  "description": "Inclusive upper bound for date of joining (YYYY-MM-DD)",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports search by contact number, full name, or email."
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, and educational detail ids."
           },
           "response": []
         },
@@ -239,8 +391,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -301,8 +460,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/posts?page=1&limit=20&sort=DESC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
               "query": [
                 {
                   "key": "tags",
@@ -410,8 +574,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/my-posts?page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "my-posts"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "my-posts"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -729,8 +898,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events"
+              ],
               "query": [
                 {
                   "key": "title",
@@ -994,7 +1168,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/media",
-            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
+            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each \u2264 5MB). Update the file path before sending."
           },
           "response": []
         },
@@ -1300,8 +1474,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "events", "{{eventId}}", "registrations"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "registrations"
+              ],
               "query": [
                 {
                   "key": "includeUnregistered",
@@ -1378,8 +1559,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/jobs?sort=DESC&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -1862,8 +2048,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/schemes?status=1&search=grant&sortBy=createdAt&sortOrder=DESC&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "schemes"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schemes"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -2128,8 +2319,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-categories?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-categories"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2166,8 +2362,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-categories/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-categories", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2196,8 +2398,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/scheme-categories/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-categories", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2226,8 +2434,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/scheme-categories/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-categories", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2247,8 +2462,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-categories/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-categories", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-categories",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2292,8 +2513,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-sectors?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-sectors"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2330,8 +2556,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-sectors/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-sectors", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2360,8 +2592,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/scheme-sectors/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-sectors", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2390,8 +2628,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/scheme-sectors/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-sectors", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2411,8 +2656,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-sectors/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-sectors", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-sectors",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2460,20 +2711,188 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"],
+              "raw": "{{baseUrl}}/api/admin/users?page=1&limit=25&search=&sort=ASC&sortColumn=id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ],
               "query": [
                 {
                   "key": "page",
-                  "value": "1"
+                  "value": "1",
+                  "description": "Page number for pagination"
                 },
                 {
                   "key": "limit",
-                  "value": "25"
+                  "value": "25",
+                  "description": "Number of items per page (max 100)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by contact number, full name, or email"
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Sort direction: ASC or DESC"
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "id",
+                  "description": "Column to sort by: id, contactNumber, fullName, email, createdAt"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "9898989898",
+                  "description": "Exact contact number filter",
+                  "disabled": true
+                },
+                {
+                  "key": "id",
+                  "value": "42",
+                  "description": "Filter by a specific user id",
+                  "disabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "demo@example.com",
+                  "description": "Filter users whose email contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "fullName",
+                  "value": "Demo",
+                  "description": "Filter users whose full name contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Filter by status (comma-separated to match multiple statuses; e.g., 1,2)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfBirthStart",
+                  "value": "1990-01-01",
+                  "description": "Inclusive lower bound for profile date of birth (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfBirthEnd",
+                  "value": "1995-12-31",
+                  "description": "Inclusive upper bound for profile date of birth (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "citizenAgeStart",
+                  "value": "25",
+                  "description": "Inclusive lower bound for citizenAge",
+                  "disabled": true
+                },
+                {
+                  "key": "citizenAgeEnd",
+                  "value": "45",
+                  "description": "Inclusive upper bound for citizenAge",
+                  "disabled": true
+                },
+                {
+                  "key": "genderId",
+                  "value": "2",
+                  "description": "Filter by gender id",
+                  "disabled": true
+                },
+                {
+                  "key": "maritalStatusId",
+                  "value": "1",
+                  "description": "Filter by marital status id",
+                  "disabled": true
+                },
+                {
+                  "key": "occupation",
+                  "value": "Engineer",
+                  "description": "Filter profiles whose occupation contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "Mumbai",
+                  "description": "Filter profiles whose city contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "state",
+                  "value": "Maharashtra",
+                  "description": "Filter profiles whose state contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "postalCode",
+                  "value": "400001",
+                  "description": "Filter profiles whose postalCode contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "12",
+                  "description": "Filter by ward number id",
+                  "disabled": true
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "4",
+                  "description": "Filter by booth number id",
+                  "disabled": true
+                },
+                {
+                  "key": "sectorId",
+                  "value": "3",
+                  "description": "Filter by sector id",
+                  "disabled": true
+                },
+                {
+                  "key": "postsBlocked",
+                  "value": "false",
+                  "description": "Filter by postsBlocked flag (true/false)",
+                  "disabled": true
+                },
+                {
+                  "key": "referredBy",
+                  "value": "Captain",
+                  "description": "Filter profiles whose referredBy contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "educationalDetailId",
+                  "value": "5",
+                  "description": "Filter by educational detail id",
+                  "disabled": true
+                },
+                {
+                  "key": "educationalDetailGroupId",
+                  "value": "2",
+                  "description": "Filter by educational detail group id",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfJoiningStart",
+                  "value": "2024-01-01",
+                  "description": "Inclusive lower bound for date of joining (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "dateOfJoiningEnd",
+                  "value": "2024-12-31",
+                  "description": "Inclusive upper bound for date of joining (YYYY-MM-DD)",
+                  "disabled": true
                 }
               ]
-            }
+            },
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, and educational detail ids."
           },
           "response": []
         },
@@ -2490,8 +2909,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/pending-approval?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "pending-approval"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "pending-approval"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2628,8 +3054,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/admin/users/:id/posts-block",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", ":id", "posts-block"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                ":id",
+                "posts-block"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2654,8 +3088,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/admin/roles?page=1&limit=10&sort=ASC&sortColumn=id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "roles"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "roles"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2728,8 +3168,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permissions?page=1&limit=10&sort=ASC&sortColumn=id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permissions"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permissions"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2792,8 +3238,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/admin/permission-groups?includePermissions=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "permission-groups"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "permission-groups"
+              ],
               "query": [
                 {
                   "key": "includePermissions",
@@ -2931,8 +3383,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2963,8 +3420,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members?search=John&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -2992,8 +3454,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3022,8 +3490,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3052,8 +3526,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3073,8 +3553,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3118,8 +3604,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3168,8 +3659,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities?search=Tech&communityTypeId=1&isRegistered=1&page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -3207,8 +3703,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3237,8 +3739,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3267,8 +3775,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3297,8 +3812,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id/member-count",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id", "member-count"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id",
+                "member-count"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3318,8 +3840,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/communities/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "communities", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "communities",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3363,8 +3891,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3399,8 +3932,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3428,8 +3967,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3448,8 +3993,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3468,8 +4020,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/businesses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "businesses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "businesses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3478,6 +4036,177 @@
               ]
             },
             "description": "Delete business"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sidebar",
+      "item": [
+        {
+          "name": "List Sidebar Entries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sidebar?page=1&limit=25&dispName=&screenName=&userRoleId=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sidebar"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "dispName",
+                  "value": "",
+                  "description": "Filter by display name (optional)"
+                },
+                {
+                  "key": "screenName",
+                  "value": "",
+                  "description": "Filter by screen name (optional)"
+                },
+                {
+                  "key": "userRoleId",
+                  "value": "",
+                  "description": "Filter by linked role id (optional)"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status (optional)"
+                }
+              ]
+            },
+            "description": "Fetch sidebar entries with pagination and optional filters for disp_name, screen_name, and user_role_id."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sidebar Entry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sidebar/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sidebar",
+                "1"
+              ]
+            },
+            "description": "Retrieve a single sidebar entry by id."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Sidebar Entry",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Dashboard\",\n  \"screenName\": \"dashboard\",\n  \"userRoleId\": 1,\n  \"icon\": \"home\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sidebar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sidebar"
+              ]
+            },
+            "description": "Create a sidebar entry. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Sidebar Entry",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dispName\": \"Dashboard\",\n  \"userRoleId\": 2,\n  \"icon\": \"gov\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sidebar/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sidebar",
+                "1"
+              ]
+            },
+            "description": "Update display metadata, linked role, icon, or status for a sidebar entry. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Sidebar Entry",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sidebar/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sidebar",
+                "1"
+              ]
+            },
+            "description": "Soft delete (status=0) a sidebar entry. Requires authentication."
           },
           "response": []
         }
@@ -3512,8 +4241,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3556,8 +4290,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3585,8 +4325,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3614,8 +4360,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3634,8 +4387,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "family-members", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "family-members",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3689,8 +4448,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -3715,8 +4479,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3740,8 +4510,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3774,8 +4550,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaint-types/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-types", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-types",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3926,8 +4708,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaints?page=1&limit=10&sort=DESC&sortColumn=createdAt&currentStatusId=1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -4030,8 +4817,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaints/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4138,8 +4931,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/sector-departments?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sector-departments"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -4167,8 +4965,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/sector-departments/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sector-departments", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4201,8 +5005,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/sector-departments/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sector-departments", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4226,8 +5036,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/sector-departments/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "sector-departments", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sector-departments",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4295,8 +5111,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-statuses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-statuses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4329,8 +5151,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaint-statuses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-statuses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4354,8 +5182,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaint-statuses/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaint-statuses", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaint-statuses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4388,8 +5222,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaints/:complaintId/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", ":complaintId", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":complaintId",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "complaintId",
@@ -4436,8 +5277,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/complaints/:complaintId/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", ":complaintId", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":complaintId",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "complaintId",
@@ -4461,8 +5309,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/complaints/:complaintId/status-history",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "complaints", ":complaintId", "status-history"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "complaints",
+                ":complaintId",
+                "status-history"
+              ],
               "variable": [
                 {
                   "key": "complaintId",
@@ -4520,8 +5375,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pa-events?search=Update",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events"
+              ],
               "query": [
                 {
                   "key": "search",
@@ -4608,8 +5468,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/pa-events/1/logs?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pa-events", "1", "logs"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pa-events",
+                "1",
+                "logs"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -4679,8 +5546,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/ward-numbers?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ward-numbers"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -4712,8 +5584,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/ward-numbers/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ward-numbers", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4746,8 +5624,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/ward-numbers/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ward-numbers", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4771,8 +5655,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/ward-numbers/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ward-numbers", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4796,8 +5687,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/ward-numbers/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ward-numbers", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ward-numbers",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4844,8 +5741,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "booth-numbers"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -4877,8 +5779,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "booth-numbers", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4911,8 +5819,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "booth-numbers", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4936,8 +5850,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "booth-numbers", ":id", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -4961,8 +5882,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/booth-numbers/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "booth-numbers", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "booth-numbers",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5006,8 +5933,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -5051,8 +5985,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5080,8 +6022,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/schema",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "schema"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "schema"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5105,8 +6054,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/stats",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "stats"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "stats"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5139,8 +6095,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5173,8 +6136,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5202,8 +6173,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "data", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "data",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5240,8 +6219,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/bulk-status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-tables", ":tableName", "bulk-status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables",
+                ":tableName",
+                "bulk-status"
+              ],
               "variable": [
                 {
                   "key": "tableName",
@@ -5265,8 +6251,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-table-registry?page=1&limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-table-registry"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-table-registry"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -5305,8 +6296,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-table-registry/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-table-registry", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-table-registry",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5365,8 +6362,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-table-registry/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-table-registry", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-table-registry",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5391,8 +6394,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/meta-table-registry/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "meta-table-registry", ":id"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-table-registry",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -5533,8 +6542,13 @@
             ],
             "url": {
               "raw": "{{baseUrl}}/api/scheme-applications?status=1&applicantType=SELF&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "scheme-applications"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "scheme-applications"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -5912,7 +6926,9 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     },
     {
@@ -5921,7 +6937,9 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [""]
+        "exec": [
+          ""
+        ]
       }
     }
   ],

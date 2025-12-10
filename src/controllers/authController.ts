@@ -207,14 +207,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("Unable to resolve user", 500);
   }
 
-  if (user.status === 2) {
-    throw new ApiError("Account pending admin approval", 403);
-  }
-
-  if (user.status !== 1) {
-    throw new ApiError("Account is inactive", 403);
-  }
-
   emitEvent(AppEvent.USER_LOGGED_IN, { userId: user.id });
 
   const accessProfile = await getUserAccessProfile(user.id);
@@ -249,6 +241,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   const profileExists = Boolean(sanitizedUser?.profile);
   const resolvedUserExists = userExists && profileExists;
+
+  if (user.status === 2 && resolvedUserExists) {
+    throw new ApiError("Account requires admin approval", 403);
+  }
+
+  // if (user.status !== 1) {
+  //   throw new ApiError("Account is inactive", 403);
+  // }
 
   // Enrich Admin roles with all permissions, then filter based on user restrictions
   let userForResponse = sanitizedUser;
@@ -551,7 +551,7 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
   return sendSuccess(res, { user: userForResponse }, "Profile image updated successfully");
 });
 
-export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+export const getSidebarOld = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 
   const accessProfile = await getUserAccessProfile(userId);
