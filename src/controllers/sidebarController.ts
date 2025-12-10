@@ -20,8 +20,7 @@ import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 const buildSidebarWhereClause = (req: Request): WhereOptions<Attributes<Sidebar>> | undefined => {
   const filters: WhereOptions<Attributes<Sidebar>>[] = [];
-  const dispName =
-    (req.query.dispName as string) ?? (req.query.disp_name as string) ?? undefined;
+  const dispName = (req.query.dispName as string) ?? (req.query.disp_name as string) ?? undefined;
   const screenName =
     (req.query.screenName as string) ?? (req.query.screen_name as string) ?? undefined;
   const userRoleId =
@@ -94,145 +93,139 @@ export const getSidebarItem = asyncHandler(async (req: Request, res: Response) =
   return sendSuccess(res, sidebar, "Sidebar entry retrieved successfully");
 });
 
-export const createSidebarItem = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    assertNoRestrictedFields(req.body);
+export const createSidebarItem = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  assertNoRestrictedFields(req.body);
 
-    const { dispName, screenName, userRoleId, icon } = req.body;
-    const userId = req.user?.id;
+  const { dispName, screenName, userRoleId, icon } = req.body;
+  const userId = req.user?.id;
 
-    if (!userId) {
-      throw new ApiError("Authentication required", 401);
+  if (!userId) {
+    throw new ApiError("Authentication required", 401);
+  }
+
+  if (!dispName || !screenName) {
+    throw new ApiError("dispName and screenName are required", 400);
+  }
+
+  const trimmedScreenName = screenName.trim();
+  const existing = await Sidebar.findOne({ where: { screenName: trimmedScreenName } });
+  if (existing) {
+    throw new ApiError("screenName must be unique", 409);
+  }
+
+  const normalizedRoleId =
+    userRoleId === undefined || userRoleId === null ? null : Number(userRoleId);
+  if (normalizedRoleId !== null && Number.isNaN(normalizedRoleId)) {
+    throw new ApiError("userRoleId must be a valid number", 400);
+  }
+
+  if (normalizedRoleId !== null) {
+    const role = await MetaUserRole.findByPk(normalizedRoleId);
+    if (!role) {
+      throw new ApiError("Invalid userRoleId", 400);
     }
+  }
 
-    if (!dispName || !screenName) {
-      throw new ApiError("dispName and screenName are required", 400);
-    }
+  const newSidebar = await Sidebar.create({
+    dispName,
+    screenName: trimmedScreenName,
+    userRoleId: normalizedRoleId,
+    icon: icon ?? null,
+    status: 1,
+    createdBy: userId,
+    updatedBy: userId
+  });
 
+  const createdSidebar = await Sidebar.findByPk(newSidebar.id, {
+    include: sidebarInclude
+  });
+
+  return sendCreated(res, createdSidebar ?? newSidebar, "Sidebar entry created successfully");
+});
+
+export const updateSidebarItem = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  assertNoRestrictedFields(req.body, { allow: ["status"] });
+
+  const { dispName, screenName, userRoleId, icon, status } = req.body;
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new ApiError("Authentication required", 401);
+  }
+
+  const sidebar = await Sidebar.findByPk(id);
+  if (!sidebar) {
+    return sendNotFound(res, "Sidebar entry not found", "sidebar");
+  }
+
+  if (screenName && screenName.trim() !== sidebar.screenName) {
     const trimmedScreenName = screenName.trim();
-    const existing = await Sidebar.findOne({ where: { screenName: trimmedScreenName } });
+    const existing = await Sidebar.findOne({
+      where: {
+        screenName: trimmedScreenName,
+        id: { [Op.ne]: sidebar.id }
+      }
+    });
+
     if (existing) {
       throw new ApiError("screenName must be unique", 409);
     }
 
-    const normalizedRoleId =
-      userRoleId === undefined || userRoleId === null ? null : Number(userRoleId);
-    if (normalizedRoleId !== null && Number.isNaN(normalizedRoleId)) {
-      throw new ApiError("userRoleId must be a valid number", 400);
-    }
+    sidebar.screenName = trimmedScreenName;
+  }
 
-    if (normalizedRoleId !== null) {
-      const role = await MetaUserRole.findByPk(normalizedRoleId);
+  if (dispName !== undefined) {
+    sidebar.dispName = dispName;
+  }
+
+  if (userRoleId !== undefined) {
+    if (userRoleId === null) {
+      sidebar.userRoleId = null;
+    } else {
+      const parsedRoleId = Number(userRoleId);
+      if (Number.isNaN(parsedRoleId)) {
+        throw new ApiError("userRoleId must be a valid number", 400);
+      }
+      const role = await MetaUserRole.findByPk(parsedRoleId);
       if (!role) {
         throw new ApiError("Invalid userRoleId", 400);
       }
+      sidebar.userRoleId = parsedRoleId;
     }
-
-    const newSidebar = await Sidebar.create({
-      dispName,
-      screenName: trimmedScreenName,
-      userRoleId: normalizedRoleId,
-      icon: icon ?? null,
-      status: 1,
-      createdBy: userId,
-      updatedBy: userId
-    });
-
-    const createdSidebar = await Sidebar.findByPk(newSidebar.id, {
-      include: sidebarInclude
-    });
-
-    return sendCreated(res, createdSidebar ?? newSidebar, "Sidebar entry created successfully");
   }
-);
 
-export const updateSidebarItem = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    assertNoRestrictedFields(req.body, { allow: ["status"] });
-
-    const { dispName, screenName, userRoleId, icon, status } = req.body;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      throw new ApiError("Authentication required", 401);
-    }
-
-    const sidebar = await Sidebar.findByPk(id);
-    if (!sidebar) {
-      return sendNotFound(res, "Sidebar entry not found", "sidebar");
-    }
-
-    if (screenName && screenName.trim() !== sidebar.screenName) {
-      const trimmedScreenName = screenName.trim();
-      const existing = await Sidebar.findOne({
-        where: {
-          screenName: trimmedScreenName,
-          id: { [Op.ne]: sidebar.id }
-        }
-      });
-
-      if (existing) {
-        throw new ApiError("screenName must be unique", 409);
-      }
-
-      sidebar.screenName = trimmedScreenName;
-    }
-
-    if (dispName !== undefined) {
-      sidebar.dispName = dispName;
-    }
-
-    if (userRoleId !== undefined) {
-      if (userRoleId === null) {
-        sidebar.userRoleId = null;
-      } else {
-        const parsedRoleId = Number(userRoleId);
-        if (Number.isNaN(parsedRoleId)) {
-          throw new ApiError("userRoleId must be a valid number", 400);
-        }
-        const role = await MetaUserRole.findByPk(parsedRoleId);
-        if (!role) {
-          throw new ApiError("Invalid userRoleId", 400);
-        }
-        sidebar.userRoleId = parsedRoleId;
-      }
-    }
-
-    if (icon !== undefined) {
-      sidebar.icon = icon;
-    }
-
-    if (status !== undefined) {
-      sidebar.status = status;
-    }
-
-    sidebar.updatedBy = userId;
-    await sidebar.save();
-
-    const updatedSidebar = await Sidebar.findByPk(id, { include: sidebarInclude });
-    return sendSuccess(res, updatedSidebar ?? sidebar, "Sidebar entry updated successfully");
+  if (icon !== undefined) {
+    sidebar.icon = icon;
   }
-);
 
-export const deleteSidebarItem = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      throw new ApiError("Authentication required", 401);
-    }
-
-    const sidebar = await Sidebar.findByPk(id);
-    if (!sidebar) {
-      return sendNotFound(res, "Sidebar entry not found", "sidebar");
-    }
-
-    sidebar.status = 0;
-    sidebar.updatedBy = userId;
-    await sidebar.save();
-
-    return sendNoContent(res);
+  if (status !== undefined) {
+    sidebar.status = status;
   }
-);
+
+  sidebar.updatedBy = userId;
+  await sidebar.save();
+
+  const updatedSidebar = await Sidebar.findByPk(id, { include: sidebarInclude });
+  return sendSuccess(res, updatedSidebar ?? sidebar, "Sidebar entry updated successfully");
+});
+
+export const deleteSidebarItem = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new ApiError("Authentication required", 401);
+  }
+
+  const sidebar = await Sidebar.findByPk(id);
+  if (!sidebar) {
+    return sendNotFound(res, "Sidebar entry not found", "sidebar");
+  }
+
+  sidebar.status = 0;
+  sidebar.updatedBy = userId;
+  await sidebar.save();
+
+  return sendNoContent(res);
+});

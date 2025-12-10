@@ -199,9 +199,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const contactNumberFilter = parseStringFilter(
     pickQueryValue(queryParams, ["contactNumber", "contact_number"])
   );
-  const userIdFilter = parseNumberFilter(
-    pickQueryValue(queryParams, ["id", "userId", "user_id"])
-  );
+  const userIdFilter = parseNumberFilter(pickQueryValue(queryParams, ["id", "userId", "user_id"]));
   const userEmailFilter = parseStringFilter(pickQueryValue(queryParams, ["email"]));
   const userFullNameFilter = parseStringFilter(
     pickQueryValue(queryParams, ["fullName", "full_name"])
@@ -220,9 +218,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const citizenAgeEnd = parseNumberFilter(
     pickQueryValue(queryParams, ["citizenAgeEnd", "citizen_age_end"])
   );
-  const genderFilter = parseNumberFilter(
-    pickQueryValue(queryParams, ["genderId", "gender_id"])
-  );
+  const genderFilter = parseNumberFilter(pickQueryValue(queryParams, ["genderId", "gender_id"]));
   const maritalStatusFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["maritalStatusId", "marital_status_id"])
   );
@@ -238,9 +234,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const boothNumberFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["boothNumberId", "booth_number_id"])
   );
-  const sectorFilter = parseNumberFilter(
-    pickQueryValue(queryParams, ["sectorId", "sector_id"])
-  );
+  const sectorFilter = parseNumberFilter(pickQueryValue(queryParams, ["sectorId", "sector_id"]));
   const postsBlockedFilter = parseBooleanFilter(
     pickQueryValue(queryParams, ["postsBlocked", "posts_blocked"])
   );
@@ -295,9 +289,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
   if (userStatusFilters && userStatusFilters.length > 0) {
     userFilters.status =
-      userStatusFilters.length === 1
-        ? userStatusFilters[0]
-        : { [Op.in]: userStatusFilters };
+      userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
   }
 
   const profileFilters: Record<string, unknown> = {};
@@ -362,9 +354,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const userWhere =
-    whereClauses.length > 1
-      ? { [Op.and]: whereClauses }
-      : whereClauses[0] ?? undefined;
+    whereClauses.length > 1 ? { [Op.and]: whereClauses } : (whereClauses[0] ?? undefined);
 
   const { rows, count } = await User.findAndCountAll({
     where: userWhere,
