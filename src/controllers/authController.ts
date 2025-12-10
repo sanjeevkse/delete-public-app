@@ -559,6 +559,112 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
   return sendSuccess(res, { user: userForResponse }, "Profile image updated successfully");
 });
 
+export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
+  const accessProfile = await getUserAccessProfile(userId);
+  const permissionSet = new Set(accessProfile.permissions ?? []);
+
+  // Fetch sidebars through the permission chain:
+  // User -> Roles -> Permissions -> PermissionGroups -> Sidebars
+  const groups = await MetaPermissionGroup.findAll({
+    include: [
+      {
+        association: "permissions",
+        include: [{ association: "roles" }]
+      },
+      {
+        association: "sidebar",
+        attributes: ["id", "dispName", "screenName", "icon", "status"]
+      }
+    ],
+    where: { status: 1 },
+    order: [["label", "ASC"]]
+  });
+
+  const serializedSidebars = permissionSet.has("*")
+    ? // User has wildcard permission - show all sidebars
+      groups
+        .filter((group) => group.sidebar)
+        .map((group) => {
+          const payload = group.toJSON() as any;
+          return {
+            id: payload.sidebar.id,
+            dispName: payload.sidebar.dispName,
+            screenName: payload.sidebar.screenName,
+            icon: payload.sidebar.icon,
+            status: payload.sidebar.status,
+            label: payload.label,
+            description: payload.description
+          };
+        })
+    : // Filter sidebars based on user's permissions
+      groups
+        .filter((group) => {
+          if (!group.sidebar || !group.permissions) return false;
+
+          // Check if user has any permission in this group
+          return group.permissions.some((permission) => permissionSet.has(permission.dispName));
+        })
+        .map((group) => {
+          const payload = group.toJSON() as any;
+          return {
+            id: payload.sidebar.id,
+            dispName: payload.sidebar.dispName,
+            screenName: payload.sidebar.screenName,
+            icon: payload.sidebar.icon,
+            status: payload.sidebar.status,
+            label: payload.label,
+            description: payload.description
+          };
+        });
+
+  // Remove duplicates (same sidebar might be linked through multiple permission groups)
+  const uniqueSidebars = Array.from(
+    new Map(serializedSidebars.map((item) => [item.id, item])).values()
+  );
+
+  // Add public sidebars that don't require permissions
+  const publicSidebars = [
+    {
+      id: 901,
+      dispName: "Requests",
+      screenName: "REQUESTS_SCREEN",
+      icon: "copy",
+      status: 1,
+      label: "Requests",
+      description: "User requests and submissions"
+    },
+    {
+      id: 902,
+      dispName: "Profile",
+      screenName: "PROFILE_SCREEN",
+      icon: "id-card",
+      status: 1,
+      label: "Profile",
+      description: "User profile and settings"
+    }
+  ];
+
+  uniqueSidebars.unshift(...publicSidebars);
+
+  // Add dashboard for non-public users
+  if (accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
+    const dashboardSidebar = {
+      id: 950,
+      dispName: "Dashboard",
+      screenName: "DASHBOARD_SCREEN",
+      icon: "tachometer-alt",
+      status: 1,
+      label: "Dashboard",
+      description: "Administrative dashboard"
+    };
+    uniqueSidebars.unshift(dashboardSidebar);
+  }
+
+  return sendSuccess(res, { sidebars: uniqueSidebars }, "Sidebar data retrieved successfully");
+});
+
 export const getSidebarOld = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 

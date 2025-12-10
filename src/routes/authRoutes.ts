@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   getProfile,
+  getSidebar,
   getSidebarOld,
   login,
   requestOtp,
@@ -18,6 +19,7 @@ router.post("/login", login);
 router.get("/profile", authenticate(), getProfile);
 router.patch("/profile", authenticate(), updateProfile);
 router.patch("/profile/image", authenticate(), profileImageUpload, updateProfileImage);
+router.get("/sidebar", authenticate(), getSidebar);
 router.get("/sidebar_old", authenticate(), getSidebarOld);
 
 export default router;

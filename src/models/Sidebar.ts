@@ -8,20 +8,19 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
-import type MetaUserRole from "./MetaUserRole";
+import type MetaPermissionGroup from "./MetaPermissionGroup";
 
 class Sidebar extends Model<InferAttributes<Sidebar>, InferCreationAttributes<Sidebar>> {
   declare id: CreationOptional<number>;
   declare dispName: string;
   declare screenName: string;
-  declare userRoleId: CreationOptional<number | null>;
   declare icon: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number>;
   declare updatedBy: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
-  declare userRole?: NonAttribute<MetaUserRole>;
+  declare permissionGroups?: NonAttribute<MetaPermissionGroup[]>;
 }
 
 Sidebar.init(
@@ -41,15 +40,6 @@ Sidebar.init(
       type: DataTypes.STRING(255),
       allowNull: false,
       unique: true
-    },
-    userRoleId: {
-      field: "user_role_id",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true,
-      references: {
-        model: "tbl_meta_user_role",
-        key: "id"
-      }
     },
     icon: {
       type: DataTypes.STRING(8),

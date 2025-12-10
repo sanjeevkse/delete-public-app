@@ -109,28 +109,30 @@ export const createPermissionGroup = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     assertNoRestrictedFields(req.body);
 
-    const { label, description, sidebar, icon } = req.body;
+    const { label, description, sidebarId } = req.body;
     const userId = req.user!.id;
 
     // Validate required fields
-    if (!label || !sidebar) {
-      throw new ApiError("Label and sidebar are required", 400);
+    if (!label) {
+      throw new ApiError("Label is required", 400);
     }
 
-    // Check if sidebar is unique
-    const existingGroup = await MetaPermissionGroup.findOne({
-      where: { sidebar }
-    });
-
-    if (existingGroup) {
-      throw new ApiError("Sidebar value must be unique", 400);
+    // Validate sidebarId if provided
+    if (sidebarId !== undefined && sidebarId !== null) {
+      const parsedSidebarId = Number(sidebarId);
+      if (Number.isNaN(parsedSidebarId)) {
+        throw new ApiError("sidebarId must be a valid number", 400);
+      }
+      const sidebar = await Sidebar.findByPk(parsedSidebarId);
+      if (!sidebar) {
+        throw new ApiError("Invalid sidebarId", 404);
+      }
     }
 
     const permissionGroup = await MetaPermissionGroup.create({
       label,
       description,
-      sidebar,
-      icon,
+      sidebarId: sidebarId || null,
       status: 1,
       createdBy: userId,
       updatedBy: userId
@@ -149,7 +151,7 @@ export const updatePermissionGroup = asyncHandler(
     const { id } = req.params;
     assertNoRestrictedFields(req.body);
 
-    const { label, description, sidebar, icon } = req.body;
+    const { label, description, sidebarId } = req.body;
     const userId = req.user!.id;
 
     const permissionGroup = await MetaPermissionGroup.findByPk(id);
@@ -158,25 +160,22 @@ export const updatePermissionGroup = asyncHandler(
       throw new ApiError("Permission group not found", 404);
     }
 
-    // If sidebar is being updated, check uniqueness
-    if (sidebar && sidebar !== permissionGroup.sidebar) {
-      const existingGroup = await MetaPermissionGroup.findOne({
-        where: {
-          sidebar,
-          id: { [Op.ne]: id }
-        }
-      });
-
-      if (existingGroup) {
-        throw new ApiError("Sidebar value must be unique", 400);
+    // Validate sidebarId if being updated
+    if (sidebarId !== undefined && sidebarId !== null) {
+      const parsedSidebarId = Number(sidebarId);
+      if (Number.isNaN(parsedSidebarId)) {
+        throw new ApiError("sidebarId must be a valid number", 400);
+      }
+      const sidebar = await Sidebar.findByPk(parsedSidebarId);
+      if (!sidebar) {
+        throw new ApiError("Invalid sidebarId", 404);
       }
     }
 
     // Update fields
     if (label !== undefined) permissionGroup.label = label;
     if (description !== undefined) permissionGroup.description = description;
-    if (sidebar !== undefined) permissionGroup.sidebar = sidebar;
-    if (icon !== undefined) permissionGroup.icon = icon;
+    if (sidebarId !== undefined) permissionGroup.sidebarId = sidebarId || null;
     permissionGroup.updatedBy = userId;
 
     await permissionGroup.save();

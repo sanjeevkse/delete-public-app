@@ -9,6 +9,7 @@ import {
 
 import sequelize from "../config/database";
 import type MetaPermission from "./MetaPermission";
+import type Sidebar from "./Sidebar";
 
 class MetaPermissionGroup extends Model<
   InferAttributes<MetaPermissionGroup>,
@@ -17,14 +18,14 @@ class MetaPermissionGroup extends Model<
   declare id: CreationOptional<number>;
   declare label: string;
   declare description: CreationOptional<string | null>;
-  declare sidebar: string;
-  declare icon: CreationOptional<string | null>;
+  declare sidebarId: number | null;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare permissions?: NonAttribute<MetaPermission[]>;
+  declare sidebar?: NonAttribute<Sidebar>;
 }
 
 MetaPermissionGroup.init(
@@ -42,13 +43,9 @@ MetaPermissionGroup.init(
       type: DataTypes.STRING(255),
       allowNull: true
     },
-    sidebar: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-      unique: true
-    },
-    icon: {
-      type: DataTypes.STRING(255),
+    sidebarId: {
+      field: "sidebar_id",
+      type: DataTypes.INTEGER,
       allowNull: true
     },
     status: {

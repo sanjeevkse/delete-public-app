@@ -5,7 +5,6 @@ import type { Attributes, WhereOptions } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import Sidebar from "../models/Sidebar";
-import MetaUserRole from "../models/MetaUserRole";
 import asyncHandler from "../utils/asyncHandler";
 import {
   calculatePagination,
@@ -23,8 +22,6 @@ const buildSidebarWhereClause = (req: Request): WhereOptions<Attributes<Sidebar>
   const dispName = (req.query.dispName as string) ?? (req.query.disp_name as string) ?? undefined;
   const screenName =
     (req.query.screenName as string) ?? (req.query.screen_name as string) ?? undefined;
-  const userRoleId =
-    (req.query.userRoleId as string) ?? (req.query.user_role_id as string) ?? undefined;
   const status = req.query.status as string | undefined;
 
   if (dispName) {
@@ -33,13 +30,6 @@ const buildSidebarWhereClause = (req: Request): WhereOptions<Attributes<Sidebar>
 
   if (screenName) {
     filters.push({ screenName: { [Op.like]: `%${screenName}%` } });
-  }
-
-  if (userRoleId) {
-    const parsedRoleId = Number.parseInt(userRoleId, 10);
-    if (!Number.isNaN(parsedRoleId)) {
-      filters.push({ userRoleId: parsedRoleId });
-    }
   }
 
   if (status !== undefined) {
@@ -52,14 +42,6 @@ const buildSidebarWhereClause = (req: Request): WhereOptions<Attributes<Sidebar>
   return filters.length ? { [Op.and]: filters } : undefined;
 };
 
-const sidebarInclude = [
-  {
-    model: MetaUserRole,
-    as: "userRole",
-    attributes: ["id", "dispName", "description"]
-  }
-];
-
 export const listSidebarItems = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
@@ -71,7 +53,6 @@ export const listSidebarItems = asyncHandler(async (req: Request, res: Response)
 
   const { rows, count } = await Sidebar.findAndCountAll({
     where,
-    include: sidebarInclude,
     limit,
     offset,
     order: [["createdAt", "DESC"]]
@@ -84,7 +65,7 @@ export const listSidebarItems = asyncHandler(async (req: Request, res: Response)
 export const getSidebarItem = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  const sidebar = await Sidebar.findByPk(id, { include: sidebarInclude });
+  const sidebar = await Sidebar.findByPk(id);
 
   if (!sidebar) {
     return sendNotFound(res, "Sidebar entry not found", "sidebar");
@@ -96,7 +77,7 @@ export const getSidebarItem = asyncHandler(async (req: Request, res: Response) =
 export const createSidebarItem = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
 
-  const { dispName, screenName, userRoleId, icon } = req.body;
+  const { dispName, screenName, icon } = req.body;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -113,41 +94,23 @@ export const createSidebarItem = asyncHandler(async (req: AuthenticatedRequest, 
     throw new ApiError("screenName must be unique", 409);
   }
 
-  const normalizedRoleId =
-    userRoleId === undefined || userRoleId === null ? null : Number(userRoleId);
-  if (normalizedRoleId !== null && Number.isNaN(normalizedRoleId)) {
-    throw new ApiError("userRoleId must be a valid number", 400);
-  }
-
-  if (normalizedRoleId !== null) {
-    const role = await MetaUserRole.findByPk(normalizedRoleId);
-    if (!role) {
-      throw new ApiError("Invalid userRoleId", 400);
-    }
-  }
-
   const newSidebar = await Sidebar.create({
     dispName,
     screenName: trimmedScreenName,
-    userRoleId: normalizedRoleId,
     icon: icon ?? null,
     status: 1,
     createdBy: userId,
     updatedBy: userId
   });
 
-  const createdSidebar = await Sidebar.findByPk(newSidebar.id, {
-    include: sidebarInclude
-  });
-
-  return sendCreated(res, createdSidebar ?? newSidebar, "Sidebar entry created successfully");
+  return sendCreated(res, newSidebar, "Sidebar entry created successfully");
 });
 
 export const updateSidebarItem = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   assertNoRestrictedFields(req.body, { allow: ["status"] });
 
-  const { dispName, screenName, userRoleId, icon, status } = req.body;
+  const { dispName, screenName, icon, status } = req.body;
   const userId = req.user?.id;
 
   if (!userId) {
@@ -179,22 +142,6 @@ export const updateSidebarItem = asyncHandler(async (req: AuthenticatedRequest, 
     sidebar.dispName = dispName;
   }
 
-  if (userRoleId !== undefined) {
-    if (userRoleId === null) {
-      sidebar.userRoleId = null;
-    } else {
-      const parsedRoleId = Number(userRoleId);
-      if (Number.isNaN(parsedRoleId)) {
-        throw new ApiError("userRoleId must be a valid number", 400);
-      }
-      const role = await MetaUserRole.findByPk(parsedRoleId);
-      if (!role) {
-        throw new ApiError("Invalid userRoleId", 400);
-      }
-      sidebar.userRoleId = parsedRoleId;
-    }
-  }
-
   if (icon !== undefined) {
     sidebar.icon = icon;
   }
@@ -206,8 +153,7 @@ export const updateSidebarItem = asyncHandler(async (req: AuthenticatedRequest, 
   sidebar.updatedBy = userId;
   await sidebar.save();
 
-  const updatedSidebar = await Sidebar.findByPk(id, { include: sidebarInclude });
-  return sendSuccess(res, updatedSidebar ?? sidebar, "Sidebar entry updated successfully");
+  return sendSuccess(res, sidebar, "Sidebar entry updated successfully");
 });
 
 export const deleteSidebarItem = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
