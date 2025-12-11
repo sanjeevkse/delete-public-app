@@ -14,7 +14,10 @@ import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaUserRole from "./MetaUserRole";
 
 class FormEventAccessibility extends Model<
-  InferAttributes<FormEventAccessibility, { omit: "formEvent" | "wardNumber" | "boothNumber" | "userRole" }>,
+  InferAttributes<
+    FormEventAccessibility,
+    { omit: "formEvent" | "wardNumber" | "boothNumber" | "userRole" }
+  >,
   InferCreationAttributes<FormEventAccessibility>
 > {
   declare id: CreationOptional<number>;

@@ -176,8 +176,7 @@ const ensureIdsExist = async <T extends Model>(
     } as any
   });
 
-  const matched =
-    typeof countResult === "number" ? countResult : (countResult as unknown[]).length;
+  const matched = typeof countResult === "number" ? countResult : (countResult as unknown[]).length;
 
   if (matched !== ids.length) {
     throw new ApiError(`One or more ${field} values are invalid`, 400);
@@ -243,11 +242,7 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
     100
   );
   const sortDirection = parseSortDirection(req.query.sort as string | undefined, "DESC");
-  const sortColumn = validateSortColumn(
-    req.query.sortColumn,
-    DEFAULT_SORT_COLUMNS,
-    "startDate"
-  );
+  const sortColumn = validateSortColumn(req.query.sortColumn, DEFAULT_SORT_COLUMNS, "startDate");
 
   const where: Record<string, unknown> = {};
   const { status, formId, search, startDateFrom, startDateTo } = req.query;
@@ -368,15 +363,7 @@ export const updateFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
   assertNoRestrictedFields(req.body, { allow: ["status"] });
   const { id } = req.params;
   const { id: userId } = requireAuthenticatedUser(req);
-  const {
-    formId,
-    title,
-    description,
-    startDate,
-    endDate,
-    status,
-    accessibility
-  } = req.body;
+  const { formId, title, description, startDate, endDate, status, accessibility } = req.body;
 
   const event = await loadFormEventOrThrow(id);
 
@@ -416,8 +403,7 @@ export const updateFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
   const currentStart = toDateOnlyString(event.getDataValue("startDate"));
   const currentEnd = toDateOnlyString(event.getDataValue("endDate"));
   const futureStartDate = normalizedStartDate ?? currentStart;
-  const futureEndDate =
-    normalizedEndDate !== undefined ? normalizedEndDate : currentEnd ?? null;
+  const futureEndDate = normalizedEndDate !== undefined ? normalizedEndDate : (currentEnd ?? null);
 
   if (futureStartDate) {
     ensureValidDateRange(futureStartDate, futureEndDate ?? null);
