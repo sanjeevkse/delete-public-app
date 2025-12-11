@@ -6494,6 +6494,160 @@
       ]
     },
     {
+      "name": "Form Events",
+      "item": [
+        {
+          "name": "List Form Events",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/form-events?page=1&limit=10&status=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "form-events"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number to return (default 1)."
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Page size up to 100 (default 20)."
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "Filter by active (1) or inactive (0) events.",
+                  "disabled": true
+                },
+                {
+                  "key": "formId",
+                  "value": "1",
+                  "description": "Optional: only events that use a specific form template.",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "enrollment",
+                  "description": "Optional title search substring.",
+                  "disabled": true
+                },
+                {
+                  "key": "startDateFrom",
+                  "value": "2024-12-01",
+                  "description": "Optional: events starting on/after this date.",
+                  "disabled": true
+                },
+                {
+                  "key": "startDateTo",
+                  "value": "2024-12-31",
+                  "description": "Optional: events starting on/before this date.",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns paginated form events with their accessibility matrix (ward, booth, and user role combinations) and the linked form template."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Form Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/form-events/{{formEventId}}",
+            "description": "Retrieves a single form event along with its accessibility definitions. Set `formEventId` using the list call."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Form Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formId\": 1,\n  \"title\": \"Ward Volunteer Signup\",\n  \"description\": \"Collect volunteer information for Ward 12\",\n  \"startDate\": \"2024-12-10\",\n  \"endDate\": \"2024-12-20\",\n  \"accessibility\": [\n    {\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    },\n    {\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 102,\n      \"userRoleId\": 4\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/form-events",
+            "description": "Creates a form event for a specific form template and seeds one or more accessibility entries. All accessibility rows are created together so each event can target the right ward, booth, and role combination."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Form Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Ward Volunteer Signup (Evening Batch)\",\n  \"description\": \"Updated session window\",\n  \"startDate\": \"2024-12-12\",\n  \"endDate\": \"2024-12-22\",\n  \"status\": 1,\n  \"accessibility\": [\n    {\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/form-events/{{formEventId}}",
+            "description": "Updates event metadata and replaces the accessibility matrix. Provide the complete accessibility array whenever you change ward/booth/role assignments."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Form Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/form-events/{{formEventId}}",
+            "description": "Soft deletes a form event (status set to 0) and marks its accessibility rows inactive. Existing submissions remain untouched."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "User Scheme Applications",
       "item": [
         {

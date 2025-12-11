@@ -4,6 +4,7 @@ import { Op } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaPermissionGroup from "../models/MetaPermissionGroup";
 import MetaPermission from "../models/MetaPermission";
+import Sidebar from "../models/Sidebar";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
 import {

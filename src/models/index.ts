@@ -60,6 +60,8 @@ import Form from "./Form";
 import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
 import FormMapping from "./FormMapping";
+import FormEvent from "./FormEvent";
+import FormEventAccessibility from "./FormEventAccessibility";
 import DeviceToken from "./DeviceToken";
 import NotificationLog from "./NotificationLog";
 import Sidebar from "./Sidebar";
@@ -402,6 +404,52 @@ const establishAssociations = (): void => {
 
   FormMapping.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
   MetaBoothNumber.hasMany(FormMapping, { foreignKey: "boothNumberId", as: "formMappings" });
+
+  Form.hasMany(FormEvent, {
+    foreignKey: "formId",
+    as: "events",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormEvent.belongsTo(Form, { foreignKey: "formId", as: "form" });
+
+  FormEvent.hasMany(FormEventAccessibility, {
+    foreignKey: "formEventId",
+    as: "accessibility",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormEventAccessibility.belongsTo(FormEvent, {
+    foreignKey: "formEventId",
+    as: "formEvent"
+  });
+
+  FormEventAccessibility.belongsTo(MetaWardNumber, {
+    foreignKey: "wardNumberId",
+    as: "wardNumber"
+  });
+  MetaWardNumber.hasMany(FormEventAccessibility, {
+    foreignKey: "wardNumberId",
+    as: "formEventAccessibilities"
+  });
+
+  FormEventAccessibility.belongsTo(MetaBoothNumber, {
+    foreignKey: "boothNumberId",
+    as: "boothNumber"
+  });
+  MetaBoothNumber.hasMany(FormEventAccessibility, {
+    foreignKey: "boothNumberId",
+    as: "formEventAccessibilities"
+  });
+
+  FormEventAccessibility.belongsTo(MetaUserRole, {
+    foreignKey: "userRoleId",
+    as: "userRole"
+  });
+  MetaUserRole.hasMany(FormEventAccessibility, {
+    foreignKey: "userRoleId",
+    as: "formEventAccessibilities"
+  });
 
   FormField.belongsTo(MetaFieldType, { foreignKey: "fieldTypeId", as: "fieldType" });
   MetaFieldType.hasMany(FormField, { foreignKey: "fieldTypeId", as: "formFields" });
