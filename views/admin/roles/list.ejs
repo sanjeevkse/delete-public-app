@@ -1,0 +1,128 @@
+<%- include('../../layout', { title: 'Role Management', currentPage: 'roles', body: `
+<div class="page-header">
+  <h1><i class="fas fa-user-tie"></i> Role Management</h1>
+  <p>Create and manage user roles</p>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Roles</h5>
+    <button class="btn btn-primary btn-sm" onclick="openCreateRoleModal()">
+      <i class="fas fa-plus"></i> New Role
+    </button>
+  </div>
+  <div class="card-body">
+    <div class="mb-3">
+      <input type="text" class="form-control" id="searchRoles" placeholder="Search roles...">
+    </div>
+    <div id="rolesTableContainer">
+      <div class="text-center">
+        <div class="loading"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="roleModalTitle">Create Role</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Role Name</label>
+          <input type="text" class="form-control" id="roleName" placeholder="Enter role name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" id="roleDescription" rows="3" placeholder="Enter description"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveRole()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentRoleId = null;
+
+  async function loadRoles() {
+    try {
+      const data = await fetchAPI(API_BASE + '/roles?page=1&limit=50');
+      const roles = data.data || [];
+
+      let html = '<table class="table table-hover">';
+      html += '<thead><tr><th>Name</th><th>Description</th><th>Permissions</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+
+      roles.forEach(role => {
+        const permCount = role.permissions?.length || 0;
+        const createdAt = new Date(role.createdAt).toLocaleDateString();
+        html += '<tr>';
+        html += '<td><strong>' + role.dispName + '</strong></td>';
+        html += '<td>' + (role.description || '-') + '</td>';
+        html += '<td><span class="badge bg-info">' + permCount + '</span></td>';
+        html += '<td>' + createdAt + '</td>';
+        html += '<td><button class="btn btn-sm btn-info" onclick="editRole(' + role.id + ')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteRole(' + role.id + ')"><i class="fas fa-trash"></i></button></td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      if (roles.length === 0) {
+        html = '<p class="text-center text-muted">No roles found</p>';
+      }
+
+      document.getElementById('rolesTableContainer').innerHTML = html;
+    } catch (error) {
+      document.getElementById('rolesTableContainer').innerHTML = '<p class="text-danger">Error loading roles</p>';
+    }
+  }
+
+  function openCreateRoleModal() {
+    currentRoleId = null;
+    document.getElementById('roleModalTitle').textContent = 'Create Role';
+    document.getElementById('roleName').value = '';
+    document.getElementById('roleDescription').value = '';
+    new bootstrap.Modal(document.getElementById('roleModal')).show();
+  }
+
+  function editRole(id) {
+    alert('Edit role ' + id);
+  }
+
+  function deleteRole(id) {
+    if (confirm('Are you sure?')) {
+      alert('Delete role ' + id);
+    }
+  }
+
+  async function saveRole() {
+    const name = document.getElementById('roleName').value;
+    const description = document.getElementById('roleDescription').value;
+
+    if (!name) {
+      showAlert('Role name is required', 'danger');
+      return;
+    }
+
+    try {
+      await fetchAPI(API_BASE + '/roles', {
+        method: 'POST',
+        body: JSON.stringify({ dispName: name, description })
+      });
+      showAlert('Role created successfully', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('roleModal')).hide();
+      loadRoles();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadRoles);
+</script>
+` }) %>

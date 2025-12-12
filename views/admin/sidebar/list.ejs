@@ -1,0 +1,71 @@
+<%- include('../../layout', { title: 'Sidebar Management', currentPage: 'sidebar', body: `
+<div class="page-header">
+  <h1><i class="fas fa-bars"></i> Sidebar Management</h1>
+  <p>Manage sidebar menu items</p>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Menu Items</h5>
+    <button class="btn btn-primary btn-sm" onclick="openCreateItemModal()">
+      <i class="fas fa-plus"></i> New Item
+    </button>
+  </div>
+  <div class="card-body">
+    <div id="sidebarItemsContainer">
+      <div class="text-center">
+        <div class="loading"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function loadSidebarItems() {
+    try {
+      const data = await fetchAPI(API_BASE + '/sidebars?page=1&limit=100');
+      const items = data.data || [];
+
+      let html = '<table class="table table-hover">';
+      html += '<thead><tr><th>Title</th><th>Icon</th><th>URL</th><th>Order</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+      items.forEach(item => {
+        const status = item.status === 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+        html += '<tr>';
+        html += '<td>' + item.title + '</td>';
+        html += '<td><i class="fas fa-' + (item.icon || 'link') + '"></i></td>';
+        html += '<td><code>' + (item.url || '-') + '</code></td>';
+        html += '<td>' + (item.order || '-') + '</td>';
+        html += '<td>' + status + '</td>';
+        html += '<td><button class="btn btn-sm btn-info" onclick="editItem(' + item.id + ')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteItem(' + item.id + ')"><i class="fas fa-trash"></i></button></td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      if (items.length === 0) {
+        html = '<p class="text-center text-muted">No sidebar items found</p>';
+      }
+
+      document.getElementById('sidebarItemsContainer').innerHTML = html;
+    } catch (error) {
+      document.getElementById('sidebarItemsContainer').innerHTML = '<p class="text-danger">Error loading sidebar items</p>';
+    }
+  }
+
+  function openCreateItemModal() {
+    alert('Sidebar item creation form would go here');
+  }
+
+  function editItem(id) {
+    alert('Edit item ' + id);
+  }
+
+  function deleteItem(id) {
+    if (confirm('Are you sure?')) {
+      alert('Delete item ' + id);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadSidebarItems);
+</script>
+` }) %>

@@ -9,10 +9,15 @@ import { telescopeMiddleware } from "./middlewares/telescopeMiddleware";
 import { sanitizeAuditFields } from "./middlewares/sanitizeAuditFields";
 import routes from "./routes";
 import telescopeRoutes from "./routes/telescopeRoutes";
+import adminRoutes from "./routes/adminRoutes";
 import { UPLOAD_PATHS } from "./config/uploadConstants";
 import { ensureDirectory } from "./utils/fileStorage";
 
 const app = express();
+
+// Set view engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "../views"));
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -36,6 +41,9 @@ app.get("/firebase-test", (_req, res) => {
 app.get("/role-permission-manager", (_req, res) => {
   res.sendFile(path.join(__dirname, "../public/role-permission-manager.html"));
 });
+
+// Admin dashboard routes
+app.use("/admin", adminRoutes);
 
 // Telescope monitoring dashboard
 app.use("/telescope", telescopeRoutes);

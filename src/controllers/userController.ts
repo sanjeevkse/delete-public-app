@@ -616,7 +616,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
   const user = await User.findByPk(req.params.id, {
-    attributes: buildQueryAttributes({ includeAuditFields }),
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["status"] }),
     include: [
       {
         model: UserProfile,

@@ -1,0 +1,111 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <i class="fas fa-shield-alt"></i>
+      <span>Admin Panel</span>
+    </div>
+  </div>
+
+  <ul class="sidebar-menu">
+    <li>
+      <a href="/admin" class="<%= currentPage === 'dashboard' ? 'active' : '' %>">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+    </li>
+
+    <li
+      style="
+        margin-top: 20px;
+        padding: 0 20px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+      "
+    >
+      Management
+    </li>
+
+    <li>
+      <a href="/admin/users" class="<%= currentPage === 'users' ? 'active' : '' %>">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="/admin/roles" class="<%= currentPage === 'roles' ? 'active' : '' %>">
+        <i class="fas fa-user-tie"></i>
+        <span>Roles</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="/admin/permissions" class="<%= currentPage === 'permissions' ? 'active' : '' %>">
+        <i class="fas fa-lock"></i>
+        <span>Permissions</span>
+      </a>
+    </li>
+
+    <li>
+      <a
+        href="/admin/permission-groups"
+        class="<%= currentPage === 'permission-groups' ? 'active' : '' %>"
+      >
+        <i class="fas fa-folder-lock"></i>
+        <span>Permission Groups</span>
+      </a>
+    </li>
+
+    <li
+      style="
+        margin-top: 20px;
+        padding: 0 20px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+      "
+    >
+      Configuration
+    </li>
+
+    <li>
+      <a
+        href="/admin/role-permissions"
+        class="<%= currentPage === 'role-permissions' ? 'active' : '' %>"
+      >
+        <i class="fas fa-link"></i>
+        <span>Role-Permission Map</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="/admin/sidebar" class="<%= currentPage === 'sidebar' ? 'active' : '' %>">
+        <i class="fas fa-bars"></i>
+        <span>Sidebar</span>
+      </a>
+    </li>
+
+    <li
+      style="
+        margin-top: 20px;
+        padding: 0 20px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+      "
+    >
+      Other
+    </li>
+
+    <li>
+      <a href="/role-permission-manager">
+        <i class="fas fa-sliders-h"></i>
+        <span>Legacy Manager</span>
+      </a>
+    </li>
+  </ul>
+</aside>

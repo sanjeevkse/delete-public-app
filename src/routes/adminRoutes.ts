@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authMiddleware";
+import { AdminDashboardController } from "../controllers/adminDashboardController";
 import permissionRoutes from "./permissionRoutes";
 import permissionGroupRoutes from "./permissionGroupRoutes";
 import roleRoutes from "./roleRoutes";
@@ -7,7 +7,11 @@ import userRoutes from "./userRoutes";
 
 const router = Router();
 
-router.use(authenticate());
+// No authentication required for admin routes
+
+// Dashboard route
+router.get("/", AdminDashboardController.getDashboard);
+
 router.use("/users", userRoutes);
 router.use("/roles", roleRoutes);
 router.use("/permissions", permissionRoutes);

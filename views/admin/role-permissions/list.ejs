@@ -1,0 +1,153 @@
+<%- include('../../layout', { title: 'Role-Permission Mapping', currentPage: 'role-permissions', body: `
+<div class="page-header">
+  <h1><i class="fas fa-link"></i> Role-Permission Mapping</h1>
+  <p>Assign permissions to roles</p>
+</div>
+
+<div class="row">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Roles</h5>
+      </div>
+      <div class="card-body p-0">
+        <div id="rolesListContainer" style="max-height: 600px; overflow-y: auto;">
+          <div class="text-center p-3">
+            <div class="loading"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-9">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Assign Permissions to <strong id="selectedRoleName">Select a role</strong></h5>
+      </div>
+      <div class="card-body">
+        <div id="permissionsContainer">
+          <p class="text-center text-muted">Select a role to manage its permissions</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allRoles = [];
+  let allPermissionsGrouped = {};
+  let selectedRoleId = null;
+  let selectedPermissions = new Set();
+
+  async function loadRoles() {
+    try {
+      const data = await fetchAPI(API_BASE + '/roles?page=1&limit=50');
+      allRoles = data.data || [];
+
+      let html = '<div class="list-group list-group-flush">';
+      allRoles.forEach(role => {
+        html += '<button class="list-group-item list-group-item-action" onclick="selectRole(' + role.id + ', \'' + role.dispName.replace(/'/g, "\\'") + '\')">';
+        html += '<strong>' + role.dispName + '</strong><br>';
+        html += '<small class="text-muted">' + (role.permissions?.length || 0) + ' permissions</small>';
+        html += '</button>';
+      });
+      html += '</div>';
+
+      document.getElementById('rolesListContainer').innerHTML = html;
+    } catch (error) {
+      document.getElementById('rolesListContainer').innerHTML = '<p class="text-danger p-3">Error loading roles</p>';
+    }
+  }
+
+  async function loadPermissionsGrouped() {
+    try {
+      const data = await fetchAPI(API_BASE + '/roles/permissions/grouped/all');
+      allPermissionsGrouped = data.data || {};
+    } catch (error) {
+      console.error('Error loading permissions:', error);
+    }
+  }
+
+  function selectRole(roleId, roleName) {
+    selectedRoleId = roleId;
+    document.getElementById('selectedRoleName').textContent = roleName;
+    renderPermissions(roleId);
+  }
+
+  function renderPermissions(roleId) {
+    const role = allRoles.find(r => r.id === roleId);
+    const assignedPerms = new Set((role?.permissions || []).map(p => p.id));
+
+    let html = '<div class="mb-3">';
+    html += '<input type="text" class="form-control mb-3" id="permFilter" placeholder="Search permissions..." onkeyup="filterPermissions()">';
+    html += '</div>';
+
+    Object.entries(allPermissionsGrouped).forEach(([groupName, permissions]) => {
+      html += '<div class="mb-4">';
+      html += '<h6 class="text-primary mb-3"><strong>' + groupName + '</strong></h6>';
+
+      (permissions || []).forEach((perm) => {
+        const checked = assignedPerms.has(perm.id) ? 'checked' : '';
+        html += '<div class="form-check mb-2">';
+        html += '<input class="form-check-input perm-checkbox" type="checkbox" id="perm_' + perm.id + '" value="' + perm.id + '" ' + checked + ' data-perm-name="' + perm.dispName + '">';
+        html += '<label class="form-check-label" for="perm_' + perm.id + '">';
+        html += '<code>' + perm.dispName + '</code>';
+        if (perm.description) {
+          html += '<br><small class="text-muted">' + perm.description + '</small>';
+        }
+        html += '</label>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    html += '<div class="mt-4">';
+    html += '<button class="btn btn-success" onclick="savePermissions()"><i class="fas fa-save"></i> Save Changes</button>';
+    html += '<button class="btn btn-secondary ms-2" onclick="clearSelection()"><i class="fas fa-redo"></i> Reset</button>';
+    html += '</div>';
+
+    document.getElementById('permissionsContainer').innerHTML = html;
+  }
+
+  function filterPermissions() {
+    const query = document.getElementById('permFilter').value.toLowerCase();
+    document.querySelectorAll('.form-check').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      el.style.display = text.includes(query) ? '' : 'none';
+    });
+  }
+
+  function clearSelection() {
+    if (selectedRoleId) {
+      selectRole(selectedRoleId, document.getElementById('selectedRoleName').textContent);
+    }
+  }
+
+  async function savePermissions() {
+    if (!selectedRoleId) {
+      showAlert('Select a role first', 'danger');
+      return;
+    }
+
+    const selected = Array.from(document.querySelectorAll('.perm-checkbox:checked')).map(el => parseInt(el.value));
+
+    try {
+      await fetchAPI(API_BASE + '/roles/' + selectedRoleId + '/permissions', {
+        method: 'POST',
+        body: JSON.stringify({ permissionIds: selected })
+      });
+      showAlert('Permissions saved successfully', 'success');
+      loadRoles();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadRoles();
+    loadPermissionsGrouped();
+  });
+</script>
+` }) %>
