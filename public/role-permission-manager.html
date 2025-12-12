@@ -525,9 +525,6 @@
               <div class="bulk-action-bar" id="bulkActionBar">
                 <span class="selected-count"> <span id="selectedCount">0</span> selected </span>
                 <div>
-                  <button class="btn-success btn-sm" onclick="bulkAssignPermissions()">
-                    Assign
-                  </button>
                   <button class="btn-danger btn-sm" onclick="bulkRemovePermissions()">
                     Remove
                   </button>
@@ -819,10 +816,6 @@
           console.error("Error removing permissions:", error);
           showAlert("Error removing permissions", "error");
         }
-      }
-
-      function bulkAssignPermissions() {
-        saveRolePermissions();
       }
 
       function clearSelection() {
