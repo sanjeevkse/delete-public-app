@@ -28,6 +28,32 @@ import {
 } from "../utils/apiResponse";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
+/**
+ * Transform metaUserRoleId to parentId in response
+ */
+function transformRoleResponse(data: any): any {
+  if (!data) return data;
+
+  if (Array.isArray(data)) {
+    return data.map(item => transformRoleResponse(item));
+  }
+
+  if (data.toJSON && typeof data.toJSON === "function") {
+    const json = data.toJSON();
+    return transformRoleResponse(json);
+  }
+
+  if (typeof data === "object") {
+    const transformed = { ...data };
+    if ("metaUserRoleId" in transformed) {
+      transformed.parentId = transformed.metaUserRoleId;
+      delete transformed.metaUserRoleId;
+    }
+    return transformed;
+  }
+
+  return data;
+}
 export const listRoles = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
@@ -73,7 +99,7 @@ export const listRoles = asyncHandler(async (req: Request, res: Response) => {
   const pagination = calculatePagination(count, page, limit);
   return sendSuccessWithPagination(
     res,
-    rolesWithPermissions,
+    transformRoleResponse(rolesWithPermissions),
     pagination,
     "Roles retrieved successfully"
   );
@@ -101,10 +127,10 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
       ...role.toJSON(),
       permissions: allPermissions
     };
-    return sendSuccess(res, roleWithAllPermissions, "Role retrieved successfully");
+    return sendSuccess(res, transformRoleResponse(roleWithAllPermissions), "Role retrieved successfully");
   }
 
-  return sendSuccess(res, role, "Role retrieved successfully");
+  return sendSuccess(res, transformRoleResponse(role), "Role retrieved successfully");
 });
 
 export const getRolePermissions = asyncHandler(async (req: Request, res: Response) => {
@@ -137,14 +163,14 @@ export const getRolePermissions = asyncHandler(async (req: Request, res: Respons
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
   assertNoRestrictedFields(req.body);
 
-  const { dispName, description, metaUserRoleId, permissions = [] } = req.body;
+  const { dispName, description, parentId, permissions = [] } = req.body;
   if (!dispName) {
     throw new ApiError("dispName is required", 400);
   }
 
   // Validate parent role if provided
-  if (metaUserRoleId) {
-    const parentRole = await MetaUserRole.findByPk(metaUserRoleId);
+  if (parentId) {
+    const parentRole = await MetaUserRole.findByPk(parentId);
     if (!parentRole) {
       throw new ApiError("Parent role not found", 404);
     }
@@ -153,7 +179,7 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
   const role = await MetaUserRole.create({
     dispName,
     description,
-    metaUserRoleId: metaUserRoleId || null,
+    metaUserRoleId: parentId || null,
     status: 1
   });
 
@@ -181,36 +207,36 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
       ...created.toJSON(),
       permissions: allPermissions
     };
-    return sendCreated(res, createdWithAllPermissions, "Role created successfully");
+    return sendCreated(res, transformRoleResponse(createdWithAllPermissions), "Role created successfully");
   }
 
-  return sendCreated(res, created, "Role created successfully");
+  return sendCreated(res, transformRoleResponse(created), "Role created successfully");
 });
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   assertNoRestrictedFields(req.body);
 
-  const { permissions, metaUserRoleId, ...rolePayload } = req.body;
+  const { permissions, parentId, ...rolePayload } = req.body;
   const role = await MetaUserRole.findByPk(req.params.id);
   if (!role) {
     return sendNotFound(res, "Role not found", "role");
   }
 
   // Validate parent role if provided
-  if (metaUserRoleId !== undefined) {
-    if (metaUserRoleId === null) {
+  if (parentId !== undefined) {
+    if (parentId === null) {
       // Allow setting to null
       rolePayload.metaUserRoleId = null;
     } else {
-      const parentRole = await MetaUserRole.findByPk(metaUserRoleId);
+      const parentRole = await MetaUserRole.findByPk(parentId);
       if (!parentRole) {
         throw new ApiError("Parent role not found", 404);
       }
       // Prevent circular reference
-      if (metaUserRoleId === role.id) {
+      if (parentId === role.id) {
         throw new ApiError("A role cannot be its own parent", 400);
       }
-      rolePayload.metaUserRoleId = metaUserRoleId;
+      rolePayload.metaUserRoleId = parentId;
     }
   }
 
@@ -245,10 +271,10 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
       ...updated.toJSON(),
       permissions: allPermissions
     };
-    return sendSuccess(res, updatedWithAllPermissions, "Role updated successfully");
+    return sendSuccess(res, transformRoleResponse(updatedWithAllPermissions), "Role updated successfully");
   }
 
-  return sendSuccess(res, updated, "Role updated successfully");
+  return sendSuccess(res, transformRoleResponse(updated), "Role updated successfully");
 });
 
 export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
@@ -415,7 +441,7 @@ export const assignPermissionToRole = asyncHandler(async (req: Request, res: Res
     ]
   });
 
-  return sendSuccess(res, updated, "Permissions assigned to role successfully");
+  return sendSuccess(res, transformRoleResponse(updated), "Permissions assigned to role successfully");
 });
 
 export const removePermissionFromRole = asyncHandler(async (req: Request, res: Response) => {
@@ -454,7 +480,7 @@ export const removePermissionFromRole = asyncHandler(async (req: Request, res: R
     ]
   });
 
-  return sendSuccess(res, updated, "Permission removed from role successfully");
+  return sendSuccess(res, transformRoleResponse(updated), "Permission removed from role successfully");
 });
 
 export const getAllPermissionsGrouped = asyncHandler(async (req: Request, res: Response) => {
