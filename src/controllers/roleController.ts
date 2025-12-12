@@ -35,7 +35,7 @@ function transformRoleResponse(data: any): any {
   if (!data) return data;
 
   if (Array.isArray(data)) {
-    return data.map(item => transformRoleResponse(item));
+    return data.map((item) => transformRoleResponse(item));
   }
 
   if (data.toJSON && typeof data.toJSON === "function") {
@@ -127,7 +127,11 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
       ...role.toJSON(),
       permissions: allPermissions
     };
-    return sendSuccess(res, transformRoleResponse(roleWithAllPermissions), "Role retrieved successfully");
+    return sendSuccess(
+      res,
+      transformRoleResponse(roleWithAllPermissions),
+      "Role retrieved successfully"
+    );
   }
 
   return sendSuccess(res, transformRoleResponse(role), "Role retrieved successfully");
@@ -207,7 +211,11 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
       ...created.toJSON(),
       permissions: allPermissions
     };
-    return sendCreated(res, transformRoleResponse(createdWithAllPermissions), "Role created successfully");
+    return sendCreated(
+      res,
+      transformRoleResponse(createdWithAllPermissions),
+      "Role created successfully"
+    );
   }
 
   return sendCreated(res, transformRoleResponse(created), "Role created successfully");
@@ -271,7 +279,11 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
       ...updated.toJSON(),
       permissions: allPermissions
     };
-    return sendSuccess(res, transformRoleResponse(updatedWithAllPermissions), "Role updated successfully");
+    return sendSuccess(
+      res,
+      transformRoleResponse(updatedWithAllPermissions),
+      "Role updated successfully"
+    );
   }
 
   return sendSuccess(res, transformRoleResponse(updated), "Role updated successfully");
@@ -441,7 +453,11 @@ export const assignPermissionToRole = asyncHandler(async (req: Request, res: Res
     ]
   });
 
-  return sendSuccess(res, transformRoleResponse(updated), "Permissions assigned to role successfully");
+  return sendSuccess(
+    res,
+    transformRoleResponse(updated),
+    "Permissions assigned to role successfully"
+  );
 });
 
 export const removePermissionFromRole = asyncHandler(async (req: Request, res: Response) => {
@@ -480,7 +496,11 @@ export const removePermissionFromRole = asyncHandler(async (req: Request, res: R
     ]
   });
 
-  return sendSuccess(res, transformRoleResponse(updated), "Permission removed from role successfully");
+  return sendSuccess(
+    res,
+    transformRoleResponse(updated),
+    "Permission removed from role successfully"
+  );
 });
 
 export const getAllPermissionsGrouped = asyncHandler(async (req: Request, res: Response) => {
