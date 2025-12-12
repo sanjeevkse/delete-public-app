@@ -688,11 +688,6 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   const wardNumberId = userProfile?.wardNumberId ?? null;
   const boothNumberId = userProfile?.boothNumberId ?? null;
 
-  if (wardNumberId === null || boothNumberId === null) {
-    const pagination = calculatePagination(0, page, limit);
-    return sendSuccessWithPagination(res, [], pagination, "Forms retrieved successfully");
-  }
-
   if (search) {
     filters.push({
       [Op.or]: [{ title: { [Op.like]: `%${search}%` } }, { slug: { [Op.like]: `%${search}%` } }]
@@ -707,6 +702,8 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     filters.push({ isPublic });
   }
 
+  // If user has both ward and booth numbers, filter by those mappings
+  // Otherwise, show public forms or forms without specific mappings
   const mappingWhere = buildFormMappingWhere(wardNumberId, boothNumberId);
 
   const where: WhereOptions<Attributes<Form>> | undefined =
