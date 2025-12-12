@@ -26,6 +26,8 @@ import formEventRoutes from "./formEventRoutes";
 import metaTablesRoutes from "./metaTablesRoutes";
 import userSchemeApplicationRoutes from "./userSchemeApplicationRoutes";
 import notificationRoutes from "./notificationRoutes";
+import roleRoutes from "./roleRoutes";
+import permissionRoutes from "./permissionRoutes";
 
 const router = Router();
 
@@ -59,6 +61,8 @@ router.use("/", formBuilderRoutes);
 router.use("/", formEventRoutes);
 router.use("/", metaTablesRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/roles", roleRoutes);
+router.use("/permissions", permissionRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;

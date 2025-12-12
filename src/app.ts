@@ -32,6 +32,11 @@ app.get("/firebase-test", (_req, res) => {
   res.sendFile(path.join(__dirname, "../public/firebase-test.html"));
 });
 
+// Role & Permission Manager UI
+app.get("/role-permission-manager", (_req, res) => {
+  res.sendFile(path.join(__dirname, "../public/role-permission-manager.html"));
+});
+
 // Telescope monitoring dashboard
 app.use("/telescope", telescopeRoutes);
 

@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Role & Permission Manager</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      header {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .main-layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 20px;
+      }
+
+      .panel {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .roles-list {
+        list-style: none;
+      }
+
+      .role-item {
+        padding: 12px;
+        margin-bottom: 8px;
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+      }
+
+      .role-item:hover {
+        background: #e8ebf7;
+        transform: translateX(4px);
+      }
+
+      .role-item.active {
+        background: #667eea;
+        color: white;
+        border-left-color: #764ba2;
+      }
+
+      .role-name {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .role-count {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 4px;
+      }
+
+      .permission-group {
+        margin-bottom: 25px;
+      }
+
+      .group-title {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 10px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .permission-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: #f8f9fa;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+      }
+
+      .permission-item:hover {
+        background: #e8ebf7;
+      }
+
+      .permission-item.assigned {
+        background: #d4edda;
+        border-left: 3px solid #28a745;
+      }
+
+      .permission-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+
+      .permission-label {
+        flex: 1;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .permission-label .perm-name {
+        display: block;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .permission-label .perm-desc {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        margin-top: 2px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c82333;
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .no-role-selected {
+        text-align: center;
+        color: #999;
+        padding: 40px 20px;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .stat-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+      }
+
+      .filter-box {
+        margin-bottom: 15px;
+      }
+
+      .filter-box input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+
+      .search-results-count {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 10px;
+      }
+
+      @media (max-width: 1024px) {
+        .main-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .permission-item.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .permission-item.disabled input[type="checkbox"] {
+        cursor: not-allowed;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-header {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .modal-body {
+        margin-bottom: 20px;
+      }
+
+      .modal-body label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 13px;
+      }
+
+      .modal-body input,
+      .modal-body textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+
+      .modal-body textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .btn-sm {
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+
+      .select-all-section {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .select-all-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .select-all-checkbox input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .select-all-checkbox label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .bulk-action-bar {
+        background: #e8ebf7;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .bulk-action-bar.show {
+        display: flex;
+      }
+
+      .bulk-action-bar .selected-count {
+        font-size: 13px;
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .bulk-action-bar button {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Role & Permission Manager</h1>
+        <p class="subtitle">Assign and manage permissions for different user roles</p>
+      </header>
+
+      <div class="alert alert-success" id="successAlert"></div>
+      <div class="alert alert-error" id="errorAlert"></div>
+      <div class="alert alert-info" id="infoAlert"></div>
+
+      <div class="main-layout">
+        <!-- Left Panel: Roles List -->
+        <div class="panel">
+          <div class="panel-title">Roles</div>
+
+          <div class="filter-box">
+            <input type="text" id="roleFilter" placeholder="Search roles..." />
+          </div>
+
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-value" id="totalRoles">0</div>
+              <div class="stat-label">Total Roles</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="totalPermissions">0</div>
+              <div class="stat-label">Total Permissions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="selectedRolePermissions">0</div>
+              <div class="stat-label">Selected Role Perms</div>
+            </div>
+          </div>
+
+          <ul class="roles-list" id="rolesList"></ul>
+
+          <div class="action-buttons">
+            <button class="btn-primary" onclick="openCreateRoleModal()">+ New Role</button>
+          </div>
+        </div>
+
+        <!-- Right Panel: Permissions Management -->
+        <div class="panel">
+          <div class="panel-title">Manage Permissions</div>
+
+          <div id="noRoleSelected" class="no-role-selected">
+            <p>Select a role to manage its permissions</p>
+          </div>
+
+          <div id="permissionsPanel" style="display: none">
+            <div class="loading" id="loadingSpinner">
+              <div class="spinner"></div>
+              <p>Loading permissions...</p>
+            </div>
+
+            <div id="permissionsContent" style="display: none">
+              <div class="filter-box">
+                <input type="text" id="permissionFilter" placeholder="Search permissions..." />
+              </div>
+
+              <div class="bulk-action-bar" id="bulkActionBar">
+                <span class="selected-count"> <span id="selectedCount">0</span> selected </span>
+                <div>
+                  <button class="btn-success btn-sm" onclick="bulkAssignPermissions()">
+                    Assign
+                  </button>
+                  <button class="btn-danger btn-sm" onclick="bulkRemovePermissions()">
+                    Remove
+                  </button>
+                </div>
+              </div>
+
+              <div class="select-all-section">
+                <div class="select-all-checkbox">
+                  <input
+                    type="checkbox"
+                    id="selectAllPermissions"
+                    onclick="toggleSelectAll(this.checked)"
+                  />
+                  <label for="selectAllPermissions">Select All Visible</label>
+                </div>
+              </div>
+
+              <div id="permissionsContainer"></div>
+            </div>
+          </div>
+
+          <div class="action-buttons" id="actionButtons" style="display: none">
+            <button class="btn-success" onclick="saveRolePermissions()">Save Changes</button>
+            <button class="btn-secondary" onclick="clearSelection()">Clear Selection</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Role Modal -->
+    <div class="modal" id="createRoleModal">
+      <div class="modal-content">
+        <div class="modal-header">Create New Role</div>
+        <div class="modal-body">
+          <label for="roleName">Role Name *</label>
+          <input type="text" id="roleName" placeholder="Enter role name" />
+
+          <label for="roleDescription">Description</label>
+          <textarea id="roleDescription" placeholder="Enter role description"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary btn-sm" onclick="closeCreateRoleModal()">Cancel</button>
+          <button class="btn-primary btn-sm" onclick="createNewRole()">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let allRoles = [];
+      let allPermissionsGrouped = {};
+      let selectedRole = null;
+      let selectedPermissions = new Set();
+      let assignedPermissions = new Set();
+
+      // API Base URL - adjust if needed
+      const API_BASE = "/api";
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        loadRoles();
+        loadPermissions();
+        setupEventListeners();
+      });
+
+      function setupEventListeners() {
+        document.getElementById("roleFilter").addEventListener("input", filterRoles);
+        document.getElementById("permissionFilter").addEventListener("input", filterPermissions);
+      }
+
+      async function loadRoles() {
+        try {
+          const response = await fetch(`${API_BASE}/roles`);
+          const data = await response.json();
+          allRoles = data.data || [];
+          renderRolesList();
+          updateStats();
+        } catch (error) {
+          console.error("Error loading roles:", error);
+          showAlert("Error loading roles", "error");
+        }
+      }
+
+      async function loadPermissions() {
+        try {
+          const response = await fetch(`${API_BASE}/roles/permissions/grouped/all`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          console.log("Full API response:", data);
+          // Handle both data.data and direct response
+          allPermissionsGrouped = data.data || data || {};
+          console.log("Grouped permissions:", allPermissionsGrouped);
+          updateStats();
+        } catch (error) {
+          console.error("Error loading permissions:", error);
+          showAlert("Error loading permissions: " + error.message, "error");
+        }
+      }
+
+      function renderRolesList() {
+        const list = document.getElementById("rolesList");
+        list.innerHTML = "";
+
+        allRoles.forEach((role) => {
+          const li = document.createElement("li");
+          li.className = "role-item";
+          if (selectedRole?.id === role.id) li.classList.add("active");
+
+          li.innerHTML = `
+                    <div class="role-name">${escapeHtml(role.dispName)}</div>
+                    <div class="role-count">${role.permissions?.length || 0} permissions</div>
+                `;
+
+          li.onclick = () => selectRole(role);
+          list.appendChild(li);
+        });
+
+        document.getElementById("totalRoles").textContent = allRoles.length;
+      }
+
+      async function selectRole(role) {
+        selectedRole = role;
+        selectedPermissions.clear();
+        assignedPermissions = new Set((role.permissions || []).map((p) => p.id));
+
+        renderRolesList();
+        renderPermissions();
+
+        const panel = document.getElementById("permissionsPanel");
+        const noRole = document.getElementById("noRoleSelected");
+        const actionButtons = document.getElementById("actionButtons");
+
+        noRole.style.display = "none";
+        panel.style.display = "block";
+        actionButtons.style.display = "flex";
+
+        document.getElementById("selectedRolePermissions").textContent = assignedPermissions.size;
+      }
+
+      function renderPermissions() {
+        const container = document.getElementById("permissionsContainer");
+        const loading = document.getElementById("loadingSpinner");
+        const content = document.getElementById("permissionsContent");
+
+        loading.classList.add("show");
+        content.style.display = "none";
+
+        setTimeout(() => {
+          container.innerHTML = "";
+
+          const groups = Object.entries(allPermissionsGrouped);
+          console.log("Rendering groups:", groups.length);
+
+          if (groups.length === 0) {
+            container.innerHTML =
+              '<p style="padding: 20px; color: #999; text-align: center;">No permissions available</p>';
+          } else {
+            groups.forEach(([groupName, permissions]) => {
+              const groupDiv = document.createElement("div");
+              groupDiv.className = "permission-group";
+
+              const groupTitle = document.createElement("div");
+              groupTitle.className = "group-title";
+              groupTitle.textContent = groupName;
+              groupDiv.appendChild(groupTitle);
+
+              (permissions || []).forEach((perm) => {
+                const item = document.createElement("div");
+                item.className = "permission-item";
+                if (assignedPermissions.has(perm.id)) {
+                  item.classList.add("assigned");
+                }
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = `perm_${perm.id}`;
+                checkbox.checked =
+                  assignedPermissions.has(perm.id) || selectedPermissions.has(perm.id);
+                checkbox.onchange = () => togglePermission(perm.id);
+
+                const label = document.createElement("label");
+                label.className = "permission-label";
+                label.htmlFor = `perm_${perm.id}`;
+                label.innerHTML = `
+                                <span class="perm-name">${escapeHtml(perm.dispName)}</span>
+                                <span class="perm-desc">${escapeHtml(perm.description || "")}</span>
+                            `;
+
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                groupDiv.appendChild(item);
+              });
+
+              container.appendChild(groupDiv);
+            });
+          }
+
+          loading.classList.remove("show");
+          content.style.display = "block";
+        }, 300);
+      }
+
+      function togglePermission(permissionId) {
+        if (assignedPermissions.has(permissionId)) {
+          selectedPermissions.delete(permissionId);
+        } else {
+          selectedPermissions.add(permissionId);
+        }
+        updateBulkActionBar();
+      }
+
+      function toggleSelectAll(checked) {
+        const checkboxes = document.querySelectorAll(
+          '#permissionsContainer input[type="checkbox"]'
+        );
+        checkboxes.forEach((cb) => {
+          const permId = parseInt(cb.id.split("_")[1]);
+          if (checked) {
+            selectedPermissions.add(permId);
+          } else {
+            selectedPermissions.delete(permId);
+          }
+          cb.checked = checked;
+        });
+        updateBulkActionBar();
+      }
+
+      function updateBulkActionBar() {
+        const bar = document.getElementById("bulkActionBar");
+        const count = document.getElementById("selectedCount");
+
+        if (selectedPermissions.size > 0) {
+          bar.classList.add("show");
+          count.textContent = selectedPermissions.size;
+        } else {
+          bar.classList.remove("show");
+        }
+      }
+
+      async function saveRolePermissions() {
+        if (!selectedRole) return;
+
+        try {
+          const newPermissions = Array.from(selectedPermissions);
+
+          if (newPermissions.length > 0) {
+            await fetch(`${API_BASE}/roles/${selectedRole.id}/permissions`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ permissionIds: newPermissions })
+            });
+          }
+
+          // Reload to reflect changes
+          await loadRoles();
+          showAlert("Permissions updated successfully", "success");
+
+          const updatedRole = allRoles.find((r) => r.id === selectedRole.id);
+          if (updatedRole) {
+            selectRole(updatedRole);
+          }
+        } catch (error) {
+          console.error("Error saving permissions:", error);
+          showAlert("Error saving permissions", "error");
+        }
+      }
+
+      async function bulkRemovePermissions() {
+        if (!selectedRole || selectedPermissions.size === 0) return;
+
+        if (!confirm(`Remove ${selectedPermissions.size} permission(s)?`)) return;
+
+        try {
+          for (const permId of selectedPermissions) {
+            await fetch(`${API_BASE}/roles/${selectedRole.id}/permissions/${permId}`, {
+              method: "DELETE"
+            });
+          }
+
+          selectedPermissions.clear();
+          await loadRoles();
+          const updatedRole = allRoles.find((r) => r.id === selectedRole.id);
+          if (updatedRole) {
+            selectRole(updatedRole);
+          }
+          showAlert("Permissions removed successfully", "success");
+        } catch (error) {
+          console.error("Error removing permissions:", error);
+          showAlert("Error removing permissions", "error");
+        }
+      }
+
+      function bulkAssignPermissions() {
+        saveRolePermissions();
+      }
+
+      function clearSelection() {
+        selectedPermissions.clear();
+        document.querySelectorAll('#permissionsContainer input[type="checkbox"]').forEach((cb) => {
+          const permId = parseInt(cb.id.split("_")[1]);
+          cb.checked = assignedPermissions.has(permId);
+        });
+        updateBulkActionBar();
+      }
+
+      function filterRoles() {
+        const query = document.getElementById("roleFilter").value.toLowerCase();
+        const filtered = allRoles.filter((r) => r.dispName.toLowerCase().includes(query));
+
+        const list = document.getElementById("rolesList");
+        list.innerHTML = "";
+
+        filtered.forEach((role) => {
+          const li = document.createElement("li");
+          li.className = "role-item";
+          if (selectedRole?.id === role.id) li.classList.add("active");
+
+          li.innerHTML = `
+                    <div class="role-name">${escapeHtml(role.dispName)}</div>
+                    <div class="role-count">${role.permissions?.length || 0} permissions</div>
+                `;
+
+          li.onclick = () => selectRole(role);
+          list.appendChild(li);
+        });
+      }
+
+      function filterPermissions() {
+        const query = document.getElementById("permissionFilter").value.toLowerCase();
+        const items = document.querySelectorAll(".permission-item");
+
+        let visibleCount = 0;
+        items.forEach((item) => {
+          const text = item.textContent.toLowerCase();
+          if (text.includes(query)) {
+            item.style.display = "";
+            visibleCount++;
+          } else {
+            item.style.display = "none";
+          }
+        });
+
+        // Hide empty groups
+        document.querySelectorAll(".permission-group").forEach((group) => {
+          const visibleItems = group.querySelectorAll(
+            '.permission-item:not([style*="display: none"])'
+          );
+          group.style.display = visibleItems.length > 0 ? "" : "none";
+        });
+
+        document.getElementById("searchResultsCount").textContent =
+          `Showing ${visibleCount} permissions`;
+      }
+
+      function updateStats() {
+        const totalPerms = Object.values(allPermissionsGrouped).reduce(
+          (sum, perms) => sum + perms.length,
+          0
+        );
+        document.getElementById("totalPermissions").textContent = totalPerms;
+      }
+
+      function openCreateRoleModal() {
+        document.getElementById("createRoleModal").classList.add("show");
+      }
+
+      function closeCreateRoleModal() {
+        document.getElementById("createRoleModal").classList.remove("show");
+        document.getElementById("roleName").value = "";
+        document.getElementById("roleDescription").value = "";
+      }
+
+      async function createNewRole() {
+        const name = document.getElementById("roleName").value.trim();
+        const description = document.getElementById("roleDescription").value.trim();
+
+        if (!name) {
+          showAlert("Role name is required", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}/roles`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              dispName: name,
+              description,
+              permissions: []
+            })
+          });
+
+          if (!response.ok) throw new Error("Failed to create role");
+
+          closeCreateRoleModal();
+          await loadRoles();
+          showAlert("Role created successfully", "success");
+        } catch (error) {
+          console.error("Error creating role:", error);
+          showAlert("Error creating role", "error");
+        }
+      }
+
+      function showAlert(message, type) {
+        const alertId = `${type}Alert`;
+        const alert = document.getElementById(alertId);
+        alert.textContent = message;
+        alert.classList.add("show");
+
+        setTimeout(() => {
+          alert.classList.remove("show");
+        }, 4000);
+      }
+
+      function escapeHtml(text) {
+        const map = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        };
+        return text.replace(/[&<>"']/g, (m) => map[m]);
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function (event) {
+        const modal = document.getElementById("createRoleModal");
+        if (event.target === modal) {
+          closeCreateRoleModal();
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -372,3 +372,115 @@ export const unassignRoleFromUser = asyncHandler(async (req: Request, res: Respo
 
   return sendSuccess(res, updatedUser, "Role unassigned from user successfully");
 });
+export const assignPermissionToRole = asyncHandler(async (req: Request, res: Response) => {
+  const { roleId } = req.params;
+  const { permissionIds } = req.body;
+
+  if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
+    throw new ApiError("permissionIds must be a non-empty array", 400);
+  }
+
+  const role = await MetaUserRole.findByPk(roleId);
+  if (!role) {
+    return sendNotFound(res, "Role not found", "role");
+  }
+
+  // Check if all permissions exist
+  const permissions = await MetaPermission.findAll({
+    where: { id: permissionIds, status: 1 }
+  });
+
+  if (permissions.length !== permissionIds.length) {
+    throw new ApiError("One or more permissions not found", 404);
+  }
+
+  // Create role-permission mappings
+  const payload = permissionIds.map((permissionId: number) => ({
+    roleId: Number(roleId),
+    permissionId,
+    status: 1
+  }));
+
+  await RolePermission.bulkCreate(payload, {
+    updateOnDuplicate: ["status"]
+  });
+
+  const updated = await MetaUserRole.findByPk(roleId, {
+    include: [
+      {
+        model: MetaPermission,
+        as: "permissions",
+        include: [{ association: "group" }]
+      }
+    ]
+  });
+
+  return sendSuccess(res, updated, "Permissions assigned to role successfully");
+});
+
+export const removePermissionFromRole = asyncHandler(async (req: Request, res: Response) => {
+  const { roleId, permissionId } = req.params;
+
+  const [role, permission] = await Promise.all([
+    MetaUserRole.findByPk(roleId),
+    MetaPermission.findByPk(permissionId)
+  ]);
+
+  if (!role) {
+    return sendNotFound(res, "Role not found", "role");
+  }
+
+  if (!permission) {
+    return sendNotFound(res, "Permission not found", "permission");
+  }
+
+  const rolePermission = await RolePermission.findOne({
+    where: { roleId, permissionId }
+  });
+
+  if (!rolePermission) {
+    return sendNotFound(res, "This permission is not assigned to this role");
+  }
+
+  await rolePermission.update({ status: 0 });
+
+  const updated = await MetaUserRole.findByPk(roleId, {
+    include: [
+      {
+        model: MetaPermission,
+        as: "permissions",
+        include: [{ association: "group" }]
+      }
+    ]
+  });
+
+  return sendSuccess(res, updated, "Permission removed from role successfully");
+});
+
+export const getAllPermissionsGrouped = asyncHandler(async (req: Request, res: Response) => {
+  const permissions = await MetaPermission.findAll({
+    where: { status: 1 },
+    include: [
+      {
+        association: "group",
+        attributes: ["id", "label"]
+      }
+    ],
+    order: [
+      ["permissionGroupId", "ASC"],
+      ["dispName", "ASC"]
+    ]
+  });
+
+  // Group permissions by group
+  const grouped = permissions.reduce((acc: Record<string, any>, permission: any) => {
+    const groupName = permission.group?.label || "Ungrouped";
+    if (!acc[groupName]) {
+      acc[groupName] = [];
+    }
+    acc[groupName].push(permission);
+    return acc;
+  }, {});
+
+  return sendSuccess(res, grouped, "Permissions retrieved and grouped successfully");
+});
