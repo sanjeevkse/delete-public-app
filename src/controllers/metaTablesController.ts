@@ -203,6 +203,7 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   );
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
+  const needAll = req.query.need_all === "1";
 
   const metaTables = await getMetaTables();
   const config = metaTables[tableName];
@@ -242,11 +243,17 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
 
   const { rows, count } = await config.model.findAndCountAll(queryOptions);
 
+  // Add "ALL" option at the beginning if needed_all parameter is present
+  let responseData = rows;
+  if (needAll) {
+    responseData = [{ id: -1, disp_name: "-ALL-" }, ...rows];
+  }
+
   const pagination = calculatePagination(count, page, limit);
 
   sendSuccessWithPagination(
     res,
-    rows,
+    responseData,
     pagination,
     `${config.displayName} data retrieved successfully`
   );
