@@ -48,8 +48,7 @@ User.init(
     },
     email: {
       type: DataTypes.STRING(191),
-      allowNull: true,
-      unique: true
+      allowNull: true
     },
     fullName: {
       field: "full_name",
