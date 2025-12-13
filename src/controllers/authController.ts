@@ -583,42 +583,43 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
     order: [["label", "ASC"]]
   });
 
-  const serializedSidebars = permissionSet.has("*")
-    ? // User has wildcard permission - show all sidebars
-      groups
-        .filter((group) => group.sidebar)
-        .map((group) => {
-          const payload = group.toJSON() as any;
-          return {
-            id: payload.sidebar.id,
-            dispName: payload.sidebar.dispName,
-            screenName: payload.sidebar.screenName,
-            icon: payload.sidebar.icon,
-            status: payload.sidebar.status,
-            label: payload.label,
-            description: payload.description
-          };
-        })
-    : // Filter sidebars based on user's permissions
-      groups
-        .filter((group) => {
-          if (!group.sidebar || !group.permissions) return false;
+  const serializedSidebars =
+    permissionSet.has("*") || true
+      ? // User has wildcard permission - show all sidebars
+        groups
+          .filter((group) => group.sidebar)
+          .map((group) => {
+            const payload = group.toJSON() as any;
+            return {
+              id: payload.sidebar.id,
+              dispName: payload.sidebar.dispName,
+              screenName: payload.sidebar.screenName,
+              icon: payload.sidebar.icon,
+              status: payload.sidebar.status,
+              label: payload.label,
+              description: payload.description
+            };
+          })
+      : // Filter sidebars based on user's permissions
+        groups
+          .filter((group) => {
+            if (!group.sidebar || !group.permissions) return false;
 
-          // Check if user has any permission in this group
-          return group.permissions.some((permission) => permissionSet.has(permission.dispName));
-        })
-        .map((group) => {
-          const payload = group.toJSON() as any;
-          return {
-            id: payload.sidebar.id,
-            dispName: payload.sidebar.dispName,
-            screenName: payload.sidebar.screenName,
-            icon: payload.sidebar.icon,
-            status: payload.sidebar.status,
-            label: payload.label,
-            description: payload.description
-          };
-        });
+            // Check if user has any permission in this group
+            return group.permissions.some((permission) => permissionSet.has(permission.dispName));
+          })
+          .map((group) => {
+            const payload = group.toJSON() as any;
+            return {
+              id: payload.sidebar.id,
+              dispName: payload.sidebar.dispName,
+              screenName: payload.sidebar.screenName,
+              icon: payload.sidebar.icon,
+              status: payload.sidebar.status,
+              label: payload.label,
+              description: payload.description
+            };
+          });
 
   // Remove duplicates (same sidebar might be linked through multiple permission groups)
   const uniqueSidebars = Array.from(
@@ -689,6 +690,15 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
       description: "Administrative dashboard"
     };
     uniqueSidebars.unshift(dashboardSidebar);
+    uniqueSidebars.unshift({
+      id: 999,
+      dispName: "Pending Regs.",
+      screenName: "PENDING_REGISTRATION_SCREEN",
+      icon: "tachometer-alt",
+      status: 1,
+      label: "Pending Registrations",
+      description: "Administrative dashboard"
+    });
   }
 
   return sendSuccess(res, { sidebars: uniqueSidebars }, "Sidebar data retrieved successfully");
