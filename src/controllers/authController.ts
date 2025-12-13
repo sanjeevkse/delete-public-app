@@ -690,15 +690,6 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
       description: "Administrative dashboard"
     };
     uniqueSidebars.unshift(dashboardSidebar);
-    uniqueSidebars.unshift({
-      id: 999,
-      dispName: "Pending Regs.",
-      screenName: "PENDING_REGISTRATION_SCREEN",
-      icon: "tachometer-alt",
-      status: 1,
-      label: "Pending Registrations",
-      description: "Administrative dashboard"
-    });
   }
 
   return sendSuccess(res, { sidebars: uniqueSidebars }, "Sidebar data retrieved successfully");
