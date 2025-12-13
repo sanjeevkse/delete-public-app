@@ -671,9 +671,9 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   );
   const search = (req.query.search as string) ?? "";
   const status = parseStatusFilter(req.query.status);
-  const isPublic = parseBooleanLike(req.query.isPublic);
+  // const isPublic = parseBooleanLike(req.query.isPublic);
 
-  const filters: WhereOptions<Attributes<Form>>[] = [];
+  // const filters: WhereOptions<Attributes<Form>>[] = [];
 
   const userId = req.user?.id;
   if (!userId) {
@@ -688,40 +688,40 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   const wardNumberId = userProfile?.wardNumberId ?? null;
   const boothNumberId = userProfile?.boothNumberId ?? null;
 
-  if (search) {
-    filters.push({
-      [Op.or]: [{ title: { [Op.like]: `%${search}%` } }, { slug: { [Op.like]: `%${search}%` } }]
-    });
-  }
+  // if (search) {
+  //   filters.push({
+  //     [Op.or]: [{ title: { [Op.like]: `%${search}%` } }, { slug: { [Op.like]: `%${search}%` } }]
+  //   });
+  // }
 
-  if (status !== undefined && status !== null) {
-    filters.push({ status });
-  }
+  // if (status !== undefined && status !== null) {
+  //   filters.push({ status });
+  // }
 
-  if (isPublic !== undefined) {
-    filters.push({ isPublic });
-  }
+  // if (isPublic !== undefined) {
+  //   filters.push({ isPublic });
+  // }
 
   // If user has both ward and booth numbers, filter by those mappings
   // Otherwise, show public forms or forms without specific mappings
-  const mappingWhere = buildFormMappingWhere(wardNumberId, boothNumberId);
+  // const mappingWhere = buildFormMappingWhere(wardNumberId, boothNumberId);
 
-  const where: WhereOptions<Attributes<Form>> | undefined =
-    filters.length > 0 ? { [Op.and]: filters } : undefined;
+  // const where: WhereOptions<Attributes<Form>> | undefined =
+  //   filters.length > 0 ? { [Op.and]: filters } : undefined;
 
   const include = formInclude.map((includeItem) => {
     if ("association" in includeItem && includeItem.association === "mappings") {
       return {
-        ...includeItem,
-        required: mappingWhere !== undefined,
-        where: mappingWhere
+        ...includeItem
+        // required: mappingWhere !== undefined,
+        // where: mappingWhere
       };
     }
     return includeItem;
   });
 
   const { rows, count } = await Form.findAndCountAll({
-    where,
+    // where,
     limit,
     offset,
     include,

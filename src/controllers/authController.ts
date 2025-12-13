@@ -654,8 +654,8 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
     uniqueSidebars.push(...orphanedSerialized);
   }
 
-  // Add public sidebars that don't require permissions
-  const publicSidebars = [
+  // Add open sidebars that don't require permissions
+  const openSidebars = [
     {
       id: 901,
       dispName: "Requests",
@@ -676,7 +676,7 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
     }
   ];
 
-  uniqueSidebars.unshift(...publicSidebars);
+  uniqueSidebars.unshift(...openSidebars);
 
   // Add dashboard for non-public users
   if (accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
