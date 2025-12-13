@@ -9,6 +9,7 @@ import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import MetaPermissionGroup from "../models/MetaPermissionGroup";
+import Sidebar from "../models/Sidebar";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
 import UserProfile from "../models/UserProfile";
@@ -623,6 +624,34 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const uniqueSidebars = Array.from(
     new Map(serializedSidebars.map((item) => [item.id, item])).values()
   );
+
+  // Also fetch sidebars without permission groups (orphaned sidebars)
+  // These will show to all authenticated users
+  if (permissionSet.has("*") || accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
+    const sidebarIds = new Set(uniqueSidebars.map((s) => s.id));
+    const orphanedSidebars = await Sidebar.findAll({
+      where: {
+        status: 1,
+        id: {
+          [Op.notIn]: Array.from(sidebarIds)
+        }
+      },
+      attributes: ["id", "dispName", "screenName", "icon", "status"],
+      order: [["dispName", "ASC"]]
+    });
+
+    const orphanedSerialized = orphanedSidebars.map((sidebar) => ({
+      id: sidebar.id,
+      dispName: sidebar.dispName,
+      screenName: sidebar.screenName,
+      icon: sidebar.icon,
+      status: sidebar.status,
+      label: sidebar.dispName,
+      description: ""
+    }));
+
+    uniqueSidebars.push(...orphanedSerialized);
+  }
 
   // Add public sidebars that don't require permissions
   const publicSidebars = [
