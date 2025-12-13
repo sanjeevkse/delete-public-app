@@ -246,7 +246,7 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   // Add "ALL" option at the beginning if needed_all parameter is present
   let responseData = rows;
   if (needAll) {
-    responseData = [{ id: -1, disp_name: "-ALL-" }, ...rows];
+    responseData = [{ id: -1, dispName: "-ALL-" }, ...rows];
   }
 
   const pagination = calculatePagination(count, page, limit);
