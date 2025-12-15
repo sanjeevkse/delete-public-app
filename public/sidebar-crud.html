@@ -109,67 +109,18 @@
           <th>Icon</th>
           <th>Status</th>
           <th>Created</th>
-          <th>Roles</th>
-          <th>Permission Groups</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody id="tableBody">
         <tr>
-          <td colspan="9">Loading...</td>
+          <td colspan="7">Loading...</td>
         </tr>
       </tbody>
     </table>
 
-    <h2>Manage Access</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
-      <div>
-        <label>Sidebar:</label>
-        <select id="accessSidebarId">
-          <option value="">Select sidebar</option>
-        </select>
-      </div>
-      <div style="border-left: 1px solid #ccc; padding-left: 10px">
-        <h3>Assign Roles</h3>
-        <div>
-          <label>Role:</label>
-          <select id="roleId">
-            <option value="">Select role</option>
-          </select>
-        </div>
-        <button onclick="assignRole()">Assign Role</button>
-        <div id="assignedRoles" style="margin-top: 10px; padding: 10px; background: #f0f0f0">
-          Assigned roles will appear here
-        </div>
-      </div>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px">
-      <div style="border-right: 1px solid #ccc; padding-right: 10px">
-        <h3>Assign Permission Groups</h3>
-        <div>
-          <label>Permission Group:</label>
-          <select id="permissionGroupId">
-            <option value="">Select group</option>
-          </select>
-        </div>
-        <button onclick="assignPermissionGroup()">Assign Permission Group</button>
-      </div>
-      <div>
-        <h3>Assigned Permission Groups</h3>
-        <div
-          id="assignedPermissionGroups"
-          style="margin-top: 10px; padding: 10px; background: #f0f0f0"
-        >
-          Assigned permission groups will appear here
-        </div>
-      </div>
-    </div>
-
     <script>
-      const API_URL = "/api/auth/sidebar";
-      const ROLE_API_URL = "/api/roles";
-      const PERMISSION_GROUP_API_URL = "/api/permission-groups";
+      const API_URL = "/api/sidebar-view";
 
       function showAlert(msg, type) {
         const box = document.getElementById("alertBox");
@@ -178,47 +129,19 @@
         setTimeout(() => (box.className = ""), 3000);
       }
 
-      async function loadRoles() {
-        try {
-          const res = await fetch(ROLE_API_URL);
-          const data = await res.json();
-          const roles = data.data || data || [];
-          const select = document.getElementById("roleId");
-          select.innerHTML =
-            '<option value="">Select role</option>' +
-            roles.map((r) => `<option value="${r.id}">${r.dispName}</option>`).join("");
-        } catch (err) {
-          console.error("Error loading roles:", err);
-        }
-      }
-
-      async function loadPermissionGroups() {
-        try {
-          const res = await fetch(PERMISSION_GROUP_API_URL);
-          const data = await res.json();
-          const groups = data.data || data || [];
-          const select = document.getElementById("permissionGroupId");
-          select.innerHTML =
-            '<option value="">Select group</option>' +
-            groups.map((g) => `<option value="${g.id}">${g.label}</option>`).join("");
-        } catch (err) {
-          console.error("Error loading permission groups:", err);
-        }
-      }
-
       async function load() {
         try {
-          const res = await fetch(`${API_URL}/sidebar`);
+          const res = await fetch(API_URL);
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}`);
           }
           const data = await res.json();
+          console.log("Data:", data);
           const items = data.data || data || [];
           const tbody = document.getElementById("tableBody");
-          const sidebarSelect = document.getElementById("accessSidebarId");
 
           if (!items.length) {
-            tbody.innerHTML = '<tr><td colspan="9">No items</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7">No items</td></tr>';
             return;
           }
 
@@ -232,8 +155,6 @@
                         <td>${item.icon || "-"}</td>
                         <td>${item.status ? "Active" : "Inactive"}</td>
                         <td>${new Date(item.createdAt).toLocaleDateString()}</td>
-                        <td id="roles-${item.id}">Loading...</td>
-                        <td id="groups-${item.id}">Loading...</td>
                         <td>
                             <button onclick="edit(${item.id}, '${item.dispName.replace(/'/g, "\\'")}', '${item.screenName.replace(/'/g, "\\'")}', '${(item.icon || "").replace(/'/g, "\\'")}', ${item.status})">Edit</button>
                         </td>
@@ -241,99 +162,10 @@
                 `
             )
             .join("");
-
-          sidebarSelect.innerHTML =
-            '<option value="">Select sidebar</option>' +
-            items.map((item) => `<option value="${item.id}">${item.dispName}</option>`).join("");
-
-          // Load role and permission group info for each sidebar
-          items.forEach((item) => loadAccessInfo(item.id));
         } catch (err) {
           console.error(err);
           const tbody = document.getElementById("tableBody");
-          tbody.innerHTML = `<tr><td colspan="9">Error loading: ${err.message}</td></tr>`;
-        }
-      }
-
-      async function loadAccessInfo(sidebarId) {
-        try {
-          const res = await fetch(`${API_URL}/${sidebarId}`);
-          const data = await res.json();
-          const item = data.data;
-
-          if (item.roles && Array.isArray(item.roles)) {
-            document.getElementById(`roles-${sidebarId}`).innerHTML =
-              item.roles
-                .map(
-                  (r) =>
-                    `<span style="background:#e8f4f8; padding:2px 4px; margin:2px">${r.dispName}</span>`
-                )
-                .join("") || "No roles";
-          } else {
-            document.getElementById(`roles-${sidebarId}`).innerHTML = "No roles";
-          }
-
-          if (item.permissionGroupSidebars && Array.isArray(item.permissionGroupSidebars)) {
-            document.getElementById(`groups-${sidebarId}`).innerHTML =
-              item.permissionGroupSidebars
-                .map(
-                  (pg) =>
-                    `<span style="background:#f0e8f4; padding:2px 4px; margin:2px">${pg.label || pg.permissionGroupId}</span>`
-                )
-                .join("") || "No groups";
-          } else {
-            document.getElementById(`groups-${sidebarId}`).innerHTML = "No groups";
-          }
-        } catch (err) {
-          console.error("Error loading access info:", err);
-        }
-      }
-
-      async function assignRole() {
-        const sidebarId = document.getElementById("accessSidebarId").value;
-        const roleId = document.getElementById("roleId").value;
-
-        if (!sidebarId || !roleId) {
-          showAlert("Select both sidebar and role", "error");
-          return;
-        }
-
-        try {
-          const res = await fetch(`${API_URL}/${sidebarId}/roles/${roleId}`, { method: "POST" });
-          if (res.ok) {
-            showAlert("Role assigned", "success");
-            load();
-          } else {
-            const err = await res.json();
-            showAlert(err.message || "Error", "error");
-          }
-        } catch (err) {
-          showAlert("Error: " + err.message, "error");
-        }
-      }
-
-      async function assignPermissionGroup() {
-        const sidebarId = document.getElementById("accessSidebarId").value;
-        const groupId = document.getElementById("permissionGroupId").value;
-
-        if (!sidebarId || !groupId) {
-          showAlert("Select both sidebar and permission group", "error");
-          return;
-        }
-
-        try {
-          const res = await fetch(`${API_URL}/${sidebarId}/permission-groups/${groupId}`, {
-            method: "POST"
-          });
-          if (res.ok) {
-            showAlert("Permission group assigned", "success");
-            load();
-          } else {
-            const err = await res.json();
-            showAlert(err.message || "Error", "error");
-          }
-        } catch (err) {
-          showAlert("Error: " + err.message, "error");
+          tbody.innerHTML = `<tr><td colspan="7">Error loading: ${err.message}</td></tr>`;
         }
       }
 
@@ -391,8 +223,6 @@
         }
       });
 
-      loadRoles();
-      loadPermissionGroups();
       load();
     </script>
   </body>
