@@ -77,7 +77,8 @@
         font-size: 12px;
         overflow: auto;
       }
-      th, td {
+      th,
+      td {
         padding: 4px;
         text-align: left;
         border: 1px solid #ddd;
@@ -206,12 +207,16 @@
             container.innerHTML = "No roles available";
             return;
           }
-          container.innerHTML = roles.map((r) => `
+          container.innerHTML = roles
+            .map(
+              (r) => `
             <div>
               <input type="checkbox" id="role_${r.id}" value="${r.id}" class="roleCheckbox">
               <label for="role_${r.id}">${r.dispName}</label>
             </div>
-          `).join("");
+          `
+            )
+            .join("");
         } catch (err) {
           console.error("Error loading roles:", err);
           document.getElementById("rolesCheckboxes").innerHTML = "Error loading roles";
@@ -228,15 +233,20 @@
             container.innerHTML = "No permission groups available";
             return;
           }
-          container.innerHTML = groups.map((g) => `
+          container.innerHTML = groups
+            .map(
+              (g) => `
             <div>
               <input type="checkbox" id="pg_${g.id}" value="${g.id}" class="pgCheckbox">
               <label for="pg_${g.id}">${g.label}</label>
             </div>
-          `).join("");
+          `
+            )
+            .join("");
         } catch (err) {
           console.error("Error loading permission groups:", err);
-          document.getElementById("permissionGroupsCheckboxes").innerHTML = "Error loading permission groups";
+          document.getElementById("permissionGroupsCheckboxes").innerHTML =
+            "Error loading permission groups";
         }
       }
 
@@ -291,11 +301,11 @@
             document.getElementById("screenName").value = item.screenName;
             document.getElementById("icon").value = item.icon || "";
             document.getElementById("status").value = item.status;
-            
+
             // Uncheck all first
             document.querySelectorAll(".roleCheckbox").forEach((cb) => (cb.checked = false));
             document.querySelectorAll(".pgCheckbox").forEach((cb) => (cb.checked = false));
-            
+
             // Check assigned roles
             if (item.roles && item.roles.length) {
               item.roles.forEach((r) => {
@@ -303,7 +313,7 @@
                 if (cb) cb.checked = true;
               });
             }
-            
+
             // Check assigned permission groups
             if (item.permissionGroups_assigned && item.permissionGroups_assigned.length) {
               item.permissionGroups_assigned.forEach((p) => {
@@ -311,7 +321,7 @@
                 if (cb) cb.checked = true;
               });
             }
-            
+
             document.getElementById("editingId").textContent = id;
             document.getElementById("editInfo").classList.remove("hidden");
             document.getElementById("cancelBtn").classList.remove("hidden");
