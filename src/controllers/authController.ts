@@ -9,6 +9,7 @@ import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import MetaPermissionGroup from "../models/MetaPermissionGroup";
+import MetaUserRole from "../models/MetaUserRole";
 import Sidebar from "../models/Sidebar";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
@@ -566,34 +567,59 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const { id: userId } = requireAuthenticatedUser(req);
 
   const accessProfile = await getUserAccessProfile(userId);
-  const userRoleIds = accessProfile.roles.map((roleName) => roleName);
   const permissionSet = new Set(accessProfile.permissions ?? []);
 
+  // Get actual role IDs by mapping role names to their IDs from the database
+  const roleNames = accessProfile.roles;
+  const rolesWithIds =
+    roleNames.length > 0
+      ? await MetaUserRole.findAll({
+          where: { dispName: { [Op.in]: roleNames } },
+          attributes: ["id"],
+          raw: true
+        })
+      : [];
+
+  const userRoleIds = rolesWithIds.map((role: any) => parseInt(String(role.id)));
+
   // Fetch sidebars based on role-based access (from tbl_xref_role_sidebar)
-  const roleSidebars = await RoleSidebar.findAll({
-    where: {
-      roleId: userRoleIds.length > 0 ? { [Op.in]: userRoleIds } : null,
-      status: 1
-    },
-    attributes: ["sidebarId"],
-    raw: true
-  });
+  const roleSidebars =
+    userRoleIds.length > 0
+      ? await RoleSidebar.findAll({
+          where: {
+            roleId: { [Op.in]: userRoleIds },
+            status: 1
+          },
+          attributes: ["sidebarId"],
+          raw: true
+        })
+      : [];
 
   // Fetch sidebars based on permission group access (from tbl_xref_permission_group_sidebar)
-  const pgSidebars = await PermissionGroupSidebar.findAll({
-    where: {
-      permissionGroupId: userRoleIds.length > 0 ? { [Op.in]: userRoleIds } : null,
-      status: 1
-    },
-    attributes: ["sidebarId"],
-    raw: true
-  });
+  // Note: We don't use userRoleIds here as permission group IDs are different from role IDs
+  // This would only work if we had user's permission group assignments, which we don't currently use
+  const pgSidebars: any[] = [];
 
   const roleBasedSidebarIds = new Set(roleSidebars.map((rs) => rs.sidebarId));
   const pgBasedSidebarIds = new Set(pgSidebars.map((ps) => ps.sidebarId));
 
-  // Combine all sidebar IDs from junction tables
-  const restrictedSidebarIds = new Set([...roleBasedSidebarIds, ...pgBasedSidebarIds]);
+  // Get ALL sidebars that have roles OR permission groups assigned (restricted sidebars)
+  const allRestrictedRoleSidebars = await RoleSidebar.findAll({
+    attributes: ["sidebarId"],
+    raw: true
+  });
+  const allRestrictedPGSidebars = await PermissionGroupSidebar.findAll({
+    attributes: ["sidebarId"],
+    raw: true
+  });
+
+  const allRestrictedSidebarIds = new Set([
+    ...allRestrictedRoleSidebars.map((rs) => rs.sidebarId),
+    ...allRestrictedPGSidebars.map((ps) => ps.sidebarId)
+  ]);
+
+  // Sidebars with user access
+  const userAccessSidebarIds = new Set([...roleBasedSidebarIds, ...pgBasedSidebarIds]);
 
   // Fetch all sidebars
   const allSidebars = await Sidebar.findAll({
@@ -605,13 +631,13 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   // Determine which sidebars to show
   const serializedSidebars = allSidebars
     .filter((sidebar) => {
-      // If sidebar is in junction tables (restricted), check access
-      if (restrictedSidebarIds.has(sidebar.id)) {
-        // User must have matching role or permission group
-        return roleBasedSidebarIds.has(sidebar.id) || pgBasedSidebarIds.has(sidebar.id);
+      // If sidebar is NOT in any junction table (no roles, no permission groups), it's open to all
+      if (!allRestrictedSidebarIds.has(sidebar.id)) {
+        return true;
       }
-      // If sidebar is not restricted (public), show to authenticated users
-      return true;
+
+      // If sidebar IS restricted, user must have matching role or permission group
+      return userAccessSidebarIds.has(sidebar.id);
     })
     .map((sidebar) => ({
       id: sidebar.id,
@@ -628,142 +654,5 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
     new Map(serializedSidebars.map((item) => [item.id, item])).values()
   );
 
-  // Add open sidebars that don't require permissions
-  const openSidebars = [
-    {
-      id: 901,
-      dispName: "Requests",
-      screenName: "REQUESTS_SCREEN",
-      icon: "copy",
-      status: 1,
-      label: "Requests",
-      description: "User requests and submissions"
-    },
-    {
-      id: 902,
-      dispName: "Profile",
-      screenName: "PROFILE_SCREEN",
-      icon: "id-card",
-      status: 1,
-      label: "Profile",
-      description: "User profile and settings"
-    }
-  ];
-
-  uniqueSidebars.unshift(...openSidebars);
-
-  // Add dashboard for non-public users
-  if (accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
-    const dashboardSidebar = {
-      id: 950,
-      dispName: "Dashboard",
-      screenName: "DASHBOARD_SCREEN",
-      icon: "tachometer-alt",
-      status: 1,
-      label: "Dashboard",
-      description: "Administrative dashboard"
-    };
-    uniqueSidebars.unshift(dashboardSidebar);
-  }
-
   return sendSuccess(res, { sidebars: uniqueSidebars }, "Sidebar data retrieved successfully");
-});
-
-export const getSidebarOld = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
-
-  const accessProfile = await getUserAccessProfile(userId);
-  const permissionSet = new Set(accessProfile.permissions ?? []);
-
-  const groups = await MetaPermissionGroup.findAll({
-    include: [{ association: "permissions" }],
-    order: [["label", "ASC"]]
-  });
-
-  const groupWildcards = new Set(
-    Array.from(permissionSet).filter(
-      (permission) => typeof permission === "string" && permission.endsWith(":*")
-    )
-  );
-
-  const serializedGroups = permissionSet.has("*")
-    ? groups.map((group) => {
-        const payload = group.toJSON() as {
-          id: number;
-          label: string;
-          description?: string;
-          sidebar?: string;
-          status: number;
-          permissions?: Array<{ dispName: string }>;
-        };
-        // Remove permissions from the response
-        delete payload.permissions;
-        return payload;
-      })
-    : groups
-        .map((group) => {
-          const payload = group.toJSON() as {
-            id: number;
-            label: string;
-            description?: string;
-            sidebar?: string;
-            status: number;
-            action?: string;
-            permissions?: Array<{ dispName: string }>;
-          };
-          const hasGroupWildcard = payload.action ? groupWildcards.has(payload.action) : false;
-          const availablePermissions = Array.isArray(payload.permissions)
-            ? payload.permissions
-            : [];
-          const visiblePermissions = hasGroupWildcard
-            ? availablePermissions
-            : availablePermissions.filter((permission) => permissionSet.has(permission.dispName));
-
-          if (visiblePermissions.length === 0) {
-            return null;
-          }
-
-          // Remove permissions from the response
-          delete payload.permissions;
-          return payload;
-        })
-        .filter((groupPayload) => groupPayload !== null);
-
-  const publicSidebars = [
-    {
-      id: 901,
-      label: "Requets",
-      description: "User requests and submissions",
-      sidebar: "REQUESTS_SCREEN",
-      status: 1,
-      icon: "copy"
-    },
-    {
-      id: 902,
-      label: "Profile",
-      description: "User profile and settings",
-      sidebar: "PROFILE_SCREEN",
-      status: 1,
-      icon: "id-card"
-    }
-  ];
-
-  serializedGroups.unshift(...publicSidebars);
-
-  const dahboardSidebar = [
-    {
-      id: 950,
-      label: "Dashboard",
-      description: "Administrative dashboard",
-      sidebar: "DASHBOARD_SCREEN",
-      status: 1,
-      icon: "tachometer-alt"
-    }
-  ];
-
-  if (accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
-    serializedGroups.unshift(...dahboardSidebar);
-  }
-
-  return sendSuccess(res, { groups: serializedGroups }, "Sidebar data retrieved successfully");
 });

@@ -348,10 +348,10 @@
         const id = document.getElementById("sidebarForm").dataset.id;
 
         const selectedRoles = Array.from(document.querySelectorAll(".roleCheckbox:checked")).map(
-          (cb) => cb.value
+          (cb) => parseInt(cb.value)
         );
-        const selectedPGs = Array.from(document.querySelectorAll(".pgCheckbox:checked")).map(
-          (cb) => cb.value
+        const selectedPGs = Array.from(document.querySelectorAll(".pgCheckbox:checked")).map((cb) =>
+          parseInt(cb.value)
         );
 
         if (!dispName || !screenName) {
@@ -371,26 +371,66 @@
             const newItem = await res.json();
             const sidebarId = id || newItem.data.id;
 
-            for (const roleId of selectedRoles) {
-              try {
-                const roleRes = await fetch(`/api/sidebar-view/${sidebarId}/roles/${roleId}`, {
-                  method: "POST"
-                });
-                if (!roleRes.ok) console.error("Role assignment failed:", roleRes.status);
-              } catch (err) {
-                console.error("Role assignment error:", err);
+            // Get current roles and permission groups
+            const currentItem = await fetch(`${API_URL}/${sidebarId}`).then((r) => r.json());
+            const currentRoleIds = currentItem.data.roles.map((r) => r.id);
+            const currentPGIds = currentItem.data.permissionGroups_assigned.map((p) => p.id);
+
+            // Remove unchecked roles
+            for (const roleId of currentRoleIds) {
+              if (!selectedRoles.includes(roleId)) {
+                try {
+                  const delRes = await fetch(`/api/sidebar-view/${sidebarId}/roles/${roleId}`, {
+                    method: "DELETE"
+                  });
+                  if (!delRes.ok) console.error("Role deletion failed:", delRes.status);
+                } catch (err) {
+                  console.error("Role deletion error:", err);
+                }
               }
             }
 
+            // Add newly checked roles
+            for (const roleId of selectedRoles) {
+              if (!currentRoleIds.includes(roleId)) {
+                try {
+                  const roleRes = await fetch(`/api/sidebar-view/${sidebarId}/roles/${roleId}`, {
+                    method: "POST"
+                  });
+                  if (!roleRes.ok) console.error("Role assignment failed:", roleRes.status);
+                } catch (err) {
+                  console.error("Role assignment error:", err);
+                }
+              }
+            }
+
+            // Remove unchecked permission groups
+            for (const pgId of currentPGIds) {
+              if (!selectedPGs.includes(pgId)) {
+                try {
+                  const delRes = await fetch(
+                    `/api/sidebar-view/${sidebarId}/permission-groups/${pgId}`,
+                    { method: "DELETE" }
+                  );
+                  if (!delRes.ok) console.error("Permission group deletion failed:", delRes.status);
+                } catch (err) {
+                  console.error("Permission group deletion error:", err);
+                }
+              }
+            }
+
+            // Add newly checked permission groups
             for (const pgId of selectedPGs) {
-              try {
-                const pgRes = await fetch(
-                  `/api/sidebar-view/${sidebarId}/permission-groups/${pgId}`,
-                  { method: "POST" }
-                );
-                if (!pgRes.ok) console.error("Permission group assignment failed:", pgRes.status);
-              } catch (err) {
-                console.error("Permission group assignment error:", err);
+              if (!currentPGIds.includes(pgId)) {
+                try {
+                  const pgRes = await fetch(
+                    `/api/sidebar-view/${sidebarId}/permission-groups/${pgId}`,
+                    { method: "POST" }
+                  );
+                  if (!pgRes.ok) console.error("Permission group assignment failed:", pgRes.status);
+                } catch (err) {
+                  console.error("Permission group assignment error:", err);
+                }
               }
             }
 
