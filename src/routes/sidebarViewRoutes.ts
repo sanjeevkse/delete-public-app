@@ -137,10 +137,111 @@ router.delete(
     if (!sidebar) {
       return sendNotFound(res, "Sidebar entry not found", "sidebar");
     }
-
     sidebar.status = 0;
     sidebar.updatedBy = 1;
     await sidebar.save();
+
+    return sendNoContent(res);
+  })
+);
+
+// POST assign role to sidebar (role-based access)
+router.post(
+  "/:sidebarId/roles/:roleId",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sidebarId, roleId } = req.params;
+
+    const sidebar = await Sidebar.findByPk(sidebarId);
+    if (!sidebar) {
+      return sendNotFound(res, "Sidebar not found", "sidebar");
+    }
+
+    const { RoleSidebar } = await import("../models");
+    const existing = await RoleSidebar.findOne({
+      where: { sidebarId: parseInt(sidebarId), roleId: BigInt(roleId) }
+    });
+
+    if (existing) {
+      return sendSuccess(res, existing, "Role already assigned to sidebar");
+    }
+
+    const roleSidebar = await RoleSidebar.create({
+      sidebarId: parseInt(sidebarId),
+      roleId: BigInt(roleId),
+      status: 1,
+      createdBy: 1,
+      updatedBy: 1
+    });
+
+    return sendCreated(res, roleSidebar, "Role assigned to sidebar");
+  })
+);
+
+// DELETE remove role from sidebar
+router.delete(
+  "/:sidebarId/roles/:roleId",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sidebarId, roleId } = req.params;
+
+    const { RoleSidebar } = await import("../models");
+    const rowsDeleted = await RoleSidebar.destroy({
+      where: { sidebarId: parseInt(sidebarId), roleId: BigInt(roleId) }
+    });
+
+    if (rowsDeleted === 0) {
+      return sendNotFound(res, "Role-sidebar mapping not found", "roleMapping");
+    }
+
+    return sendNoContent(res);
+  })
+);
+
+// POST assign permission group to sidebar (permission-based access)
+router.post(
+  "/:sidebarId/permission-groups/:groupId",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sidebarId, groupId } = req.params;
+
+    const sidebar = await Sidebar.findByPk(sidebarId);
+    if (!sidebar) {
+      return sendNotFound(res, "Sidebar not found", "sidebar");
+    }
+
+    const { PermissionGroupSidebar } = await import("../models");
+    const existing = await PermissionGroupSidebar.findOne({
+      where: { sidebarId: parseInt(sidebarId), permissionGroupId: BigInt(groupId) }
+    });
+
+    if (existing) {
+      return sendSuccess(res, existing, "Permission group already assigned to sidebar");
+    }
+
+    const pgSidebar = await PermissionGroupSidebar.create({
+      sidebarId: parseInt(sidebarId),
+      permissionGroupId: BigInt(groupId),
+      status: 1,
+      createdBy: 1,
+      updatedBy: 1
+    });
+
+    return sendCreated(res, pgSidebar, "Permission group assigned to sidebar");
+  })
+);
+
+// DELETE remove permission group from sidebar
+router.delete(
+  "/:sidebarId/permission-groups/:groupId",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { sidebarId, groupId } = req.params;
+
+    const { PermissionGroupSidebar } = await import("../models");
+    const rowsDeleted = await PermissionGroupSidebar.destroy({
+      where: { sidebarId: parseInt(sidebarId), permissionGroupId: BigInt(groupId) }
+    });
+
+    if (rowsDeleted === 0) {
+      return sendNotFound(res, "Permission-sidebar mapping not found", "groupMapping");
+    }
 
     return sendNoContent(res);
   })

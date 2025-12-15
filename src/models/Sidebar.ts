@@ -9,6 +9,9 @@ import {
 
 import sequelize from "../config/database";
 import type MetaPermissionGroup from "./MetaPermissionGroup";
+import type MetaUserRole from "./MetaUserRole";
+import type RoleSidebar from "./RoleSidebar";
+import type PermissionGroupSidebar from "./PermissionGroupSidebar";
 
 class Sidebar extends Model<InferAttributes<Sidebar>, InferCreationAttributes<Sidebar>> {
   declare id: CreationOptional<number>;
@@ -21,6 +24,9 @@ class Sidebar extends Model<InferAttributes<Sidebar>, InferCreationAttributes<Si
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare permissionGroups?: NonAttribute<MetaPermissionGroup[]>;
+  declare roles?: NonAttribute<MetaUserRole[]>;
+  declare roleSidebars?: NonAttribute<RoleSidebar[]>;
+  declare permissionGroupSidebars?: NonAttribute<PermissionGroupSidebar[]>;
 }
 
 Sidebar.init(

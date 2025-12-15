@@ -175,3 +175,123 @@ export const deleteSidebarItem = asyncHandler(async (req: AuthenticatedRequest, 
 
   return sendNoContent(res);
 });
+
+export const assignRoleToSidebar = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { sidebarId, roleId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new ApiError("Authentication required", 401);
+    }
+
+    const sidebar = await Sidebar.findByPk(sidebarId);
+    if (!sidebar) {
+      return sendNotFound(res, "Sidebar not found", "sidebar");
+    }
+
+    const { RoleSidebar } = await import("../models");
+    const existing = await RoleSidebar.findOne({
+      where: { sidebarId: parseInt(sidebarId as string), roleId: BigInt(roleId as string) }
+    });
+
+    if (existing) {
+      return sendSuccess(res, existing, "Role already assigned to sidebar");
+    }
+
+    const roleSidebar = await RoleSidebar.create({
+      sidebarId: parseInt(sidebarId as string),
+      roleId: BigInt(roleId as string),
+      status: 1,
+      createdBy: BigInt(userId),
+      updatedBy: BigInt(userId)
+    });
+
+    return sendCreated(res, roleSidebar, "Role assigned to sidebar successfully");
+  }
+);
+
+export const removeRoleFromSidebar = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { sidebarId, roleId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new ApiError("Authentication required", 401);
+    }
+
+    const { RoleSidebar } = await import("../models");
+    const rowsDeleted = await RoleSidebar.destroy({
+      where: { sidebarId: parseInt(sidebarId as string), roleId: BigInt(roleId as string) }
+    });
+
+    if (rowsDeleted === 0) {
+      return sendNotFound(res, "Role-sidebar mapping not found", "roleMapping");
+    }
+
+    return sendNoContent(res);
+  }
+);
+
+export const assignPermissionGroupToSidebar = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { sidebarId, groupId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new ApiError("Authentication required", 401);
+    }
+
+    const sidebar = await Sidebar.findByPk(sidebarId);
+    if (!sidebar) {
+      return sendNotFound(res, "Sidebar not found", "sidebar");
+    }
+
+    const { PermissionGroupSidebar } = await import("../models");
+    const existing = await PermissionGroupSidebar.findOne({
+      where: {
+        sidebarId: parseInt(sidebarId as string),
+        permissionGroupId: BigInt(groupId as string)
+      }
+    });
+
+    if (existing) {
+      return sendSuccess(res, existing, "Permission group already assigned to sidebar");
+    }
+
+    const pgSidebar = await PermissionGroupSidebar.create({
+      sidebarId: parseInt(sidebarId as string),
+      permissionGroupId: BigInt(groupId as string),
+      status: 1,
+      createdBy: BigInt(userId),
+      updatedBy: BigInt(userId)
+    });
+
+    return sendCreated(res, pgSidebar, "Permission group assigned to sidebar successfully");
+  }
+);
+
+export const removePermissionGroupFromSidebar = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { sidebarId, groupId } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw new ApiError("Authentication required", 401);
+    }
+
+    const { PermissionGroupSidebar } = await import("../models");
+    const rowsDeleted = await PermissionGroupSidebar.destroy({
+      where: {
+        sidebarId: parseInt(sidebarId as string),
+        permissionGroupId: BigInt(groupId as string)
+      }
+    });
+
+    if (rowsDeleted === 0) {
+      return sendNotFound(res, "Permission-sidebar mapping not found", "groupMapping");
+    }
+
+    return sendNoContent(res);
+  }
+);

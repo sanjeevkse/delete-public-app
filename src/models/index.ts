@@ -65,6 +65,8 @@ import FormEventAccessibility from "./FormEventAccessibility";
 import DeviceToken from "./DeviceToken";
 import NotificationLog from "./NotificationLog";
 import Sidebar from "./Sidebar";
+import RoleSidebar from "./RoleSidebar";
+import PermissionGroupSidebar from "./PermissionGroupSidebar";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -168,6 +170,34 @@ const establishAssociations = (): void => {
   Sidebar.hasMany(MetaPermissionGroup, {
     foreignKey: "sidebarId",
     as: "permissionGroups"
+  });
+
+  // Sidebar - Role associations (many-to-many through RoleSidebar)
+  Sidebar.belongsToMany(MetaUserRole, {
+    through: RoleSidebar,
+    foreignKey: "sidebarId",
+    otherKey: "roleId",
+    as: "roles"
+  });
+  MetaUserRole.belongsToMany(Sidebar, {
+    through: RoleSidebar,
+    foreignKey: "roleId",
+    otherKey: "sidebarId",
+    as: "sidebars"
+  });
+
+  // Sidebar - PermissionGroup associations (many-to-many through PermissionGroupSidebar)
+  Sidebar.belongsToMany(MetaPermissionGroup, {
+    through: PermissionGroupSidebar,
+    foreignKey: "sidebarId",
+    otherKey: "permissionGroupId",
+    as: "permissionGroups_assigned"
+  });
+  MetaPermissionGroup.belongsToMany(Sidebar, {
+    through: PermissionGroupSidebar,
+    foreignKey: "permissionGroupId",
+    otherKey: "sidebarId",
+    as: "sidebars_assigned"
   });
 
   Scheme.hasMany(SchemeStep, {
@@ -622,6 +652,9 @@ export {
   PostReaction,
   RolePermission,
   Scheme,
+  Sidebar,
+  RoleSidebar,
+  PermissionGroupSidebar,
   User,
   UserAccess,
   UserOtp,

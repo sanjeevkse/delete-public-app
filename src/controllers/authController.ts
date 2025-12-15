@@ -13,6 +13,8 @@ import Sidebar from "../models/Sidebar";
 import User from "../models/User";
 import UserOtp from "../models/UserOtp";
 import UserProfile from "../models/UserProfile";
+import RoleSidebar from "../models/RoleSidebar";
+import PermissionGroupSidebar from "../models/PermissionGroupSidebar";
 import {
   getRoleByName,
   getUserAccessProfile,
@@ -564,84 +566,54 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const { id: userId } = requireAuthenticatedUser(req);
 
   const accessProfile = await getUserAccessProfile(userId);
+  const userRoleIds = accessProfile.roles.map((roleName) => roleName);
   const permissionSet = new Set(accessProfile.permissions ?? []);
 
-  // Fetch sidebars through the permission chain:
-  // User -> Roles -> Permissions -> PermissionGroups -> Sidebars
-  const groups = await MetaPermissionGroup.findAll({
-    include: [
-      {
-        association: "permissions",
-        include: [{ association: "roles" }]
-      },
-      {
-        association: "sidebar",
-        attributes: ["id", "dispName", "screenName", "icon", "status"]
-      }
-    ],
-    where: { status: 1 },
-    order: [["label", "ASC"]]
+  // Fetch sidebars based on role-based access (from tbl_xref_role_sidebar)
+  const roleSidebars = await RoleSidebar.findAll({
+    where: {
+      roleId: userRoleIds.length > 0 ? { [Op.in]: userRoleIds } : null,
+      status: 1
+    },
+    attributes: ["sidebarId"],
+    raw: true
   });
 
-  const serializedSidebars =
-    permissionSet.has("*") || true
-      ? // User has wildcard permission - show all sidebars
-        groups
-          .filter((group) => group.sidebar)
-          .map((group) => {
-            const payload = group.toJSON() as any;
-            return {
-              id: payload.sidebar.id,
-              dispName: payload.sidebar.dispName,
-              screenName: payload.sidebar.screenName,
-              icon: payload.sidebar.icon,
-              status: payload.sidebar.status,
-              label: payload.label,
-              description: payload.description
-            };
-          })
-      : // Filter sidebars based on user's permissions
-        groups
-          .filter((group) => {
-            if (!group.sidebar || !group.permissions) return false;
+  // Fetch sidebars based on permission group access (from tbl_xref_permission_group_sidebar)
+  const pgSidebars = await PermissionGroupSidebar.findAll({
+    where: {
+      permissionGroupId: userRoleIds.length > 0 ? { [Op.in]: userRoleIds } : null,
+      status: 1
+    },
+    attributes: ["sidebarId"],
+    raw: true
+  });
 
-            // Check if user has any permission in this group
-            return group.permissions.some((permission) => permissionSet.has(permission.dispName));
-          })
-          .map((group) => {
-            const payload = group.toJSON() as any;
-            return {
-              id: payload.sidebar.id,
-              dispName: payload.sidebar.dispName,
-              screenName: payload.sidebar.screenName,
-              icon: payload.sidebar.icon,
-              status: payload.sidebar.status,
-              label: payload.label,
-              description: payload.description
-            };
-          });
+  const roleBasedSidebarIds = new Set(roleSidebars.map((rs) => rs.sidebarId));
+  const pgBasedSidebarIds = new Set(pgSidebars.map((ps) => ps.sidebarId));
 
-  // Remove duplicates (same sidebar might be linked through multiple permission groups)
-  const uniqueSidebars = Array.from(
-    new Map(serializedSidebars.map((item) => [item.id, item])).values()
-  );
+  // Combine all sidebar IDs from junction tables
+  const restrictedSidebarIds = new Set([...roleBasedSidebarIds, ...pgBasedSidebarIds]);
 
-  // Also fetch sidebars without permission groups (orphaned sidebars)
-  // These will show to all authenticated users
-  if (permissionSet.has("*") || accessProfile.roles.some((role) => role !== PUBLIC_ROLE_NAME)) {
-    const sidebarIds = new Set(uniqueSidebars.map((s) => s.id));
-    const orphanedSidebars = await Sidebar.findAll({
-      where: {
-        status: 1,
-        id: {
-          [Op.notIn]: Array.from(sidebarIds)
-        }
-      },
-      attributes: ["id", "dispName", "screenName", "icon", "status"],
-      order: [["dispName", "ASC"]]
-    });
+  // Fetch all sidebars
+  const allSidebars = await Sidebar.findAll({
+    where: { status: 1 },
+    attributes: ["id", "dispName", "screenName", "icon", "status"],
+    order: [["dispName", "ASC"]]
+  });
 
-    const orphanedSerialized = orphanedSidebars.map((sidebar) => ({
+  // Determine which sidebars to show
+  const serializedSidebars = allSidebars
+    .filter((sidebar) => {
+      // If sidebar is in junction tables (restricted), check access
+      if (restrictedSidebarIds.has(sidebar.id)) {
+        // User must have matching role or permission group
+        return roleBasedSidebarIds.has(sidebar.id) || pgBasedSidebarIds.has(sidebar.id);
+      }
+      // If sidebar is not restricted (public), show to authenticated users
+      return true;
+    })
+    .map((sidebar) => ({
       id: sidebar.id,
       dispName: sidebar.dispName,
       screenName: sidebar.screenName,
@@ -651,8 +623,10 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
       description: ""
     }));
 
-    uniqueSidebars.push(...orphanedSerialized);
-  }
+  // Remove duplicates
+  const uniqueSidebars = Array.from(
+    new Map(serializedSidebars.map((item) => [item.id, item])).values()
+  );
 
   // Add open sidebars that don't require permissions
   const openSidebars = [

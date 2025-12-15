@@ -4,7 +4,6 @@ import { Op } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaPermissionGroup from "../models/MetaPermissionGroup";
 import MetaPermission from "../models/MetaPermission";
-import Sidebar from "../models/Sidebar";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -110,7 +109,7 @@ export const createPermissionGroup = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     assertNoRestrictedFields(req.body);
 
-    const { label, description, sidebarId } = req.body;
+    const { label, description } = req.body;
     const userId = req.user!.id;
 
     // Validate required fields
@@ -118,22 +117,9 @@ export const createPermissionGroup = asyncHandler(
       throw new ApiError("Label is required", 400);
     }
 
-    // Validate sidebarId if provided
-    if (sidebarId !== undefined && sidebarId !== null) {
-      const parsedSidebarId = Number(sidebarId);
-      if (Number.isNaN(parsedSidebarId)) {
-        throw new ApiError("sidebarId must be a valid number", 400);
-      }
-      const sidebar = await Sidebar.findByPk(parsedSidebarId);
-      if (!sidebar) {
-        throw new ApiError("Invalid sidebarId", 404);
-      }
-    }
-
     const permissionGroup = await MetaPermissionGroup.create({
       label,
       description,
-      sidebarId: sidebarId || null,
       status: 1,
       createdBy: userId,
       updatedBy: userId
@@ -152,7 +138,7 @@ export const updatePermissionGroup = asyncHandler(
     const { id } = req.params;
     assertNoRestrictedFields(req.body);
 
-    const { label, description, sidebarId } = req.body;
+    const { label, description } = req.body;
     const userId = req.user!.id;
 
     const permissionGroup = await MetaPermissionGroup.findByPk(id);
@@ -161,22 +147,9 @@ export const updatePermissionGroup = asyncHandler(
       throw new ApiError("Permission group not found", 404);
     }
 
-    // Validate sidebarId if being updated
-    if (sidebarId !== undefined && sidebarId !== null) {
-      const parsedSidebarId = Number(sidebarId);
-      if (Number.isNaN(parsedSidebarId)) {
-        throw new ApiError("sidebarId must be a valid number", 400);
-      }
-      const sidebar = await Sidebar.findByPk(parsedSidebarId);
-      if (!sidebar) {
-        throw new ApiError("Invalid sidebarId", 404);
-      }
-    }
-
     // Update fields
     if (label !== undefined) permissionGroup.label = label;
     if (description !== undefined) permissionGroup.description = description;
-    if (sidebarId !== undefined) permissionGroup.sidebarId = sidebarId || null;
     permissionGroup.updatedBy = userId;
 
     await permissionGroup.save();
