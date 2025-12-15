@@ -55,7 +55,11 @@ export const listSidebarItems = asyncHandler(async (req: Request, res: Response)
     where,
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [["createdAt", "DESC"]],
+    include: [
+      { association: "roles", attributes: ["id", "dispName"] },
+      { association: "permissionGroupSidebars", attributes: ["permissionGroupId"] }
+    ]
   });
 
   const pagination = calculatePagination(count, page, limit);

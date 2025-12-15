@@ -1,6 +1,8 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 import Sidebar from "../models/Sidebar";
+import MetaUserRole from "../models/MetaUserRole";
+import MetaPermissionGroup from "../models/MetaPermissionGroup";
 import { Op } from "sequelize";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -16,6 +18,32 @@ import { ApiError } from "../middlewares/errorHandler";
 
 const router = Router();
 
+// GET all roles for sidebar view
+router.get(
+  "/lookup/roles",
+  asyncHandler(async (req: Request, res: Response) => {
+    const roles = await MetaUserRole.findAll({
+      where: { status: 1 },
+      attributes: ["id", "dispName"],
+      order: [["dispName", "ASC"]]
+    });
+    return sendSuccess(res, roles, "Roles retrieved");
+  })
+);
+
+// GET all permission groups for sidebar view
+router.get(
+  "/lookup/permission-groups",
+  asyncHandler(async (req: Request, res: Response) => {
+    const groups = await MetaPermissionGroup.findAll({
+      where: { status: 1 },
+      attributes: ["id", "label"],
+      order: [["label", "ASC"]]
+    });
+    return sendSuccess(res, groups, "Permission groups retrieved");
+  })
+);
+
 // GET all sidebar items for view
 router.get(
   "/",
@@ -28,7 +56,11 @@ router.get(
     const { rows, count } = await Sidebar.findAndCountAll({
       limit: limitNum,
       offset,
-      order: [["createdAt", "DESC"]]
+      order: [["createdAt", "DESC"]],
+      include: [
+        { association: "roles", attributes: ["id", "dispName"] },
+        { association: "permissionGroups_assigned", attributes: ["id", "label"] }
+      ]
     });
 
     const pagination = calculatePagination(count, pageNum, limitNum);
@@ -41,7 +73,12 @@ router.get(
   "/:id",
   asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const sidebar = await Sidebar.findByPk(id);
+    const sidebar = await Sidebar.findByPk(id, {
+      include: [
+        { association: "roles", attributes: ["id", "dispName"] },
+        { association: "permissionGroups_assigned", attributes: ["id", "label"] }
+      ]
+    });
 
     if (!sidebar) {
       return sendNotFound(res, "Sidebar entry not found", "sidebar");
