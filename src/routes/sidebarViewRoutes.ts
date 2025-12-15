@@ -56,7 +56,10 @@ router.get(
     const { rows, count } = await Sidebar.findAndCountAll({
       limit: limitNum,
       offset,
-      order: [["createdAt", "DESC"]],
+      order: [
+        ["sequence", "ASC"],
+        ["createdAt", "DESC"]
+      ],
       include: [
         { association: "roles", attributes: ["id", "dispName"] },
         { association: "permissionGroups_assigned", attributes: ["id", "label"] }
@@ -281,6 +284,37 @@ router.delete(
     }
 
     return sendNoContent(res);
+  })
+);
+
+// POST update sidebar sequence for drag-drop reordering
+router.post(
+  "/update-sequence",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { items } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new ApiError("items array is required", 400);
+    }
+
+    // Validate all items have required fields
+    for (const item of items) {
+      if (!item.id || typeof item.sequence !== "number") {
+        throw new ApiError("Each item must have id and sequence", 400);
+      }
+    }
+
+    // Update all sidebars with their new sequence
+    for (const item of items) {
+      const sidebar = await Sidebar.findByPk(item.id);
+      if (sidebar) {
+        sidebar.sequence = item.sequence;
+        sidebar.updatedBy = 1;
+        await sidebar.save();
+      }
+    }
+
+    return sendSuccess(res, { updated: items.length }, "Sidebar sequence updated successfully");
   })
 );
 

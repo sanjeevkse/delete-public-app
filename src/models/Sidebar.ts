@@ -19,6 +19,7 @@ class Sidebar extends Model<InferAttributes<Sidebar>, InferCreationAttributes<Si
   declare screenName: string;
   declare icon: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
+  declare sequence: CreationOptional<number>;
   declare createdBy: CreationOptional<number>;
   declare updatedBy: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
@@ -77,6 +78,11 @@ Sidebar.init(
       type: DataTypes.TINYINT,
       allowNull: false,
       defaultValue: 1
+    },
+    sequence: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
     }
   },
   {

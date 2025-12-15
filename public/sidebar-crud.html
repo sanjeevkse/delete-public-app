@@ -93,6 +93,13 @@
       tr.inactive {
         background: #ffcccc;
       }
+      tr.dragging {
+        opacity: 0.5;
+        background: #e3f2fd !important;
+      }
+      tr.drag-over {
+        border-top: 2px solid #2196f3;
+      }
       button {
         padding: 4px 8px;
         margin: 3px 3px 3px 0;
@@ -165,6 +172,7 @@
         <table border="1">
           <thead>
             <tr>
+              <th>Seq</th>
               <th>ID</th>
               <th>Display Name</th>
               <th>Screen Name</th>
@@ -178,7 +186,7 @@
           </thead>
           <tbody id="tableBody">
             <tr>
-              <td colspan="9">Loading...</td>
+              <td colspan="10">Loading...</td>
             </tr>
           </tbody>
         </table>
@@ -262,14 +270,15 @@
           const tbody = document.getElementById("tableBody");
 
           if (!items.length) {
-            tbody.innerHTML = '<tr><td colspan="9">No items</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10">No items</td></tr>';
             return;
           }
 
           tbody.innerHTML = items
             .map(
-              (item) => `
-                    <tr class="${item.status ? "" : "inactive"}">
+              (item, index) => `
+                    <tr class="${item.status ? "" : "inactive"}" draggable="true" data-id="${item.id}" data-seq="${index + 1}">
+                        <td style="cursor: grab; text-align: center; user-select: none;">${index + 1}</td>
                         <td>${item.id}</td>
                         <td>${item.dispName}</td>
                         <td>${item.screenName}</td>
@@ -285,10 +294,112 @@
                 `
             )
             .join("");
+
+          // Add drag and drop listeners
+          initializeDragAndDrop();
         } catch (err) {
           console.error(err);
           const tbody = document.getElementById("tableBody");
-          tbody.innerHTML = `<tr><td colspan="9">Error loading: ${err.message}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="10">Error loading: ${err.message}</td></tr>`;
+        }
+      }
+
+      function initializeDragAndDrop() {
+        const rows = document.querySelectorAll("#tableBody tr");
+
+        rows.forEach((row) => {
+          row.addEventListener("dragstart", handleDragStart);
+          row.addEventListener("dragover", handleDragOver);
+          row.addEventListener("drop", handleDrop);
+          row.addEventListener("dragleave", handleDragLeave);
+          row.addEventListener("dragend", handleDragEnd);
+        });
+      }
+
+      let draggedRow = null;
+
+      function handleDragStart(e) {
+        draggedRow = this;
+        this.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      }
+
+      function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        if (this !== draggedRow) {
+          this.classList.add("drag-over");
+        }
+      }
+
+      function handleDragLeave(e) {
+        this.classList.remove("drag-over");
+      }
+
+      function handleDragEnd(e) {
+        this.classList.remove("dragging");
+        document.querySelectorAll("#tableBody tr").forEach((row) => {
+          row.classList.remove("drag-over");
+        });
+      }
+
+      async function handleDrop(e) {
+        e.preventDefault();
+        if (this === draggedRow) return;
+
+        const tbody = document.getElementById("tableBody");
+        const allRows = Array.from(tbody.querySelectorAll("tr"));
+        const draggedIndex = allRows.indexOf(draggedRow);
+        const targetIndex = allRows.indexOf(this);
+
+        if (draggedIndex < targetIndex) {
+          this.parentNode.insertBefore(draggedRow, this.nextSibling);
+        } else {
+          this.parentNode.insertBefore(draggedRow, this);
+        }
+
+        // Update sequence numbers
+        updateSequenceNumbers();
+
+        // Save the new sequence to the database
+        await saveSequence();
+      }
+
+      function updateSequenceNumbers() {
+        const rows = document.querySelectorAll("#tableBody tr");
+        rows.forEach((row, index) => {
+          row.dataset.seq = index + 1;
+          row.querySelector("td:first-child").textContent = index + 1;
+        });
+      }
+
+      async function saveSequence() {
+        try {
+          const rows = document.querySelectorAll("#tableBody tr");
+          const sequence = Array.from(rows).map((row) => ({
+            id: parseInt(row.dataset.id),
+            sequence: parseInt(row.dataset.seq)
+          }));
+
+          const res = await fetch(`${API_URL}/update-sequence`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: sequence })
+          });
+
+          if (res.ok) {
+            showAlert("Sequence updated", "success");
+          } else {
+            const err = await res.json();
+            showAlert(err.message || "Error updating sequence", "error");
+            // Reload on error to restore original order
+            load();
+          }
+        } catch (err) {
+          console.error("Error saving sequence:", err);
+          showAlert("Error saving sequence", "error");
+          // Reload on error to restore original order
+          load();
         }
       }
 
