@@ -624,8 +624,8 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   // Fetch all sidebars
   const allSidebars = await Sidebar.findAll({
     where: { status: 1 },
-    attributes: ["id", "dispName", "screenName", "icon", "status"],
-    order: [["dispName", "ASC"]]
+    attributes: ["id", "dispName", "screenName", "icon", "status", "sequence"],
+    order: [["sequence", "ASC"]]
   });
 
   // Determine which sidebars to show
