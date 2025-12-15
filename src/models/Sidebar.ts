@@ -18,6 +18,7 @@ class Sidebar extends Model<InferAttributes<Sidebar>, InferCreationAttributes<Si
   declare dispName: string;
   declare screenName: string;
   declare icon: CreationOptional<string | null>;
+  declare color: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare sequence: CreationOptional<number>;
   declare createdBy: CreationOptional<number>;
@@ -50,6 +51,10 @@ Sidebar.init(
     },
     icon: {
       type: DataTypes.STRING(8),
+      allowNull: true
+    },
+    color: {
+      type: DataTypes.STRING(7),
       allowNull: true
     },
     createdBy: {

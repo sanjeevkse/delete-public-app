@@ -95,7 +95,7 @@ router.get(
 router.post(
   "/",
   asyncHandler(async (req: Request, res: Response) => {
-    const { dispName, screenName, icon, status } = req.body;
+    const { dispName, screenName, icon, color, status } = req.body;
 
     if (!dispName || !screenName) {
       throw new ApiError("dispName and screenName are required", 400);
@@ -111,6 +111,7 @@ router.post(
       dispName,
       screenName: trimmedScreenName,
       icon: icon ?? null,
+      color: color ?? null,
       status: status ?? 1,
       createdBy: 1,
       updatedBy: 1
@@ -125,7 +126,7 @@ router.put(
   "/:id",
   asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { dispName, screenName, icon, status } = req.body;
+    const { dispName, screenName, icon, color, status } = req.body;
 
     const sidebar = await Sidebar.findByPk(id);
     if (!sidebar) {
@@ -154,6 +155,10 @@ router.put(
 
     if (icon !== undefined) {
       sidebar.icon = icon;
+    }
+
+    if (color !== undefined) {
+      sidebar.color = color;
     }
 
     if (status !== undefined) {

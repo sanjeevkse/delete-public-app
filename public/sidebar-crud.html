@@ -145,6 +145,10 @@
             <input type="text" id="icon" />
           </div>
           <div class="form-group">
+            <label>Color (Hex):</label>
+            <input type="text" id="color" placeholder="#FFFFFF" />
+          </div>
+          <div class="form-group">
             <label>Status:</label>
             <select id="status">
               <option value="1">Active</option>
@@ -177,6 +181,7 @@
               <th>Display Name</th>
               <th>Screen Name</th>
               <th>Icon</th>
+              <th>Color</th>
               <th>Status</th>
               <th>Created</th>
               <th>Roles</th>
@@ -283,6 +288,7 @@
                         <td>${item.dispName}</td>
                         <td>${item.screenName}</td>
                         <td>${item.icon || "-"}</td>
+                        <td><div style="width: 30px; height: 20px; background-color: ${item.color || "#ffffff"}; border: 1px solid #ccc;"></div></td>
                         <td>${item.status ? "Active" : "Inactive"}</td>
                         <td>${new Date(item.createdAt).toLocaleDateString()}</td>
                         <td>${item.roles && item.roles.length ? item.roles.map((r) => r.dispName).join(", ") : "-"}</td>
@@ -411,6 +417,7 @@
             document.getElementById("dispName").value = item.dispName;
             document.getElementById("screenName").value = item.screenName;
             document.getElementById("icon").value = item.icon || "";
+            document.getElementById("color").value = item.color || "#ffffff";
             document.getElementById("status").value = item.status;
 
             // Uncheck all first
@@ -455,6 +462,7 @@
         const dispName = document.getElementById("dispName").value.trim();
         const screenName = document.getElementById("screenName").value.trim();
         const icon = document.getElementById("icon").value.trim() || null;
+        const color = document.getElementById("color").value || null;
         const status = parseInt(document.getElementById("status").value);
         const id = document.getElementById("sidebarForm").dataset.id;
 
@@ -475,7 +483,7 @@
           const res = await fetch(url, {
             method: id ? "PUT" : "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dispName, screenName, icon, status })
+            body: JSON.stringify({ dispName, screenName, icon, color, status })
           });
 
           if (res.ok) {
