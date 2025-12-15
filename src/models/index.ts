@@ -163,15 +163,6 @@ const establishAssociations = (): void => {
     as: "permissions"
   });
 
-  MetaPermissionGroup.belongsTo(Sidebar, {
-    foreignKey: "sidebarId",
-    as: "sidebar"
-  });
-  Sidebar.hasMany(MetaPermissionGroup, {
-    foreignKey: "sidebarId",
-    as: "permissionGroups"
-  });
-
   // Sidebar - Role associations (many-to-many through RoleSidebar)
   Sidebar.belongsToMany(MetaUserRole, {
     through: RoleSidebar,
