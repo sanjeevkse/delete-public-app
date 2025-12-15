@@ -13,6 +13,7 @@ import communityRoutes from "./communityRoutes";
 import familyMemberRoutes from "./familyMemberRoutes";
 import businessRoutes from "./businessRoutes";
 import sidebarRoutes from "./sidebarRoutes";
+import sidebarViewRoutes from "./sidebarViewRoutes";
 import wardNumberRoutes from "./wardNumberRoutes";
 import mlaConstituencyRoutes from "./mlaConstituencyRoutes";
 import boothNumberRoutes from "./boothNumberRoutes";
@@ -63,6 +64,7 @@ router.use("/", metaTablesRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/roles", roleRoutes);
 router.use("/permissions", permissionRoutes);
+router.use("/sidebar-view", sidebarViewRoutes);
 router.use("/admin", adminRoutes);
 
 export default router;

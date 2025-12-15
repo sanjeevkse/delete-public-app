@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sidebar CRUD</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 10px;
+      }
+      h1,
+      h2 {
+        margin: 5px 0;
+        font-size: 18px;
+      }
+      form {
+        margin: 10px 0;
+      }
+      div {
+        margin: 5px 0;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 3px;
+      }
+      form div input,
+      form div select {
+        width: 100%;
+        max-width: 400px;
+      }
+      table {
+        margin-top: 10px;
+        width: 100%;
+        border-collapse: collapse;
+      }
+      tr:nth-child(even) {
+        background: #f9f9f9;
+      }
+      tr.inactive {
+        background: #ffcccc;
+      }
+      .msg {
+        padding: 5px;
+        margin: 5px 0;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sidebar CRUD</h1>
+
+    <div id="alertBox"></div>
+
+    <h2>Add/Edit</h2>
+    <form id="sidebarForm">
+      <div>
+        <label>Display Name:</label>
+      </div>
+      <div>
+        <input type="text" id="dispName" required />
+      </div>
+      <div>
+        <label>Screen Name:</label>
+      </div>
+      <div>
+        <input type="text" id="screenName" required readonly />
+      </div>
+      <div>
+        <label>Icon:</label>
+      </div>
+      <div>
+        <input type="text" id="icon" />
+      </div>
+      <div>
+        <label>Status:</label>
+      </div>
+      <div>
+        <select id="status">
+          <option value="1">Active</option>
+          <option value="0">Inactive</option>
+        </select>
+      </div>
+      <div id="editInfo" class="hidden">Editing ID: <span id="editingId"></span></div>
+      <div style="margin-top: 10px">
+        <button type="submit">Save</button>
+        <button type="button" id="cancelBtn" class="hidden">Cancel</button>
+      </div>
+    </form>
+
+    <h2>Items</h2>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Display Name</th>
+          <th>Screen Name</th>
+          <th>Icon</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr>
+          <td colspan="7">Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <script>
+      const API_URL = "/api/sidebar-view";
+
+      function showAlert(msg, type) {
+        const box = document.getElementById("alertBox");
+        box.textContent = msg;
+        box.className = `msg ${type}`;
+        setTimeout(() => (box.className = ""), 3000);
+      }
+
+      async function load() {
+        try {
+          const res = await fetch(API_URL);
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          console.log("Data:", data);
+          const items = data.data || data || [];
+          const tbody = document.getElementById("tableBody");
+
+          if (!items.length) {
+            tbody.innerHTML = '<tr><td colspan="7">No items</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = items
+            .map(
+              (item) => `
+                    <tr class="${item.status ? "" : "inactive"}">
+                        <td>${item.id}</td>
+                        <td>${item.dispName}</td>
+                        <td>${item.screenName}</td>
+                        <td>${item.icon || "-"}</td>
+                        <td>${item.status ? "Active" : "Inactive"}</td>
+                        <td>${new Date(item.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <button onclick="edit(${item.id}, '${item.dispName.replace(/'/g, "\\'")}', '${item.screenName.replace(/'/g, "\\'")}', '${(item.icon || "").replace(/'/g, "\\'")}', ${item.status})">Edit</button>
+                        </td>
+                    </tr>
+                `
+            )
+            .join("");
+        } catch (err) {
+          console.error(err);
+          const tbody = document.getElementById("tableBody");
+          tbody.innerHTML = `<tr><td colspan="7">Error loading: ${err.message}</td></tr>`;
+        }
+      }
+
+      function edit(id, dispName, screenName, icon, status) {
+        document.getElementById("dispName").value = dispName;
+        document.getElementById("screenName").value = screenName;
+        document.getElementById("icon").value = icon;
+        document.getElementById("status").value = status;
+        document.getElementById("editingId").textContent = id;
+        document.getElementById("editInfo").classList.remove("hidden");
+        document.getElementById("cancelBtn").classList.remove("hidden");
+        document.getElementById("sidebarForm").dataset.id = id;
+      }
+
+      function reset() {
+        document.getElementById("sidebarForm").reset();
+        document.getElementById("sidebarForm").dataset.id = "";
+        document.getElementById("editInfo").classList.add("hidden");
+        document.getElementById("cancelBtn").classList.add("hidden");
+      }
+
+      document.getElementById("cancelBtn").addEventListener("click", reset);
+
+      document.getElementById("sidebarForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const dispName = document.getElementById("dispName").value.trim();
+        const screenName = document.getElementById("screenName").value.trim();
+        const icon = document.getElementById("icon").value.trim() || null;
+        const status = parseInt(document.getElementById("status").value);
+        const id = document.getElementById("sidebarForm").dataset.id;
+
+        if (!dispName || !screenName) {
+          showAlert("Fill required fields", "error");
+          return;
+        }
+
+        try {
+          const url = id ? `${API_URL}/${id}` : API_URL;
+          const res = await fetch(url, {
+            method: id ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dispName, screenName, icon, status })
+          });
+
+          if (res.ok) {
+            showAlert(id ? "Updated" : "Created", "success");
+            reset();
+            load();
+          } else {
+            const err = await res.json();
+            showAlert(err.message || "Error", "error");
+          }
+        } catch (err) {
+          showAlert("Error: " + err.message, "error");
+        }
+      });
+
+      load();
+    </script>
+  </body>
+</html>

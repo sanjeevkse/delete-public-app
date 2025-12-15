@@ -42,6 +42,11 @@ app.get("/role-permission-manager", (_req, res) => {
   res.sendFile(path.join(__dirname, "../public/role-permission-manager.html"));
 });
 
+// Sidebar CRUD UI
+app.get("/sidebar-crud", (_req, res) => {
+  res.sendFile(path.join(__dirname, "../public/sidebar-crud.html"));
+});
+
 // Admin dashboard routes
 app.use("/admin", adminRoutes);
 
