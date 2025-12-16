@@ -343,7 +343,24 @@ const formInclude: IncludeOptions[] = [
     include: [
       {
         association: "accessibility",
-        required: false
+        required: false,
+        include: [
+          {
+            association: "wardNumber",
+            required: false,
+            attributes: ["id", "dispName"]
+          },
+          {
+            association: "boothNumber",
+            required: false,
+            attributes: ["id", "dispName"]
+          },
+          {
+            association: "userRole",
+            required: false,
+            attributes: ["id", "roleName"]
+          }
+        ]
       }
     ]
   }
