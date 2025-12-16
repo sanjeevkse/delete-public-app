@@ -25,6 +25,8 @@ import MetaBoothNumber from "../models/MetaBoothNumber";
 import Form from "../models/Form";
 import FormField from "../models/FormField";
 import FormFieldOption from "../models/FormFieldOption";
+import FormEvent from "../models/FormEvent";
+import FormEventAccessibility from "../models/FormEventAccessibility";
 import UserProfile from "../models/UserProfile";
 import sequelize from "../config/database";
 
@@ -332,6 +334,16 @@ const formInclude: IncludeOptions[] = [
         association: "inputFormat",
         required: false,
         attributes: ["id", "fieldType", "dispName", "targetValue"]
+      }
+    ]
+  },
+  {
+    association: "events",
+    required: false,
+    include: [
+      {
+        association: "accessibility",
+        required: false
       }
     ]
   }
