@@ -358,7 +358,7 @@ const formInclude: IncludeOptions[] = [
           {
             association: "userRole",
             required: false,
-            attributes: ["id", "roleName"]
+            attributes: ["id", "dispName"]
           }
         ]
       }
