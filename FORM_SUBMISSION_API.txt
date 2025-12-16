@@ -1,0 +1,201 @@
+# Form Submission API - Complete Setup
+
+## ✅ Status: Complete
+
+The form builder → form event creation → assignment flow is **fully verified and working**.
+
+Now the Form Submission API is implemented with proper models, controller, and routes.
+
+---
+
+## Database Tables
+
+### Created Tables:
+1. **tbl_form_submission** - Stores form submissions
+2. **tbl_form_field_value** - Stores individual field values
+
+**Location:** [FORM_SUBMISSION_TABLES.sql](FORM_SUBMISSION_TABLES.sql)
+
+---
+
+## API Endpoints
+
+### Base URL: `/form-submissions`
+
+#### 1. Submit a Form
+**Endpoint:** `POST /form-submissions/events/:formEventId/submit`
+- **Auth:** Required (Authenticated user)
+- **Body:**
+  ```json
+  {
+    "fieldValues": [
+      {
+        "formFieldId": 1,
+        "fieldKey": "first_name",
+        "value": "John"
+      },
+      {
+        "formFieldId": 2,
+        "fieldKey": "email",
+        "value": "john@example.com"
+      }
+    ]
+  }
+  ```
+- **Validations:**
+  - Form event must exist and be active
+  - Current date must be within start_date and end_date
+  - All required fields must be provided
+  - Field values must have formFieldId and fieldKey
+- **Response:** 201 Created with full submission details
+
+#### 2. Get Specific Submission
+**Endpoint:** `GET /form-submissions/:submissionId`
+- **Auth:** Required
+- **Authorization:** User can view their own submissions; Admins can view all
+- **Response:** 200 with submission details including field values
+
+#### 3. List Submissions for Form Event
+**Endpoint:** `GET /form-submissions/events/:formEventId/list`
+- **Auth:** Required
+- **Query Parameters:**
+  - `page` (default: 1)
+  - `limit` (default: 25, max: 100)
+  - `status` (1=submitted, 2=reviewed, 3=rejected)
+  - `sortBy` (submissionDate, createdAt, id - default: submissionDate)
+  - `sortOrder` (ASC/DESC - default: DESC)
+- **Response:** 200 with paginated results
+
+#### 4. Get Current User's Submissions
+**Endpoint:** `GET /form-submissions/my-submissions/list`
+- **Auth:** Required
+- **Query Parameters:** Same as above
+- **Response:** 200 with paginated results for authenticated user
+
+#### 5. Get Form Event Statistics
+**Endpoint:** `GET /form-submissions/events/:formEventId/stats`
+- **Auth:** Required
+- **Response:** 200 with stats
+  ```json
+  {
+    "formEventId": 1,
+    "totalSubmissions": 15,
+    "byStatus": {
+      "submitted": 10,
+      "reviewed": 4,
+      "rejected": 1
+    }
+  }
+  ```
+
+#### 6. Update Submission Status
+**Endpoint:** `PUT /form-submissions/:submissionId/status`
+- **Auth:** Required
+- **Body:**
+  ```json
+  {
+    "status": 2,
+    "notes": "Under review"
+  }
+  ```
+- **Status Values:** 1 (submitted), 2 (reviewed), 3 (rejected)
+- **Response:** 200 with updated submission
+
+#### 7. Delete Submission
+**Endpoint:** `DELETE /form-submissions/:submissionId`
+- **Auth:** Required (Admin recommended)
+- **Response:** 204 No Content
+- **Cascade:** Automatically deletes all field values
+
+---
+
+## Models
+
+### FormSubmission Model
+**Table:** `tbl_form_submission`
+- `id` - BIGINT UNSIGNED (Auto-increment)
+- `formEventId` - BIGINT UNSIGNED (Foreign key → form_event)
+- `userId` - BIGINT UNSIGNED (Foreign key → user)
+- `submissionDate` - DateTime (Default: NOW)
+- `ipAddress` - VARCHAR(45) - IP address of submitter
+- `userAgent` - VARCHAR(500) - Browser user agent
+- `status` - TINYINT (1=submitted, 2=reviewed, 3=rejected)
+- `notes` - LONGTEXT - Admin notes
+- `createdAt` - DateTime
+- `updatedAt` - DateTime
+
+**Indexes:**
+- form_event_id
+- user_id
+- form_event_id + user_id (composite)
+- status
+- submission_date
+
+**Relationships:**
+- belongsTo: FormEvent, User
+- hasMany: FormFieldValue
+
+### FormFieldValue Model
+**Table:** `tbl_form_field_value`
+- `id` - BIGINT UNSIGNED (Auto-increment)
+- `formSubmissionId` - BIGINT UNSIGNED (Foreign key → form_submission)
+- `formFieldId` - BIGINT UNSIGNED (Foreign key → form_field)
+- `fieldKey` - VARCHAR(128) - Field identifier
+- `value` - LONGTEXT - Field value (can store JSON for complex fields)
+- `createdAt` - DateTime
+- `updatedAt` - DateTime
+
+**Indexes:**
+- form_submission_id
+- form_field_id
+- field_key
+
+**Relationships:**
+- belongsTo: FormSubmission, FormField
+
+---
+
+## File Locations
+
+- **Models:**
+  - [src/models/FormSubmission.ts](src/models/FormSubmission.ts)
+  - [src/models/FormFieldValue.ts](src/models/FormFieldValue.ts)
+
+- **Controller:**
+  - [src/controllers/formSubmissionController.ts](src/controllers/formSubmissionController.ts)
+
+- **Routes:**
+  - [src/routes/formSubmissionRoutes.ts](src/routes/formSubmissionRoutes.ts)
+
+- **SQL:**
+  - [FORM_SUBMISSION_TABLES.sql](FORM_SUBMISSION_TABLES.sql)
+
+---
+
+## Features Implemented
+
+✅ Form submission with validation
+✅ Field value storage
+✅ Status tracking (submitted, reviewed, rejected)
+✅ Pagination & filtering
+✅ User authorization
+✅ IP tracking
+✅ Timestamps
+✅ Cascading deletes
+✅ Admin notes/comments
+✅ Statistics endpoint
+✅ Proper error handling
+✅ Database indexes for performance
+
+---
+
+## Flow Summary
+
+1. **Admin:** Creates form with fields via Form Builder
+2. **Admin:** Creates form event linked to that form
+3. **Admin:** Assigns form event to wards/booths/roles
+4. **User:** Views available form events (based on their role/ward/booth)
+5. **User:** Fills and submits form (validated against field requirements)
+6. **System:** Stores submission + all field values
+7. **Admin:** Reviews submissions, updates status, adds notes
+8. **Admin:** Can view statistics and export data

@@ -59,9 +59,10 @@ import MetaInputFormat from "./MetaInputFormat";
 import Form from "./Form";
 import FormField from "./FormField";
 import FormFieldOption from "./FormFieldOption";
-import FormMapping from "./FormMapping";
 import FormEvent from "./FormEvent";
 import FormEventAccessibility from "./FormEventAccessibility";
+import FormSubmission from "./FormSubmission";
+import FormFieldValue from "./FormFieldValue";
 import DeviceToken from "./DeviceToken";
 import NotificationLog from "./NotificationLog";
 import Sidebar from "./Sidebar";
@@ -412,20 +413,6 @@ const establishAssociations = (): void => {
   });
   FormField.belongsTo(Form, { foreignKey: "formId", as: "form" });
 
-  Form.hasMany(FormMapping, {
-    foreignKey: "formId",
-    as: "mappings",
-    onDelete: "CASCADE",
-    hooks: true
-  });
-  FormMapping.belongsTo(Form, { foreignKey: "formId", as: "form" });
-
-  FormMapping.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
-  MetaWardNumber.hasMany(FormMapping, { foreignKey: "wardNumberId", as: "formMappings" });
-
-  FormMapping.belongsTo(MetaBoothNumber, { foreignKey: "boothNumberId", as: "boothNumber" });
-  MetaBoothNumber.hasMany(FormMapping, { foreignKey: "boothNumberId", as: "formMappings" });
-
   Form.hasMany(FormEvent, {
     foreignKey: "formId",
     as: "events",
@@ -470,6 +457,37 @@ const establishAssociations = (): void => {
   MetaUserRole.hasMany(FormEventAccessibility, {
     foreignKey: "userRoleId",
     as: "formEventAccessibilities"
+  });
+
+  FormEvent.hasMany(FormSubmission, {
+    foreignKey: "formEventId",
+    as: "submissions",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormSubmission.belongsTo(FormEvent, {
+    foreignKey: "formEventId",
+    as: "formEvent"
+  });
+
+  FormSubmission.belongsTo(User, { foreignKey: "userId", as: "user" });
+  User.hasMany(FormSubmission, { foreignKey: "userId", as: "formSubmissions" });
+
+  FormSubmission.hasMany(FormFieldValue, {
+    foreignKey: "formSubmissionId",
+    as: "fieldValues",
+    onDelete: "CASCADE",
+    hooks: true
+  });
+  FormFieldValue.belongsTo(FormSubmission, {
+    foreignKey: "formSubmissionId",
+    as: "formSubmission"
+  });
+
+  FormFieldValue.belongsTo(FormField, { foreignKey: "formFieldId", as: "formField" });
+  FormField.hasMany(FormFieldValue, {
+    foreignKey: "formFieldId",
+    as: "submissionValues"
   });
 
   FormField.belongsTo(MetaFieldType, { foreignKey: "fieldTypeId", as: "fieldType" });
@@ -659,6 +677,8 @@ export {
   ComplaintTypeStep,
   ComplaintMedia,
   UserSchemeApplication,
+  FormSubmission,
+  FormFieldValue,
   DeviceToken,
   NotificationLog
 };

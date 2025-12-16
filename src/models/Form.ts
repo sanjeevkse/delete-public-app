@@ -8,7 +8,6 @@ import {
 
 import sequelize from "../config/database";
 import type FormField from "./FormField";
-import type FormMapping from "./FormMapping";
 
 class Form extends Model<
   InferAttributes<Form, { omit: "fields" }>,
@@ -28,7 +27,6 @@ class Form extends Model<
   declare updatedAt: CreationOptional<Date>;
 
   declare fields?: FormField[];
-  declare mappings?: FormMapping[];
 }
 
 Form.init(
