@@ -188,10 +188,12 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
     // Fetch full submission with values
     const fullSubmission = await FormSubmission.findByPk(submission.id, {
+      attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
       include: [
         {
           model: FormFieldValue,
-          as: "fieldValues"
+          as: "fieldValues",
+          attributes: ["id", "formFieldId", "fieldKey", "value"]
         },
         {
           model: FormEvent,
@@ -226,10 +228,12 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
   }
 
   const submission = await FormSubmission.findByPk(submissionIdNum, {
+    attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
     include: [
       {
         model: FormFieldValue,
-        as: "fieldValues"
+        as: "fieldValues",
+        attributes: ["id", "formFieldId", "fieldKey", "value"]
       },
       {
         model: FormEvent,
@@ -250,12 +254,10 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
       {
         model: User,
         as: "user",
-        attributes: ["id", "email"],
         include: [
           {
             model: UserProfile,
-            as: "profile",
-            attributes: ["id", "firstName", "lastName", "phone"]
+            as: "profile"
           }
         ]
       }
@@ -314,21 +316,21 @@ export const listFormSubmissions = asyncHandler(
     }
 
     const { count, rows } = await FormSubmission.findAndCountAll({
+      attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
       where,
       include: [
         {
           model: FormFieldValue,
-          as: "fieldValues"
+          as: "fieldValues",
+          attributes: ["id", "formFieldId", "fieldKey", "value"]
         },
         {
           model: User,
           as: "user",
-          attributes: ["id", "email"],
           include: [
             {
               model: UserProfile,
-              as: "profile",
-              attributes: ["id", "firstName", "lastName"]
+              as: "profile"
             }
           ]
         }
@@ -382,11 +384,13 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
   }
 
   const { count, rows } = await FormSubmission.findAndCountAll({
+    attributes: ["id", "formEventId", "submittedBy", "submittedAt"],
     where,
     include: [
       {
         model: FormFieldValue,
-        as: "fieldValues"
+        as: "fieldValues",
+        attributes: ["id", "formFieldId", "fieldKey", "value"]
       },
       {
         model: FormEvent,
@@ -439,7 +443,11 @@ export const updateSubmissionStatus = asyncHandler(
       status: statusNum
     });
 
-    sendSuccess(res, submission, "Submission status updated successfully");
+    const updated = await FormSubmission.findByPk(submissionIdNum, {
+      attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"]
+    });
+
+    sendSuccess(res, updated, "Submission status updated successfully");
   }
 );
 
