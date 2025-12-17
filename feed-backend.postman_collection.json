@@ -6593,6 +6593,335 @@
 			]
 		},
 		{
+			"name": "Form Submissions",
+			"item": [
+				{
+					"name": "Submit Form",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"  pm.response.to.have.status(201);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Response contains submission id\", function () {",
+									"  pm.expect(jsonData.data.id).to.exist;",
+									"});",
+									"if (jsonData.data && jsonData.data.id) {",
+									"  pm.collectionVariables.set(\"submissionId\", jsonData.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fieldValues\": [\n    {\n      \"formFieldId\": 1,\n      \"fieldKey\": \"first_name\",\n      \"value\": \"John\"\n    },\n    {\n      \"formFieldId\": 2,\n      \"fieldKey\": \"email\",\n      \"value\": \"john@example.com\"\n    },\n    {\n      \"formFieldId\": 3,\n      \"fieldKey\": \"hobbies\",\n      \"value\": \"[\\\"reading\\\", \\\"gaming\\\"]\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/events/{{formEventId}}/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"events",
+								"{{formEventId}}",
+								"submit"
+							]
+						},
+						"description": "Submit a form with field values. Validates required fields and date range. Stores submission with all field responses."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Submission",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/{{submissionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"{{submissionId}}"
+							]
+						},
+						"description": "Retrieve a specific form submission with all field values and metadata. User can view their own submissions; admins can view all."
+					},
+					"response": []
+				},
+				{
+					"name": "List Submissions for Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Response contains pagination\", function () {",
+									"  pm.expect(jsonData.pagination).to.exist;",
+									"});",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData.data)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/events/{{formEventId}}/list?page=1&limit=25&status=1&sortBy=submissionDate&sortOrder=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"events",
+								"{{formEventId}}",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number"
+								},
+								{
+									"key": "limit",
+									"value": "25",
+									"description": "Items per page (max 100)"
+								},
+								{
+									"key": "status",
+									"value": "1",
+									"description": "Filter by status: 1=submitted, 2=reviewed, 3=rejected",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "submissionDate",
+									"description": "Sort field: submissionDate, createdAt, id"
+								},
+								{
+									"key": "sortOrder",
+									"value": "DESC",
+									"description": "ASC or DESC"
+								}
+							]
+						},
+						"description": "List all submissions for a specific form event with pagination, filtering, and sorting."
+					},
+					"response": []
+				},
+				{
+					"name": "List My Submissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Response contains pagination\", function () {",
+									"  pm.expect(jsonData.pagination).to.exist;",
+									"});",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData.data)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/my-submissions/list?page=1&limit=25&sortBy=submissionDate&sortOrder=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"my-submissions",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "25"
+								},
+								{
+									"key": "sortBy",
+									"value": "submissionDate"
+								},
+								{
+									"key": "sortOrder",
+									"value": "DESC"
+								}
+							]
+						},
+						"description": "List authenticated user's own form submissions with pagination and sorting."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Form Event Stats",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/events/{{formEventId}}/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"events",
+								"{{formEventId}}",
+								"stats"
+							]
+						},
+						"description": "Get submission statistics for a form event: total count and breakdown by status (submitted, reviewed, rejected)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Submission Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": 2,\n  \"notes\": \"Under review - pending verification\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/{{submissionId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"{{submissionId}}",
+								"status"
+							]
+						},
+						"description": "Update submission status: 1=submitted, 2=reviewed, 3=rejected. Can add admin notes."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Submission",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/form-submissions/{{submissionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"form-submissions",
+								"{{submissionId}}"
+							]
+						},
+						"description": "Delete a form submission. Cascades to delete all associated field values."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "User Scheme Applications",
 			"item": [
 				{

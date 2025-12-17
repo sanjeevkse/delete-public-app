@@ -109,13 +109,86 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const formFields = form.fields || [];
     const fieldMap = new Map(formFields.map((f) => [f.id, f]));
 
-    // Validate required fields
-    for (const formField of formFields) {
+    // Validate that all submitted fields belong to this form
+    for (const fv of fieldValues) {
+      if (!fieldMap.has(fv.formFieldId)) {
+        await transaction.rollback();
+        throw new ApiError(`Field ID ${fv.formFieldId} does not belong to this form`, 400);
+      }
+    }
+
+    // Validate field values with all constraints
+    for (const fv of fieldValues) {
+      const formField = fieldMap.get(fv.formFieldId)!;
+      const value = fv.value;
+
+      // Check required
       if (formField.isRequired === 1) {
-        const fieldValue = fieldValues.find((fv) => fv.formFieldId === formField.id);
-        if (!fieldValue || !fieldValue.value || fieldValue.value.toString().trim() === "") {
+        if (value === null || value === undefined || value.toString().trim() === "") {
           await transaction.rollback();
           throw new ApiError(`Field "${formField.label}" is required`, 400);
+        }
+      } else if (value === null || value === undefined || value.toString().trim() === "") {
+        // Skip further validation for empty optional fields
+        continue;
+      }
+
+      const strValue = String(value).trim();
+
+      // Check minLength
+      if (formField.minLength !== null && strValue.length < formField.minLength) {
+        await transaction.rollback();
+        throw new ApiError(
+          `Field "${formField.label}" must have at least ${formField.minLength} characters`,
+          400
+        );
+      }
+
+      // Check maxLength
+      if (formField.maxLength !== null && strValue.length > formField.maxLength) {
+        await transaction.rollback();
+        throw new ApiError(
+          `Field "${formField.label}" must not exceed ${formField.maxLength} characters`,
+          400
+        );
+      }
+
+      // Check validation regex pattern
+      if (formField.validationRegex) {
+        try {
+          const regex = new RegExp(formField.validationRegex);
+          if (!regex.test(strValue)) {
+            await transaction.rollback();
+            throw new ApiError(
+              `Field "${formField.label}" format is invalid. ${formField.helpText || ""}`,
+              400
+            );
+          }
+        } catch (err) {
+          await transaction.rollback();
+          throw new ApiError(`Invalid regex pattern for field "${formField.label}"`, 500);
+        }
+      }
+
+      // Check minValue and maxValue for numeric fields
+      if (formField.minValue !== null || formField.maxValue !== null) {
+        const numValue = Number(strValue);
+        if (!Number.isNaN(numValue)) {
+          if (formField.minValue !== null && numValue < Number(formField.minValue)) {
+            await transaction.rollback();
+            throw new ApiError(
+              `Field "${formField.label}" must be at least ${formField.minValue}`,
+              400
+            );
+          }
+
+          if (formField.maxValue !== null && numValue > Number(formField.maxValue)) {
+            await transaction.rollback();
+            throw new ApiError(
+              `Field "${formField.label}" must not exceed ${formField.maxValue}`,
+              400
+            );
+          }
         }
       }
     }
