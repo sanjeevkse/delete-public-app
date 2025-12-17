@@ -23,10 +23,10 @@ import FormField from "../models/FormField";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
 
-const DEFAULT_SORT_COLUMNS = ["submissionDate", "createdAt", "id"];
+const DEFAULT_SORT_COLUMNS = ["submittedAt", "createdAt", "id"];
 
 /**
- * Submit a form
+ * Submit a form for a specific form event
  */
 export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { formEventId } = req.params;
@@ -99,7 +99,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       throw new ApiError("Form submission has ended", 400);
     }
 
-    // Get form fields for validation
+    // Get form and fields for validation
     const form = formEvent.form;
     if (!form) {
       await transaction.rollback();
@@ -162,8 +162,8 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const submission = await FormSubmission.create(
       {
         formEventId: formEventIdNum,
-        userId,
-        submissionDate: new Date(),
+        submittedBy: userId,
+        submittedAt: new Date(),
         ipAddress: req.ip || null,
         userAgent: req.get("user-agent") || null,
         status: 1
@@ -266,8 +266,8 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
     return sendNotFound(res, "Form submission not found");
   }
 
-  // Check authorization - user can view their own submissions or admin
-  if (submission.userId !== userId && !req.user?.roles.includes("admin")) {
+  // Check authorization - user can view their own submissions; Admins can view all
+  if (submission.submittedBy !== userId && !req.user?.roles.includes("admin")) {
     throw new ApiError("You don't have permission to view this submission", 403);
   }
 
@@ -275,7 +275,7 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
 });
 
 /**
- * List form submissions
+ * List form submissions for a form event
  */
 export const listFormSubmissions = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -284,7 +284,7 @@ export const listFormSubmissions = asyncHandler(
       page = "1",
       limit = "25",
       status,
-      sortBy = "submissionDate",
+      sortBy = "submittedAt",
       sortOrder = "DESC"
     } = req.query;
 
@@ -356,7 +356,7 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
     page = "1",
     limit = "25",
     status,
-    sortBy = "submissionDate",
+    sortBy = "submittedAt",
     sortOrder = "DESC"
   } = req.query;
 
@@ -373,7 +373,7 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
   validateSortColumn(String(sortBy), DEFAULT_SORT_COLUMNS);
   const direction = parseSortDirection(String(sortOrder));
 
-  const where: any = { userId };
+  const where: any = { submittedBy: userId };
 
   if (status) {
     const statusFilter = parseStatusFilter(String(status));
@@ -408,12 +408,12 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
 });
 
 /**
- * Update submission status (admin only)
+ * Update submission status
  */
 export const updateSubmissionStatus = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { submissionId } = req.params;
-    const { status, notes } = req.body;
+    const { status } = req.body;
 
     const submissionIdNum = Number(submissionId);
     if (!Number.isFinite(submissionIdNum) || submissionIdNum <= 0) {
@@ -435,8 +435,7 @@ export const updateSubmissionStatus = asyncHandler(
     }
 
     await submission.update({
-      status: statusNum,
-      notes: notes || submission.notes
+      status: statusNum
     });
 
     sendSuccess(res, submission, "Submission status updated successfully");
@@ -444,7 +443,7 @@ export const updateSubmissionStatus = asyncHandler(
 );
 
 /**
- * Delete submission (admin only)
+ * Delete submission
  */
 export const deleteFormSubmission = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -521,12 +520,12 @@ export const getFormEventStats = asyncHandler(async (req: AuthenticatedRequest, 
 
   for (const stat of stats) {
     const count = Number((stat as any).totalSubmissions);
-    const status = (stat as any).status;
+    const statusVal = (stat as any).status;
     result.totalSubmissions += count;
 
-    if (status === 1) result.byStatus.submitted = count;
-    if (status === 2) result.byStatus.reviewed = count;
-    if (status === 3) result.byStatus.rejected = count;
+    if (statusVal === 1) result.byStatus.submitted = count;
+    if (statusVal === 2) result.byStatus.reviewed = count;
+    if (statusVal === 3) result.byStatus.rejected = count;
   }
 
   sendSuccess(res, result);

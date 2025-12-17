@@ -470,8 +470,8 @@ const establishAssociations = (): void => {
     as: "formEvent"
   });
 
-  FormSubmission.belongsTo(User, { foreignKey: "userId", as: "user" });
-  User.hasMany(FormSubmission, { foreignKey: "userId", as: "formSubmissions" });
+  FormSubmission.belongsTo(User, { foreignKey: "submittedBy", as: "user" });
+  User.hasMany(FormSubmission, { foreignKey: "submittedBy", as: "formSubmissions" });
 
   FormSubmission.hasMany(FormFieldValue, {
     foreignKey: "formSubmissionId",

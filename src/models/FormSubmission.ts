@@ -18,13 +18,14 @@ class FormSubmission extends Model<
 > {
   declare id: CreationOptional<number>;
   declare formEventId: number;
-  declare userId: number;
-  declare submissionDate: CreationOptional<Date>;
+  declare submittedBy: CreationOptional<number | null>;
+  declare submittedAt: CreationOptional<Date>;
   declare ipAddress: CreationOptional<string | null>;
   declare userAgent: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
-  declare notes: CreationOptional<string | null>;
+  declare createdBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
+  declare updatedBy: CreationOptional<number | null>;
   declare updatedAt: CreationOptional<Date>;
 
   declare formEvent?: NonAttribute<FormEvent>;
@@ -44,13 +45,13 @@ FormSubmission.init(
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false
     },
-    userId: {
-      field: "user_id",
+    submittedBy: {
+      field: "submitted_by",
       type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false
+      allowNull: true
     },
-    submissionDate: {
-      field: "submission_date",
+    submittedAt: {
+      field: "submitted_at",
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
@@ -62,17 +63,17 @@ FormSubmission.init(
     },
     userAgent: {
       field: "user_agent",
-      type: DataTypes.STRING(500),
+      type: DataTypes.STRING(512),
       allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,
       allowNull: false,
-      defaultValue: 1,
-      comment: "1=submitted, 2=reviewed, 3=rejected"
+      defaultValue: 1
     },
-    notes: {
-      type: DataTypes.TEXT,
+    createdBy: {
+      field: "created_by",
+      type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },
     createdAt: {
@@ -80,6 +81,11 @@ FormSubmission.init(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
+    },
+    updatedBy: {
+      field: "updated_by",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     updatedAt: {
       field: "updated_at",
@@ -93,24 +99,7 @@ FormSubmission.init(
     tableName: "tbl_form_submission",
     modelName: "FormSubmission",
     timestamps: true,
-    underscored: true,
-    indexes: [
-      {
-        fields: ["form_event_id"]
-      },
-      {
-        fields: ["user_id"]
-      },
-      {
-        fields: ["form_event_id", "user_id"]
-      },
-      {
-        fields: ["status"]
-      },
-      {
-        fields: ["submission_date"]
-      }
-    ]
+    underscored: true
   }
 );
 

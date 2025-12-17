@@ -6715,7 +6715,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/form-submissions/events/{{formEventId}}/list?page=1&limit=25&status=1&sortBy=submissionDate&sortOrder=DESC",
+							"raw": "{{baseUrl}}/api/form-submissions/events/{{formEventId}}/list?page=1&limit=25&status=1&sortBy=submittedAt&sortOrder=DESC",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -6791,7 +6791,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/form-submissions/my-submissions/list?page=1&limit=25&sortBy=submissionDate&sortOrder=DESC",
+							"raw": "{{baseUrl}}/api/form-submissions/my-submissions/list?page=1&limit=25&sortBy=submittedAt&sortOrder=DESC",
 							"host": [
 								"{{baseUrl}}"
 							],
