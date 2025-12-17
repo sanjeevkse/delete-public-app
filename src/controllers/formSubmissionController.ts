@@ -48,8 +48,8 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   // Validate field values structure
   for (const fv of fieldValues) {
-    if (!fv.formFieldId || !fv.fieldKey) {
-      throw new ApiError("Each fieldValue must have formFieldId and fieldKey", 400);
+    if (!fv.formFieldId) {
+      throw new ApiError("Each fieldValue must have formFieldId", 400);
     }
   }
 
@@ -172,12 +172,15 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     );
 
     // Create field values
-    const fieldValueRecords = fieldValues.map((fv: any) => ({
-      formSubmissionId: submission.id,
-      formFieldId: fv.formFieldId,
-      fieldKey: fv.fieldKey,
-      value: fv.value ? String(fv.value) : null
-    }));
+    const fieldValueRecords = fieldValues.map((fv: any) => {
+      const field = fieldMap.get(fv.formFieldId)!;
+      return {
+        formSubmissionId: submission.id,
+        formFieldId: fv.formFieldId,
+        fieldKey: field.fieldKey,
+        value: fv.value ? String(fv.value) : null
+      };
+    });
 
     await FormFieldValue.bulkCreate(fieldValueRecords, { transaction });
 
