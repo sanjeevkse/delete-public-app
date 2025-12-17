@@ -109,86 +109,51 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const formFields = form.fields || [];
     const fieldMap = new Map(formFields.map((f) => [f.id, f]));
 
-    // Validate that all submitted fields belong to this form
+    // Validate each submitted field value
     for (const fv of fieldValues) {
-      if (!fieldMap.has(fv.formFieldId)) {
-        await transaction.rollback();
+      const field = fieldMap.get(fv.formFieldId);
+
+      // Check field belongs to form
+      if (!field) {
         throw new ApiError(`Field ID ${fv.formFieldId} does not belong to this form`, 400);
       }
-    }
 
-    // Validate field values with all constraints
-    for (const fv of fieldValues) {
-      const formField = fieldMap.get(fv.formFieldId)!;
-      const value = fv.value;
+      const value = fv.value ? String(fv.value).trim() : "";
 
       // Check required
-      if (formField.isRequired === 1) {
-        if (value === null || value === undefined || value.toString().trim() === "") {
-          await transaction.rollback();
-          throw new ApiError(`Field "${formField.label}" is required`, 400);
-        }
-      } else if (value === null || value === undefined || value.toString().trim() === "") {
-        // Skip further validation for empty optional fields
-        continue;
+      if (field.isRequired === 1 && !value) {
+        throw new ApiError(`Field "${field.label}" is required`, 400);
       }
 
-      const strValue = String(value).trim();
+      // Skip other validations if field is empty and optional
+      if (!value) continue;
 
-      // Check minLength
-      if (formField.minLength !== null && strValue.length < formField.minLength) {
-        await transaction.rollback();
-        throw new ApiError(
-          `Field "${formField.label}" must have at least ${formField.minLength} characters`,
-          400
-        );
+      // Check min length
+      if (field.minLength && value.length < field.minLength) {
+        throw new ApiError(`"${field.label}" must be at least ${field.minLength} characters`, 400);
       }
 
-      // Check maxLength
-      if (formField.maxLength !== null && strValue.length > formField.maxLength) {
-        await transaction.rollback();
-        throw new ApiError(
-          `Field "${formField.label}" must not exceed ${formField.maxLength} characters`,
-          400
-        );
+      // Check max length
+      if (field.maxLength && value.length > field.maxLength) {
+        throw new ApiError(`"${field.label}" must not exceed ${field.maxLength} characters`, 400);
       }
 
-      // Check validation regex pattern
-      if (formField.validationRegex) {
-        try {
-          const regex = new RegExp(formField.validationRegex);
-          if (!regex.test(strValue)) {
-            await transaction.rollback();
-            throw new ApiError(
-              `Field "${formField.label}" format is invalid. ${formField.helpText || ""}`,
-              400
-            );
-          }
-        } catch (err) {
-          await transaction.rollback();
-          throw new ApiError(`Invalid regex pattern for field "${formField.label}"`, 500);
+      // Check regex pattern
+      if (field.validationRegex) {
+        const regex = new RegExp(field.validationRegex);
+        if (!regex.test(value)) {
+          throw new ApiError(`"${field.label}" format is invalid`, 400);
         }
       }
 
-      // Check minValue and maxValue for numeric fields
-      if (formField.minValue !== null || formField.maxValue !== null) {
-        const numValue = Number(strValue);
-        if (!Number.isNaN(numValue)) {
-          if (formField.minValue !== null && numValue < Number(formField.minValue)) {
-            await transaction.rollback();
-            throw new ApiError(
-              `Field "${formField.label}" must be at least ${formField.minValue}`,
-              400
-            );
-          }
-
-          if (formField.maxValue !== null && numValue > Number(formField.maxValue)) {
-            await transaction.rollback();
-            throw new ApiError(
-              `Field "${formField.label}" must not exceed ${formField.maxValue}`,
-              400
-            );
-          }
+      // Check min/max value for numbers
+      const num = Number(value);
+      if (!Number.isNaN(num)) {
+        if (field.minValue && num < Number(field.minValue)) {
+          throw new ApiError(`"${field.label}" must be at least ${field.minValue}`, 400);
+        }
+        if (field.maxValue && num > Number(field.maxValue)) {
+          throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
         }
       }
     }
