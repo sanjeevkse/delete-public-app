@@ -254,12 +254,13 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
         include: [
           {
             model: UserProfile,
-            as: "userProfile",
+            as: "profile",
             attributes: ["id", "firstName", "lastName", "phone"]
           }
         ]
       }
-    ]
+    ],
+    where: { status: { [Op.ne]: 0 } }
   });
 
   if (!submission) {
@@ -305,7 +306,7 @@ export const listFormSubmissions = asyncHandler(
     const direction = parseSortDirection(String(sortOrder));
 
     // Build where clause
-    const where: any = { formEventId: formEventIdNum };
+    const where: any = { formEventId: formEventIdNum, status: { [Op.ne]: 0 } };
 
     if (status) {
       const statusFilter = parseStatusFilter(String(status));
@@ -326,7 +327,7 @@ export const listFormSubmissions = asyncHandler(
           include: [
             {
               model: UserProfile,
-              as: "userProfile",
+              as: "profile",
               attributes: ["id", "firstName", "lastName"]
             }
           ]
@@ -373,7 +374,7 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
   validateSortColumn(String(sortBy), DEFAULT_SORT_COLUMNS);
   const direction = parseSortDirection(String(sortOrder));
 
-  const where: any = { submittedBy: userId };
+  const where: any = { submittedBy: userId, status: { [Op.ne]: 0 } };
 
   if (status) {
     const statusFilter = parseStatusFilter(String(status));
@@ -459,25 +460,12 @@ export const deleteFormSubmission = asyncHandler(
       return sendNotFound(res, "Form submission not found");
     }
 
-    const transaction = await sequelize.transaction();
+    // Soft delete - mark as deleted
+    await submission.update({
+      status: 0
+    });
 
-    try {
-      // Delete field values
-      await FormFieldValue.destroy({
-        where: { formSubmissionId: submissionIdNum },
-        transaction
-      });
-
-      // Delete submission
-      await submission.destroy({ transaction });
-
-      await transaction.commit();
-
-      res.status(204).send();
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
+    res.status(204).send();
   }
 );
 
@@ -503,7 +491,7 @@ export const getFormEventStats = asyncHandler(async (req: AuthenticatedRequest, 
       [sequelize.fn("COUNT", sequelize.col("id")), "totalSubmissions"],
       ["status", "status"]
     ],
-    where: { formEventId: formEventIdNum },
+    where: { formEventId: formEventIdNum, status: { [Op.ne]: 0 } },
     group: ["status"],
     raw: true
   });

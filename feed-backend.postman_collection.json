@@ -6745,8 +6745,8 @@
 								},
 								{
 									"key": "sortBy",
-									"value": "submissionDate",
-									"description": "Sort field: submissionDate, createdAt, id"
+									"value": "submittedAt",
+									"description": "Sort field: submittedAt, createdAt, id"
 								},
 								{
 									"key": "sortOrder",
@@ -6812,7 +6812,7 @@
 								},
 								{
 									"key": "sortBy",
-									"value": "submissionDate"
+									"value": "submittedAt"
 								},
 								{
 									"key": "sortOrder",
