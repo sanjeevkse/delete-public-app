@@ -61,6 +61,12 @@ export const UPLOAD_COUNTS = {
     MAX_IMAGES: 4,
     MAX_VIDEOS: 4,
     MAX_TOTAL: 4
+  },
+  FORM_SUBMISSION: {
+    MAX_IMAGES: 5,
+    MAX_VIDEOS: 5,
+    MAX_FILES: 5,
+    MAX_TOTAL: 10
   }
 } as const;
 
@@ -82,7 +88,8 @@ export const UPLOAD_MODULES = {
   PROFILE: "profile",
   JOBS: "jobs",
   COMPLAINTS: "complaints",
-  SCHEME_APPLICATIONS: "scheme-applications"
+  SCHEME_APPLICATIONS: "scheme-applications",
+  FORM_SUBMISSIONS: "form-submissions"
 } as const;
 
 // Asset types within modules

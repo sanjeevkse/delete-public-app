@@ -6625,20 +6625,23 @@
 							}
 						},
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"fieldValues\": [\n    {\n      \"formFieldId\": 1,\n      \"value\": \"John\"\n    },\n    {\n      \"formFieldId\": 2,\n      \"value\": \"john@example.com\"\n    },\n    {\n      \"formFieldId\": 3,\n      \"value\": \"[\\\"reading\\\", \\\"gaming\\\"]\"\n    }\n  ]\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fieldValues",
+									"value": "[{\"formFieldId\": 1, \"value\": \"John\"}, {\"formFieldId\": 2, \"value\": \"john@example.com\"}, {\"formFieldId\": 3, \"value\": \"[\\\"reading\\\", \\\"gaming\\\"]\"}]",
+									"type": "text",
+									"description": "Array of field values with formFieldId and value"
+								},
+								{
+									"key": "attachments",
+									"type": "file",
+									"description": "Optional: Image, video, or document files for file/image/video field types",
+									"disabled": true
 								}
-							}
+							]
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/form-submissions/events/{{formEventId}}/submit",
@@ -6653,7 +6656,7 @@
 								"submit"
 							]
 						},
-						"description": "Submit a form with field values. Validates required fields and date range. Stores submission with all field responses."
+						"description": "Submit a form with field values and optional file attachments. Supports images, videos, and documents. Validates required fields, date range, and file types."
 					},
 					"response": []
 				},

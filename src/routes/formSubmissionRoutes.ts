@@ -10,14 +10,21 @@ import {
   getFormEventStats
 } from "../controllers/formSubmissionController";
 import { authenticate } from "../middlewares/authMiddleware";
+import { formSubmissionUpload } from "../middlewares/postUploadMiddleware";
 
 const router = Router();
 
 /**
  * Submit a form for a specific form event
  * POST /form-submissions/events/:formEventId/submit
+ * Accepts multipart form-data with optional file attachments
  */
-router.post("/events/:formEventId/submit", authenticate(), submitForm);
+router.post(
+  "/events/:formEventId/submit",
+  authenticate(),
+  formSubmissionUpload.array("attachments", 10),
+  submitForm
+);
 
 /**
  * Get a specific form submission

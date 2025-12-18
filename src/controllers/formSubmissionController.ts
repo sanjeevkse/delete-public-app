@@ -30,8 +30,18 @@ const DEFAULT_SORT_COLUMNS = ["submittedAt", "createdAt", "id"];
  */
 export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { formEventId } = req.params;
-  const { fieldValues } = req.body;
+  let fieldValues = req.body.fieldValues;
   const userId = req.user?.id;
+  const uploadedFiles = (req as any).files || [];
+
+  // Parse fieldValues if it's a JSON string (from multipart form-data)
+  if (typeof fieldValues === "string") {
+    try {
+      fieldValues = JSON.parse(fieldValues);
+    } catch (e) {
+      throw new ApiError("fieldValues must be a valid JSON array", 400);
+    }
+  }
 
   if (!userId) {
     throw new ApiError("Unauthorized", 401);
@@ -109,6 +119,20 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const formFields = form.fields || [];
     const fieldMap = new Map(formFields.map((f) => [f.id, f]));
 
+    // Build file URL map for easy lookup by field ID
+    const fileUrlsByFieldId = new Map<number, string[]>();
+    for (const file of uploadedFiles) {
+      const fieldId = Number(file.fieldvalue); // fieldvalue is passed as a form field
+      if (fieldId) {
+        if (!fileUrlsByFieldId.has(fieldId)) {
+          fileUrlsByFieldId.set(fieldId, []);
+        }
+        // Store file URL/path
+        const fileUrl = `${file.path}`;
+        fileUrlsByFieldId.get(fieldId)!.push(fileUrl);
+      }
+    }
+
     // Validate each submitted field value
     for (const fv of fieldValues) {
       const field = fieldMap.get(fv.formFieldId);
@@ -121,12 +145,12 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       const value = fv.value ? String(fv.value).trim() : "";
 
       // Check required
-      if (field.isRequired === 1 && !value) {
+      if (field.isRequired === 1 && !value && !fileUrlsByFieldId.has(fv.formFieldId)) {
         throw new ApiError(`Field "${field.label}" is required`, 400);
       }
 
       // Skip other validations if field is empty and optional
-      if (!value) continue;
+      if (!value && !fileUrlsByFieldId.has(fv.formFieldId)) continue;
 
       // Check min length
       if (field.minLength && value.length < field.minLength) {
@@ -139,7 +163,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       }
 
       // Check regex pattern
-      if (field.validationRegex) {
+      if (field.validationRegex && value) {
         const regex = new RegExp(field.validationRegex);
         if (!regex.test(value)) {
           throw new ApiError(`"${field.label}" format is invalid`, 400);
@@ -147,13 +171,15 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       }
 
       // Check min/max value for numbers
-      const num = Number(value);
-      if (!Number.isNaN(num)) {
-        if (field.minValue && num < Number(field.minValue)) {
-          throw new ApiError(`"${field.label}" must be at least ${field.minValue}`, 400);
-        }
-        if (field.maxValue && num > Number(field.maxValue)) {
-          throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
+      if (value) {
+        const num = Number(value);
+        if (!Number.isNaN(num)) {
+          if (field.minValue && num < Number(field.minValue)) {
+            throw new ApiError(`"${field.label}" must be at least ${field.minValue}`, 400);
+          }
+          if (field.maxValue && num > Number(field.maxValue)) {
+            throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
+          }
         }
       }
     }
@@ -171,14 +197,22 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       { transaction }
     );
 
-    // Create field values
+    // Create field values (including file URLs if any)
     const fieldValueRecords = fieldValues.map((fv: any) => {
       const field = fieldMap.get(fv.formFieldId)!;
+      let finalValue = fv.value ? String(fv.value) : null;
+
+      // If field has file uploads, include them (as JSON array or URL string)
+      if (fileUrlsByFieldId.has(fv.formFieldId)) {
+        const fileUrls = fileUrlsByFieldId.get(fv.formFieldId)!;
+        finalValue = fileUrls.length === 1 ? fileUrls[0] : JSON.stringify(fileUrls);
+      }
+
       return {
         formSubmissionId: submission.id,
         formFieldId: fv.formFieldId,
         fieldKey: field.fieldKey,
-        value: fv.value ? String(fv.value) : null
+        value: finalValue
       };
     });
 
