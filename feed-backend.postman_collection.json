@@ -6631,14 +6631,20 @@
 							"formdata": [
 								{
 									"key": "fieldValues",
-									"value": "[{\"formFieldId\": 1, \"value\": \"John\"}, {\"formFieldId\": 2, \"value\": \"john@example.com\"}, {\"formFieldId\": 3, \"value\": \"[\\\"reading\\\", \\\"gaming\\\"]\"}]",
+									"value": "[{\"formFieldId\": 1, \"value\": \"John\"}, {\"formFieldId\": 2, \"value\": \"john@example.com\"}, {\"formFieldId\": 3, \"value\": \"\"}, {\"formFieldId\": 4, \"value\": \"\"}]",
 									"type": "text",
-									"description": "Array of field values with formFieldId and value"
+									"description": "Array of field values with formFieldId and value (files for image/video/document fields can be left empty)"
 								},
 								{
-									"key": "attachments",
+									"key": "3",
 									"type": "file",
-									"description": "Optional: Image, video, or document files for file/image/video field types",
+									"description": "Files for fieldId 3 - supports multiple files (max 5)",
+									"disabled": true
+								},
+								{
+									"key": "4",
+									"type": "file",
+									"description": "Files for fieldId 4 - supports multiple files (max 5)",
 									"disabled": true
 								}
 							]
@@ -6656,7 +6662,7 @@
 								"submit"
 							]
 						},
-						"description": "Submit a form with field values and optional file attachments. Supports images, videos, and documents. Validates required fields, date range, and file types."
+						"description": "Submit a form with field values and optional file attachments. Send files with field names matching fieldId (e.g., \"3\", \"4\"). Supports up to 5 files per field. Files stored as formEventId/submissionId/fieldId/uuid.ext"
 					},
 					"response": []
 				},
