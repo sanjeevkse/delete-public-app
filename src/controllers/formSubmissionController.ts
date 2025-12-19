@@ -148,10 +148,13 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     for (const fv of fieldValues) {
       const fieldId = fv.formFieldId;
       const fieldName = String(fieldId); // Field name convention: use fieldId as string
-      
+
       if (filesByFieldName.has(fieldName)) {
         const files = filesByFieldName.get(fieldName)!;
-        fileUrlsByFieldId.set(fieldId, files.map((f) => f.path));
+        fileUrlsByFieldId.set(
+          fieldId,
+          files.map((f) => f.path)
+        );
       }
     }
 
