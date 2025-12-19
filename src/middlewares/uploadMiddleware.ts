@@ -19,6 +19,7 @@ export type UploadOptions = {
   allowedMimeTypes: string[];
   maxFileSizeBytes: number;
   validateFiles?: (files: Express.Multer.File[], req: AuthenticatedRequest) => void;
+  multipleFields?: boolean;
 };
 
 const sanitizeFileName = (originalName: string): string => {
@@ -63,7 +64,9 @@ export const createFileUploadMiddleware = (options: UploadOptions): RequestHandl
   });
 
   const handler: RequestHandler = (req, res, next) => {
-    const middleware = uploader.array(options.fieldName, options.maxCount);
+    const middleware = options.multipleFields
+      ? uploader.any()
+      : uploader.array(options.fieldName, options.maxCount);
     middleware(req as any, res as any, (err: any) => {
       if (err) {
         return next(err);

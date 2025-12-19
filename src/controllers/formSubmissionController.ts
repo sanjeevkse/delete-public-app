@@ -1,5 +1,8 @@
 import type { Request, Response } from "express";
 import { Op, Transaction } from "sequelize";
+import path from "path";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
@@ -14,6 +17,7 @@ import {
   validateSortColumn
 } from "../utils/apiResponse";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
+import { ensureDirectory } from "../utils/fileStorage";
 import sequelize from "../config/database";
 import FormSubmission from "../models/FormSubmission";
 import FormFieldValue from "../models/FormFieldValue";
@@ -22,6 +26,7 @@ import Form from "../models/Form";
 import FormField from "../models/FormField";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
+import { UPLOAD_PATHS } from "../config/uploadConstants";
 
 const DEFAULT_SORT_COLUMNS = ["submittedAt", "createdAt", "id"];
 
@@ -119,17 +124,34 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const formFields = form.fields || [];
     const fieldMap = new Map(formFields.map((f) => [f.id, f]));
 
-    // Build file URL map for easy lookup by field ID
-    const fileUrlsByFieldId = new Map<number, string[]>();
+    // Parse uploaded files by field name
+    // Files come in via .any() middleware, so they have fieldname property
+    const filesByFieldName = new Map<string, Express.Multer.File[]>();
     for (const file of uploadedFiles) {
-      const fieldId = Number(file.fieldvalue); // fieldvalue is passed as a form field
-      if (fieldId) {
-        if (!fileUrlsByFieldId.has(fieldId)) {
-          fileUrlsByFieldId.set(fieldId, []);
-        }
-        // Store file URL/path
-        const fileUrl = `${file.path}`;
-        fileUrlsByFieldId.get(fieldId)!.push(fileUrl);
+      if (!filesByFieldName.has(file.fieldname)) {
+        filesByFieldName.set(file.fieldname, []);
+      }
+      filesByFieldName.get(file.fieldname)!.push(file);
+    }
+
+    // Validate files per field (max 5 files per field)
+    for (const [fieldName, files] of filesByFieldName) {
+      if (files.length > 5) {
+        await transaction.rollback();
+        throw new ApiError(`Field "${fieldName}" can have at most 5 files`, 400);
+      }
+    }
+
+    // Map field names to field IDs from fieldValues
+    // fieldValues should include a mapping from fieldId to the files
+    const fileUrlsByFieldId = new Map<number, string[]>();
+    for (const fv of fieldValues) {
+      const fieldId = fv.formFieldId;
+      const fieldName = String(fieldId); // Field name convention: use fieldId as string
+      
+      if (filesByFieldName.has(fieldName)) {
+        const files = filesByFieldName.get(fieldName)!;
+        fileUrlsByFieldId.set(fieldId, files.map((f) => f.path));
       }
     }
 
@@ -197,14 +219,48 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       { transaction }
     );
 
+    // Reorganize files to final directory structure: formEventId/submissionId/fieldId/uuid.ext
+    const finalFileUrlsByFieldId = new Map<number, string[]>();
+    for (const [fieldId, filePaths] of fileUrlsByFieldId) {
+      const finalUrls: string[] = [];
+      const finalDir = path.join(
+        UPLOAD_PATHS.BASE_DIR,
+        String(formEventIdNum),
+        String(submission.id),
+        String(fieldId)
+      );
+      ensureDirectory(finalDir);
+
+      for (const filePath of filePaths) {
+        if (fs.existsSync(filePath)) {
+          const ext = path.extname(filePath);
+          const uuid = uuidv4();
+          const finalFileName = `${uuid}${ext}`;
+          const finalFilePath = path.join(finalDir, finalFileName);
+
+          // Move file to final location
+          fs.renameSync(filePath, finalFilePath);
+
+          // Store relative path for database: formEventId/submissionId/fieldId/uuid.ext
+          const relativePath = path.relative(UPLOAD_PATHS.BASE_DIR, finalFilePath);
+          const normalizedPath = relativePath.split(path.sep).join("/");
+          finalUrls.push(normalizedPath);
+        }
+      }
+
+      if (finalUrls.length > 0) {
+        finalFileUrlsByFieldId.set(fieldId, finalUrls);
+      }
+    }
+
     // Create field values (including file URLs if any)
     const fieldValueRecords = fieldValues.map((fv: any) => {
       const field = fieldMap.get(fv.formFieldId)!;
       let finalValue = fv.value ? String(fv.value) : null;
 
       // If field has file uploads, include them (as JSON array or URL string)
-      if (fileUrlsByFieldId.has(fv.formFieldId)) {
-        const fileUrls = fileUrlsByFieldId.get(fv.formFieldId)!;
+      if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
+        const fileUrls = finalFileUrlsByFieldId.get(fv.formFieldId)!;
         finalValue = fileUrls.length === 1 ? fileUrls[0] : JSON.stringify(fileUrls);
       }
 
@@ -261,7 +317,8 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
     throw new ApiError("Invalid submissionId", 400);
   }
 
-  const submission = await FormSubmission.findByPk(submissionIdNum, {
+  const submission = await FormSubmission.findOne({
+    where: { id: submissionIdNum, status: { [Op.ne]: 0 } },
     attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
     include: [
       {
@@ -295,8 +352,7 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
           }
         ]
       }
-    ],
-    where: { status: { [Op.ne]: 0 } }
+    ]
   });
 
   if (!submission) {
