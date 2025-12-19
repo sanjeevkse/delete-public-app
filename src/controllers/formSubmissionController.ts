@@ -90,12 +90,10 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     });
 
     if (!formEvent) {
-      await transaction.rollback();
       throw new ApiError("Form event not found", 404);
     }
 
     if (formEvent.status !== 1) {
-      await transaction.rollback();
       throw new ApiError("Form event is not active", 400);
     }
 
@@ -105,19 +103,16 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const endDate = formEvent.endDate ? new Date(formEvent.endDate) : null;
 
     if (today < startDate) {
-      await transaction.rollback();
       throw new ApiError("Form submission has not started yet", 400);
     }
 
     if (endDate && today > endDate) {
-      await transaction.rollback();
       throw new ApiError("Form submission has ended", 400);
     }
 
     // Get form and fields for validation
     const form = formEvent.form;
     if (!form) {
-      await transaction.rollback();
       throw new ApiError("Form not found", 404);
     }
 
@@ -137,7 +132,6 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     // Validate files per field (max 5 files per field)
     for (const [fieldName, files] of filesByFieldName) {
       if (files.length > 5) {
-        await transaction.rollback();
         throw new ApiError(`Field "${fieldName}" can have at most 5 files`, 400);
       }
     }
@@ -303,7 +297,10 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
     sendCreated(res, fullSubmission, "Form submitted successfully");
   } catch (error) {
-    await transaction.rollback();
+    // Only rollback if transaction is still pending
+    // if (!transaction.finished) {
+    //   await transaction.rollback();
+    // }
     throw error;
   }
 });
