@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { Op, Transaction } from "sequelize";
 import path from "path";
 import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
@@ -237,7 +237,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       for (const filePath of filePaths) {
         if (fs.existsSync(filePath)) {
           const ext = path.extname(filePath);
-          const uuid = uuidv4();
+          const uuid = randomUUID();
           const finalFileName = `${uuid}${ext}`;
           const finalFilePath = path.join(finalDir, finalFileName);
 
