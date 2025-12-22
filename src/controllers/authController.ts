@@ -624,7 +624,7 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
   // Fetch all sidebars
   const allSidebars = await Sidebar.findAll({
     where: { status: 1 },
-    attributes: ["id", "dispName", "screenName", "icon", "status", "sequence"],
+    attributes: ["id", "dispName", "screenName", "icon", "color", "status", "sequence"],
     order: [["sequence", "ASC"]]
   });
 
@@ -644,6 +644,7 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
       dispName: sidebar.dispName,
       screenName: sidebar.screenName,
       icon: sidebar.icon,
+      color: sidebar.color,
       status: sidebar.status,
       label: sidebar.dispName,
       description: ""
