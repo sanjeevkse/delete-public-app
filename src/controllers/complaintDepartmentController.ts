@@ -53,8 +53,15 @@ export const getAllComplaintDepartments = asyncHandler(
       "dispName"
     );
 
+    const where: any = { status: 1 };
+
+    // Filter by complaintSectorId if provided
+    if (req.query.complaintSectorId) {
+      where.complaintSectorId = req.query.complaintSectorId;
+    }
+
     const { rows, count } = await MetaComplaintDepartment.findAndCountAll({
-      where: { status: 1 },
+      where,
       attributes: ["id", "dispName", "description", "complaintSectorId"],
       limit,
       offset,
