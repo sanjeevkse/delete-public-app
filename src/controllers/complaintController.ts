@@ -109,12 +109,18 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         required: false,
         attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
       },
-      { model: ComplaintType, as: "complaintType", attributes: ["id", "dispName", "description"] },
       {
-        model: MetaComplaintDepartment,
-        as: "complaintDepartment",
-        attributes: ["id", "dispName"],
-        required: false
+        model: ComplaintType,
+        as: "complaintType",
+        attributes: ["id", "dispName", "description"],
+        include: [
+          {
+            model: MetaComplaintDepartment,
+            as: "complaintDepartment",
+            attributes: ["id", "dispName"],
+            required: false
+          }
+        ]
       },
       { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
       {
@@ -151,13 +157,15 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
       {
         model: ComplaintType,
         as: "complaintType",
-        attributes: ["id", "dispName", "description"]
-      },
-      {
-        model: MetaComplaintDepartment,
-        as: "complaintDepartment",
-        attributes: ["id", "dispName"],
-        required: false
+        attributes: ["id", "dispName", "description"],
+        include: [
+          {
+            model: MetaComplaintDepartment,
+            as: "complaintDepartment",
+            attributes: ["id", "dispName"],
+            required: false
+          }
+        ]
       },
       { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
       {
@@ -246,13 +254,15 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         model: ComplaintType,
         as: "complaintType",
         attributes: ["id", "dispName", "description"],
-        required: false
-      },
-      {
-        model: MetaComplaintDepartment,
-        as: "complaintDepartment",
-        attributes: ["id", "dispName"],
-        required: false
+        required: false,
+        include: [
+          {
+            model: MetaComplaintDepartment,
+            as: "complaintDepartment",
+            attributes: ["id", "dispName"],
+            required: false
+          }
+        ]
       },
       { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
       {
@@ -383,13 +393,15 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
       {
         model: ComplaintType,
         as: "complaintType",
-        attributes: ["id", "dispName"]
-      },
-      {
-        model: MetaComplaintDepartment,
-        as: "complaintDepartment",
         attributes: ["id", "dispName"],
-        required: false
+        include: [
+          {
+            model: MetaComplaintDepartment,
+            as: "complaintDepartment",
+            attributes: ["id", "dispName"],
+            required: false
+          }
+        ]
       },
       { model: MetaWardNumber, as: "wardNumber", attributes: ["id", "dispName"], required: false },
       {
