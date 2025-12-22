@@ -5,27 +5,39 @@ import {
   InferCreationAttributes,
   Model,
   NonAttribute,
-  HasManyGetAssociationsMixin
+  HasManyGetAssociationsMixin,
+  BelongsToGetAssociationMixin
 } from "sequelize";
 import sequelize from "../config/database";
 import type ComplaintTypeStep from "./ComplaintTypeSteps";
+import type MetaComplaintDepartment from "./MetaComplaintDepartment";
+import type MetaComplaintSector from "./MetaComplaintSector";
 
 class ComplaintType extends Model<
-  InferAttributes<ComplaintType, { omit: "steps" }>,
-  InferCreationAttributes<ComplaintType, { omit: "steps" }>
+  InferAttributes<ComplaintType, { omit: "steps" | "complaintDepartment" | "complaintSector" }>,
+  InferCreationAttributes<
+    ComplaintType,
+    { omit: "steps" | "complaintDepartment" | "complaintSector" }
+  >
 > {
   declare id: CreationOptional<number>;
   declare dispName: string;
   declare description: string | null;
+  declare complaintDepartmentId: number | null;
+  declare complaintSectorId: number | null;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
-  // Association
+  // Associations
   declare steps?: NonAttribute<ComplaintTypeStep[]>;
+  declare complaintDepartment?: NonAttribute<MetaComplaintDepartment>;
+  declare complaintSector?: NonAttribute<MetaComplaintSector>;
   declare getSteps: HasManyGetAssociationsMixin<ComplaintTypeStep>;
+  declare getComplaintDepartment: BelongsToGetAssociationMixin<MetaComplaintDepartment>;
+  declare getComplaintSector: BelongsToGetAssociationMixin<MetaComplaintSector>;
 }
 
 ComplaintType.init(
@@ -43,6 +55,16 @@ ComplaintType.init(
     description: {
       type: DataTypes.TEXT,
       allowNull: false
+    },
+    complaintDepartmentId: {
+      field: "complaint_department_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    complaintSectorId: {
+      field: "complaint_sector_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

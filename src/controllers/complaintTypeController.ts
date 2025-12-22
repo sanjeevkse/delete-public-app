@@ -26,11 +26,21 @@ export const createComplaintType = asyncHandler(
     const { id: userId } = requireAuthenticatedUser(req);
     const dispName = parseRequiredString(req.body?.dispName, "dispName");
     const description = req.body?.description || null;
+    const complaintDepartmentId = req.body?.complaintDepartmentId || null;
+    const complaintSectorId = req.body?.complaintSectorId || null;
     const steps = Array.isArray(req.body?.steps) ? req.body.steps : [];
 
     const createdComplaintTypeId = await sequelize.transaction(async (transaction) => {
       const complaintType = await ComplaintType.create(
-        { dispName, description, status: 1, createdBy: userId, updatedBy: userId },
+        {
+          dispName,
+          description,
+          complaintDepartmentId,
+          complaintSectorId,
+          status: 1,
+          createdBy: userId,
+          updatedBy: userId
+        },
         { transaction }
       );
 
@@ -195,7 +205,13 @@ export const updateComplaintType = asyncHandler(
     const { id: userId } = requireAuthenticatedUser(req);
     const { id: paramId } = req.params;
     const id = Number(paramId);
-    const { dispName, description, steps = [] } = req.body;
+    const {
+      dispName,
+      description,
+      complaintDepartmentId,
+      complaintSectorId,
+      steps = []
+    } = req.body;
 
     if (isNaN(id)) {
       throw new ApiError("Invalid complaint type ID", 400);
@@ -208,7 +224,16 @@ export const updateComplaintType = asyncHandler(
         throw new ApiError("Complaint Type not found", 404);
       }
 
-      await complaintType.update({ dispName, description, updatedBy: userId }, { transaction });
+      await complaintType.update(
+        {
+          dispName,
+          description,
+          complaintDepartmentId,
+          complaintSectorId,
+          updatedBy: userId
+        },
+        { transaction }
+      );
 
       // Get all existing steps to reset their stepOrder to negative values
       const existingSteps = await ComplaintTypeStep.findAll({
