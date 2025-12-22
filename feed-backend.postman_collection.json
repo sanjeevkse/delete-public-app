@@ -4859,7 +4859,7 @@
 							"mode": "raw",
 							"raw": "{\n  \"dispName\": \"Electrical Department\",\n  \"description\": \"Handles all electrical related complaints\"\n}"
 						},
-						"url": "{{baseUrl}}/api/sector-departments"
+						"url": "{{baseUrl}}/api/complaint-departments"
 					},
 					"response": []
 				},
@@ -4875,13 +4875,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sector-departments?page=1&limit=10",
+							"raw": "{{baseUrl}}/api/complaint-departments?page=1&limit=10",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"sector-departments"
+								"complaint-departments"
 							],
 							"query": [
 								{
@@ -4909,13 +4909,13 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sector-departments/:id",
+							"raw": "{{baseUrl}}/api/complaint-departments/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"sector-departments",
+								"complaint-departments",
 								":id"
 							],
 							"variable": [
@@ -4949,13 +4949,13 @@
 							"raw": "{\n  \"dispName\": \"Water Supply Department\",\n  \"description\": \"Manages water supply and sanitation complaints\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/sector-departments/:id",
+							"raw": "{{baseUrl}}/api/complaint-departments/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"sector-departments",
+								"complaint-departments",
 								":id"
 							],
 							"variable": [
@@ -4980,13 +4980,13 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sector-departments/:id",
+							"raw": "{{baseUrl}}/api/complaint-departments/:id",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"sector-departments",
+								"complaint-departments",
 								":id"
 							],
 							"variable": [
