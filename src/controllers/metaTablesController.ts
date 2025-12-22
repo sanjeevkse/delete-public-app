@@ -62,8 +62,9 @@ const loadModel = async (modelName: string): Promise<ModelStatic<any>> => {
 const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig>> => {
   const registry: Record<string, MetaTableConfig> = {};
 
-  // Fetch all meta table configurations from database (regardless of status)
+  // Fetch only active meta table configurations from database (status = 1)
   const configs = await MetaTableRegistry.findAll({
+    where: { status: 1 },
     attributes: { exclude: ["createdBy", "updatedBy", "createdAt", "updatedAt"] }
   });
 

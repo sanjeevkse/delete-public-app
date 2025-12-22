@@ -47,11 +47,11 @@ export const getRegistryEntries = asyncHandler(async (req: Request, res: Respons
   }
 
   // Add status filter - default to active (1) if not specified
-  if (status !== undefined) {
-    filters.push({ status: Number.parseInt(status, 10) });
-  } else {
-    filters.push({ status: 1 });
-  }
+  // if (status !== undefined) {
+  //   filters.push({ status: Number.parseInt(status, 10) });
+  // } else {
+  //   filters.push({ status: 1 });
+  // }
 
   const where = filters.length ? { [Op.and]: filters } : undefined;
 
