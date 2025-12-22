@@ -11,20 +11,15 @@ import {
 import sequelize from "../config/database";
 import type ComplaintTypeStep from "./ComplaintTypeSteps";
 import type MetaComplaintDepartment from "./MetaComplaintDepartment";
-import type MetaComplaintSector from "./MetaComplaintSector";
 
 class ComplaintType extends Model<
-  InferAttributes<ComplaintType, { omit: "steps" | "complaintDepartment" | "complaintSector" }>,
-  InferCreationAttributes<
-    ComplaintType,
-    { omit: "steps" | "complaintDepartment" | "complaintSector" }
-  >
+  InferAttributes<ComplaintType, { omit: "steps" | "complaintDepartment" }>,
+  InferCreationAttributes<ComplaintType, { omit: "steps" | "complaintDepartment" }>
 > {
   declare id: CreationOptional<number>;
   declare dispName: string;
   declare description: string | null;
   declare complaintDepartmentId: number | null;
-  declare complaintSectorId: number | null;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -34,10 +29,8 @@ class ComplaintType extends Model<
   // Associations
   declare steps?: NonAttribute<ComplaintTypeStep[]>;
   declare complaintDepartment?: NonAttribute<MetaComplaintDepartment>;
-  declare complaintSector?: NonAttribute<MetaComplaintSector>;
   declare getSteps: HasManyGetAssociationsMixin<ComplaintTypeStep>;
   declare getComplaintDepartment: BelongsToGetAssociationMixin<MetaComplaintDepartment>;
-  declare getComplaintSector: BelongsToGetAssociationMixin<MetaComplaintSector>;
 }
 
 ComplaintType.init(
@@ -58,11 +51,6 @@ ComplaintType.init(
     },
     complaintDepartmentId: {
       field: "complaint_department_id",
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true
-    },
-    complaintSectorId: {
-      field: "complaint_sector_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },

@@ -5,6 +5,7 @@ interface MetaComplaintDepartmentAttributes {
   id: number;
   dispName: string;
   description?: string | null;
+  complaintSectorId?: number | null;
   status: number;
   createdBy?: number;
   updatedBy?: number;
@@ -13,7 +14,10 @@ interface MetaComplaintDepartmentAttributes {
 }
 
 interface MetaComplaintDepartmentCreationAttributes
-  extends Optional<MetaComplaintDepartmentAttributes, "id" | "createdBy" | "updatedBy"> {}
+  extends Optional<
+    MetaComplaintDepartmentAttributes,
+    "id" | "complaintSectorId" | "createdBy" | "updatedBy"
+  > {}
 
 class MetaComplaintDepartment
   extends Model<MetaComplaintDepartmentAttributes, MetaComplaintDepartmentCreationAttributes>
@@ -22,6 +26,7 @@ class MetaComplaintDepartment
   public id!: number;
   public dispName!: string;
   public description?: string | null;
+  public complaintSectorId?: number | null;
   public status!: number;
   public createdBy?: number;
   public updatedBy?: number;
@@ -44,6 +49,11 @@ MetaComplaintDepartment.init(
     },
     description: {
       type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    complaintSectorId: {
+      field: "complaint_sector_id",
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
     status: {

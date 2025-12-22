@@ -518,7 +518,7 @@ const establishAssociations = (): void => {
     as: "complaintType"
   });
 
-  // ComplaintType foreign key associations
+  // ComplaintType and MetaComplaintDepartment associations
   ComplaintType.belongsTo(MetaComplaintDepartment, {
     foreignKey: "complaint_department_id",
     as: "complaintDepartment"
@@ -528,13 +528,14 @@ const establishAssociations = (): void => {
     as: "complaintTypes"
   });
 
-  ComplaintType.belongsTo(MetaComplaintSector, {
+  // MetaComplaintDepartment and MetaComplaintSector associations
+  MetaComplaintDepartment.belongsTo(MetaComplaintSector, {
     foreignKey: "complaint_sector_id",
     as: "complaintSector"
   });
-  MetaComplaintSector.hasMany(ComplaintType, {
+  MetaComplaintSector.hasMany(MetaComplaintDepartment, {
     foreignKey: "complaint_sector_id",
-    as: "complaintTypes"
+    as: "departments"
   });
 
   // Complaint associations

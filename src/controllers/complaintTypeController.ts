@@ -27,7 +27,6 @@ export const createComplaintType = asyncHandler(
     const dispName = parseRequiredString(req.body?.dispName, "dispName");
     const description = req.body?.description || null;
     const complaintDepartmentId = req.body?.complaintDepartmentId || null;
-    const complaintSectorId = req.body?.complaintSectorId || null;
     const steps = Array.isArray(req.body?.steps) ? req.body.steps : [];
 
     const createdComplaintTypeId = await sequelize.transaction(async (transaction) => {
@@ -36,7 +35,6 @@ export const createComplaintType = asyncHandler(
           dispName,
           description,
           complaintDepartmentId,
-          complaintSectorId,
           status: 1,
           createdBy: userId,
           updatedBy: userId
@@ -205,13 +203,7 @@ export const updateComplaintType = asyncHandler(
     const { id: userId } = requireAuthenticatedUser(req);
     const { id: paramId } = req.params;
     const id = Number(paramId);
-    const {
-      dispName,
-      description,
-      complaintDepartmentId,
-      complaintSectorId,
-      steps = []
-    } = req.body;
+    const { dispName, description, complaintDepartmentId, steps = [] } = req.body;
 
     if (isNaN(id)) {
       throw new ApiError("Invalid complaint type ID", 400);
@@ -229,7 +221,6 @@ export const updateComplaintType = asyncHandler(
           dispName,
           description,
           complaintDepartmentId,
-          complaintSectorId,
           updatedBy: userId
         },
         { transaction }
