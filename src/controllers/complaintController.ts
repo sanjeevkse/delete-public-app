@@ -30,7 +30,6 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   const { id: userId } = requireAuthenticatedUser(req);
   const {
     selfOther,
-    complaintDepartmentId,
     complaintTypeId,
     wardNumberId,
     boothNumberId,
@@ -60,7 +59,6 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     const newComplaint = await Complaint.create(
       {
         selfOther,
-        complaintDepartmentId: complaintDepartmentId || null,
         complaintTypeId,
         wardNumberId: wardNumberId || null,
         boothNumberId: boothNumberId || null,
@@ -298,7 +296,6 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
     return {
       id: c.id,
       selfOther: c.selfOther,
-      complaintDepartmentId: c.complaintDepartmentId,
       complaintDepartment: c.complaintDepartment || null,
       complaintTypeId: c.complaintTypeId,
       complaintType: c.complaintType || null,
@@ -351,7 +348,6 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     "longitude",
     "landmark",
     "selfOther",
-    "complaintDepartmentId",
     "complaintTypeId",
     "wardNumberId",
     "boothNumberId",

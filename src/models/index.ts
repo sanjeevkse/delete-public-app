@@ -528,15 +528,6 @@ const establishAssociations = (): void => {
     as: "complaints"
   });
 
-  Complaint.belongsTo(MetaComplaintDepartment, {
-    foreignKey: "complaintDepartmentId",
-    as: "complaintDepartment"
-  });
-  MetaComplaintDepartment.hasMany(Complaint, {
-    foreignKey: "complaintDepartmentId",
-    as: "complaints"
-  });
-
   Complaint.belongsTo(MetaWardNumber, {
     foreignKey: "wardNumberId",
     as: "wardNumber"

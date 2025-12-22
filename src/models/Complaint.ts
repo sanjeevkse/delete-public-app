@@ -10,7 +10,6 @@ import sequelize from "../config/database";
 class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttributes<Complaint>> {
   declare id: CreationOptional<number>;
   declare selfOther: "SELF" | "OTHER";
-  declare complaintDepartmentId: number | null;
   declare complaintTypeId: number;
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
@@ -44,11 +43,6 @@ Complaint.init(
       type: DataTypes.ENUM("SELF", "OTHER"),
       allowNull: false,
       field: "self_other"
-    },
-    complaintDepartmentId: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true,
-      field: "complaint_department_id"
     },
     complaintTypeId: {
       type: DataTypes.INTEGER.UNSIGNED,
