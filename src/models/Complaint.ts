@@ -10,7 +10,7 @@ import sequelize from "../config/database";
 class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttributes<Complaint>> {
   declare id: CreationOptional<number>;
   declare selfOther: "SELF" | "OTHER";
-  declare sectorDepartmentId: number | null;
+  declare complaintDepartmentId: number | null;
   declare complaintTypeId: number;
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
@@ -45,10 +45,10 @@ Complaint.init(
       allowNull: false,
       field: "self_other"
     },
-    sectorDepartmentId: {
+    complaintDepartmentId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true,
-      field: "sector_department_id"
+      field: "complaint_department_id"
     },
     complaintTypeId: {
       type: DataTypes.INTEGER.UNSIGNED,

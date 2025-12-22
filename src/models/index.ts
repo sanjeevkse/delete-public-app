@@ -16,12 +16,12 @@ import MetaPermissionGroup from "./MetaPermissionGroup";
 import MetaRelationType from "./MetaRelationType";
 import MetaUserRole from "./MetaUserRole";
 import MetaWardNumber from "./MetaWardNumber";
-import MetaSectorDepartment from "./MetaSectorDepartment";
+import MetaComplaintDepartment from "./MetaComplaintDepartment";
 import MetaSchemeCategory from "./MetaSchemeCategory";
 import MetaSchemeSector from "./MetaSchemeSector";
 import SchemeStep from "./SchemeStep";
 import MetaGovernmentLevel from "./MetaGovernmentLevel";
-import MetaSector from "./MetaSector";
+import MetaComplaintSector from "./MetaComplaintSector";
 import MetaSchemeTypeLookup from "./MetaSchemeTypeLookup";
 import MetaOwnershipType from "./MetaOwnershipType";
 import MetaGenderOption from "./MetaGenderOption";
@@ -266,8 +266,11 @@ const establishAssociations = (): void => {
     as: "schemeApplications"
   });
 
-  UserSchemeApplication.belongsTo(MetaSector, { foreignKey: "sectorId", as: "sector" });
-  MetaSector.hasMany(UserSchemeApplication, { foreignKey: "sectorId", as: "schemeApplications" });
+  UserSchemeApplication.belongsTo(MetaComplaintSector, { foreignKey: "sectorId", as: "sector" });
+  MetaComplaintSector.hasMany(UserSchemeApplication, {
+    foreignKey: "sectorId",
+    as: "schemeApplications"
+  });
 
   UserSchemeApplication.belongsTo(MetaSchemeTypeLookup, {
     foreignKey: "schemeTypeId",
@@ -380,11 +383,11 @@ const establishAssociations = (): void => {
     as: "userProfiles"
   });
 
-  UserProfile.belongsTo(MetaSectorDepartment, {
+  UserProfile.belongsTo(MetaComplaintDepartment, {
     foreignKey: "sectorId",
     as: "sector"
   });
-  MetaSectorDepartment.hasMany(UserProfile, {
+  MetaComplaintDepartment.hasMany(UserProfile, {
     foreignKey: "sectorId",
     as: "userProfiles"
   });
@@ -525,12 +528,12 @@ const establishAssociations = (): void => {
     as: "complaints"
   });
 
-  Complaint.belongsTo(MetaSectorDepartment, {
-    foreignKey: "sectorDepartmentId",
-    as: "sectorDepartment"
+  Complaint.belongsTo(MetaComplaintDepartment, {
+    foreignKey: "complaintDepartmentId",
+    as: "complaintDepartment"
   });
-  MetaSectorDepartment.hasMany(Complaint, {
-    foreignKey: "sectorDepartmentId",
+  MetaComplaintDepartment.hasMany(Complaint, {
+    foreignKey: "complaintDepartmentId",
     as: "complaints"
   });
 
@@ -647,7 +650,7 @@ export {
   MetaUserRole,
   MetaWardNumber,
   MetaGovernmentLevel,
-  MetaSector,
+  MetaComplaintSector,
   MetaSchemeTypeLookup,
   MetaOwnershipType,
   MetaGenderOption,

@@ -12,7 +12,7 @@ import type User from "./User";
 import type MetaWardNumber from "./MetaWardNumber";
 import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaGovernmentLevel from "./MetaGovernmentLevel";
-import type MetaSector from "./MetaSector";
+import type MetaComplaintSector from "./MetaComplaintSector";
 import type MetaSchemeTypeLookup from "./MetaSchemeTypeLookup";
 import type MetaOwnershipType from "./MetaOwnershipType";
 import type MetaGenderOption from "./MetaGenderOption";
@@ -77,7 +77,7 @@ class UserSchemeApplication extends Model<
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
   declare governmentLevel?: NonAttribute<MetaGovernmentLevel | null>;
-  declare sector?: NonAttribute<MetaSector | null>;
+  declare sector?: NonAttribute<MetaComplaintSector | null>;
   declare schemeType?: NonAttribute<MetaSchemeTypeLookup | null>;
   declare ownershipType?: NonAttribute<MetaOwnershipType | null>;
   declare genderOption?: NonAttribute<MetaGenderOption | null>;

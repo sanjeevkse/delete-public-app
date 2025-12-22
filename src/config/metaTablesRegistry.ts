@@ -146,10 +146,10 @@ export const META_TABLE_CONFIGS: Record<string, MetaTableConfigBase> = {
     hasStatus: true
   },
   sector: {
-    name: "sector",
-    tableName: "meta_sectors",
-    displayName: "Sectors",
-    modelName: "MetaSector",
+    name: "complaintSector",
+    tableName: "meta_complaint_sector",
+    displayName: "Complaint Sectors",
+    modelName: "MetaComplaintSector",
     description: "Sectors associated with schemes (public, private, etc.).",
     primaryKey: "id",
     searchableFields: ["dispName"],

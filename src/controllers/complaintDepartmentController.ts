@@ -10,12 +10,12 @@ import {
   parseSortDirection
 } from "../utils/apiResponse";
 import { ApiError } from "../middlewares/errorHandler";
-import MetaSectorDepartment from "../models/MetaSectorDepartment";
+import MetaComplaintDepartment from "../models/MetaComplaintDepartment";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 
 // CREATE
-export const createSectorDepartment = asyncHandler(
+export const createComplaintDepartment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id: userId } = requireAuthenticatedUser(req);
     const { dispName, description } = req.body;
@@ -24,7 +24,7 @@ export const createSectorDepartment = asyncHandler(
       throw new ApiError("Display name is required", 400);
     }
 
-    const sectorDepartment = await MetaSectorDepartment.create({
+    const complaintDepartment = await MetaComplaintDepartment.create({
       dispName,
       description: description || null,
       status: 1,
@@ -32,12 +32,12 @@ export const createSectorDepartment = asyncHandler(
       updatedBy: userId
     });
 
-    return sendCreated(res, sectorDepartment, "Sector/Department created successfully");
+    return sendCreated(res, complaintDepartment, "Sector/Department created successfully");
   }
 );
 
 // READ ALL
-export const getAllSectorDepartments = asyncHandler(
+export const getAllComplaintDepartments = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { page, limit, offset } = parsePaginationParams(
       req.query.page as string,
@@ -52,7 +52,7 @@ export const getAllSectorDepartments = asyncHandler(
       "dispName"
     );
 
-    const { rows, count } = await MetaSectorDepartment.findAndCountAll({
+    const { rows, count } = await MetaComplaintDepartment.findAndCountAll({
       where: { status: 1 },
       attributes: ["id", "dispName", "description"],
       limit,
@@ -72,59 +72,59 @@ export const getAllSectorDepartments = asyncHandler(
 );
 
 // READ BY ID
-export const getSectorDepartmentById = asyncHandler(
+export const getComplaintDepartmentById = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
-    const sectorDepartment = await MetaSectorDepartment.findOne({
+    const complaintDepartment = await MetaComplaintDepartment.findOne({
       where: { id, status: 1 },
       attributes: ["id", "dispName", "description"]
     });
 
-    if (!sectorDepartment) {
+    if (!complaintDepartment) {
       throw new ApiError("Sector/Department not found", 404);
     }
 
-    return sendSuccess(res, sectorDepartment, "Sector/Department fetched successfully");
+    return sendSuccess(res, complaintDepartment, "Sector/Department fetched successfully");
   }
 );
 
 // UPDATE
-export const updateSectorDepartment = asyncHandler(
+export const updateComplaintDepartment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id: userId } = requireAuthenticatedUser(req);
     const { id } = req.params;
     const { dispName, description } = req.body;
 
-    const sectorDepartment = await MetaSectorDepartment.findOne({ where: { id, status: 1 } });
+    const complaintDepartment = await MetaComplaintDepartment.findOne({ where: { id, status: 1 } });
 
-    if (!sectorDepartment) {
+    if (!complaintDepartment) {
       throw new ApiError("Sector/Department not found", 404);
     }
 
-    await sectorDepartment.update({
-      dispName: dispName || sectorDepartment.dispName,
-      description: description !== undefined ? description : sectorDepartment.description,
+    await complaintDepartment.update({
+      dispName: dispName || complaintDepartment.dispName,
+      description: description !== undefined ? description : complaintDepartment.description,
       updatedBy: userId
     });
 
-    return sendSuccess(res, sectorDepartment, "Sector/Department updated successfully");
+    return sendSuccess(res, complaintDepartment, "Sector/Department updated successfully");
   }
 );
 
 // DELETE (soft delete)
-export const deleteSectorDepartment = asyncHandler(
+export const deleteComplaintDepartment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id: userId } = requireAuthenticatedUser(req);
     const { id } = req.params;
 
-    const sectorDepartment = await MetaSectorDepartment.findOne({ where: { id, status: 1 } });
+    const complaintDepartment = await MetaComplaintDepartment.findOne({ where: { id, status: 1 } });
 
-    if (!sectorDepartment) {
+    if (!complaintDepartment) {
       throw new ApiError("Sector/Department not found", 404);
     }
 
-    await sectorDepartment.update({
+    await complaintDepartment.update({
       status: 0,
       updatedBy: userId
     });

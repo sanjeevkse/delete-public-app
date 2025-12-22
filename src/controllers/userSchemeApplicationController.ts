@@ -13,7 +13,7 @@ import Scheme from "../models/Scheme";
 import MetaWardNumber from "../models/MetaWardNumber";
 import MetaBoothNumber from "../models/MetaBoothNumber";
 import MetaGovernmentLevel from "../models/MetaGovernmentLevel";
-import MetaSector from "../models/MetaSector";
+import MetaComplaintSector from "../models/MetaComplaintSector";
 import MetaSchemeTypeLookup from "../models/MetaSchemeTypeLookup";
 import MetaOwnershipType from "../models/MetaOwnershipType";
 import MetaGenderOption from "../models/MetaGenderOption";
@@ -415,7 +415,7 @@ const normalizeApplicationPayload = async (
     throw new ApiError("sectorId is required", 400);
   }
   const sectorId = await ensureActiveMetaRecord(
-    MetaSector,
+    MetaComplaintSector,
     parsePositiveInt(sectorInput, "sectorId"),
     "sectorId"
   );

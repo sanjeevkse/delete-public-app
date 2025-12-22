@@ -13,7 +13,7 @@ import sequelize from "../config/database";
 import Complaint from "../models/Complaint";
 import ComplaintMedia from "../models/ComplaintMedia";
 import ComplaintType from "../models/ComplaintType";
-import MetaSectorDepartment from "../models/MetaSectorDepartment";
+import MetaComplaintDepartment from "../models/MetaComplaintDepartment";
 import MetaWardNumber from "../models/MetaWardNumber";
 import MetaBoothNumber from "../models/MetaBoothNumber";
 import MetaComplaintStatus from "../models/MetaComplaintStatus";
@@ -30,7 +30,7 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   const { id: userId } = requireAuthenticatedUser(req);
   const {
     selfOther,
-    sectorDepartmentId,
+    complaintDepartmentId,
     complaintTypeId,
     wardNumberId,
     boothNumberId,
@@ -60,7 +60,7 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     const newComplaint = await Complaint.create(
       {
         selfOther,
-        sectorDepartmentId: sectorDepartmentId || null,
+        complaintDepartmentId: complaintDepartmentId || null,
         complaintTypeId,
         wardNumberId: wardNumberId || null,
         boothNumberId: boothNumberId || null,
@@ -113,8 +113,8 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
       },
       { model: ComplaintType, as: "complaintType", attributes: ["id", "dispName", "description"] },
       {
-        model: MetaSectorDepartment,
-        as: "sectorDepartment",
+        model: MetaComplaintDepartment,
+        as: "complaintDepartment",
         attributes: ["id", "dispName"],
         required: false
       },
@@ -156,8 +156,8 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
         attributes: ["id", "dispName", "description"]
       },
       {
-        model: MetaSectorDepartment,
-        as: "sectorDepartment",
+        model: MetaComplaintDepartment,
+        as: "complaintDepartment",
         attributes: ["id", "dispName"],
         required: false
       },
@@ -251,8 +251,8 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         required: false
       },
       {
-        model: MetaSectorDepartment,
-        as: "sectorDepartment",
+        model: MetaComplaintDepartment,
+        as: "complaintDepartment",
         attributes: ["id", "dispName"],
         required: false
       },
@@ -298,8 +298,8 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
     return {
       id: c.id,
       selfOther: c.selfOther,
-      sectorDepartmentId: c.sectorDepartmentId,
-      sectorDepartment: c.sectorDepartment || null,
+      complaintDepartmentId: c.complaintDepartmentId,
+      complaintDepartment: c.complaintDepartment || null,
       complaintTypeId: c.complaintTypeId,
       complaintType: c.complaintType || null,
       wardNumberId: c.wardNumberId,
@@ -351,7 +351,7 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     "longitude",
     "landmark",
     "selfOther",
-    "sectorDepartmentId",
+    "complaintDepartmentId",
     "complaintTypeId",
     "wardNumberId",
     "boothNumberId",
@@ -390,8 +390,8 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         attributes: ["id", "dispName"]
       },
       {
-        model: MetaSectorDepartment,
-        as: "sectorDepartment",
+        model: MetaComplaintDepartment,
+        as: "complaintDepartment",
         attributes: ["id", "dispName"],
         required: false
       },

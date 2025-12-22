@@ -2,7 +2,7 @@ import { DataTypes, Model, Optional } from "sequelize";
 
 import sequelize from "../config/database";
 
-interface MetaSectorAttributes {
+interface MetaComplaintSectorAttributes {
   id: number;
   dispName: string;
   description?: string | null;
@@ -13,12 +13,15 @@ interface MetaSectorAttributes {
   updatedAt?: Date;
 }
 
-type MetaSectorCreationAttributes = Optional<
-  MetaSectorAttributes,
+type MetaComplaintSectorCreationAttributes = Optional<
+  MetaComplaintSectorAttributes,
   "id" | "description" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
 >;
 
-class MetaSector extends Model<MetaSectorAttributes, MetaSectorCreationAttributes> {
+class MetaComplaintSector extends Model<
+  MetaComplaintSectorAttributes,
+  MetaComplaintSectorCreationAttributes
+> {
   declare id: number;
   declare dispName: string;
   declare description?: string | null;
@@ -29,7 +32,7 @@ class MetaSector extends Model<MetaSectorAttributes, MetaSectorCreationAttribute
   declare readonly updatedAt?: Date;
 }
 
-MetaSector.init(
+MetaComplaintSector.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -64,10 +67,10 @@ MetaSector.init(
   },
   {
     sequelize,
-    tableName: "tbl_meta_sector",
+    tableName: "tbl_meta_complaint_sector",
     timestamps: true,
     underscored: true
   }
 );
 
-export default MetaSector;
+export default MetaComplaintSector;

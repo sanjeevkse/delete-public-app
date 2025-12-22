@@ -14,7 +14,7 @@ import type MetaEducationalDetail from "./MetaEducationalDetail";
 import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
-import type MetaSectorDepartment from "./MetaSectorDepartment";
+import type MetaComplaintDepartment from "./MetaComplaintDepartment";
 import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
 
@@ -68,7 +68,7 @@ class UserProfile extends Model<
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
-  declare sector?: NonAttribute<MetaSectorDepartment | null>;
+  declare sector?: NonAttribute<MetaComplaintDepartment | null>;
 }
 
 UserProfile.init(

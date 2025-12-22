@@ -4539,7 +4539,7 @@
 									"type": "text"
 								},
 								{
-									"key": "sectorDepartmentId",
+									"key": "complaintDepartmentId",
 									"value": "1",
 									"description": "Optional - References tbl_meta_complaint_sector_department",
 									"type": "text"

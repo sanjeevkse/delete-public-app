@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 
-interface MetaSectorDepartmentAttributes {
+interface MetaComplaintDepartmentAttributes {
   id: number;
   dispName: string;
   description?: string | null;
@@ -12,12 +12,12 @@ interface MetaSectorDepartmentAttributes {
   updatedAt?: Date;
 }
 
-interface MetaSectorDepartmentCreationAttributes
-  extends Optional<MetaSectorDepartmentAttributes, "id" | "createdBy" | "updatedBy"> {}
+interface MetaComplaintDepartmentCreationAttributes
+  extends Optional<MetaComplaintDepartmentAttributes, "id" | "createdBy" | "updatedBy"> {}
 
-class MetaSectorDepartment
-  extends Model<MetaSectorDepartmentAttributes, MetaSectorDepartmentCreationAttributes>
-  implements MetaSectorDepartmentAttributes
+class MetaComplaintDepartment
+  extends Model<MetaComplaintDepartmentAttributes, MetaComplaintDepartmentCreationAttributes>
+  implements MetaComplaintDepartmentAttributes
 {
   public id!: number;
   public dispName!: string;
@@ -29,7 +29,7 @@ class MetaSectorDepartment
   public readonly updatedAt!: Date;
 }
 
-MetaSectorDepartment.init(
+MetaComplaintDepartment.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -65,10 +65,10 @@ MetaSectorDepartment.init(
   },
   {
     sequelize,
-    tableName: "tbl_meta_complaint_sector_department",
+    tableName: "tbl_meta_complaint_department",
     timestamps: true,
     underscored: true
   }
 );
 
-export default MetaSectorDepartment;
+export default MetaComplaintDepartment;
