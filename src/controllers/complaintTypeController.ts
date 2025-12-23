@@ -15,6 +15,8 @@ import {
 import sequelize from "../config/database";
 import ComplaintType from "../models/ComplaintType";
 import ComplaintTypeStep from "../models/ComplaintTypeSteps";
+import MetaComplaintDepartment from "../models/MetaComplaintDepartment";
+import MetaComplaintSector from "../models/MetaComplaintSector";
 import { ApiError } from "../middlewares/errorHandler";
 
 // ✅ Common attributes to exclude
@@ -69,6 +71,20 @@ export const createComplaintType = asyncHandler(
           where: { status: 1 },
           required: false,
           attributes: { exclude: excludeFields }
+        },
+        {
+          model: MetaComplaintDepartment,
+          as: "complaintDepartment",
+          attributes: ["id", "dispName", "description"],
+          required: false,
+          include: [
+            {
+              model: MetaComplaintSector,
+              as: "complaintSector",
+              attributes: ["id", "dispName", "description"],
+              required: false
+            }
+          ]
         }
       ]
     });
@@ -125,6 +141,20 @@ export const getAllComplaintTypes = asyncHandler(
             ["complaint_type_id", "complaintTypeId"]
           ],
           order: [["step_order", "ASC"]]
+        },
+        {
+          model: MetaComplaintDepartment,
+          as: "complaintDepartment",
+          attributes: ["id", "dispName", "description"],
+          required: false,
+          include: [
+            {
+              model: MetaComplaintSector,
+              as: "complaintSector",
+              attributes: ["id", "dispName", "description"],
+              required: false
+            }
+          ]
         }
       ],
       order: [["id", sortDirection]],
@@ -139,13 +169,14 @@ export const getAllComplaintTypes = asyncHandler(
         id: ctJson.id,
         dispName: ctJson.dispName,
         description: ctJson.description,
+        complaintDepartmentId: ctJson.complaintDepartmentId,
+        complaintDepartment: ctJson.complaintDepartment || null,
         status: ctJson.status,
         steps: Array.isArray(ctJson.steps)
           ? ctJson.steps.map((s: any) => ({
               id: s.id,
               name: s.name,
               description: s.description,
-              // status: s.status,
               stepOrder: s.stepOrder,
               complaintTypeId: s.complaintTypeId
             }))
@@ -184,6 +215,20 @@ export const getComplaintTypeById = asyncHandler(
             ["disp_name", "dispName"],
             ["description", "description"],
             ["status", "status"]
+          ]
+        },
+        {
+          model: MetaComplaintDepartment,
+          as: "complaintDepartment",
+          attributes: ["id", "dispName", "description"],
+          required: false,
+          include: [
+            {
+              model: MetaComplaintSector,
+              as: "complaintSector",
+              attributes: ["id", "dispName", "description"],
+              required: false
+            }
           ]
         }
       ]
@@ -287,6 +332,20 @@ export const updateComplaintType = asyncHandler(
             where: { status: 1 },
             required: false,
             attributes: { exclude: ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"] }
+          },
+          {
+            model: MetaComplaintDepartment,
+            as: "complaintDepartment",
+            attributes: ["id", "dispName", "description"],
+            required: false,
+            include: [
+              {
+                model: MetaComplaintSector,
+                as: "complaintSector",
+                attributes: ["id", "dispName", "description"],
+                required: false
+              }
+            ]
           }
         ]
       });
