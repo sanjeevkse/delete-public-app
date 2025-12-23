@@ -71,7 +71,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName", "description", "icon"]
       }
     ],
     limit,
@@ -100,7 +100,7 @@ export const getBusiness = asyncHandler(async (req: Request, res: Response) => {
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName", "description", "icon"]
       }
     ]
   });
@@ -180,7 +180,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName", "description", "icon"]
       }
     ]
   });
@@ -269,7 +269,7 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
       {
         model: MetaBusinessType,
         as: "businessType",
-        attributes: ["id", "dispName", "description"]
+        attributes: ["id", "dispName", "description", "icon"]
       }
     ]
   });
@@ -324,7 +324,7 @@ export const toggleBusinessStatus = asyncHandler(
         {
           model: MetaBusinessType,
           as: "businessType",
-          attributes: ["id", "dispName", "description"]
+          attributes: ["id", "dispName", "description", "icon"]
         }
       ]
     });

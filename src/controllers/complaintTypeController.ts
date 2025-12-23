@@ -89,7 +89,14 @@ export const createComplaintType = asyncHandler(
       ]
     });
 
-    return sendCreated(res, createdComplaintType, "Complaint Type created successfully");
+    // Flatten the response
+    const result: any = createdComplaintType ? createdComplaintType.toJSON() : null;
+    if (result && result.complaintDepartment?.complaintSector) {
+      const { complaintSector } = result.complaintDepartment;
+      result.complaintSector = complaintSector;
+    }
+
+    return sendCreated(res, result, "Complaint Type created successfully");
   }
 );
 
@@ -170,7 +177,20 @@ export const getAllComplaintTypes = asyncHandler(
         dispName: ctJson.dispName,
         description: ctJson.description,
         complaintDepartmentId: ctJson.complaintDepartmentId,
-        complaintDepartment: ctJson.complaintDepartment || null,
+        complaintDepartment: ctJson.complaintDepartment
+          ? {
+              id: ctJson.complaintDepartment.id,
+              dispName: ctJson.complaintDepartment.dispName,
+              description: ctJson.complaintDepartment.description
+            }
+          : null,
+        complaintSector: ctJson.complaintDepartment?.complaintSector
+          ? {
+              id: ctJson.complaintDepartment.complaintSector.id,
+              dispName: ctJson.complaintDepartment.complaintSector.dispName,
+              description: ctJson.complaintDepartment.complaintSector.description
+            }
+          : null,
         status: ctJson.status,
         steps: Array.isArray(ctJson.steps)
           ? ctJson.steps.map((s: any) => ({
@@ -238,7 +258,14 @@ export const getComplaintTypeById = asyncHandler(
       throw new ApiError("Complaint Type not found", 404);
     }
 
-    return sendSuccess(res, complaintType, "Complaint Type fetched successfully");
+    // Flatten the response
+    const result: any = complaintType.toJSON();
+    if (result.complaintDepartment?.complaintSector) {
+      const { complaintSector } = result.complaintDepartment;
+      result.complaintSector = complaintSector;
+    }
+
+    return sendSuccess(res, result, "Complaint Type fetched successfully");
   }
 );
 
@@ -351,7 +378,14 @@ export const updateComplaintType = asyncHandler(
       });
     });
 
-    return sendSuccess(res, updatedComplaintType, "Complaint Type updated successfully");
+    // Flatten the response
+    const result: any = updatedComplaintType ? updatedComplaintType.toJSON() : null;
+    if (result && result.complaintDepartment?.complaintSector) {
+      const { complaintSector } = result.complaintDepartment;
+      result.complaintSector = complaintSector;
+    }
+
+    return sendSuccess(res, result, "Complaint Type updated successfully");
   }
 );
 

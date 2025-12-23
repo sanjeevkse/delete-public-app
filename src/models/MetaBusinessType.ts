@@ -15,6 +15,7 @@ class MetaBusinessType extends Model<
   declare id: CreationOptional<number>;
   declare dispName: string;
   declare description: CreationOptional<string | null>;
+  declare icon: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -38,6 +39,11 @@ MetaBusinessType.init(
     description: {
       type: DataTypes.STRING(255),
       allowNull: true
+    },
+    icon: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: "Icon URL or base64 encoded icon"
     },
     status: {
       type: DataTypes.TINYINT,
