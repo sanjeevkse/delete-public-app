@@ -31,6 +31,7 @@ import userSchemeApplicationRoutes from "./userSchemeApplicationRoutes";
 import notificationRoutes from "./notificationRoutes";
 import roleRoutes from "./roleRoutes";
 import permissionRoutes from "./permissionRoutes";
+import reportRoutes from "./reportRoutes";
 
 const router = Router();
 
@@ -70,5 +71,6 @@ router.use("/roles", roleRoutes);
 router.use("/permissions", permissionRoutes);
 router.use("/sidebar-view", sidebarViewRoutes);
 router.use("/admin", adminRoutes);
+router.use("/reports", reportRoutes);
 
 export default router;
