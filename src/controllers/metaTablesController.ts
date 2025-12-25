@@ -39,16 +39,19 @@ interface MetaTableConfig {
 const modelCache = new Map<string, ModelStatic<any>>();
 
 /**
- * Dynamically import a model by name
+ * Dynamically load a model by name using require
+ * require() works better in production builds than dynamic import()
  */
-const loadModel = async (modelName: string): Promise<ModelStatic<any>> => {
+const loadModel = (modelName: string): ModelStatic<any> => {
   if (modelCache.has(modelName)) {
     return modelCache.get(modelName)!;
   }
 
   try {
-    const modelModule = await import(`../models/${modelName}`);
-    const model = modelModule.default;
+    // Use require for reliable dynamic loading in production builds
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const modelModule = require(`../models/${modelName}`);
+    const model = modelModule.default || modelModule;
     modelCache.set(modelName, model);
     return model;
   } catch (error) {
@@ -69,7 +72,7 @@ const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig
   });
 
   for (const config of configs) {
-    const model = await loadModel(config.modelName);
+    const model = loadModel(config.modelName);
     registry[config.name] = {
       name: config.name,
       tableName: config.tableName,
