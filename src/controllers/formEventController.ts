@@ -20,40 +20,17 @@ import Form from "../models/Form";
 import FormField from "../models/FormField";
 import FormFieldOption from "../models/FormFieldOption";
 import FormEventAccessibility from "../models/FormEventAccessibility";
-import MetaWardNumber from "../models/MetaWardNumber";
-import MetaBoothNumber from "../models/MetaBoothNumber";
-import MetaUserRole from "../models/MetaUserRole";
 import sequelize from "../config/database";
-
-type AccessibilityPayload = {
-  wardNumberId: number;
-  boothNumberId: number;
-  userRoleId: number;
-};
+import {
+  buildAccessibilityInclude,
+  validateAccessibilityPayload,
+  ensureAccessibilityReferencesExist,
+  getUserAccessProfile,
+  buildAccessibilityWhereClause,
+  type AccessibilityPayload
+} from "../services/accessibilityService";
 
 const DEFAULT_SORT_COLUMNS = ["startDate", "endDate", "createdAt", "title"];
-
-const buildAccessibilityInclude = () => ({
-  model: FormEventAccessibility,
-  as: "accessibility",
-  include: [
-    {
-      model: MetaWardNumber,
-      as: "wardNumber",
-      attributes: ["id", "dispName", "status"]
-    },
-    {
-      model: MetaBoothNumber,
-      as: "boothNumber",
-      attributes: ["id", "dispName", "status"]
-    },
-    {
-      model: MetaUserRole,
-      as: "userRole",
-      attributes: ["id", "dispName", "status"]
-    }
-  ]
-});
 
 const getBaseIncludes = () => [
   buildAccessibilityInclude(),
@@ -133,23 +110,7 @@ const toDateOnlyString = (value: unknown): string | undefined => {
 };
 
 const parseAccessibilityPayload = (value: unknown): AccessibilityPayload[] => {
-  if (!Array.isArray(value) || value.length === 0) {
-    throw new ApiError("At least one accessibility entry is required", 400);
-  }
-
-  return value.map((item, index) => {
-    if (!item || typeof item !== "object") {
-      throw new ApiError(`Accessibility entry at index ${index} is invalid`, 400);
-    }
-
-    const record = item as Record<string, unknown>;
-
-    return {
-      wardNumberId: ensureNumber(record.wardNumberId, "wardNumberId"),
-      boothNumberId: ensureNumber(record.boothNumberId, "boothNumberId"),
-      userRoleId: ensureNumber(record.userRoleId, "userRoleId")
-    };
-  });
+  return validateAccessibilityPayload(value);
 };
 
 const ensureFormExists = async (formId: number): Promise<void> => {
@@ -159,40 +120,8 @@ const ensureFormExists = async (formId: number): Promise<void> => {
   }
 };
 
-const ensureIdsExist = async <T extends Model>(
-  ids: number[],
-  model: ModelStatic<T>,
-  field: string
-): Promise<void> => {
-  if (!ids.length) {
-    return;
-  }
-
-  const countResult = await model.count({
-    where: {
-      id: {
-        [Op.in]: ids
-      }
-    } as any
-  });
-
-  const matched = typeof countResult === "number" ? countResult : (countResult as unknown[]).length;
-
-  if (matched !== ids.length) {
-    throw new ApiError(`One or more ${field} values are invalid`, 400);
-  }
-};
-
 const ensureAccessibilityReferences = async (records: AccessibilityPayload[]): Promise<void> => {
-  const wardIds = Array.from(new Set(records.map((item) => item.wardNumberId)));
-  const boothIds = Array.from(new Set(records.map((item) => item.boothNumberId)));
-  const roleIds = Array.from(new Set(records.map((item) => item.userRoleId)));
-
-  await Promise.all([
-    ensureIdsExist(wardIds, MetaWardNumber, "wardNumberId"),
-    ensureIdsExist(boothIds, MetaBoothNumber, "boothNumberId"),
-    ensureIdsExist(roleIds, MetaUserRole, "userRoleId")
-  ]);
+  return ensureAccessibilityReferencesExist(records);
 };
 
 const loadFormEventOrThrow = async (id: string | number): Promise<FormEvent> => {
@@ -235,6 +164,8 @@ const replaceAccessibility = async (
 };
 
 export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId } = requireAuthenticatedUser(req);
+
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string | undefined,
     req.query.limit as string | undefined,
@@ -276,9 +207,30 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
     };
   }
 
+  // Get user's access profile (ward, booth, roles)
+  const userAccess = await getUserAccessProfile(userId);
+
+  // Build accessibility filter - only show events in user's geographic area with matching roles
+  const accessibilityWhere =
+    userAccess.wardNumberId && userAccess.boothNumberId && userAccess.roleIds.length > 0
+      ? buildAccessibilityWhereClause(
+          userAccess.wardNumberId,
+          userAccess.boothNumberId,
+          userAccess.roleIds
+        )
+      : null;
+
+  // Build include with accessibility filtering if user has access profile
+  const includes = getBaseIncludes();
+  if (accessibilityWhere) {
+    const accessibilityInclude = includes[0] as any;
+    accessibilityInclude.where = accessibilityWhere;
+    accessibilityInclude.required = true; // INNER JOIN - only return events with matching accessibility
+  }
+
   const { rows, count } = await FormEvent.findAndCountAll({
     where,
-    include: getBaseIncludes(),
+    include: includes,
     distinct: true,
     limit,
     offset,
