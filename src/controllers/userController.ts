@@ -6,6 +6,7 @@ import { PUBLIC_ROLE_NAME } from "../config/rbac";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import User from "../models/User";
+import UserRole from "../models/UserRole";
 import UserProfile from "../models/UserProfile";
 import UserAccess from "../models/UserAccess";
 import {
@@ -15,6 +16,11 @@ import {
   setUserRoles,
   enrichAdminRolePermissions
 } from "../services/rbacService";
+import {
+  getDescendantRoleIds,
+  canManageUser,
+  buildAccessibilityFilter
+} from "../services/userHierarchyService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import {
   createUserAccessProfiles,
@@ -187,6 +193,7 @@ const applyRangeFilter = (
 };
 
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
+  const loggedInUser = (req as AuthenticatedRequest).user;
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
     req.query.limit as string,
@@ -353,6 +360,25 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
+  // Apply role hierarchy filter: only show users with descendant roles
+  let allowedRoleIds: number[] | undefined;
+  if (loggedInUser?.id && loggedInUser?.roles && loggedInUser.roles.length > 0) {
+    // Get role IDs from role names - need to fetch from database
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    if (userRoles.length > 0) {
+      allowedRoleIds = await getDescendantRoleIds(userRoles[0].roleId);
+    }
+  }
+
+  // Apply accessibility filter: only show users in accessible zones
+  const accessibilityFilter = loggedInUser?.id
+    ? await buildAccessibilityFilter(loggedInUser.id)
+    : null;
+
   const userWhere =
     whereClauses.length > 1 ? { [Op.and]: whereClauses } : (whereClauses[0] ?? undefined);
 
@@ -364,6 +390,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
         model: UserProfile,
         as: "profile",
         ...(profileFiltersApplied && { where: profileFilters, required: true }),
+        ...(accessibilityFilter && { where: accessibilityFilter, required: true }),
         include: [
           { association: "gender", attributes: ["id", "dispName"], required: false },
           { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
@@ -393,6 +420,10 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       {
         association: "roles",
         include: [{ association: "permissions" }],
+        ...(allowedRoleIds && {
+          where: { id: { [Op.in]: allowedRoleIds } },
+          required: true
+        }),
         ...(roleIds &&
           roleIds.length > 0 && { where: { id: { [Op.in]: roleIds } }, required: true })
       }
@@ -512,6 +543,8 @@ export const listUsersPendingApproval = asyncHandler(async (req: Request, res: R
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
+  const loggedInUser = (req as AuthenticatedRequest).user;
+
   assertNoRestrictedFields(req.body);
 
   const { contactNumber, email, fullName, profile, roleIds: roleIdsInput, accessibles } = req.body;
@@ -526,6 +559,34 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
   if (!publicRole) {
     throw new ApiError("Default public role is not configured", 500);
+  }
+
+  // Check if logged-in user can create users with the specified roles
+  if (
+    loggedInUser?.id &&
+    loggedInUser.roles &&
+    loggedInUser.roles.length > 0 &&
+    parsedRoleIds &&
+    parsedRoleIds.length > 0
+  ) {
+    // Get user's role IDs from database
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+
+    if (userRoles.length > 0) {
+      // Get allowed descendant roles for logged-in user
+      const allowedRoleIds = await getDescendantRoleIds(userRoles[0].roleId);
+
+      // Ensure all requested roles are within allowed hierarchy
+      const canCreateWithRoles = parsedRoleIds.every((roleId) => allowedRoleIds.includes(roleId));
+
+      if (!canCreateWithRoles) {
+        throw new ApiError("Cannot create user with roles outside your role hierarchy", 403);
+      }
+    }
   }
 
   const user = await User.create({
@@ -555,7 +616,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   // Handle accessibles if provided
   if (accessibles) {
     const validatedAccessibles = validateAccessibles(accessibles);
-    const actorId = (req as AuthenticatedRequest).user?.id ?? user.id;
+    const actorId = loggedInUser?.id ?? user.id;
     // Use the first role as access role, or public role if no roles provided
     const accessRoleId = parsedRoleIds?.[0] ?? publicRole.id;
     await createUserAccessProfiles(user.id, accessRoleId, validatedAccessibles, actorId);
@@ -613,9 +674,12 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getUser = asyncHandler(async (req: Request, res: Response) => {
+  const loggedInUser = (req as AuthenticatedRequest).user;
+  const targetUserId = Number(req.params.id);
   const includeAuditFields = shouldIncludeAuditFields(req.query);
 
-  const user = await User.findByPk(req.params.id, {
+  // Fetch target user with roles and accessibility
+  const user = await User.findByPk(targetUserId, {
     attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["status"] }),
     include: [
       {
@@ -655,6 +719,27 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     return sendNotFound(res, "User not found", "user");
   }
 
+  // Check if logged-in user can access this user (hierarchy and accessibility)
+  if (loggedInUser?.id && loggedInUser.id !== targetUserId && loggedInUser.roles) {
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
+    const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
+    const canAccess = await canManageUser(
+      loggedInUser.id,
+      loggedInUserRoleIds,
+      targetUserId,
+      targetUserRoles
+    );
+
+    if (!canAccess) {
+      return sendNotFound(res, "User not found or access denied", "user");
+    }
+  }
+
   // Enrich Admin roles with all permissions
   if (user.roles && user.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(user.roles);
@@ -669,7 +754,10 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.findByPk(req.params.id, {
+  const loggedInUser = (req as AuthenticatedRequest).user;
+  const targetUserId = Number(req.params.id);
+
+  const user = await User.findByPk(targetUserId, {
     include: [
       { model: UserProfile, as: "profile" },
       { association: "roles", include: [{ association: "permissions" }] }
@@ -678,6 +766,27 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 
   if (!user) {
     throw new ApiError("User not found", 404);
+  }
+
+  // Check if logged-in user can update this user (hierarchy and accessibility)
+  if (loggedInUser?.id && loggedInUser.id !== targetUserId && loggedInUser.roles) {
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
+    const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
+    const canAccess = await canManageUser(
+      loggedInUser.id,
+      loggedInUserRoleIds,
+      targetUserId,
+      targetUserRoles
+    );
+
+    if (!canAccess) {
+      throw new ApiError("Access denied: Cannot update this user", 403);
+    }
   }
 
   assertNoRestrictedFields(req.body, { allow: ["status"] });
