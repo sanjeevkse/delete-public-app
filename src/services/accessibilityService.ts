@@ -1,4 +1,5 @@
 import type { IncludeOptions } from "sequelize";
+import { Op } from "sequelize";
 import FormEventAccessibility from "../models/FormEventAccessibility";
 import MetaWardNumber from "../models/MetaWardNumber";
 import MetaBoothNumber from "../models/MetaBoothNumber";
@@ -6,6 +7,7 @@ import MetaUserRole from "../models/MetaUserRole";
 import UserProfile from "../models/UserProfile";
 import UserRole from "../models/UserRole";
 import { ApiError } from "../middlewares/errorHandler";
+import { isAccessibleToAll } from "./userAccessibilityService";
 
 /**
  * Accessibility payload for FormEvent
@@ -151,6 +153,8 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
 /**
  * Check if a user can access a specific form event
  * Returns true if user's ward+booth+role matches any accessibility rule for the event
+ * Handles -1 values in accessibility rules for ward/booth (means 'all')
+ * Roles do NOT support -1 - must be explicit role IDs
  */
 export const canUserAccessFormEvent = async (
   userId: number,
@@ -168,37 +172,68 @@ export const canUserAccessFormEvent = async (
     return false;
   }
 
-  const { Op } = require("sequelize");
-
-  // Check if form event has accessibility rule matching user's geography and role
-  const accessibility = await FormEventAccessibility.findOne({
+  // Get all accessibility rules for this form event
+  const accessibilityRules = await FormEventAccessibility.findAll({
     where: {
       formEventId,
-      wardNumberId: userAccess.wardNumberId,
-      boothNumberId: userAccess.boothNumberId,
-      userRoleId: { [Op.in]: userAccess.roleIds },
       status: 1
-    }
+    },
+    attributes: ["wardNumberId", "boothNumberId", "userRoleId"],
+    raw: true
   });
 
-  return !!accessibility;
+  if (accessibilityRules.length === 0) {
+    return false;
+  }
+
+  // Check if user's geography and role matches any rule (considering -1 as 'all' for ward/booth only)
+  return accessibilityRules.some((rule: any) => {
+    // Check ward match (-1 means all wards, otherwise exact match)
+    const wardMatches =
+      isAccessibleToAll(rule.wardNumberId) || rule.wardNumberId === userAccess.wardNumberId;
+
+    // Check booth match (-1 means all booths, otherwise exact match)
+    const boothMatches =
+      isAccessibleToAll(rule.boothNumberId) || rule.boothNumberId === userAccess.boothNumberId;
+
+    // Check role match - must be exact match (no -1 for roles)
+    const roleMatches = userAccess.roleIds.includes(rule.userRoleId);
+
+    return wardMatches && boothMatches && roleMatches;
+  });
 };
 
 /**
  * Build WHERE clause for filtering FormEventAccessibility by user's access
  * Used in queries to filter form events at database level
+ * Handles -1 values in accessibility rules for ward/booth (means 'all')
+ * Roles do NOT support -1 - must be explicit role IDs
  */
 export const buildAccessibilityWhereClause = (
   wardNumberId: number | null,
   boothNumberId: number | null,
   roleIds: number[]
 ): Record<string, unknown> => {
-  const { Op } = require("sequelize");
+  const conditions: Array<Record<string, unknown>> = [];
 
-  return {
-    wardNumberId,
-    boothNumberId,
-    userRoleId: { [Op.in]: roleIds },
-    status: 1
-  };
+  // Build conditions for ward (match -1 or specific ward)
+  if (wardNumberId) {
+    conditions.push({ wardNumberId: { [Op.or]: [-1, wardNumberId] } });
+  }
+
+  // Build conditions for booth (match -1 or specific booth)
+  if (boothNumberId) {
+    conditions.push({ boothNumberId: { [Op.or]: [-1, boothNumberId] } });
+  }
+
+  // Build conditions for role (must be exact match - no -1 support for roles)
+  if (roleIds.length > 0) {
+    conditions.push({ userRoleId: { [Op.in]: roleIds } });
+  }
+
+  // Status check
+  conditions.push({ status: 1 });
+
+  // Combine all conditions with AND
+  return conditions.length > 0 ? { [Op.and]: conditions } : { status: 1 };
 };
