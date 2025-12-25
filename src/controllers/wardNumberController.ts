@@ -1,8 +1,8 @@
 import type { Response } from "express";
+import { Op } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import MetaWardNumber from "../models/MetaWardNumber";
-import UserAccess from "../models/UserAccess";
 import asyncHandler from "../utils/asyncHandler";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
