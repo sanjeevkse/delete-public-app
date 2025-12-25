@@ -16,6 +16,13 @@ import {
   validateSortColumn,
   parseSortDirection
 } from "../utils/apiResponse";
+import {
+  applyAccessibilityFilterToList,
+  validateItemAccess,
+  userHasAccessibilityConfigured,
+  combineAccessibilityFilters
+} from "../utils/accessibilityControllerHelper";
+import { getUserAccessList } from "../services/userAccessibilityService";
 
 export const createBoothNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
@@ -74,6 +81,18 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     whereClause.mlaConstituencyId = mlaConstituencyId;
   }
 
+  // Apply accessibility filter - restrict to booths in user's accessible zones
+  if (req.user?.id) {
+    const userAccessList = await getUserAccessList(req.user.id);
+
+    const hasAccess = applyAccessibilityFilterToList(whereClause, userAccessList, "boothNumberId");
+    if (!hasAccess) {
+      // User has accessibility configured but no booth access
+      const pagination = calculatePagination(0, page, limit);
+      return sendSuccessWithPagination(res, [], pagination, "Booth numbers retrieved successfully");
+    }
+  }
+
   // If filtering by ward number, find booth numbers through GeoPolitical table
   if (wardNumberId) {
     const geoPoliticals = await GeoPolitical.findAll({
@@ -84,7 +103,26 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     const boothNumberIds = [...new Set(geoPoliticals.map((gp) => gp.boothNumberId))];
 
     if (boothNumberIds.length > 0) {
-      whereClause.id = { [Op.in]: boothNumberIds };
+      // Apply additional accessibility filter if configured
+      if (whereClause.id && whereClause.id[Op.in]) {
+        // User has booth accessibility filter - intersect with ward booths
+        const accessibleIds = whereClause.id[Op.in];
+        const filteredIds = boothNumberIds.filter((id) => accessibleIds.includes(id));
+        if (filteredIds.length > 0) {
+          whereClause.id = { [Op.in]: filteredIds };
+        } else {
+          // Ward has booths but user can't access any
+          const pagination = calculatePagination(0, page, limit);
+          return sendSuccessWithPagination(
+            res,
+            [],
+            pagination,
+            "Booth numbers retrieved successfully"
+          );
+        }
+      } else {
+        whereClause.id = { [Op.in]: boothNumberIds };
+      }
     } else {
       // No booths found for this ward, return empty result
       const pagination = calculatePagination(0, page, limit);
@@ -126,6 +164,17 @@ export const getBoothNumberById = asyncHandler(async (req: AuthenticatedRequest,
 
   if (!boothNumber) {
     throw new ApiError("Booth number not found", 404);
+  }
+
+  // Check accessibility - user must have access to this booth
+  if (req.user?.id) {
+    const userAccessList = await getUserAccessList(req.user.id);
+
+    if (userHasAccessibilityConfigured(userAccessList)) {
+      if (!validateItemAccess(userAccessList, Number(id), "boothNumberId")) {
+        throw new ApiError("Booth number not found", 404);
+      }
+    }
   }
 
   return sendSuccess(res, boothNumber, "Booth number retrieved successfully");

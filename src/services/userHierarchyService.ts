@@ -2,6 +2,11 @@ import { Op } from "sequelize";
 import MetaUserRole from "../models/MetaUserRole";
 import UserAccess from "../models/UserAccess";
 import { ApiError } from "../middlewares/errorHandler";
+import {
+  buildAccessibilityORConditions,
+  buildAccessibilityFilterWithFlag,
+  getUserAccessList
+} from "./userAccessibilityService";
 
 /**
  * Get all descendant role IDs for a given role (children, grandchildren, etc.)
@@ -83,54 +88,15 @@ export const getUsersWithRoleHierarchy = async (loggedInUserRoles: number[]): Pr
 export const getAccessibilityConstraints = async (
   loggedInUserId: number
 ): Promise<Record<string, any>> => {
-  const loggedInAccess = await UserAccess.findAll({
-    where: { userId: loggedInUserId, status: 1 },
-    attributes: [
-      "stateId",
-      "districtId",
-      "talukId",
-      "mainVillageId",
-      "subVillageId",
-      "mpConstituencyId",
-      "mlaConstituencyId",
-      "wardNumberId",
-      "boothNumberId"
-    ],
-    raw: true
-  });
+  const loggedInAccess = await getUserAccessList(loggedInUserId);
 
   if (loggedInAccess.length === 0) {
     // If logged-in user has no accessibility configured, allow all
     return {};
   }
 
-  // Build OR conditions - user can access others if they share the same accessibility level
-  const accessibilityOR: Array<Record<string, any>> = [];
-
-  for (const access of loggedInAccess) {
-    const condition: Record<string, any> = {};
-
-    // Add accessibility constraints
-    if (access.stateId) condition.stateId = access.stateId;
-    if (access.districtId) condition.districtId = access.districtId;
-    if (access.talukId) condition.talukId = access.talukId;
-    if (access.mainVillageId) condition.mainVillageId = access.mainVillageId;
-    if (access.subVillageId) condition.subVillageId = access.subVillageId;
-    if (access.mpConstituencyId) condition.mpConstituencyId = access.mpConstituencyId;
-    if (access.mlaConstituencyId) condition.mlaConstituencyId = access.mlaConstituencyId;
-    if (access.wardNumberId) condition.wardNumberId = access.wardNumberId;
-    if (access.boothNumberId) condition.boothNumberId = access.boothNumberId;
-
-    if (Object.keys(condition).length > 0) {
-      accessibilityOR.push(condition);
-    }
-  }
-
-  if (accessibilityOR.length === 0) {
-    return {};
-  }
-
-  return { [Op.or]: accessibilityOR };
+  const orConditions = buildAccessibilityORConditions(loggedInAccess);
+  return orConditions || {};
 };
 
 /**
@@ -228,40 +194,12 @@ export const canManageUser = async (
 export const buildAccessibilityFilter = async (
   loggedInUserId: number
 ): Promise<Record<string, any> | null> => {
-  const loggedInAccess = await UserAccess.findAll({
-    where: { userId: loggedInUserId, status: 1 },
-    raw: true
-  });
+  const loggedInAccess = await getUserAccessList(loggedInUserId);
 
   if (loggedInAccess.length === 0) {
     return null; // No accessibility constraints
   }
 
-  // Build conditions for each accessibility dimension
-  const conditions: Array<Record<string, any>> = [];
-
-  for (const access of loggedInAccess) {
-    const condition: Record<string, any> = {};
-
-    // Match on ANY of the accessibility dimensions that are set
-    if (access.stateId) condition.stateId = access.stateId;
-    if (access.districtId) condition.districtId = access.districtId;
-    if (access.talukId) condition.talukId = access.talukId;
-    if (access.mainVillageId) condition.mainVillageId = access.mainVillageId;
-    if (access.subVillageId) condition.subVillageId = access.subVillageId;
-    if (access.mpConstituencyId) condition.mpConstituencyId = access.mpConstituencyId;
-    if (access.mlaConstituencyId) condition.mlaConstituencyId = access.mlaConstituencyId;
-    if (access.wardNumberId) condition.wardNumberId = access.wardNumberId;
-    if (access.boothNumberId) condition.boothNumberId = access.boothNumberId;
-
-    if (Object.keys(condition).length > 0) {
-      conditions.push(condition);
-    }
-  }
-
-  if (conditions.length === 0) {
-    return null;
-  }
-
-  return { [Op.or]: conditions };
+  const orConditions = buildAccessibilityORConditions(loggedInAccess);
+  return orConditions;
 };

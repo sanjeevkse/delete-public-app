@@ -1,8 +1,8 @@
 import type { Response } from "express";
-import { Op } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import MetaWardNumber from "../models/MetaWardNumber";
+import UserAccess from "../models/UserAccess";
 import asyncHandler from "../utils/asyncHandler";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
@@ -15,6 +15,13 @@ import {
   parseSortDirection,
   validateSortColumn
 } from "../utils/apiResponse";
+import {
+  applyAccessibilityFilterToList,
+  validateItemAccess,
+  userHasAccessibilityConfigured,
+  getAccessibleIds
+} from "../utils/accessibilityControllerHelper";
+import { getUserAccessList } from "../services/userAccessibilityService";
 
 export const createWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
@@ -63,6 +70,18 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
     whereClause.status = status;
   }
 
+  // Apply accessibility filter - restrict to wards in user's accessible zones
+  if (req.user?.id) {
+    const userAccessList = await getUserAccessList(req.user.id);
+
+    const hasAccess = applyAccessibilityFilterToList(whereClause, userAccessList, "wardNumberId");
+    if (!hasAccess) {
+      // User has accessibility configured but no ward access
+      const pagination = calculatePagination(0, page, limit);
+      return sendSuccessWithPagination(res, [], pagination, "Ward numbers retrieved successfully");
+    }
+  }
+
   const { count, rows } = await MetaWardNumber.findAndCountAll({
     where: whereClause,
     limit,
@@ -82,6 +101,17 @@ export const getWardNumberById = asyncHandler(async (req: AuthenticatedRequest, 
 
   if (!wardNumber) {
     throw new ApiError("Ward number not found", 404);
+  }
+
+  // Check accessibility - user must have access to this ward
+  if (req.user?.id) {
+    const userAccessList = await getUserAccessList(req.user.id);
+
+    if (userHasAccessibilityConfigured(userAccessList)) {
+      if (!validateItemAccess(userAccessList, Number(id), "wardNumberId")) {
+        throw new ApiError("Ward number not found", 404);
+      }
+    }
   }
 
   return sendSuccess(res, wardNumber, "Ward number retrieved successfully");
