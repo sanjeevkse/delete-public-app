@@ -144,9 +144,23 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
     order: [[sortColumn, sortDirection]]
   });
 
-  const pagination = calculatePagination(count, page, limit);
+  let responseData = rows;
+  let totalCount = count;
 
-  return sendSuccessWithPagination(res, rows, pagination, "Booth numbers retrieved successfully");
+  // Prepend "ALL" option if need_all=1
+  if (req.query.need_all === "1") {
+    responseData = [{ id: -1, dispName: "-ALL-" }, ...rows];
+    totalCount = count + 1;
+  }
+
+  const pagination = calculatePagination(totalCount, page, limit);
+
+  return sendSuccessWithPagination(
+    res,
+    responseData,
+    pagination,
+    "Booth numbers retrieved successfully"
+  );
 });
 
 export const getBoothNumberById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

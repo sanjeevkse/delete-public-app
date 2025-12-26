@@ -89,9 +89,23 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
     order: [[sortColumn, sortDirection]]
   });
 
-  const pagination = calculatePagination(count, page, limit);
+  let responseData = rows;
+  let totalCount = count;
 
-  return sendSuccessWithPagination(res, rows, pagination, "Ward numbers retrieved successfully");
+  // Prepend "ALL" option if need_all=1
+  if (req.query.need_all === "1") {
+    responseData = [{ id: -1, dispName: "-ALL-" }, ...rows];
+    totalCount = count + 1;
+  }
+
+  const pagination = calculatePagination(totalCount, page, limit);
+
+  return sendSuccessWithPagination(
+    res,
+    responseData,
+    pagination,
+    "Ward numbers retrieved successfully"
+  );
 });
 
 export const getWardNumberById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
