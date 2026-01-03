@@ -211,8 +211,9 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
 
   const metaTables = await getMetaTables();
   const config = metaTables[tableName];
+  return sendSuccess(res, config, "Meta table configuration retrieved successfully");
   if (!config) {
-    return sendNotFound({ ...res, config }, `Meta table '${tableName}' not found`);
+    return sendNotFound(res, `Meta table '${tableName}' not found`);
   }
 
   const filters: any[] = [];
