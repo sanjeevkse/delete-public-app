@@ -149,12 +149,26 @@ export const validateAccessibles = (accessibles: unknown): AccessibleArea[] => {
       unknown
     >;
 
-    if (!wardNumberId || typeof wardNumberId !== "number" || wardNumberId <= 0) {
-      throw new ApiError(`accessibles[${index}].wardNumberId must be a positive number`, 400);
+    if (
+      !wardNumberId ||
+      typeof wardNumberId !== "number" ||
+      (wardNumberId !== -1 && wardNumberId <= 0)
+    ) {
+      throw new ApiError(
+        `accessibles[${index}].wardNumberId must be a positive number or -1 for all wards`,
+        400
+      );
     }
 
-    if (!boothNumberId || typeof boothNumberId !== "number" || boothNumberId <= 0) {
-      throw new ApiError(`accessibles[${index}].boothNumberId must be a positive number`, 400);
+    if (
+      !boothNumberId ||
+      typeof boothNumberId !== "number" ||
+      (boothNumberId !== -1 && boothNumberId <= 0)
+    ) {
+      throw new ApiError(
+        `accessibles[${index}].boothNumberId must be a positive number or -1 for all booths`,
+        400
+      );
     }
 
     const result: AccessibleArea = {
