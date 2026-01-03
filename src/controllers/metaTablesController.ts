@@ -67,7 +67,7 @@ const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig
 
   // Fetch only active meta table configurations from database (status = 1)
   const configs = await MetaTableRegistry.findAll({
-    where: { status: 1 },
+    // where: { status: 1 },
     attributes: { exclude: ["createdBy", "updatedBy", "createdAt", "updatedAt"] }
   });
 
@@ -211,7 +211,6 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
 
   const metaTables = await getMetaTables();
   const config = metaTables[tableName];
-  return sendSuccess(res, config, "Meta table configuration retrieved successfully");
   if (!config) {
     return sendNotFound(res, `Meta table '${tableName}' not found`);
   }
