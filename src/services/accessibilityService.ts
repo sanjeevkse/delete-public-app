@@ -64,18 +64,25 @@ export const validateAccessibilityPayload = (payload: unknown): AccessibilityPay
 
     const { wardNumberId, boothNumberId, userRoleId } = item as Record<string, unknown>;
 
-    const parseNumber = (value: unknown, fieldName: string): number => {
+    const parseNumber = (value: unknown, fieldName: string, allowAll: boolean = false): number => {
       const num = Number(value);
-      if (!Number.isInteger(num) || num <= 0) {
+      if (!Number.isInteger(num)) {
+        throw new ApiError(`accessibility[${index}].${fieldName} must be an integer`, 400);
+      }
+      // Allow -1 for ward and booth (means 'all'), but only positive for role
+      if (allowAll && num === -1) {
+        return num;
+      }
+      if (num <= 0) {
         throw new ApiError(`accessibility[${index}].${fieldName} must be a positive integer`, 400);
       }
       return num;
     };
 
     return {
-      wardNumberId: parseNumber(wardNumberId, "wardNumberId"),
-      boothNumberId: parseNumber(boothNumberId, "boothNumberId"),
-      userRoleId: parseNumber(userRoleId, "userRoleId")
+      wardNumberId: parseNumber(wardNumberId, "wardNumberId", true), // Allow -1 for "all"
+      boothNumberId: parseNumber(boothNumberId, "boothNumberId", true), // Allow -1 for "all"
+      userRoleId: parseNumber(userRoleId, "userRoleId", false) // Roles must be positive
     };
   });
 };
@@ -87,8 +94,13 @@ export const validateAccessibilityPayload = (payload: unknown): AccessibilityPay
 export const ensureAccessibilityReferencesExist = async (
   records: AccessibilityPayload[]
 ): Promise<void> => {
-  const wardIds = Array.from(new Set(records.map((item) => item.wardNumberId)));
-  const boothIds = Array.from(new Set(records.map((item) => item.boothNumberId)));
+  // Filter out -1 values (which mean 'all' and don't need to exist in the database)
+  const wardIds = Array.from(
+    new Set(records.map((item) => item.wardNumberId).filter((id) => id !== -1))
+  );
+  const boothIds = Array.from(
+    new Set(records.map((item) => item.boothNumberId).filter((id) => id !== -1))
+  );
   const roleIds = Array.from(new Set(records.map((item) => item.userRoleId)));
 
   const { Op } = require("sequelize");
