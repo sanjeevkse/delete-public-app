@@ -221,31 +221,3 @@ export const canUserAccessFormEvent = async (
  * Handles -1 values in accessibility rules for ward/booth (means 'all')
  * Roles do NOT support -1 - must be explicit role IDs
  */
-export const buildAccessibilityWhereClause = (
-  wardNumberId: number | null,
-  boothNumberId: number | null,
-  roleIds: number[]
-): Record<string, unknown> => {
-  const conditions: Array<Record<string, unknown>> = [];
-
-  // Build conditions for ward (match -1 or specific ward)
-  if (wardNumberId) {
-    conditions.push({ wardNumberId: { [Op.or]: [-1, wardNumberId] } });
-  }
-
-  // Build conditions for booth (match -1 or specific booth)
-  if (boothNumberId) {
-    conditions.push({ boothNumberId: { [Op.or]: [-1, boothNumberId] } });
-  }
-
-  // Build conditions for role (must be exact match - no -1 support for roles)
-  if (roleIds.length > 0) {
-    conditions.push({ userRoleId: { [Op.in]: roleIds } });
-  }
-
-  // Status check
-  conditions.push({ status: 1 });
-
-  // Combine all conditions with AND
-  return conditions.length > 0 ? { [Op.and]: conditions } : { status: 1 };
-};

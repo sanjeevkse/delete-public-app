@@ -25,10 +25,9 @@ import {
   buildAccessibilityInclude,
   validateAccessibilityPayload,
   ensureAccessibilityReferencesExist,
-  getUserAccessProfile,
-  buildAccessibilityWhereClause,
   type AccessibilityPayload
 } from "../services/accessibilityService";
+import { buildAccessibilityFilter } from "../services/userHierarchyService";
 
 const DEFAULT_SORT_COLUMNS = ["startDate", "endDate", "createdAt", "title"];
 
@@ -207,24 +206,14 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
     };
   }
 
-  // Get user's access profile (ward, booth, roles)
-  const userAccess = await getUserAccessProfile(userId);
+  // Build accessibility filter for geographic zones (geo-boundary only)
+  const accessibilityFilter = await buildAccessibilityFilter(userId);
 
-  // Build accessibility filter - only show events in user's geographic area with matching roles
-  const accessibilityWhere =
-    userAccess.wardNumberId && userAccess.boothNumberId && userAccess.roleIds.length > 0
-      ? buildAccessibilityWhereClause(
-          userAccess.wardNumberId,
-          userAccess.boothNumberId,
-          userAccess.roleIds
-        )
-      : null;
-
-  // Build include with accessibility filtering if user has access profile
+  // Build include with accessibility filtering
   const includes = getBaseIncludes();
-  if (accessibilityWhere) {
+  if (accessibilityFilter) {
     const accessibilityInclude = includes[0] as any;
-    accessibilityInclude.where = accessibilityWhere;
+    accessibilityInclude.where = accessibilityFilter;
     accessibilityInclude.required = true; // INNER JOIN - only return events with matching accessibility
   }
 
