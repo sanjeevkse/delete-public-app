@@ -19,7 +19,7 @@ class MetaUserRole extends Model<
   declare id: CreationOptional<number>;
   declare dispName: string;
   declare description: CreationOptional<string | null>;
-  declare metaUserRoleId: CreationOptional<number | null>;
+  declare depthPath: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -47,14 +47,10 @@ MetaUserRole.init(
       type: DataTypes.STRING(255),
       allowNull: true
     },
-    metaUserRoleId: {
-      field: "meta_user_role_id",
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: true,
-      references: {
-        model: "tbl_meta_user_role",
-        key: "id"
-      }
+    depthPath: {
+      field: "depth_path",
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     status: {
       type: DataTypes.TINYINT,

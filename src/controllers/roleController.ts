@@ -68,7 +68,33 @@ export const listRoles = asyncHandler(async (req: Request, res: Response) => {
     "id"
   );
 
+  // Get current user's roles with their depth paths
+  const userRoles = await MetaUserRole.findAll({
+    where: { id: (req as any).user?.roles || [] }
+  });
+
+  // Build filter condition: only show roles that are descendants of user's roles
+  let where: any = { status: 1 };
+  if (userRoles.length > 0) {
+    const depthPathFilters = userRoles.map((role) => ({
+      [require("sequelize").Op.or]: [
+        { depthPath: { [require("sequelize").Op.like]: `${role.depthPath}/%` } }
+      ]
+    }));
+
+    if (depthPathFilters.length > 0) {
+      where = {
+        ...where,
+        [require("sequelize").Op.or]: depthPathFilters
+          .flat()
+          .map((f) => f[require("sequelize").Op.or])
+          .flat()
+      };
+    }
+  }
+
   const { rows: roles, count } = await MetaUserRole.findAndCountAll({
+    where,
     include: [
       { model: MetaPermission, as: "permissions" },
       { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
@@ -115,6 +141,20 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
   });
 
   if (!role) {
+    return sendNotFound(res, "Role not found", "role");
+  }
+
+  // Check if user has access to this role (it must be a descendant of one of their roles)
+  const userRoles = await MetaUserRole.findAll({
+    where: { id: (req as any).user?.roles || [] }
+  });
+
+  const hasAccess = userRoles.some(
+    (userRole) =>
+      role.depthPath?.startsWith(`${userRole.depthPath}/`) || role.depthPath === userRole.depthPath
+  );
+
+  if (!hasAccess && userRoles.length > 0) {
     return sendNotFound(res, "Role not found", "role");
   }
 
@@ -172,20 +212,40 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError("dispName is required", 400);
   }
 
+  let parentDepthPath: string | null = null;
+
   // Validate parent role if provided
   if (parentId) {
     const parentRole = await MetaUserRole.findByPk(parentId);
     if (!parentRole) {
       throw new ApiError("Parent role not found", 404);
     }
+    parentDepthPath = parentRole.depthPath;
   }
 
+  // Create role first to get its ID
   const role = await MetaUserRole.create({
     dispName,
     description,
-    metaUserRoleId: parentId || null,
+    depthPath: null, // Will be set after we have the ID
     status: 1
   });
+
+  // Calculate depthPath using the newly created role's ID
+  let depthPath: string;
+  if (parentDepthPath) {
+    // Child role: append ID to parent's path
+    depthPath = `${parentDepthPath}/${role.id}`;
+  } else if (parentId) {
+    // Parent is root (no depthPath yet): create path with parent ID and current ID
+    depthPath = `/${parentId}/${role.id}`;
+  } else {
+    // Root role: just the role's ID
+    depthPath = `/${role.id}`;
+  }
+
+  // Update the role with calculated depthPath
+  await role.update({ depthPath });
 
   if (Array.isArray(permissions) && permissions.length > 0) {
     const payload = permissions.map((permissionId: number) => ({
@@ -230,11 +290,11 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
     return sendNotFound(res, "Role not found", "role");
   }
 
-  // Validate parent role if provided
+  // Validate parent role if provided and calculate depthPath
   if (parentId !== undefined) {
     if (parentId === null) {
-      // Allow setting to null
-      rolePayload.metaUserRoleId = null;
+      // Root role: depthPath is just the role's ID
+      rolePayload.depthPath = `/${role.id}`;
     } else {
       const parentRole = await MetaUserRole.findByPk(parentId);
       if (!parentRole) {
@@ -244,7 +304,13 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
       if (parentId === role.id) {
         throw new ApiError("A role cannot be its own parent", 400);
       }
-      rolePayload.metaUserRoleId = parentId;
+      // Calculate depthPath based on parent's depthPath and current role's ID
+      if (parentRole.depthPath) {
+        rolePayload.depthPath = `${parentRole.depthPath}/${role.id}`;
+      } else {
+        // Parent is root (no depthPath): create path with parent ID and current ID
+        rolePayload.depthPath = `/${parentId}/${role.id}`;
+      }
     }
   }
 
