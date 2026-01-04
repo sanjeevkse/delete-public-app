@@ -96,7 +96,16 @@ export const getUserNotificationStatus = async (
         notificationLogId: parseInt(notificationLogId),
         userId: parseInt(userId as string)
       },
-      attributes: ["id", "userId", "deviceTokenId", "status", "errorMessage", "fcmResponse", "sentAt", "createdAt"]
+      attributes: [
+        "id",
+        "userId",
+        "deviceTokenId",
+        "status",
+        "errorMessage",
+        "fcmResponse",
+        "sentAt",
+        "createdAt"
+      ]
     });
 
     if (!recipient) {
@@ -122,7 +131,8 @@ export const getUserNotificationStatus = async (
     });
   } catch (error: unknown) {
     console.error("Error getting user notification status:", error);
-    const message = error instanceof Error ? error.message : "Failed to get user notification status";
+    const message =
+      error instanceof Error ? error.message : "Failed to get user notification status";
     res.status(500).json({ success: false, message });
   }
 };
@@ -154,7 +164,15 @@ export const getNotificationDeliverySummary = async (
 
     const logs = await NotificationLog.findAll({
       where: logWhere,
-      attributes: ["id", "notificationType", "title", "recipientCount", "successCount", "failureCount", "sentAt"],
+      attributes: [
+        "id",
+        "notificationType",
+        "title",
+        "recipientCount",
+        "successCount",
+        "failureCount",
+        "sentAt"
+      ],
       order: [["sentAt", "DESC"]]
     });
 

@@ -288,8 +288,8 @@ class NotificationService {
 
       for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
         const batch = tokens.slice(i, i + BATCH_SIZE);
-        const batchDeviceTokens = batch.map(t => deviceTokens[tokenIndexMap.get(t)!]);
-        
+        const batchDeviceTokens = batch.map((t) => deviceTokens[tokenIndexMap.get(t)!]);
+
         const response = await this.sendToMultipleDevices({
           tokens: batch,
           notification
@@ -299,7 +299,7 @@ class NotificationService {
         for (let j = 0; j < response.responses.length; j++) {
           const resp = response.responses[j];
           const deviceToken = batchDeviceTokens[j];
-          
+
           if (resp.success) {
             await NotificationRecipient.update(
               {
@@ -318,7 +318,9 @@ class NotificationService {
               {
                 status: "failed",
                 errorMessage: resp.error?.message || "Unknown error",
-                fcmResponse: resp.error ? { code: resp.error.code, message: resp.error.message } : null
+                fcmResponse: resp.error
+                  ? { code: resp.error.code, message: resp.error.message }
+                  : null
               },
               {
                 where: {
