@@ -91,6 +91,59 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
       const pagination = calculatePagination(0, page, limit);
       return sendSuccessWithPagination(res, [], pagination, "Booth numbers retrieved successfully");
     }
+
+    // If no ward filter provided, also filter by accessible wards
+    if (!wardNumberId && userAccessList.length > 0) {
+      // Get accessible ward IDs
+      const accessibleWards = userAccessList
+        .map((access) => access.wardNumberId)
+        .filter((id): id is number => id !== null && id !== undefined && id !== -1);
+
+      // If user has -1 (all wards), no need to filter by ward
+      const hasAllWards = userAccessList.some((access) => access.wardNumberId === -1);
+
+      if (!hasAllWards && accessibleWards.length > 0) {
+        // Get all booths in accessible wards
+        const geoPoliticals = await GeoPolitical.findAll({
+          where: { wardNumberId: { [Op.in]: accessibleWards } },
+          attributes: ["boothNumberId"],
+          raw: true
+        });
+
+        const boothsInAccessibleWards = [...new Set(geoPoliticals.map((gp) => gp.boothNumberId))];
+
+        if (boothsInAccessibleWards.length > 0) {
+          // Intersect with accessible booth IDs if already filtered
+          if (whereClause.id && whereClause.id[Op.in]) {
+            const accessibleBoothIds = whereClause.id[Op.in];
+            const filteredIds = boothsInAccessibleWards.filter((id) =>
+              accessibleBoothIds.includes(id)
+            );
+            if (filteredIds.length > 0) {
+              whereClause.id = { [Op.in]: filteredIds };
+            } else {
+              const pagination = calculatePagination(0, page, limit);
+              return sendSuccessWithPagination(
+                res,
+                [],
+                pagination,
+                "Booth numbers retrieved successfully"
+              );
+            }
+          } else {
+            whereClause.id = { [Op.in]: boothsInAccessibleWards };
+          }
+        } else {
+          const pagination = calculatePagination(0, page, limit);
+          return sendSuccessWithPagination(
+            res,
+            [],
+            pagination,
+            "Booth numbers retrieved successfully"
+          );
+        }
+      }
+    }
   }
 
   // If filtering by ward number, find booth numbers through GeoPolitical table
