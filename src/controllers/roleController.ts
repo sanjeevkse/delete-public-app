@@ -29,27 +29,37 @@ import {
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 /**
- * Transform metaUserRoleId to parentId in response
+ * Response helper for roles
+ * Extracts parentId from depthPath for backward compatibility
+ * depthPath format: /parentId/roleId or /roleId
  */
-function transformRoleResponse(data: any): any {
+function getRoleResponse(data: any): any {
   if (!data) return data;
 
   if (Array.isArray(data)) {
-    return data.map((item) => transformRoleResponse(item));
+    return data.map((item) => getRoleResponse(item));
   }
 
   if (data.toJSON && typeof data.toJSON === "function") {
     const json = data.toJSON();
-    return transformRoleResponse(json);
+    return getRoleResponse(json);
   }
 
   if (typeof data === "object") {
-    const transformed = { ...data };
-    if ("metaUserRoleId" in transformed) {
-      transformed.parentId = transformed.metaUserRoleId;
-      delete transformed.metaUserRoleId;
+    let parentId: number | null = null;
+
+    if (data.depthPath) {
+      const parts = data.depthPath.split("/").filter((p: string) => p);
+      // If there are 2+ parts, the second-to-last is the parent ID
+      if (parts.length >= 2) {
+        parentId = parseInt(parts[parts.length - 2], 10);
+      }
     }
-    return transformed;
+
+    return {
+      ...data,
+      parentId
+    };
   }
 
   return data;
@@ -167,14 +177,10 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
       ...role.toJSON(),
       permissions: allPermissions
     };
-    return sendSuccess(
-      res,
-      transformRoleResponse(roleWithAllPermissions),
-      "Role retrieved successfully"
-    );
+    return sendSuccess(res, getRoleResponse(roleWithAllPermissions), "Role retrieved successfully");
   }
 
-  return sendSuccess(res, transformRoleResponse(role), "Role retrieved successfully");
+  return sendSuccess(res, getRoleResponse(role), "Role retrieved successfully");
 });
 
 export const getRolePermissions = asyncHandler(async (req: Request, res: Response) => {
@@ -273,12 +279,12 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     };
     return sendCreated(
       res,
-      transformRoleResponse(createdWithAllPermissions),
+      getRoleResponse(createdWithAllPermissions),
       "Role created successfully"
     );
   }
 
-  return sendCreated(res, transformRoleResponse(created), "Role created successfully");
+  return sendCreated(res, getRoleResponse(created), "Role created successfully");
 });
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
@@ -347,12 +353,12 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
     };
     return sendSuccess(
       res,
-      transformRoleResponse(updatedWithAllPermissions),
+      getRoleResponse(updatedWithAllPermissions),
       "Role updated successfully"
     );
   }
 
-  return sendSuccess(res, transformRoleResponse(updated), "Role updated successfully");
+  return sendSuccess(res, getRoleResponse(updated), "Role updated successfully");
 });
 
 export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
@@ -519,11 +525,7 @@ export const assignPermissionToRole = asyncHandler(async (req: Request, res: Res
     ]
   });
 
-  return sendSuccess(
-    res,
-    transformRoleResponse(updated),
-    "Permissions assigned to role successfully"
-  );
+  return sendSuccess(res, getRoleResponse(updated), "Permissions assigned to role successfully");
 });
 
 export const removePermissionFromRole = asyncHandler(async (req: Request, res: Response) => {
@@ -562,11 +564,7 @@ export const removePermissionFromRole = asyncHandler(async (req: Request, res: R
     ]
   });
 
-  return sendSuccess(
-    res,
-    transformRoleResponse(updated),
-    "Permission removed from role successfully"
-  );
+  return sendSuccess(res, getRoleResponse(updated), "Permission removed from role successfully");
 });
 
 export const getAllPermissionsGrouped = asyncHandler(async (req: Request, res: Response) => {

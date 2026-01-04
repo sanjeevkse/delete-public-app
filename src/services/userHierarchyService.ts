@@ -9,78 +9,6 @@ import {
 } from "./userAccessibilityService";
 
 /**
- * Get all descendant role IDs for a given role (children, grandchildren, etc.)
- * Returns the role ID itself plus all roles below it in the hierarchy
- */
-export const getDescendantRoleIds = async (roleId: number): Promise<number[]> => {
-  const descendants: number[] = [roleId];
-  const queue: number[] = [roleId];
-
-  while (queue.length > 0) {
-    const currentRoleId = queue.shift();
-    if (!currentRoleId) break;
-
-    const childRoles = await MetaUserRole.findAll({
-      where: { metaUserRoleId: currentRoleId, status: 1 },
-      attributes: ["id"],
-      raw: true
-    });
-
-    childRoles.forEach((child) => {
-      descendants.push(child.id);
-      queue.push(child.id);
-    });
-  }
-
-  return descendants;
-};
-
-/**
- * Get all ancestor role IDs for a given role (parent, grandparent, etc.)
- * Returns the role ID itself plus all roles above it in the hierarchy
- */
-export const getAncestorRoleIds = async (roleId: number): Promise<number[]> => {
-  const ancestors: number[] = [roleId];
-  let currentRoleId: number | null = roleId;
-
-  while (currentRoleId) {
-    const role = (await MetaUserRole.findByPk(currentRoleId, {
-      attributes: ["metaUserRoleId"],
-      raw: true
-    })) as { metaUserRoleId: number | null } | null;
-
-    if (role && role.metaUserRoleId) {
-      ancestors.push(role.metaUserRoleId);
-      currentRoleId = role.metaUserRoleId;
-    } else {
-      break;
-    }
-  }
-
-  return ancestors;
-};
-
-/**
- * Get all users who have roles that are descendants of the logged-in user's role
- * This allows a user to manage only people below/under their role hierarchy
- */
-export const getUsersWithRoleHierarchy = async (loggedInUserRoles: number[]): Promise<number[]> => {
-  if (loggedInUserRoles.length === 0) {
-    return [];
-  }
-
-  // Get all descendant roles for each of the logged-in user's roles
-  const allDescendantRoles: Set<number> = new Set();
-
-  for (const roleId of loggedInUserRoles) {
-    const descendants = await getDescendantRoleIds(roleId);
-    descendants.forEach((id) => allDescendantRoles.add(id));
-  }
-
-  return Array.from(allDescendantRoles);
-};
-
-/**
  * Get accessibility constraints for a logged-in user
  * Compares user's accessibility with target user's accessibility
  * Returns WHERE clause conditions for filtering
@@ -101,7 +29,7 @@ export const getAccessibilityConstraints = async (
 
 /**
  * Validate if logged-in user can manage a target user
- * Checks both role hierarchy and accessibility constraints
+ * Checks accessibility constraints only (role hierarchy has been removed)
  */
 export const canManageUser = async (
   loggedInUserId: number,
@@ -109,21 +37,11 @@ export const canManageUser = async (
   targetUserId: number,
   targetUserRoles: number[]
 ): Promise<boolean> => {
-  // Get allowed descendant roles
-  const allowedDescendantRoles = await getUsersWithRoleHierarchy(loggedInUserRoles);
-
-  // Check if target user has at least one role in allowed descendants
-  const hasAllowedRole = targetUserRoles.some((roleId) => allowedDescendantRoles.includes(roleId));
-
-  if (!hasAllowedRole) {
-    return false;
-  }
-
   // Check accessibility constraints
   const accessibilityConstraints = await getAccessibilityConstraints(loggedInUserId);
 
   if (Object.keys(accessibilityConstraints).length === 0) {
-    return true; // No accessibility constraints, role check passed
+    return true; // No accessibility constraints
   }
 
   // Get target user's accessibility
