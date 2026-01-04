@@ -32,13 +32,67 @@ export const authenticate =
 
     try {
       const payload = verifyAccessToken(token);
+      console.log("[AUTH DEBUG] Token verified:", payload);
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
         permissions: Array.isArray(payload.permissions) ? payload.permissions : []
       };
+      console.log("[AUTH DEBUG] User set:", req.user);
       next();
-    } catch {
+    } catch (err) {
+      console.log(
+        "[AUTH DEBUG] Token verification failed:",
+        err instanceof Error ? err.message : String(err)
+      );
+      throw new ApiError("Invalid or expired token", 401);
+    }
+  };
+
+/**
+ * Optional authentication middleware
+ * If token is provided, it validates and sets req.user
+ * If no token, it proceeds without setting req.user
+ * Controllers can then check if req.user exists to apply filters
+ */
+export const authenticateOptional =
+  () =>
+  (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+    const header = req.headers.authorization?.trim();
+
+    // If no authorization header, allow access (public)
+    if (!header) {
+      console.log("[AUTH DEBUG] No token provided - public access");
+      next();
+      return;
+    }
+
+    const match = header.match(/^(\S+)\s+(.+)$/);
+    if (!match) {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
+    const [, scheme, rawToken] = match;
+    const token = rawToken.trim();
+    if (!/^(Bearer)$/i.test(scheme) || token === "") {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
+    try {
+      const payload = verifyAccessToken(token);
+      console.log("[AUTH DEBUG] Optional token verified:", payload);
+      req.user = {
+        id: payload.userId,
+        roles: Array.isArray(payload.roles) ? payload.roles : [],
+        permissions: Array.isArray(payload.permissions) ? payload.permissions : []
+      };
+      console.log("[AUTH DEBUG] User set:", req.user);
+      next();
+    } catch (err) {
+      console.log(
+        "[AUTH DEBUG] Token verification failed:",
+        err instanceof Error ? err.message : String(err)
+      );
       throw new ApiError("Invalid or expired token", 401);
     }
   };
