@@ -71,14 +71,37 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
   }
 
   // Apply accessibility filter - restrict to wards in user's accessible zones
+  const debugMode = req.query.debug === "true";
+  let debugInfo: any = {};
+
   if (req.user?.id) {
     const userAccessList = await getUserAccessList(req.user.id);
 
+    if (debugMode) {
+      debugInfo.userId = req.user.id;
+      debugInfo.userAccessList = userAccessList;
+    }
+
     const hasAccess = applyAccessibilityFilterToList(whereClause, userAccessList, "wardNumberId");
+
+    if (debugMode) {
+      debugInfo.hasAccess = hasAccess;
+      debugInfo.whereClauseAfterFilter = whereClause;
+    }
+
     if (!hasAccess) {
       // User has accessibility configured but no ward access
       const pagination = calculatePagination(0, page, limit);
-      return sendSuccessWithPagination(res, [], pagination, "Ward numbers retrieved successfully");
+      const response = {
+        success: true,
+        data: [],
+        pagination,
+        message: "Ward numbers retrieved successfully"
+      };
+      if (debugMode) {
+        (response as any).debug = debugInfo;
+      }
+      return res.status(200).json(response);
     }
   }
 
@@ -99,6 +122,21 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
   }
 
   const pagination = calculatePagination(totalCount, page, limit);
+
+  if (debugMode) {
+    const response = {
+      success: true,
+      data: responseData,
+      pagination,
+      message: "Ward numbers retrieved successfully",
+      debug: {
+        ...debugInfo,
+        queryWhereClause: whereClause,
+        resultCount: rows.length
+      }
+    };
+    return res.status(200).json(response);
+  }
 
   return sendSuccessWithPagination(
     res,
