@@ -17,9 +17,9 @@ import {
   enrichAdminRolePermissions
 } from "../services/rbacService";
 import {
-  getDescendantRoleIds,
   canManageUser,
-  buildAccessibilityFilter
+  buildAccessibilityFilter,
+  getDescendantRoleIds
 } from "../services/userHierarchyService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import {
@@ -360,21 +360,23 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  // Apply role hierarchy filter: only show users with descendant roles
-  let allowedRoleIds: number[] | undefined;
-  if (loggedInUser?.id && loggedInUser?.roles && loggedInUser.roles.length > 0) {
-    // Get role IDs from role names - need to fetch from database
-    const userRoles = await UserRole.findAll({
-      where: { userId: loggedInUser.id },
-      attributes: ["roleId"],
-      raw: true
-    });
-    if (userRoles.length > 0) {
-      allowedRoleIds = await getDescendantRoleIds(userRoles[0].roleId);
+  // Apply both role hierarchy and accessibility filters
+  let roleHierarchyFilter: { [Op.in]: number[] } | undefined;
+  if (loggedInUser?.id && loggedInUser.roles && loggedInUser.roles.length > 0) {
+    // Get all descendant roles for the logged-in user's roles
+    const allDescendantRoleIds: Set<number> = new Set();
+    for (const roleIdStr of loggedInUser.roles) {
+      const roleId = parseInt(roleIdStr, 10);
+      if (!isNaN(roleId)) {
+        const descendantRoles = await getDescendantRoleIds(roleId);
+        descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
+      }
+    }
+    if (allDescendantRoleIds.size > 0) {
+      roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
     }
   }
 
-  // Apply accessibility filter: only show users in accessible zones
   const accessibilityFilter = loggedInUser?.id
     ? await buildAccessibilityFilter(loggedInUser.id)
     : null;
@@ -420,8 +422,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       {
         association: "roles",
         include: [{ association: "permissions" }],
-        ...(allowedRoleIds && {
-          where: { id: { [Op.in]: allowedRoleIds } },
+        ...(roleHierarchyFilter && {
+          where: { id: roleHierarchyFilter },
           required: true
         }),
         ...(roleIds &&
@@ -453,94 +455,123 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   return sendSuccessWithPagination(res, enrichedRows, pagination, "Users retrieved successfully");
 });
 
-export const listUsersPendingApproval = asyncHandler(async (req: Request, res: Response) => {
-  const { page, limit, offset } = parsePaginationParams(
-    req.query.page as string,
-    req.query.limit as string,
-    25,
-    100
-  );
-  const search = (req.query.search as string) ?? "";
-  const includeAuditFields = shouldIncludeAuditFields(req.query);
+export const listUsersPendingApproval = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const loggedInUser = req.user;
+    const { page, limit, offset } = parsePaginationParams(
+      req.query.page as string,
+      req.query.limit as string,
+      25,
+      100
+    );
+    const search = (req.query.search as string) ?? "";
+    const includeAuditFields = shouldIncludeAuditFields(req.query);
 
-  const whereClause: any = {
-    status: 2
-  };
+    const whereClause: any = {
+      status: 2
+    };
 
-  if (search) {
-    whereClause[Op.or] = [
-      { contactNumber: { [Op.like]: `%${search}%` } },
-      { fullName: { [Op.like]: `%${search}%` } },
-      { email: { [Op.like]: `%${search}%` } }
-    ];
+    if (search) {
+      whereClause[Op.or] = [
+        { contactNumber: { [Op.like]: `%${search}%` } },
+        { fullName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    // Apply role hierarchy filter
+    let roleHierarchyFilter: { [Op.in]: number[] } | undefined;
+    if (loggedInUser?.id && loggedInUser.roles && loggedInUser.roles.length > 0) {
+      const allDescendantRoleIds: Set<number> = new Set();
+      for (const roleIdStr of loggedInUser.roles) {
+        const roleId = parseInt(roleIdStr, 10);
+        if (!isNaN(roleId)) {
+          const descendantRoles = await getDescendantRoleIds(roleId);
+          descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
+        }
+      }
+      if (allDescendantRoleIds.size > 0) {
+        roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
+      }
+    }
+
+    // Apply accessibility filter: only show pending users in accessible zones
+    const accessibilityFilter = loggedInUser?.id
+      ? await buildAccessibilityFilter(loggedInUser.id)
+      : null;
+
+    const { rows, count } = await User.findAndCountAll({
+      where: whereClause,
+      attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
+      include: [
+        {
+          model: UserProfile,
+          as: "profile",
+          ...(accessibilityFilter && { where: accessibilityFilter, required: true }),
+          include: [
+            { association: "gender", attributes: ["id", "dispName"], required: false },
+            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+            {
+              association: "educationalDetailGroup",
+              attributes: ["id", "dispName"],
+              required: false
+            },
+            { association: "sector", attributes: ["id", "dispName"], required: false }
+          ]
+        },
+        {
+          model: UserAccess,
+          as: "accessProfiles",
+          where: { status: 1 },
+          required: false,
+          include: [
+            { association: "accessRole" },
+            { association: "wardNumber" },
+            { association: "boothNumber" },
+            { association: "mlaConstituency" }
+          ]
+        },
+        {
+          association: "roles",
+          include: [{ association: "permissions" }],
+          ...(roleHierarchyFilter && {
+            where: { id: roleHierarchyFilter },
+            required: true
+          })
+        }
+      ],
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+      distinct: true
+    });
+
+    const enrichedRows = await Promise.all(
+      rows.map(async (user) => {
+        if (user.roles && user.roles.length > 0) {
+          const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+          return {
+            ...user.toJSON(),
+            roles: enrichedRoles.reverse()
+          };
+        }
+        return user;
+      })
+    );
+
+    const pagination = calculatePagination(count, page, limit);
+
+    return sendSuccessWithPagination(
+      res,
+      enrichedRows,
+      pagination,
+      "Users pending approval retrieved successfully"
+    );
   }
-
-  const { rows, count } = await User.findAndCountAll({
-    where: whereClause,
-    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
-    include: [
-      {
-        model: UserProfile,
-        as: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
-        ]
-      },
-      {
-        model: UserAccess,
-        as: "accessProfiles",
-        where: { status: 1 },
-        required: false,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
-      },
-      {
-        association: "roles",
-        include: [{ association: "permissions" }]
-      }
-    ],
-    limit,
-    offset,
-    order: [["createdAt", "DESC"]],
-    distinct: true
-  });
-
-  const enrichedRows = await Promise.all(
-    rows.map(async (user) => {
-      if (user.roles && user.roles.length > 0) {
-        const enrichedRoles = await enrichAdminRolePermissions(user.roles);
-        return {
-          ...user.toJSON(),
-          roles: enrichedRoles.reverse()
-        };
-      }
-      return user;
-    })
-  );
-
-  const pagination = calculatePagination(count, page, limit);
-
-  return sendSuccessWithPagination(
-    res,
-    enrichedRows,
-    pagination,
-    "Users pending approval retrieved successfully"
-  );
-});
+);
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const loggedInUser = (req as AuthenticatedRequest).user;
@@ -562,32 +593,8 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Check if logged-in user can create users with the specified roles
-  if (
-    loggedInUser?.id &&
-    loggedInUser.roles &&
-    loggedInUser.roles.length > 0 &&
-    parsedRoleIds &&
-    parsedRoleIds.length > 0
-  ) {
-    // Get user's role IDs from database
-    const userRoles = await UserRole.findAll({
-      where: { userId: loggedInUser.id },
-      attributes: ["roleId"],
-      raw: true
-    });
-
-    if (userRoles.length > 0) {
-      // Get allowed descendant roles for logged-in user
-      const allowedRoleIds = await getDescendantRoleIds(userRoles[0].roleId);
-
-      // Ensure all requested roles are within allowed hierarchy
-      const canCreateWithRoles = parsedRoleIds.every((roleId) => allowedRoleIds.includes(roleId));
-
-      if (!canCreateWithRoles) {
-        throw new ApiError("Cannot create user with roles outside your role hierarchy", 403);
-      }
-    }
-  }
+  // Role hierarchy validation removed - roles can be assigned freely
+  // Only accessibility boundary is checked in canManageUser
 
   const user = await User.create({
     contactNumber,

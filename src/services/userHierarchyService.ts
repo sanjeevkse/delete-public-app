@@ -1,12 +1,48 @@
 import { Op } from "sequelize";
 import MetaUserRole from "../models/MetaUserRole";
 import UserAccess from "../models/UserAccess";
+import UserRole from "../models/UserRole";
 import { ApiError } from "../middlewares/errorHandler";
 import {
   buildAccessibilityORConditions,
   buildAccessibilityFilterWithFlag,
   getUserAccessList
 } from "./userAccessibilityService";
+
+/**
+ * Get all descendant role IDs for a given role using depthPath
+ * depthPath format: /1/9/10 means role 10 is under 9 is under 1
+ * Returns the role ID itself plus all roles below it
+ */
+export const getDescendantRoleIds = async (roleId: number): Promise<number[]> => {
+  // Get the role's depthPath
+  const role = await MetaUserRole.findByPk(roleId, {
+    attributes: ["depthPath"],
+    raw: true
+  });
+
+  if (!role || !role.depthPath) {
+    return [roleId]; // Just return the role itself if no depthPath
+  }
+
+  // Find all roles whose depthPath starts with this role's depthPath
+  // e.g., if this role is /1/9, find roles like /1/9/10, /1/9/10/11, etc.
+  const descendantRoles = await MetaUserRole.findAll({
+    where: {
+      [Op.or]: [
+        // Exact match (the role itself)
+        { depthPath: role.depthPath },
+        // Starts with the depthPath followed by / (direct and indirect children)
+        { depthPath: { [Op.like]: `${role.depthPath}/%` } }
+      ],
+      status: 1
+    },
+    attributes: ["id"],
+    raw: true
+  });
+
+  return descendantRoles.map((r) => r.id);
+};
 
 /**
  * Get accessibility constraints for a logged-in user
@@ -29,7 +65,7 @@ export const getAccessibilityConstraints = async (
 
 /**
  * Validate if logged-in user can manage a target user
- * Checks accessibility constraints only (role hierarchy has been removed)
+ * Checks both role hierarchy (using depthPath) and accessibility constraints
  */
 export const canManageUser = async (
   loggedInUserId: number,
@@ -37,11 +73,31 @@ export const canManageUser = async (
   targetUserId: number,
   targetUserRoles: number[]
 ): Promise<boolean> => {
+  // Check role hierarchy: target roles must be descendants of logged-in user's roles
+  if (loggedInUserRoles.length > 0 && targetUserRoles.length > 0) {
+    let hasValidRole = false;
+
+    for (const loggedInRoleId of loggedInUserRoles) {
+      const allowedDescendantRoles = await getDescendantRoleIds(loggedInRoleId);
+      const hasAllowedRole = targetUserRoles.some((roleId) =>
+        allowedDescendantRoles.includes(roleId)
+      );
+      if (hasAllowedRole) {
+        hasValidRole = true;
+        break;
+      }
+    }
+
+    if (!hasValidRole) {
+      return false; // Target user's roles are not under logged-in user's roles
+    }
+  }
+
   // Check accessibility constraints
   const accessibilityConstraints = await getAccessibilityConstraints(loggedInUserId);
 
   if (Object.keys(accessibilityConstraints).length === 0) {
-    return true; // No accessibility constraints
+    return true; // No accessibility constraints, role check passed
   }
 
   // Get target user's accessibility
