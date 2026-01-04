@@ -199,6 +199,7 @@ class NotificationService {
   /**
    * Send notification to all active users
    * Fetches all active device tokens from database and sends broadcast
+   * Tracks individual recipient delivery status
    */
   async sendToAllUsers(
     notification: NotificationPayload,
@@ -218,11 +219,12 @@ class NotificationService {
       // Import models
       const { default: DeviceToken } = await import("../models/DeviceToken");
       const { default: NotificationLog } = await import("../models/NotificationLog");
+      const { default: NotificationRecipient } = await import("../models/NotificationRecipient");
 
-      // Get all active device tokens
+      // Get all active device tokens with user info
       const deviceTokens = await DeviceToken.findAll({
         where: { isActive: true, status: 1 },
-        attributes: ["token"]
+        attributes: ["id", "userId", "token"]
       });
 
       logger.info({ count: deviceTokens.length }, "Active device tokens found");
@@ -267,17 +269,67 @@ class NotificationService {
 
       logId = notificationLog.id;
 
+      // Create pending recipient entries for all users
+      const recipientEntries = deviceTokens.map((dt) => ({
+        notificationLogId: logId,
+        userId: dt.userId,
+        deviceTokenId: dt.id,
+        status: "pending" as const,
+        sentAt: new Date()
+      }));
+
+      await NotificationRecipient.bulkCreate(recipientEntries);
+
       // Firebase has limit of 500 tokens per batch
       // Split into chunks if needed
       const BATCH_SIZE = 500;
       const results: BatchResponse[] = [];
+      const tokenIndexMap = new Map(deviceTokens.map((dt, idx) => [dt.token, idx]));
 
       for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
         const batch = tokens.slice(i, i + BATCH_SIZE);
+        const batchDeviceTokens = batch.map(t => deviceTokens[tokenIndexMap.get(t)!]);
+        
         const response = await this.sendToMultipleDevices({
           tokens: batch,
           notification
         });
+
+        // Update recipient status based on response
+        for (let j = 0; j < response.responses.length; j++) {
+          const resp = response.responses[j];
+          const deviceToken = batchDeviceTokens[j];
+          
+          if (resp.success) {
+            await NotificationRecipient.update(
+              {
+                status: "success",
+                fcmResponse: resp.messageId ? { messageId: resp.messageId } : null
+              },
+              {
+                where: {
+                  notificationLogId: logId,
+                  deviceTokenId: deviceToken.id
+                }
+              }
+            );
+          } else {
+            await NotificationRecipient.update(
+              {
+                status: "failed",
+                errorMessage: resp.error?.message || "Unknown error",
+                fcmResponse: resp.error ? { code: resp.error.code, message: resp.error.message } : null
+              },
+              {
+                where: {
+                  notificationLogId: logId,
+                  deviceTokenId: deviceToken.id
+                }
+              }
+            );
+          }
+        }
+
         results.push(response);
       }
 

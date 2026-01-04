@@ -2141,11 +2141,157 @@
 						"description": "Sends a push notification to all devices subscribed to a specific topic."
 					},
 					"response": []
+				},
+				{
+					"name": "Get Notification Delivery Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notifications/5/delivery-status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"5",
+								"delivery-status"
+							]
+						},
+						"description": "Get detailed delivery status for all recipients of a specific notification log. Returns notification details, summary statistics, and list of all recipients with their delivery status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Notification Status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notifications/5/user-status?userId=42",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"5",
+								"user-status"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "42",
+									"description": "User ID to check notification delivery status for"
+								}
+							]
+						},
+						"description": "Get delivery status for a specific user for a notification. Returns user's delivery status, error message (if failed), and FCM response."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification Delivery Summary",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notifications/delivery/summary?startDate=2025-12-01&endDate=2025-12-31&notificationType=event_created&status=success",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"delivery",
+								"summary"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-12-01",
+									"description": "Optional: Start date for filtering notifications (ISO format)"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-31",
+									"description": "Optional: End date for filtering notifications (ISO format)"
+								},
+								{
+									"key": "notificationType",
+									"value": "event_created",
+									"description": "Optional: Filter by notification type (e.g., event_created, broadcast)"
+								},
+								{
+									"key": "status",
+									"value": "success",
+									"description": "Optional: Filter by delivery status (pending, success, failed)"
+								}
+							]
+						},
+						"description": "Get aggregate delivery statistics with optional filters. Returns overall summary and per-notification breakdown with success rates."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Failed Notifications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notifications/users/42/failed?limit=20&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"users",
+								"42",
+								"failed"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: Number of records per page (default: 50)"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Optional: Number of records to skip for pagination (default: 0)"
+								}
+							]
+						},
+						"description": "Get all failed notifications for a specific user. Returns paginated list of failed notifications with error details and associated notification information."
+					},
+					"response": []
 				}
-			]
-		},
-		{
-			"name": "Schemes",
 			"item": [
 				{
 					"name": "List Schemes",
