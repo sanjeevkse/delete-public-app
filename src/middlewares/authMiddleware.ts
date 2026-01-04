@@ -41,10 +41,9 @@ export const authenticate =
       console.log("[AUTH DEBUG] User set:", req.user);
       next();
     } catch (err) {
-      console.log(
-        "[AUTH DEBUG] Token verification failed:",
-        err instanceof Error ? err.message : String(err)
-      );
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.log("[AUTH DEBUG] Token verification failed:", errorMsg);
+      console.log("[AUTH DEBUG] Token:", token.substring(0, 50) + "...");
       throw new ApiError("Invalid or expired token", 401);
     }
   };
@@ -89,11 +88,17 @@ export const authenticateOptional =
       console.log("[AUTH DEBUG] User set:", req.user);
       next();
     } catch (err) {
-      console.log(
-        "[AUTH DEBUG] Token verification failed:",
-        err instanceof Error ? err.message : String(err)
-      );
-      throw new ApiError("Invalid or expired token", 401);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.log("[AUTH DEBUG] Optional token verification failed:", errorMsg);
+      console.log("[AUTH DEBUG] Token:", token.substring(0, 50) + "...");
+
+      // For debug purposes, attach error to request
+      (req as any).authError = {
+        message: errorMsg,
+        tokenPreview: token.substring(0, 50) + "..."
+      };
+
+      throw new ApiError(`Invalid or expired token: ${errorMsg}`, 401);
     }
   };
 
