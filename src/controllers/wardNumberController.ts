@@ -74,19 +74,24 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
   const debugMode = req.query.debug === "true";
   let debugInfo: any = {};
 
+  if (debugMode) {
+    debugInfo.hasUserAuth = !!req.user?.id;
+    debugInfo.userId = req.user?.id || null;
+  }
+
   if (req.user?.id) {
     const userAccessList = await getUserAccessList(req.user.id);
 
     if (debugMode) {
-      debugInfo.userId = req.user.id;
       debugInfo.userAccessList = userAccessList;
+      debugInfo.userAccessListLength = userAccessList.length;
     }
 
     const hasAccess = applyAccessibilityFilterToList(whereClause, userAccessList, "wardNumberId");
 
     if (debugMode) {
       debugInfo.hasAccess = hasAccess;
-      debugInfo.whereClauseAfterFilter = whereClause;
+      debugInfo.whereClauseAfterFilter = JSON.stringify(whereClause);
     }
 
     if (!hasAccess) {
