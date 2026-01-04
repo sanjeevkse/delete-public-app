@@ -271,7 +271,7 @@ class NotificationService {
 
       // Create pending recipient entries for all users
       const recipientEntries = deviceTokens.map((dt) => ({
-        notificationLogId: logId,
+        notificationLogId: logId as number,
         userId: dt.userId,
         deviceTokenId: dt.id,
         status: "pending" as const,
@@ -387,6 +387,272 @@ class NotificationService {
       }
 
       logger.error({ err: error }, "Error sending broadcast notification");
+      throw error;
+    }
+  }
+
+  /**
+   * Send targeted notification to users by ward/booth combinations and role
+   * accesses: array of {wardNumberId, boothNumberId} combinations
+   * roleId: specific role to filter by
+   */
+  async sendToTargetedUsers(
+    notification: NotificationPayload,
+    options: {
+      accesses: Array<{ wardNumberId?: number | null; boothNumberId?: number | null }>;
+      roleId?: number | null;
+      triggeredBy?: number;
+    }
+  ): Promise<BatchResponse> {
+    const startTime = Date.now();
+    let logId: number | null = null;
+    let targetedLogId: number | null = null;
+
+    try {
+      logger.info(
+        { accesses: options.accesses, roleId: options.roleId },
+        "sendToTargetedUsers called"
+      );
+
+      if (!options.accesses || options.accesses.length === 0) {
+        throw new Error(
+          "At least one access combination (wardNumberId, boothNumberId) is required"
+        );
+      }
+
+      // Import models
+      const { default: DeviceToken } = await import("../models/DeviceToken");
+      const { default: NotificationLog } = await import("../models/NotificationLog");
+      const { default: NotificationRecipient } = await import("../models/NotificationRecipient");
+      const { default: TargetedNotificationLog } = await import(
+        "../models/TargetedNotificationLog"
+      );
+      const sequelize = require("../config/database").default;
+
+      // Build OR conditions for each access combination
+      const accessConditions = options.accesses.map((access) => {
+        let condition = "tbl_user.status = 1";
+        const params: any[] = [];
+
+        // Always filter by role if specified
+        if (options.roleId && options.roleId !== -1) {
+          condition += " AND tbl_user_access.role_id = ?";
+          params.push(options.roleId);
+        }
+
+        // Filter by ward if specified in this access
+        if (access.wardNumberId && access.wardNumberId !== -1) {
+          condition += " AND tbl_user_access.ward_number_id = ?";
+          params.push(access.wardNumberId);
+        }
+
+        // Filter by booth if specified in this access
+        if (access.boothNumberId && access.boothNumberId !== -1) {
+          condition += " AND tbl_user_access.booth_number_id = ?";
+          params.push(access.boothNumberId);
+        }
+
+        return { condition, params };
+      });
+
+      // Build query to find matching users
+      let query = `
+        SELECT DISTINCT tbl_user.id FROM tbl_user
+        INNER JOIN tbl_user_access ON tbl_user.id = tbl_user_access.user_id
+        WHERE (`;
+
+      const allParams: any[] = [];
+      accessConditions.forEach((ac, idx) => {
+        if (idx > 0) query += " OR ";
+        query += `(${ac.condition})`;
+        allParams.push(...ac.params);
+      });
+
+      query += ")";
+
+      logger.info({ query, params: allParams }, "Executing user query");
+
+      const matchedUsers = await sequelize.query(query, {
+        replacements: allParams,
+        type: sequelize.QueryTypes.SELECT
+      });
+
+      const userIds = (matchedUsers as any[]).map((u) => u.id);
+
+      if (userIds.length === 0) {
+        logger.warn("No users found matching targeting criteria");
+        throw new Error("No users found matching the specified access and role criteria");
+      }
+
+      logger.info({ matchedUserCount: userIds.length }, "Users matched for targeting");
+
+      // Get device tokens for matched users
+      const deviceTokens = await DeviceToken.findAll({
+        where: { userId: userIds, isActive: true, status: 1 },
+        attributes: ["id", "userId", "token"]
+      });
+
+      logger.info({ count: deviceTokens.length }, "Device tokens found for targeted users");
+
+      if (deviceTokens.length === 0) {
+        logger.warn("No active device tokens found for targeted users");
+        throw new Error("No active device tokens found for the targeted users");
+      }
+
+      // Create notification log
+      const notificationLog = await NotificationLog.create({
+        notificationType: "targeted",
+        entityType: null,
+        entityId: null,
+        title: notification.title,
+        body: notification.body,
+        dataJson: notification.data || null,
+        recipientCount: deviceTokens.length,
+        successCount: 0,
+        failureCount: 0,
+        triggeredBy: options.triggeredBy || null,
+        status: 1
+      });
+
+      logId = notificationLog.id;
+
+      // Create targeted notification log with access combinations
+      const targetedLog = await TargetedNotificationLog.create({
+        notificationLogId: logId,
+        wardNumberId: null, // Not used anymore, stored in targetingCriteria
+        boothNumberId: null, // Not used anymore, stored in targetingCriteria
+        roleId: options.roleId || null,
+        targetingCriteria: {
+          accesses: options.accesses,
+          roleId: options.roleId
+        },
+        targetUserCount: userIds.length
+      });
+
+      targetedLogId = targetedLog.id;
+
+      // Create pending recipient entries
+      const recipientEntries = deviceTokens.map((dt) => ({
+        notificationLogId: logId as number,
+        userId: dt.userId,
+        deviceTokenId: dt.id,
+        status: "pending" as const,
+        sentAt: new Date()
+      }));
+
+      await NotificationRecipient.bulkCreate(recipientEntries);
+
+      // Send notifications in batches
+      const BATCH_SIZE = 500;
+      const tokens = deviceTokens.map((dt) => dt.token);
+      const results: BatchResponse[] = [];
+      const tokenIndexMap = new Map(deviceTokens.map((dt, idx) => [dt.token, idx]));
+
+      for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
+        const batch = tokens.slice(i, i + BATCH_SIZE);
+        const batchDeviceTokens = batch.map((t) => deviceTokens[tokenIndexMap.get(t)!]);
+
+        const response = await this.sendToMultipleDevices({
+          tokens: batch,
+          notification
+        });
+
+        // Update recipient status
+        for (let j = 0; j < response.responses.length; j++) {
+          const resp = response.responses[j];
+          const deviceToken = batchDeviceTokens[j];
+
+          if (resp.success) {
+            await NotificationRecipient.update(
+              {
+                status: "success",
+                fcmResponse: resp.messageId ? { messageId: resp.messageId } : null
+              },
+              {
+                where: {
+                  notificationLogId: logId,
+                  deviceTokenId: deviceToken.id
+                }
+              }
+            );
+          } else {
+            await NotificationRecipient.update(
+              {
+                status: "failed",
+                errorMessage: resp.error?.message || "Unknown error",
+                fcmResponse: resp.error
+                  ? { code: resp.error.code, message: resp.error.message }
+                  : null
+              },
+              {
+                where: {
+                  notificationLogId: logId,
+                  deviceTokenId: deviceToken.id
+                }
+              }
+            );
+          }
+        }
+
+        results.push(response);
+      }
+
+      // Aggregate results
+      const totalSuccess = results.reduce((sum, r) => sum + r.successCount, 0);
+      const totalFailure = results.reduce((sum, r) => sum + r.failureCount, 0);
+
+      // Update logs with results
+      if (logId) {
+        await NotificationLog.update(
+          {
+            successCount: totalSuccess,
+            failureCount: totalFailure,
+            fcmResponse: {
+              batches: results.length,
+              duration: Date.now() - startTime,
+              results: results.map((r) => ({
+                successCount: r.successCount,
+                failureCount: r.failureCount
+              }))
+            }
+          },
+          { where: { id: logId } }
+        );
+      }
+
+      logger.info(
+        {
+          successCount: totalSuccess,
+          failureCount: totalFailure,
+          totalTokens: tokens.length,
+          targetedLogId
+        },
+        "Targeted notification sent"
+      );
+
+      return {
+        successCount: totalSuccess,
+        failureCount: totalFailure,
+        responses: results.flatMap((r) => r.responses)
+      };
+    } catch (error) {
+      // Update log with error if we have a logId
+      if (logId) {
+        try {
+          const { default: NotificationLog } = await import("../models/NotificationLog");
+          await NotificationLog.update(
+            {
+              errorMessage: error instanceof Error ? error.message : String(error),
+              fcmResponse: { error: true, duration: Date.now() - startTime }
+            },
+            { where: { id: logId } }
+          );
+        } catch (logError) {
+          logger.error({ err: logError }, "Failed to update notification log with error");
+        }
+      }
+
+      logger.error({ err: error }, "Error sending targeted notification");
       throw error;
     }
   }
