@@ -187,6 +187,29 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
   );
 });
 
+/**
+ * Helper function to add parentId to role based on depthPath
+ * depthPath format: /parentId/roleId or /roleId
+ */
+const addParentIdToRole = (role: any): any => {
+  if (!role) return role;
+
+  let parentId: number | null = null;
+
+  if (role.depthPath) {
+    const parts = role.depthPath.split("/").filter((p: string) => p);
+    // If there are 2+ parts, the second-to-last is the parent ID
+    if (parts.length >= 2) {
+      parentId = parseInt(parts[parts.length - 2], 10);
+    }
+  }
+
+  return {
+    ...role,
+    parentId
+  };
+};
+
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const payload = req.body as {
     contactNumber?: unknown;
@@ -267,9 +290,13 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   if (sanitizedUser && sanitizedUser.roles && sanitizedUser.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(sanitizedUser.roles);
     const filteredRoles = await filterUserRolePermissions(user.id, enrichedRoles);
+    // Add parentId to each role based on depthPath
+    const rolesWithParentId = filteredRoles.map((role: any) =>
+      addParentIdToRole(role.toJSON ? role.toJSON() : role)
+    );
     userForResponse = {
       ...sanitizedUser.toJSON(),
-      roles: filteredRoles
+      roles: rolesWithParentId
     } as any;
   }
 

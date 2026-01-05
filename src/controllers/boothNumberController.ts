@@ -202,7 +202,7 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
 
   // Prepend "ALL" option if need_all=1
   if (req.query.need_all === "1") {
-    responseData = [{ id: -1, dispName: "-ALL-" }, ...rows];
+    responseData = [{ id: -1, dispName: "-ALL-" } as any, ...rows];
     totalCount = count + 1;
   }
 
