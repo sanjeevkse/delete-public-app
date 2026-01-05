@@ -274,7 +274,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
           { association: "sector", attributes: ["id", "dispName"], required: false }
         ]
       },
-      { association: "roles", include: [{ association: "permissions" }] }
+      {
+        association: "roles",
+        include: [
+          {
+            association: "permissions"
+          }
+        ]
+      }
     ]
   });
 
