@@ -65,6 +65,7 @@ import FormSubmission from "./FormSubmission";
 import FormFieldValue from "./FormFieldValue";
 import DeviceToken from "./DeviceToken";
 import NotificationLog from "./NotificationLog";
+import NotificationRecipient from "./NotificationRecipient";
 import Sidebar from "./Sidebar";
 import RoleSidebar from "./RoleSidebar";
 import PermissionGroupSidebar from "./PermissionGroupSidebar";
@@ -152,6 +153,16 @@ const establishAssociations = (): void => {
   MetaPermissionGroup.hasMany(MetaPermission, {
     foreignKey: "permissionGroupId",
     as: "permissions"
+  });
+
+  // MetaUserRole self-association for parent-child relationship
+  MetaUserRole.belongsTo(MetaUserRole, {
+    foreignKey: "parentId",
+    as: "parentRole"
+  });
+  MetaUserRole.hasMany(MetaUserRole, {
+    foreignKey: "parentId",
+    as: "childRoles"
   });
 
   // Sidebar - Role associations (many-to-many through RoleSidebar)
@@ -626,6 +637,16 @@ const establishAssociations = (): void => {
   // DeviceToken associations
   DeviceToken.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(DeviceToken, { foreignKey: "userId", as: "deviceTokens" });
+
+  // NotificationLog and NotificationRecipient associations
+  NotificationLog.hasMany(NotificationRecipient, {
+    foreignKey: "notificationLogId",
+    as: "recipients"
+  });
+  NotificationRecipient.belongsTo(NotificationLog, {
+    foreignKey: "notificationLogId",
+    as: "notificationLog"
+  });
 };
 
 establishAssociations();
@@ -684,5 +705,6 @@ export {
   FormSubmission,
   FormFieldValue,
   DeviceToken,
-  NotificationLog
+  NotificationLog,
+  NotificationRecipient
 };
