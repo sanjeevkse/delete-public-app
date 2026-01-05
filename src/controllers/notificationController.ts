@@ -423,3 +423,107 @@ export const sendBroadcastNotification = async (req: Request, res: Response): Pr
     res.status(500).json({ success: false, message });
   }
 };
+
+/**
+ * Get notifications for the authenticated user with pagination
+ */
+export const getUserNotifications = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req.user as any)?.id;
+
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Authentication required" });
+      return;
+    }
+
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const offset = (page - 1) * limit;
+
+    const { default: NotificationRecipient } = await import("../models/NotificationRecipient");
+    const { default: NotificationLog } = await import("../models/NotificationLog");
+    const { default: TargetedNotificationLog } = await import(
+      "../models/TargetedNotificationLog"
+    );
+
+    // Get paginated notifications for the user
+    const { count, rows: recipients } = await NotificationRecipient.findAndCountAll({
+      where: { userId },
+      attributes: ["id", "notificationLogId", "status", "sentAt", "errorMessage"],
+      include: [
+        {
+          model: NotificationLog,
+          attributes: [
+            "id",
+            "notificationType",
+            "entityType",
+            "entityId",
+            "title",
+            "body",
+            "dataJson",
+            "createdAt"
+          ]
+        }
+      ],
+      order: [["sentAt", "DESC"]],
+      limit,
+      offset,
+      raw: false,
+      subQuery: false
+    });
+
+    // Get targeted notification logs for context
+    const notificationIds = recipients.map((r: any) => r.notificationLogId);
+    const targetedLogs = await TargetedNotificationLog.findAll({
+      where: { notificationLogId: notificationIds },
+      attributes: ["notificationLogId", "wardNumberId", "boothNumberId", "roleId"],
+      raw: true
+    });
+
+    const targetedLogsMap = new Map(targetedLogs.map((t: any) => [t.notificationLogId, t]));
+
+    // Format response
+    const notifications = recipients.map((recipient: any) => {
+      const notifLog = recipient.NotificationLog;
+      const targeted = targetedLogsMap.get(notifLog.id);
+
+      return {
+        recipientId: recipient.id,
+        notificationId: notifLog.id,
+        type: notifLog.notificationType,
+        entityType: notifLog.entityType,
+        entityId: notifLog.entityId,
+        title: notifLog.title,
+        body: notifLog.body,
+        data: notifLog.dataJson,
+        status: recipient.status,
+        sentAt: recipient.sentAt,
+        createdAt: notifLog.createdAt,
+        isTargeted: !!targeted,
+        targetingInfo: targeted || null,
+        errorMessage: recipient.errorMessage
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        notifications,
+        pagination: {
+          total: count,
+          page,
+          limit,
+          pages: Math.ceil(count / limit)
+        }
+      }
+    });
+  } catch (error: unknown) {
+    console.error("Error fetching user notifications:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch notifications";
+    res.status(500).json({ success: false, message });
+  }
+};

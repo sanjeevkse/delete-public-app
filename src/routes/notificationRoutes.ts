@@ -9,7 +9,8 @@ import {
   sendNotificationToTopic,
   sendBroadcastNotification,
   subscribeToTopic,
-  unsubscribeFromTopic
+  unsubscribeFromTopic,
+  getUserNotifications
 } from "../controllers/notificationController";
 
 const router = Router();
@@ -18,6 +19,9 @@ const router = Router();
 router.post("/tokens/register", authenticate(), registerDeviceToken);
 router.post("/tokens/unregister", authenticate(), unregisterDeviceToken);
 router.get("/tokens", authenticate(), getDeviceTokens);
+
+// Get user notifications (AUTHENTICATED)
+router.get("/user", authenticate(), getUserNotifications);
 
 // Topic subscription routes (AUTHENTICATED)
 router.post("/topics/subscribe", authenticate(), subscribeToTopic);
