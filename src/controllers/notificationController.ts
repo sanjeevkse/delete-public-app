@@ -454,6 +454,7 @@ export const getUserNotifications = async (
       include: [
         {
           model: NotificationLog,
+          as: "notificationLog",
           attributes: [
             "id",
             "notificationType",
