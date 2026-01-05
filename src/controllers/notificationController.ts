@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import DeviceToken from "../models/DeviceToken";
+import NotificationRecipient from "../models/NotificationRecipient";
+import NotificationLog from "../models/NotificationLog";
+import TargetedNotificationLog from "../models/TargetedNotificationLog";
 import notificationService from "../services/notificationService";
 import { Op } from "sequelize";
 
@@ -443,10 +446,6 @@ export const getUserNotifications = async (
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
     const offset = (page - 1) * limit;
 
-    const { default: NotificationRecipient } = await import("../models/NotificationRecipient");
-    const { default: NotificationLog } = await import("../models/NotificationLog");
-    const { default: TargetedNotificationLog } = await import("../models/TargetedNotificationLog");
-
     // Get paginated notifications for the user
     const { count, rows: recipients } = await NotificationRecipient.findAndCountAll({
       where: { userId },
@@ -464,7 +463,8 @@ export const getUserNotifications = async (
             "body",
             "dataJson",
             "createdAt"
-          ]
+          ],
+          required: true // This ensures we only get recipients with valid notification logs
         }
       ],
       order: [["sentAt", "DESC"]],
@@ -485,27 +485,33 @@ export const getUserNotifications = async (
     const targetedLogsMap = new Map(targetedLogs.map((t: any) => [t.notificationLogId, t]));
 
     // Format response
-    const notifications = recipients.map((recipient: any) => {
-      const notifLog = recipient.NotificationLog;
-      const targeted = targetedLogsMap.get(notifLog.id);
+    const notifications = recipients
+      .map((recipient: any) => {
+        const notifLog = recipient.notificationLog; // Use lowercase 'notificationLog'
+        if (!notifLog) {
+          return null;
+        }
 
-      return {
-        recipientId: recipient.id,
-        notificationId: notifLog.id,
-        type: notifLog.notificationType,
-        entityType: notifLog.entityType,
-        entityId: notifLog.entityId,
-        title: notifLog.title,
-        body: notifLog.body,
-        data: notifLog.dataJson,
-        status: recipient.status,
-        sentAt: recipient.sentAt,
-        createdAt: notifLog.createdAt,
-        isTargeted: !!targeted,
-        targetingInfo: targeted || null,
-        errorMessage: recipient.errorMessage
-      };
-    });
+        const targeted = targetedLogsMap.get(notifLog.id);
+
+        return {
+          recipientId: recipient.id,
+          notificationId: notifLog.id,
+          type: notifLog.notificationType,
+          entityType: notifLog.entityType,
+          entityId: notifLog.entityId,
+          title: notifLog.title,
+          body: notifLog.body,
+          data: notifLog.dataJson,
+          status: recipient.status,
+          sentAt: recipient.sentAt,
+          createdAt: notifLog.createdAt,
+          isTargeted: !!targeted,
+          targetingInfo: targeted || null,
+          errorMessage: recipient.errorMessage
+        };
+      })
+      .filter((n: any) => n !== null);
 
     res.status(200).json({
       success: true,
