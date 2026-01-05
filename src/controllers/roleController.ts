@@ -105,11 +105,7 @@ export const listRoles = asyncHandler(async (req: Request, res: Response) => {
 
   const { rows: roles, count } = await MetaUserRole.findAndCountAll({
     where,
-    include: [
-      { model: MetaPermission, as: "permissions" },
-      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
-      { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
-    ],
+    include: [{ model: MetaPermission, as: "permissions" }],
     limit,
     offset,
     order: [[sortColumn, sortDirection]],
@@ -143,11 +139,7 @@ export const listRoles = asyncHandler(async (req: Request, res: Response) => {
 
 export const getRole = asyncHandler(async (req: Request, res: Response) => {
   const role = await MetaUserRole.findByPk(req.params.id, {
-    include: [
-      { model: MetaPermission, as: "permissions" },
-      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
-      { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
-    ]
+    include: [{ model: MetaPermission, as: "permissions" }]
   });
 
   if (!role) {
@@ -262,10 +254,7 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const created = await MetaUserRole.findByPk(role.id, {
-    include: [
-      { model: MetaPermission, as: "permissions" },
-      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] }
-    ]
+    include: [{ model: MetaPermission, as: "permissions" }]
   });
 
   // For Admin role, replace permissions with all permissions
@@ -335,11 +324,7 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const updated = await MetaUserRole.findByPk(role.id, {
-    include: [
-      { model: MetaPermission, as: "permissions" },
-      { model: MetaUserRole, as: "parentRole", attributes: ["id", "dispName"] },
-      { model: MetaUserRole, as: "childRoles", attributes: ["id", "dispName"] }
-    ]
+    include: [{ model: MetaPermission, as: "permissions" }]
   });
 
   // For Admin role, replace permissions with all permissions

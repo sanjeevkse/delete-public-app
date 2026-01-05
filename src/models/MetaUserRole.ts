@@ -27,8 +27,6 @@ class MetaUserRole extends Model<
   declare updatedAt: CreationOptional<Date>;
   declare permissions?: NonAttribute<MetaPermission[]>;
   declare users?: NonAttribute<User[]>;
-  declare parentRole?: NonAttribute<MetaUserRole>;
-  declare childRoles?: NonAttribute<MetaUserRole[]>;
 }
 
 MetaUserRole.init(
