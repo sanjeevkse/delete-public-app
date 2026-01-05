@@ -445,9 +445,7 @@ export const getUserNotifications = async (
 
     const { default: NotificationRecipient } = await import("../models/NotificationRecipient");
     const { default: NotificationLog } = await import("../models/NotificationLog");
-    const { default: TargetedNotificationLog } = await import(
-      "../models/TargetedNotificationLog"
-    );
+    const { default: TargetedNotificationLog } = await import("../models/TargetedNotificationLog");
 
     // Get paginated notifications for the user
     const { count, rows: recipients } = await NotificationRecipient.findAndCountAll({
@@ -522,8 +520,7 @@ export const getUserNotifications = async (
     });
   } catch (error: unknown) {
     console.error("Error fetching user notifications:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch notifications";
+    const message = error instanceof Error ? error.message : "Failed to fetch notifications";
     res.status(500).json({ success: false, message });
   }
 };
