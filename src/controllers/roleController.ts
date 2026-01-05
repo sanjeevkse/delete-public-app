@@ -131,7 +131,7 @@ export const listRoles = asyncHandler(async (req: Request, res: Response) => {
   const pagination = calculatePagination(count, page, limit);
   return sendSuccessWithPagination(
     res,
-    transformRoleResponse(rolesWithPermissions),
+    getRoleResponse(rolesWithPermissions),
     pagination,
     "Roles retrieved successfully"
   );
