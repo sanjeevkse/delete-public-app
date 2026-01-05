@@ -116,8 +116,9 @@ export const getTargetedNotificationDetails = async (
       data: {
         id: targetedLog.id,
         notificationLogId: targetedLog.notificationLogId,
-        targetingCriteria: targetedLog.targetingCriteria,
-        targetUserCount: targetedLog.targetUserCount,
+        wardNumberId: targetedLog.wardNumberId,
+        boothNumberId: targetedLog.boothNumberId,
+        roleId: targetedLog.roleId,
         notification: {
           title: notificationLog?.title,
           body: notificationLog?.body,

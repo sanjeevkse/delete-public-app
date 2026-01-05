@@ -519,14 +519,9 @@ class NotificationService {
       // Create targeted notification log with access combinations
       const targetedLog = await TargetedNotificationLog.create({
         notificationLogId: logId,
-        wardNumberId: null, // Not used anymore, stored in targetingCriteria
-        boothNumberId: null, // Not used anymore, stored in targetingCriteria
-        roleId: options.roleId || null,
-        targetingCriteria: {
-          accesses: options.accesses,
-          roleId: options.roleId
-        },
-        targetUserCount: userIds.length
+        wardNumberId: null,
+        boothNumberId: null,
+        roleId: options.roleId || null
       });
 
       targetedLogId = targetedLog.id;

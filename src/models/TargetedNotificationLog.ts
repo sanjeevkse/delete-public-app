@@ -7,8 +7,6 @@ interface TargetedNotificationLogAttributes {
   wardNumberId: number | null;
   boothNumberId: number | null;
   roleId: number | null;
-  targetingCriteria: Record<string, any> | null;
-  targetUserCount: number;
   createdAt: Date;
   updatedAt: Date;
   createdBy: number | null;
@@ -22,8 +20,6 @@ interface TargetedNotificationLogCreationAttributes
     | "wardNumberId"
     | "boothNumberId"
     | "roleId"
-    | "targetingCriteria"
-    | "targetUserCount"
     | "createdAt"
     | "updatedAt"
     | "createdBy"
@@ -39,8 +35,6 @@ class TargetedNotificationLog
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
   declare roleId: number | null;
-  declare targetingCriteria: Record<string, any> | null;
-  declare targetUserCount: number;
   declare createdAt: Date;
   declare updatedAt: Date;
   declare createdBy: number | null;
@@ -73,16 +67,6 @@ TargetedNotificationLog.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       field: "role_id"
-    },
-    targetingCriteria: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      field: "targeting_criteria"
-    },
-    targetUserCount: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-      field: "target_user_count"
     },
     createdAt: {
       type: DataTypes.DATE,
