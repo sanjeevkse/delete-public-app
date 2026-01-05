@@ -145,16 +145,6 @@ const establishAssociations = (): void => {
     as: "roles"
   });
 
-  // Self-referential association for parent-child role relationships
-  MetaUserRole.belongsTo(MetaUserRole, {
-    foreignKey: "metaUserRoleId",
-    as: "parentRole"
-  });
-  MetaUserRole.hasMany(MetaUserRole, {
-    foreignKey: "metaUserRoleId",
-    as: "childRoles"
-  });
-
   MetaPermission.belongsTo(MetaPermissionGroup, {
     foreignKey: "permissionGroupId",
     as: "group"
