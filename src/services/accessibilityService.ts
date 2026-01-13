@@ -74,7 +74,11 @@ export const validateAccessibilityPayload = (payload: unknown): AccessibilityPay
         return num;
       }
       if (num <= 0) {
-        throw new ApiError(`accessibility[${index}].${fieldName} must be a positive integer`, 400);
+        const suffix = allowAll ? " or -1 for all" : "";
+        throw new ApiError(
+          `accessibility[${index}].${fieldName} must be a positive integer${suffix}`,
+          400
+        );
       }
       return num;
     };
@@ -82,7 +86,7 @@ export const validateAccessibilityPayload = (payload: unknown): AccessibilityPay
     return {
       wardNumberId: parseNumber(wardNumberId, "wardNumberId", true), // Allow -1 for "all"
       boothNumberId: parseNumber(boothNumberId, "boothNumberId", true), // Allow -1 for "all"
-      userRoleId: parseNumber(userRoleId, "userRoleId", false) // Roles must be positive
+      userRoleId: parseNumber(userRoleId, "userRoleId", true) // Allow -1 for "all roles"
     };
   });
 };
@@ -101,7 +105,9 @@ export const ensureAccessibilityReferencesExist = async (
   const boothIds = Array.from(
     new Set(records.map((item) => item.boothNumberId).filter((id) => id !== -1))
   );
-  const roleIds = Array.from(new Set(records.map((item) => item.userRoleId)));
+  const roleIds = Array.from(
+    new Set(records.map((item) => item.userRoleId).filter((id) => id !== -1))
+  );
 
   const { Op } = require("sequelize");
 
@@ -165,8 +171,7 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
 /**
  * Check if a user can access a specific form event
  * Returns true if user's ward+booth+role matches any accessibility rule for the event
- * Handles -1 values in accessibility rules for ward/booth (means 'all')
- * Roles do NOT support -1 - must be explicit role IDs
+ * Handles -1 values in accessibility rules (means 'all')
  */
 export const canUserAccessFormEvent = async (
   userId: number,
@@ -198,7 +203,7 @@ export const canUserAccessFormEvent = async (
     return false;
   }
 
-  // Check if user's geography and role matches any rule (considering -1 as 'all' for ward/booth only)
+  // Check if user's geography and role matches any rule (considering -1 as 'all')
   return accessibilityRules.some((rule: any) => {
     // Check ward match (-1 means all wards, otherwise exact match)
     const wardMatches =
@@ -208,8 +213,9 @@ export const canUserAccessFormEvent = async (
     const boothMatches =
       isAccessibleToAll(rule.boothNumberId) || rule.boothNumberId === userAccess.boothNumberId;
 
-    // Check role match - must be exact match (no -1 for roles)
-    const roleMatches = userAccess.roleIds.includes(rule.userRoleId);
+    // Check role match (-1 means all roles, otherwise exact match)
+    const roleMatches =
+      isAccessibleToAll(rule.userRoleId) || userAccess.roleIds.includes(rule.userRoleId);
 
     return wardMatches && boothMatches && roleMatches;
   });
