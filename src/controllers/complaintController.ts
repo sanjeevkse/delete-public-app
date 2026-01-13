@@ -22,6 +22,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { MediaType } from "../types/enums";
 import { Sequelize, Op } from "sequelize";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
+import { PUBLIC_ROLE_NAME } from "../config/rbac";
 
 // ✅ Common attributes to exclude
 const excludeFields = ["updatedBy", "status", "updatedAt"];
@@ -203,6 +204,7 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
 });
 
 export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string | undefined,
     req.query.limit as string | undefined,
@@ -212,11 +214,18 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
   const sortDirection = parseSortDirection(req.query.sort, "DESC");
 
   const where: any = { status: 1 };
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isPublicOnly =
+    normalizedRoles.length === 1 && normalizedRoles[0] === PUBLIC_ROLE_NAME.toLowerCase();
 
   const searchTerm = (req.query.search as string | undefined)?.trim();
   const complaintTypeId = req.query.complaintTypeId ? Number(req.query.complaintTypeId) : undefined;
   const currentStatusId = req.query.currentStatusId ? Number(req.query.currentStatusId) : undefined;
   const selfOther = (req.query.selfOther as string | undefined)?.trim();
+
+  if (isPublicOnly) {
+    where.createdBy = userId;
+  }
 
   if (complaintTypeId && !Number.isNaN(complaintTypeId)) {
     where.complaintTypeId = complaintTypeId;
