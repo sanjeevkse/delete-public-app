@@ -23,7 +23,6 @@ import {
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
-import { PUBLIC_ROLE_NAME } from "../config/rbac";
 
 const PAGE_DEFAULT = 1;
 const LIMIT_DEFAULT = 20;
@@ -417,7 +416,7 @@ const normalizeJobPayload = async (
 };
 
 export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId, roles } = requireAuthenticatedUser(req);
+  requireAuthenticatedUser(req);
 
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string | undefined,
@@ -438,18 +437,11 @@ export const listJobs = asyncHandler(async (req: AuthenticatedRequest, res: Resp
   });
 
   const where: WhereOptions = {};
-  const normalizedRoles = roles.map((role) => role.toLowerCase());
-  const isPublicOnly =
-    normalizedRoles.length === 1 && normalizedRoles[0] === PUBLIC_ROLE_NAME.toLowerCase();
 
   if (statusFilter === undefined) {
     where.status = 1;
   } else if (statusFilter !== null) {
     where.status = statusFilter;
-  }
-
-  if (isPublicOnly) {
-    where.createdBy = userId;
   }
 
   if (submittedForFilterValue !== undefined) {
