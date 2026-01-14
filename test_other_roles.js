@@ -11,7 +11,7 @@ async function testOtherRoles() {
     });
 
     console.log("\n=== All Roles ===");
-    allRoles.forEach(role => {
+    allRoles.forEach((role) => {
       console.log(`${role.id}: ${role.dispName}`);
     });
 
@@ -23,8 +23,8 @@ async function testOtherRoles() {
         attributes: ["sidebarId"],
         raw: true
       });
-      
-      const sidebarIds = sidebars.map(s => s.sidebarId).sort((a, b) => a - b);
+
+      const sidebarIds = sidebars.map((s) => s.sidebarId).sort((a, b) => a - b);
       console.log(`Role ${role.id} (${role.dispName}): [${sidebarIds.join(", ")}]`);
     }
 

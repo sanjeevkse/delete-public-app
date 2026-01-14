@@ -32,7 +32,7 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
     100
   );
   const search = (req.query.search as string) ?? "";
-  const status = req.query.status as string;
+  const status = req.query.status as string | undefined;
   const userId = req.query.userId as string;
   const relationTypeId = req.query.relationTypeId as string;
 
@@ -49,8 +49,13 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
     });
   }
 
-  if (status !== undefined) {
-    filters.push({ status: Number.parseInt(status, 10) });
+  if (status === undefined || status === null || status === "") {
+    filters.push({ status: 1 });
+  } else {
+    const parsedStatus = Number.parseInt(status, 10);
+    if (!Number.isNaN(parsedStatus)) {
+      filters.push({ status: parsedStatus });
+    }
   }
 
   if (userId) {
@@ -99,9 +104,11 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
  */
 export const getFamilyMember = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const includeInactive =
+    req.query.includeInactive === "true" || req.query.includeInactive === "1";
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
-  const attributes = buildQueryAttributes({ includeAuditFields });
+  const attributes = buildQueryAttributes({ includeAuditFields, keepFields: ["status"] });
 
   const familyMember = await FamilyMember.findByPk(id, {
     attributes,
@@ -119,8 +126,13 @@ export const getFamilyMember = asyncHandler(async (req: Request, res: Response) 
     ]
   });
 
-  if (!familyMember) {
+  if (!familyMember || (!includeInactive && familyMember.status === 0)) {
     return sendNotFound(res, "Family member not found");
+  }
+
+  if (!includeAuditFields) {
+    const { status: _status, ...payload } = familyMember.get({ plain: true });
+    return sendSuccess(res, payload, "Family member retrieved successfully");
   }
 
   return sendSuccess(res, familyMember, "Family member retrieved successfully");
@@ -362,8 +374,9 @@ export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
  * Delete a family member
  * DELETE /api/family-members/:id
  */
-export const deleteFamilyMember = asyncHandler(async (req: Request, res: Response) => {
+export const deleteFamilyMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
+  const currentUserId = req.user?.id;
 
   const familyMember = await FamilyMember.findByPk(id);
 
@@ -371,7 +384,13 @@ export const deleteFamilyMember = asyncHandler(async (req: Request, res: Respons
     return sendNotFound(res, "Family member not found");
   }
 
-  await familyMember.update({ status: 0 });
+  await FamilyMember.update(
+    {
+      status: 0,
+      ...(currentUserId ? { updatedBy: currentUserId } : {})
+    },
+    { where: { id: familyMember.id } }
+  );
 
   sendNoContent(res);
 });
