@@ -98,7 +98,7 @@ export const sendCreated = <T = unknown>(
  * @param res - Express response object
  */
 export const sendNoContent = (res: Response): Response => {
-  return res.status(204).send();
+  return sendSuccess(res, {}, "Successful operation", 200);
 };
 
 /**
