@@ -1,5 +1,5 @@
-const { Op } = require('sequelize');
-const MetaUserRole = require('./dist/models/MetaUserRole').default;
+const { Op } = require("sequelize");
+const MetaUserRole = require("./dist/models/MetaUserRole").default;
 
 (async () => {
   try {
