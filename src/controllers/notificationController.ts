@@ -6,6 +6,8 @@ import NotificationLog from "../models/NotificationLog";
 import TargetedNotificationLog from "../models/TargetedNotificationLog";
 import notificationService from "../services/notificationService";
 import { Op } from "sequelize";
+import { calculatePagination, sendSuccessWithPagination } from "../utils/apiResponse";
+import asyncHandler from "../utils/asyncHandler";
 
 /**
  * Register FCM token for the authenticated user (Mobile App)
@@ -430,11 +432,8 @@ export const sendBroadcastNotification = async (req: Request, res: Response): Pr
 /**
  * Get notifications for the authenticated user with pagination
  */
-export const getUserNotifications = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  try {
+export const getUserNotifications = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
     const userId = (req.user as any)?.id;
 
     if (!userId) {
@@ -513,21 +512,13 @@ export const getUserNotifications = async (
       })
       .filter((n: any) => n !== null);
 
-    res.status(200).json({
-      success: true,
-      data: {
-        notifications,
-        pagination: {
-          total: count,
-          page,
-          limit,
-          pages: Math.ceil(count / limit)
-        }
-      }
-    });
-  } catch (error: unknown) {
-    console.error("Error fetching user notifications:", error);
-    const message = error instanceof Error ? error.message : "Failed to fetch notifications";
-    res.status(500).json({ success: false, message });
+    const pagination = calculatePagination(count, page, limit);
+
+    return sendSuccessWithPagination(
+      res,
+      notifications,
+      pagination,
+      "Notifications retrieved successfully"
+    );
   }
-};
+);
