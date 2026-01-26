@@ -441,7 +441,7 @@ class NotificationService {
 
         // Always filter by role if specified
         if (options.roleId && options.roleId !== -1) {
-          condition += " AND tbl_user_access.role_id = ?";
+          condition += " AND tbl_user_access.access_role_id = ?";
           params.push(options.roleId);
         }
 
