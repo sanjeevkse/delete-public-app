@@ -8,6 +8,10 @@ import notificationService from "../services/notificationService";
  */
 export const sendTargetedNotification = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    console.log("=== TARGETED NOTIFICATION ENDPOINT HIT ===");
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("User ID:", (req.user as any)?.id);
+
     const userId = (req.user as any)?.id;
     const { accesses, roleId, title, body, data } = req.body;
 

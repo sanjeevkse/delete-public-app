@@ -404,11 +404,16 @@ class NotificationService {
       triggeredBy?: number;
     }
   ): Promise<BatchResponse> {
+    console.log("=== NOTIFICATION SERVICE: sendToTargetedUsers CALLED ===");
+    console.log("Options:", JSON.stringify(options, null, 2));
+    console.log("Notification:", JSON.stringify(notification, null, 2));
+
     const startTime = Date.now();
     let logId: number | null = null;
     let targetedLogId: number | null = null;
 
     try {
+      console.log("=== NOTIFICATION SERVICE: Starting processing ===");
       logger.info(
         { accesses: options.accesses, roleId: options.roleId },
         "sendToTargetedUsers called"
