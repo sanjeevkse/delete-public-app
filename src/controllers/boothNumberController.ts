@@ -148,39 +148,50 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
 
   // If filtering by ward number, find booth numbers through GeoPolitical table
   if (wardNumberId) {
-    const geoPoliticals = await GeoPolitical.findAll({
-      where: { wardNumberId: Number(wardNumberId) },
-      attributes: ["boothNumberId"]
-    });
+    const wardId = Number(wardNumberId);
 
-    const boothNumberIds = [...new Set(geoPoliticals.map((gp) => gp.boothNumberId))];
+    // If wardNumberId is -1, return all booths from all wards (no ward filter needed)
+    if (wardId !== -1) {
+      const geoPoliticals = await GeoPolitical.findAll({
+        where: { wardNumberId: wardId },
+        attributes: ["boothNumberId"]
+      });
 
-    if (boothNumberIds.length > 0) {
-      // Apply additional accessibility filter if configured
-      if (whereClause.id && whereClause.id[Op.in]) {
-        // User has booth accessibility filter - intersect with ward booths
-        const accessibleIds = whereClause.id[Op.in];
-        const filteredIds = boothNumberIds.filter((id) => accessibleIds.includes(id));
-        if (filteredIds.length > 0) {
-          whereClause.id = { [Op.in]: filteredIds };
+      const boothNumberIds = [...new Set(geoPoliticals.map((gp) => gp.boothNumberId))];
+
+      if (boothNumberIds.length > 0) {
+        // Apply additional accessibility filter if configured
+        if (whereClause.id && whereClause.id[Op.in]) {
+          // User has booth accessibility filter - intersect with ward booths
+          const accessibleIds = whereClause.id[Op.in];
+          const filteredIds = boothNumberIds.filter((id) => accessibleIds.includes(id));
+          if (filteredIds.length > 0) {
+            whereClause.id = { [Op.in]: filteredIds };
+          } else {
+            // Ward has booths but user can't access any
+            const pagination = calculatePagination(0, page, limit);
+            return sendSuccessWithPagination(
+              res,
+              [],
+              pagination,
+              "Booth numbers retrieved successfully"
+            );
+          }
         } else {
-          // Ward has booths but user can't access any
-          const pagination = calculatePagination(0, page, limit);
-          return sendSuccessWithPagination(
-            res,
-            [],
-            pagination,
-            "Booth numbers retrieved successfully"
-          );
+          whereClause.id = { [Op.in]: boothNumberIds };
         }
       } else {
-        whereClause.id = { [Op.in]: boothNumberIds };
+        // No booths found for this ward, return empty result
+        const pagination = calculatePagination(0, page, limit);
+        return sendSuccessWithPagination(
+          res,
+          [],
+          pagination,
+          "Booth numbers retrieved successfully"
+        );
       }
-    } else {
-      // No booths found for this ward, return empty result
-      const pagination = calculatePagination(0, page, limit);
-      return sendSuccessWithPagination(res, [], pagination, "Booth numbers retrieved successfully");
     }
+    // If wardNumberId is -1, we don't filter by ward and return all booths
   }
 
   const { count, rows } = await MetaBoothNumber.findAndCountAll({
