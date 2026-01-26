@@ -537,8 +537,8 @@ class NotificationService {
 
       await NotificationRecipient.bulkCreate(recipientEntries);
 
-      // Send notifications in batches
-      const BATCH_SIZE = 500;
+      // Send notifications in smaller batches to prevent timeouts
+      const BATCH_SIZE = 100; // Reduced from 500 for better performance
       const tokens = deviceTokens.map((dt) => dt.token);
       const results: BatchResponse[] = [];
       const tokenIndexMap = new Map(deviceTokens.map((dt, idx) => [dt.token, idx]));
@@ -552,41 +552,67 @@ class NotificationService {
           notification
         });
 
-        // Update recipient status
+        // Prepare batch updates for better performance
+        const successUpdates: any[] = [];
+        const failureUpdates: any[] = [];
+
         for (let j = 0; j < response.responses.length; j++) {
           const resp = response.responses[j];
           const deviceToken = batchDeviceTokens[j];
 
           if (resp.success) {
-            await NotificationRecipient.update(
+            successUpdates.push({
+              deviceTokenId: deviceToken.id,
+              messageId: resp.messageId
+            });
+          } else {
+            failureUpdates.push({
+              deviceTokenId: deviceToken.id,
+              errorMessage: resp.error?.message || "Unknown error",
+              errorCode: resp.error?.code
+            });
+          }
+        }
+
+        // Batch update successful recipients
+        if (successUpdates.length > 0) {
+          const updatePromises = successUpdates.map((update) =>
+            NotificationRecipient.update(
               {
                 status: "success",
-                fcmResponse: resp.messageId ? { messageId: resp.messageId } : null
+                fcmResponse: update.messageId ? { messageId: update.messageId } : null
               },
               {
                 where: {
                   notificationLogId: logId,
-                  deviceTokenId: deviceToken.id
+                  deviceTokenId: update.deviceTokenId
                 }
               }
-            );
-          } else {
-            await NotificationRecipient.update(
+            )
+          );
+          await Promise.all(updatePromises);
+        }
+
+        // Batch update failed recipients
+        if (failureUpdates.length > 0) {
+          const updatePromises = failureUpdates.map((update) =>
+            NotificationRecipient.update(
               {
                 status: "failed",
-                errorMessage: resp.error?.message || "Unknown error",
-                fcmResponse: resp.error
-                  ? { code: resp.error.code, message: resp.error.message }
+                errorMessage: update.errorMessage,
+                fcmResponse: update.errorCode
+                  ? { code: update.errorCode, message: update.errorMessage }
                   : null
               },
               {
                 where: {
                   notificationLogId: logId,
-                  deviceTokenId: deviceToken.id
+                  deviceTokenId: update.deviceTokenId
                 }
               }
-            );
-          }
+            )
+          );
+          await Promise.all(updatePromises);
         }
 
         results.push(response);
