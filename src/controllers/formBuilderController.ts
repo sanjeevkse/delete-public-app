@@ -634,11 +634,11 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     ["id", "title", "slug", "createdAt"],
     "createdAt"
   );
-  const search = (req.query.search as string) ?? "";
-  const status = parseStatusFilter(req.query.status);
-  // const isPublic = parseBooleanLike(req.query.isPublic);
+  // const search = (req.query.search as string) ?? "";
+  // const status = parseStatusFilter(req.query.status);
+  const isPublic = parseBooleanLike(req.query.isPublic);
 
-  // const filters: WhereOptions<Attributes<Form>>[] = [];
+  const filters: WhereOptions<Attributes<Form>>[] = [];
 
   const userId = req.user?.id;
   if (!userId) {
@@ -663,9 +663,9 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   //   filters.push({ status });
   // }
 
-  // if (isPublic !== undefined) {
-  //   filters.push({ isPublic });
-  // }
+  if (isPublic !== undefined) {
+    filters.push({ isPublic });
+  }
 
   // If user has both ward and booth numbers, filter by those mappings
   // Otherwise, show public forms or forms without specific mappings
