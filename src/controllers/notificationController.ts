@@ -128,7 +128,7 @@ export const getDeviceTokens = async (req: Request, res: Response): Promise<void
     }
 
     const tokens = await DeviceToken.findAll({
-      where: { userId: Number(userId), isActive: true },
+      where: { userId: Number(userId), isActive: true, status: 1 },
       attributes: ["id", "deviceId", "platform", "lastUsedAt", "createdAt"]
     });
 
@@ -160,7 +160,7 @@ export const sendNotificationToUser = async (req: Request, res: Response): Promi
 
     // Get all active tokens for the user
     const deviceTokens = await DeviceToken.findAll({
-      where: { userId, isActive: true }
+      where: { userId, isActive: true, status: 1 }
     });
 
     if (deviceTokens.length === 0) {
@@ -180,7 +180,10 @@ export const sendNotificationToUser = async (req: Request, res: Response): Promi
     });
 
     // Update lastUsedAt for successful tokens
-    await DeviceToken.update({ lastUsedAt: new Date() }, { where: { userId, isActive: true } });
+    await DeviceToken.update(
+      { lastUsedAt: new Date() },
+      { where: { userId, isActive: true, status: 1 } }
+    );
 
     res.status(200).json({
       success: true,
@@ -219,7 +222,8 @@ export const sendNotificationToMultipleUsers = async (
     const deviceTokens = await DeviceToken.findAll({
       where: {
         userId: { [Op.in]: userIds },
-        isActive: true
+        isActive: true,
+        status: 1
       }
     });
 
@@ -242,7 +246,7 @@ export const sendNotificationToMultipleUsers = async (
     // Update lastUsedAt for successful tokens
     await DeviceToken.update(
       { lastUsedAt: new Date() },
-      { where: { userId: { [Op.in]: userIds }, isActive: true } }
+      { where: { userId: { [Op.in]: userIds }, isActive: true, status: 1 } }
     );
 
     res.status(200).json({

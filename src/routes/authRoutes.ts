@@ -4,6 +4,7 @@ import {
   getProfile,
   getSidebar,
   login,
+  logout,
   requestOtp,
   updateProfile,
   updateProfileImage
@@ -15,6 +16,7 @@ const router = Router();
 
 router.post("/request-otp", requestOtp);
 router.post("/login", login);
+router.post("/logout", authenticate(), logout);
 router.get("/profile", authenticate(), getProfile);
 router.patch("/profile", authenticate(), updateProfile);
 router.patch("/profile/image", authenticate(), profileImageUpload, updateProfileImage);

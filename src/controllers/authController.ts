@@ -691,3 +691,31 @@ export const getSidebar = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   return sendSuccess(res, { sidebars: uniqueSidebars }, "Sidebar data retrieved successfully");
 });
+
+export const logout = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    throw new ApiError("User not authenticated", 401);
+  }
+
+  const { token: deviceToken } = req.body;
+
+  // Import DeviceToken model
+  const { default: DeviceToken } = await import("../models/DeviceToken");
+
+  // Invalidate the device token provided in the request
+  if (deviceToken) {
+    await DeviceToken.update(
+      { isActive: false, status: 0 },
+      { where: { userId, token: deviceToken } }
+    );
+  } else {
+    // If no specific token provided, invalidate all tokens for this user
+    await DeviceToken.update({ isActive: false, status: 0 }, { where: { userId } });
+  }
+
+  // Emit logout event for any other cleanup operations
+  emitEvent(AppEvent.USER_LOGOUT, { userId, deviceToken });
+
+  sendSuccess(res, {}, "Logged out successfully");
+});
