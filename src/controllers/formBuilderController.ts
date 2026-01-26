@@ -670,8 +670,10 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   // If user has both ward and booth numbers, filter by those mappings
   // Otherwise, show public forms or forms without specific mappings
 
+  const where = filters.length > 0 ? { [Op.and]: filters } : {};
+
   const { rows, count } = await Form.findAndCountAll({
-    // where,
+    where,
     limit,
     offset,
     include: formInclude,
