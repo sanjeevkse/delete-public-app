@@ -267,11 +267,15 @@ class NotificationService {
         status: 1
       });
 
-      logId = notificationLog.id;
+      const logIdValue = notificationLog.id;
+      if (!logIdValue) {
+        throw new Error("Failed to create notification log for broadcast notification");
+      }
+      logId = logIdValue;
 
       // Create pending recipient entries for all users
       const recipientEntries = deviceTokens.map((dt) => ({
-        notificationLogId: logId as number,
+        notificationLogId: logIdValue,
         userId: dt.userId,
         deviceTokenId: dt.id,
         status: "pending" as const,
@@ -308,7 +312,7 @@ class NotificationService {
               },
               {
                 where: {
-                  notificationLogId: logId,
+                  notificationLogId: logIdValue,
                   deviceTokenId: deviceToken.id
                 }
               }
@@ -324,7 +328,7 @@ class NotificationService {
               },
               {
                 where: {
-                  notificationLogId: logId,
+                  notificationLogId: logIdValue,
                   deviceTokenId: deviceToken.id
                 }
               }
@@ -519,11 +523,15 @@ class NotificationService {
         status: 1
       });
 
-      logId = notificationLog.id;
+      const logIdValue = notificationLog.id;
+      if (!logIdValue) {
+        throw new Error("Failed to create notification log for targeted notification");
+      }
+      logId = logIdValue;
 
       // Create targeted notification log with access combinations
       const targetedLog = await TargetedNotificationLog.create({
-        notificationLogId: logId,
+        notificationLogId: logIdValue,
         wardNumberId: null,
         boothNumberId: null,
         roleId: options.roleId || null
@@ -533,7 +541,7 @@ class NotificationService {
 
       // Create pending recipient entries
       const recipientEntries = deviceTokens.map((dt) => ({
-        notificationLogId: logId as number,
+        notificationLogId: logIdValue,
         userId: dt.userId,
         deviceTokenId: dt.id,
         status: "pending" as const,
@@ -589,7 +597,7 @@ class NotificationService {
               },
               {
                 where: {
-                  notificationLogId: logId,
+                  notificationLogId: logIdValue,
                   deviceTokenId: update.deviceTokenId
                 }
               }
@@ -611,7 +619,7 @@ class NotificationService {
               },
               {
                 where: {
-                  notificationLogId: logId,
+                  notificationLogId: logIdValue,
                   deviceTokenId: update.deviceTokenId
                 }
               }

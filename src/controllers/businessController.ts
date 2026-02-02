@@ -15,7 +15,9 @@ import {
   sendNotFound,
   sendSuccessWithPagination,
   parsePaginationParams,
-  calculatePagination
+  calculatePagination,
+  parseSortDirection,
+  validateSortColumn
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 
@@ -36,6 +38,12 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
   const status = req.query.status as string;
   const businessTypeId = req.query.businessTypeId as string;
   const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const sortBy = validateSortColumn(
+    req.query.sortBy,
+    ["createdAt", "updatedAt", "businessName"],
+    "createdAt"
+  );
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
 
   const filters: WhereOptions<Attributes<Business>>[] = [];
 
@@ -76,7 +84,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
     ],
     limit,
     offset,
-    order: [["createdAt", "DESC"]]
+    order: [[sortBy, sortDirection]]
   });
 
   const pagination = calculatePagination(count, page, limit);

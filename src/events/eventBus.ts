@@ -6,6 +6,7 @@ export enum AppEvent {
   USER_CREATED = "user.created",
   USER_UPDATED = "user.updated",
   USER_LOGGED_IN = "user.logged_in",
+  USER_LOGOUT = "user.logout",
   EVENT_PUBLISHED = "event.published",
   POST_PUBLISHED = "post.published",
   AUDIT_LOGGED = "audit.logged"

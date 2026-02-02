@@ -38,3 +38,5 @@ lens.db-wal
 *.swp
 
 migrations
+AGENTS.override.md
+tasks.md

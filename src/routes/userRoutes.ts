@@ -4,6 +4,7 @@ import {
   createUser,
   deleteUser,
   getUser,
+  getUserByMobileNumber,
   listUsers,
   listUsersPendingApproval,
   updateUser,
@@ -19,6 +20,7 @@ router.post("/", createUser);
 
 router.get("/", listUsers);
 router.get("/pending-approval", listUsersPendingApproval);
+router.get("/by-mobile/:contactNumber", getUserByMobileNumber);
 router.get("/:id", getUser);
 router.put("/:id", updateUser);
 router.patch("/:id/posts-block", updateUserPostsBlockStatus);

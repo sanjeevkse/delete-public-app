@@ -6,6 +6,7 @@ import {
   getPost,
   listMyPosts,
   listPosts,
+  listPostLikes,
   addPostMedia,
   removePostMedia,
   reactToPost,
@@ -19,6 +20,7 @@ const router = Router();
 
 router.get("/posts", authenticate(), listPosts);
 router.get("/posts/:id", authenticate(), getPost);
+router.get("/posts/:id/likes", authenticate(), listPostLikes);
 router.get("/my-posts", authenticate(), listMyPosts);
 router.post("/posts", authenticate(), postMediaUpload, createPost);
 router.put("/posts/:id", authenticate(), updatePost);

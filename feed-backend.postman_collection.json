@@ -686,6 +686,83 @@
 					"response": []
 				},
 				{
+					"name": "List Post Likes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response contains data array\", function () {",
+									"  pm.expect(Array.isArray(jsonData && jsonData.data)).to.be.true;",
+									"});",
+									"if (jsonData && Array.isArray(jsonData.data) && jsonData.data.length > 0) {",
+									"  var first = jsonData.data[0];",
+									"  pm.test(\"Like entry has likedAt and user\", function () {",
+									"    pm.expect(first).to.have.property(\"likedAt\");",
+									"    pm.expect(first).to.have.property(\"user\");",
+									"  });",
+									"  if (first.user) {",
+									"    pm.test(\"Like user has fullName\", function () {",
+									"      pm.expect(first.user).to.have.property(\"fullName\");",
+									"    });",
+									"  }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/posts/{{postId}}/likes?page=1&limit=20&sortBy=createdAt&sort=DESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"posts",
+								"{{postId}}",
+								"likes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (defaults to 1)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Optional: page size up to 100 (defaults to 20)."
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Optional: sort field (defaults to createdAt)."
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"description": "Optional: sort direction for liked time (ASC or DESC, defaults to DESC)."
+								}
+							]
+						},
+						"description": "Lists users who liked the post with their full name, profile image, and liked time."
+					},
+					"response": []
+				},
+				{
 					"name": "List My Posts",
 					"event": [
 						{
@@ -1587,7 +1664,8 @@
 									"});",
 									"if (jsonData && jsonData.data && Array.isArray(jsonData.data.registrations) && jsonData.data.registrations.length > 0) {",
 									"  var first = jsonData.data.registrations[0];",
-									"  pm.test(\"Registration has isGuest flag\", function () {",
+									"  pm.test(\"Registration has registeredAt and isGuest flag\", function () {",
+									"    pm.expect(first).to.have.property(\"registeredAt\");",
 									"    pm.expect(first).to.have.property(\"isGuest\");",
 									"  });",
 									"  if (!first.isGuest && first.user) {",
@@ -1613,7 +1691,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20",
+							"raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20&sortBy=registeredAt&sort=DESC",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -1638,10 +1716,20 @@
 									"key": "limit",
 									"value": "20",
 									"description": "Optional page size up to 100 (defaults to 20)."
+								},
+								{
+									"key": "sortBy",
+									"value": "registeredAt",
+									"description": "Optional: field to sort by (defaults to registeredAt)."
+								},
+								{
+									"key": "sort",
+									"value": "DESC",
+									"description": "Optional: sort direction ASC or DESC (defaults to DESC)."
 								}
 							]
 						},
-						"description": "Lists registrations for a specific event, including both user and guest registrations. Each registration has an isGuest flag. User registrations have user details, guest registrations have guestDetails. Use includeUnregistered=true to include soft-unregistered entries."
+						"description": "Lists registrations for a specific event, including both user and guest registrations. Each registration has an isGuest flag and registeredAt timestamp. User registrations have user details, guest registrations have guestDetails. Use includeUnregistered=true to include soft-unregistered entries. Use sortBy=registeredAt and sort=ASC|DSC to control ordering."
 					},
 					"response": []
 				}
@@ -3182,13 +3270,76 @@
 									}
 								]
 							},
-							"description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, and educational detail ids."
-						},
-						"response": []
+						"description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, and educational detail ids."
 					},
-					{
-						"name": "List Users Pending Approval",
-						"request": {
+					"response": []
+				},
+				{
+					"name": "Get User By Mobile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"  pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = {};",
+									"try {",
+									"  jsonData = pm.response.json();",
+									"} catch (err) {",
+									"  jsonData = {};",
+									"}",
+									"pm.test(\"Response has user data\", function () {",
+									"  pm.expect(jsonData && jsonData.data).to.exist;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "{{authToken}}"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/users/by-mobile/{{contactNumber}}?includeAuditFields=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"users",
+								"by-mobile",
+								"{{contactNumber}}"
+							],
+							"query": [
+								{
+									"key": "includeAuditFields",
+									"value": "true"
+								}
+							],
+							"variable": [
+								{
+									"key": "contactNumber",
+									"value": "9898989898",
+									"description": "10 digit mobile number"
+								}
+							]
+						},
+						"description": "Get a user by mobile number including profile, access profiles, roles, family members, and event registrations."
+					},
+					"response": []
+				},
+				{
+					"name": "List Users Pending Approval",
+					"request": {
 							"auth": {
 								"type": "bearer",
 								"bearer": {
@@ -4156,7 +4307,7 @@
 							"method": "GET",
 							"header": [],
 							"url": {
-								"raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=",
+								"raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=&sortBy=createdAt&sort=DESC",
 								"host": [
 									"{{baseUrl}}"
 								],
@@ -4184,15 +4335,23 @@
 									{
 										"key": "businessTypeId",
 										"value": ""
+									},
+									{
+										"key": "sortBy",
+										"value": "createdAt"
+									},
+									{
+										"key": "sort",
+										"value": "DESC"
 									}
 								]
 							},
-							"description": "Get all businesses"
-						},
-						"response": []
+						"description": "Get all businesses"
 					},
-					{
-						"name": "Get Business by ID",
+					"response": []
+				},
+				{
+					"name": "Get Business by ID",
 						"request": {
 							"method": "GET",
 							"header": [],
@@ -4416,7 +4575,7 @@
 							],
 							"body": {
 								"mode": "raw",
-								"raw": "{\n  \"fullName\": \"John Doe Sr. Updated\",\n  \"contactNumber\": \"9876543211\",\n  \"email\": \"john.sr.updated@example.com\"\n}"
+								"raw": "{\n  \"fullName\": \"John Doe Sr. Updated\",\n  \"contactNumber\": \"9876543211\",\n  \"email\": \"john.sr.updated@example.com\",\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"relationTypeId\": 1\n}"
 							},
 							"url": {
 								"raw": "{{baseUrl}}/api/family-members/:id",
@@ -7560,7 +7719,7 @@
 		"auth": {
 			"type": "bearer",
 			"bearer": {
-				"token": "jk"
+				"token": "{{authToken}}"
 			}
 		},
 		"event": [

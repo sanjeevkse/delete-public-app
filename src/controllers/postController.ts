@@ -26,6 +26,7 @@ import {
   parsePaginationParams,
   calculatePagination,
   parseSortDirection,
+  validateSortColumn,
   parseRequiredString,
   parseRequiredNumber,
   parseOptionalNumber,
@@ -172,7 +173,15 @@ const basePostInclude = [
     include: [
       {
         association: "profile",
-        attributes: [],
+        attributes: [
+          "profileImageUrl",
+          "fullAddress",
+          "addressLine1",
+          "addressLine2",
+          "city",
+          "state",
+          "postalCode"
+        ],
         required: false,
         include: [
           { association: "gender", attributes: ["id", "dispName"], required: false },
@@ -370,6 +379,64 @@ const getReactionCounts = async (postId: number) => {
     dislikesCount: dislikes
   };
 };
+
+export const listPostLikes = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const id = Number.parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) {
+    return sendBadRequest(res, "Invalid post id");
+  }
+
+  const post = await Post.findOne({ where: { id, status: 1 } });
+  if (!post) {
+    throw new ApiError("Post not found", 404);
+  }
+
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
+    20,
+    100
+  );
+  const sortBy = validateSortColumn(req.query.sortBy, ["createdAt"], "createdAt");
+  const sortDirection = parseSortDirection(req.query.sort, "DESC");
+
+  const { rows, count } = await PostReaction.findAndCountAll({
+    where: { postId: id, reaction: PostReactionType.LIKE, status: 1 },
+    attributes: ["id", "createdAt"],
+    include: [
+      {
+        association: "user",
+        attributes: ["id", "fullName"],
+        required: true,
+        include: [
+          {
+            association: "profile",
+            attributes: ["profileImageUrl"],
+            required: false
+          }
+        ]
+      }
+    ],
+    limit,
+    offset,
+    order: [[sortBy, sortDirection]]
+  });
+
+  const data = rows.map((reaction) => ({
+    id: reaction.id,
+    likedAt: reaction.createdAt ?? null,
+    user: reaction.user
+      ? {
+          id: reaction.user.id,
+          fullName: reaction.user.fullName ?? null,
+          profileImageUrl: reaction.user.profile?.profileImageUrl ?? null
+        }
+      : null
+  }));
+
+  const pagination = calculatePagination(count, page, limit);
+  return sendSuccessWithPagination(res, data, pagination, "Post likes retrieved successfully");
+});
 
 export const createPost = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);

@@ -662,6 +662,17 @@ export const listEventRegistrations = asyncHandler(
     }
 
     const includeUnregistered = parseBooleanQuery(req.query.includeUnregistered);
+    const sortByRaw = typeof req.query.sortBy === "string" ? req.query.sortBy.trim() : "";
+    const sortBy = sortByRaw ? sortByRaw.toLowerCase() : "registeredat";
+    if (sortBy !== "registeredat" && sortBy !== "registered_at") {
+      throw new ApiError("sortBy must be 'registeredAt'", 400);
+    }
+    const sortRaw = typeof req.query.sort === "string" ? req.query.sort.trim() : "";
+    const sortNormalized = sortRaw ? sortRaw.toLowerCase() : "desc";
+    if (sortNormalized !== "asc" && sortNormalized !== "desc") {
+      throw new ApiError("sort must be 'ASC' or 'DESC'", 400);
+    }
+    const sortDirection = sortNormalized === "asc" ? "ASC" : "DESC";
 
     const event = await Event.findOne({ where: { id: eventId, status: 1 } });
     if (!event) {
@@ -709,15 +720,17 @@ export const listEventRegistrations = asyncHandler(
       ],
       limit,
       offset,
-      order: [["createdAt", "DESC"]],
+      order: [["createdAt", sortDirection]],
       distinct: true
     });
 
     const data = rows.map((registration) => {
       const isGuest = !registration.userId;
+      const registeredAt = registration.createdAt ? registration.createdAt.toISOString() : null;
 
       return {
         id: registration.id,
+        registeredAt,
         deregisterReason: registration.deregisterReason,
         deregisteredAt: registration.deregisteredAt,
         isGuest,
@@ -741,7 +754,6 @@ export const listEventRegistrations = asyncHandler(
     });
 
     const pagination = calculatePagination(count, page, limit);
-
     return sendSuccess(
       res,
       {

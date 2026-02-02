@@ -38,6 +38,7 @@ import {
   calculatePagination
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { normalizePhoneNumber } from "../utils/phoneNumber";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 type QueryRecord = Record<string, unknown>;
@@ -748,6 +749,212 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Enrich Admin roles with all permissions
+  if (user.roles && user.roles.length > 0) {
+    const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+    const enrichedUser = {
+      ...user.toJSON(),
+      roles: enrichedRoles.reverse()
+    };
+    return sendSuccess(res, enrichedUser, "User retrieved successfully");
+  }
+
+  return sendSuccess(res, user, "User retrieved successfully");
+});
+
+export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Response) => {
+  const loggedInUser = (req as AuthenticatedRequest).user;
+  const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const contactNumberInput = req.params.contactNumber ?? req.query.contactNumber;
+  const contactNumber = normalizePhoneNumber(contactNumberInput, "contactNumber");
+
+  const user = await User.findOne({
+    where: { contactNumber },
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["status"] }),
+    include: [
+      {
+        model: UserProfile,
+        as: "profile",
+        include: [
+          { association: "gender", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          {
+            association: "educationalDetailGroup",
+            attributes: ["id", "dispName"],
+            required: false
+          },
+          { association: "sector", attributes: ["id", "dispName"], required: false }
+        ]
+      },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      },
+      { association: "roles", include: [{ association: "permissions" }] },
+      {
+        association: "familyMembers",
+        required: false,
+        include: [
+          {
+            association: "relationType",
+            attributes: ["id", "dispName", "description"],
+            required: false
+          }
+        ]
+      },
+      {
+        association: "eventRegistrations",
+        where: { status: 1 },
+        required: false,
+        include: [
+          {
+            association: "event",
+            attributes: [
+              "id",
+              "title",
+              "description",
+              "place",
+              "startDate",
+              "startTime",
+              "endDate",
+              "endTime"
+            ],
+            required: false
+          },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
+        ]
+      },
+      {
+        association: "schemeApplications",
+        required: false,
+        attributes: { exclude: ["createdBy", "updatedBy"] },
+        include: [
+          {
+            association: "scheme",
+            attributes: ["id", "dispName", "description"],
+            required: false
+          },
+          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+          { association: "governmentLevel", attributes: ["id", "dispName"], required: false },
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "schemeType", attributes: ["id", "dispName"], required: false },
+          { association: "ownershipType", attributes: ["id", "dispName"], required: false },
+          { association: "genderOption", attributes: ["id", "dispName"], required: false },
+          { association: "widowStatus", attributes: ["id", "dispName"], required: false },
+          { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
+        ]
+      },
+      {
+        association: "jobApplications",
+        required: false,
+        attributes: [
+          "id",
+          "submittedFor",
+          "fullName",
+          "contactNumber",
+          "email",
+          "alternativeContactNumber",
+          "fullAddress",
+          "education",
+          "workExperience",
+          "description",
+          "resumeUrl",
+          "status",
+          "createdAt"
+        ]
+      },
+      {
+        association: "posts",
+        required: false,
+        attributes: ["id", "description", "tags", "status", "createdAt"],
+        include: [
+          {
+            association: "media",
+            attributes: [
+              "id",
+              "mediaType",
+              "mediaUrl",
+              "thumbnailUrl",
+              "mimeType",
+              "durationSecond",
+              "positionNumber",
+              "caption",
+              "createdAt"
+            ],
+            where: { status: 1 },
+            required: false
+          }
+        ]
+      },
+      {
+        association: "formSubmissions",
+        required: false,
+        include: [
+          {
+            association: "formEvent",
+            required: false,
+            include: [
+              {
+                association: "form",
+                attributes: ["id", "title", "description", "status"],
+                required: false
+              }
+            ]
+          },
+          {
+            association: "fieldValues",
+            required: false,
+            include: [
+              {
+                association: "formField",
+                attributes: ["id", "label", "fieldTypeId", "inputFormatId"],
+                required: false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  });
+
+  if (!user) {
+    return sendNotFound(res, "User not found", "user");
+  }
+
+  const targetUserId = user.id;
+  if (loggedInUser?.id && loggedInUser.id !== targetUserId && loggedInUser.roles) {
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
+    const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
+    const canAccess = await canManageUser(
+      loggedInUser.id,
+      loggedInUserRoleIds,
+      targetUserId,
+      targetUserRoles
+    );
+
+    if (!canAccess) {
+      return sendNotFound(res, "User not found or access denied", "user");
+    }
+  }
+
   if (user.roles && user.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(user.roles);
     const enrichedUser = {
