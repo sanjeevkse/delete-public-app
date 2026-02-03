@@ -18,7 +18,7 @@ import {
 } from "../services/rbacService";
 import {
   canManageUser,
-  buildAccessibilityFilter,
+  buildUserListingAccessibilityFilter,
   getDescendantRoleIds
 } from "../services/userHierarchyService";
 import { buildProfileAttributes } from "../services/userProfileService";
@@ -379,8 +379,10 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const accessibilityFilter = loggedInUser?.id
-    ? await buildAccessibilityFilter(loggedInUser.id)
+    ? await buildUserListingAccessibilityFilter(loggedInUser.id)
     : null;
+
+  console.log("listUsers access filter", loggedInUser?.id, accessibilityFilter);
 
   const userWhere =
     whereClauses.length > 1 ? { [Op.and]: whereClauses } : (whereClauses[0] ?? undefined);
@@ -498,7 +500,7 @@ export const listUsersPendingApproval = asyncHandler(
 
     // Apply accessibility filter: only show pending users in accessible zones
     const accessibilityFilter = loggedInUser?.id
-      ? await buildAccessibilityFilter(loggedInUser.id)
+      ? await buildUserListingAccessibilityFilter(loggedInUser.id)
       : null;
 
     const { rows, count } = await User.findAndCountAll({

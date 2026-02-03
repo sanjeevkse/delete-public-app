@@ -177,3 +177,55 @@ export const buildAccessibilityFilter = async (
   const orConditions = buildAccessibilityORConditions(loggedInAccess);
   return orConditions;
 };
+
+/**
+ * Build accessibility filter for listing users (ward/booth only).
+ * Handles -1 as "all" for ward or booth and avoids duplicates.
+ */
+export const buildUserListingAccessibilityFilter = async (
+  loggedInUserId: number
+): Promise<Record<string, any> | null> => {
+  const loggedInAccess = await getUserAccessList(loggedInUserId);
+
+  if (loggedInAccess.length === 0) {
+    return null; // No accessibility constraints
+  }
+
+  const conditions: Array<Record<string, any>> = [];
+  const seen = new Set<string>();
+
+  for (const access of loggedInAccess) {
+    const wardNumberId = access.wardNumberId;
+    const boothNumberId = access.boothNumberId;
+
+    if (wardNumberId === -1 && boothNumberId === -1) {
+      return null; // Access to all wards and booths
+    }
+
+    const condition: Record<string, any> = {};
+
+    if (wardNumberId !== -1 && wardNumberId !== null && wardNumberId !== undefined) {
+      condition.wardNumberId = wardNumberId;
+    }
+
+    if (boothNumberId !== -1 && boothNumberId !== null && boothNumberId !== undefined) {
+      condition.boothNumberId = boothNumberId;
+    }
+
+    if (Object.keys(condition).length === 0) {
+      continue;
+    }
+
+    const key = JSON.stringify(condition);
+    if (!seen.has(key)) {
+      seen.add(key);
+      conditions.push(condition);
+    }
+  }
+
+  if (conditions.length === 0) {
+    return null;
+  }
+
+  return { [Op.or]: conditions };
+};

@@ -332,6 +332,12 @@
 		},
 		{
 			"name": "Users",
+			"auth": {
+				"type": "bearer",
+				"bearer": {
+					"token": "{{authToken}}"
+				}
+			},
 			"item": [
 				{
 					"name": "List Users",
