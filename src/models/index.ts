@@ -25,6 +25,7 @@ import MetaComplaintSector from "./MetaComplaintSector";
 import MetaSchemeTypeLookup from "./MetaSchemeTypeLookup";
 import MetaOwnershipType from "./MetaOwnershipType";
 import MetaGenderOption from "./MetaGenderOption";
+import MetaDesignation from "./MetaDesignation";
 import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
@@ -666,6 +667,7 @@ export {
   MetaSchemeTypeLookup,
   MetaOwnershipType,
   MetaGenderOption,
+  MetaDesignation,
   MetaMaritalStatus,
   MetaWidowStatus,
   MetaDisabilityStatus,
