@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import asyncHandler from "../utils/asyncHandler";
 import notificationService from "../services/notificationService";
+import { getUserAccessList } from "../services/userAccessibilityService";
 
 /**
  * Send notification to users targeted by ward/booth access combinations and role
@@ -21,17 +22,59 @@ export const sendTargetedNotification = asyncHandler(
       return;
     }
 
-    if (!accesses || !Array.isArray(accesses) || accesses.length === 0) {
+    if (accesses !== undefined && (!Array.isArray(accesses) || accesses.length === 0)) {
+      // If accesses is provided, it must be a non-empty array
+      // Empty array is treated as not provided and will fallback to user access list
+      if (!Array.isArray(accesses)) {
+        res.status(400).json({
+          success: false,
+          message:
+            "accesses must be an array of {wardNumberId, boothNumberId} objects when provided"
+        });
+        return;
+      }
+    }
+
+    let effectiveAccesses = accesses;
+    const hasProvidedAccesses = Array.isArray(accesses) && accesses.length > 0;
+
+    if (!hasProvidedAccesses) {
+      if (!userId) {
+        res.status(400).json({
+          success: false,
+          message: "Authenticated user required when accesses is not provided"
+        });
+        return;
+      }
+
+      const userAccessList = await getUserAccessList(userId);
+      const mappedAccesses = userAccessList
+        .map((access) => ({
+          wardNumberId: access.wardNumberId ?? null,
+          boothNumberId: access.boothNumberId ?? null
+        }))
+        .filter(
+          (access) =>
+            (access.wardNumberId !== null && access.wardNumberId !== undefined) ||
+            (access.boothNumberId !== null && access.boothNumberId !== undefined)
+        );
+
+      // If user has no access list, treat as access to all
+      effectiveAccesses =
+        mappedAccesses.length > 0 ? mappedAccesses : [{ wardNumberId: -1, boothNumberId: -1 }];
+    }
+
+    if (!effectiveAccesses || !Array.isArray(effectiveAccesses) || effectiveAccesses.length === 0) {
       res.status(400).json({
         success: false,
         message:
-          "accesses is required and must be a non-empty array of {wardNumberId, boothNumberId} objects"
+          "accesses must be provided or derived from user access list and contain at least one entry"
       });
       return;
     }
 
     // Validate each access object has at least one field
-    const validAccesses = accesses.every(
+    const validAccesses = effectiveAccesses.every(
       (access: any) =>
         (access.wardNumberId !== null && access.wardNumberId !== undefined) ||
         (access.boothNumberId !== null && access.boothNumberId !== undefined)
@@ -52,7 +95,7 @@ export const sendTargetedNotification = asyncHandler(
         data: data || {}
       },
       {
-        accesses: accesses,
+        accesses: effectiveAccesses,
         roleId: roleId || null,
         triggeredBy: userId
       }

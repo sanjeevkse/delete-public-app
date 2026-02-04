@@ -7682,7 +7682,7 @@
 					],
 					"body": {
 						"mode": "raw",
-						"raw": "{\n  \"accesses\": [\n    {\"wardNumberId\": 5, \"boothNumberId\": 1},\n    {\"wardNumberId\": 5, \"boothNumberId\": 3},\n    {\"wardNumberId\": 6, \"boothNumberId\": 2}\n  ],\n  \"roleId\": 3,\n  \"title\": \"Ward Meeting Update\",\n  \"body\": \"Important meeting scheduled for your booth\",\n  \"data\": {\n    \"type\": \"ward_meeting\",\n    \"priority\": \"high\",\n    \"meetingDate\": \"2026-01-10\"\n  }\n}",
+						"raw": "{\n  \"title\": \"Ward Meeting Update\",\n  \"body\": \"Important meeting scheduled for your booth\",\n  \"data\": {\n    \"type\": \"ward_meeting\",\n    \"priority\": \"high\",\n    \"meetingDate\": \"2026-01-10\"\n  }\n}",
 						"options": {
 							"raw": {
 								"language": "json"
@@ -7690,7 +7690,7 @@
 						}
 					},
 					"url": "{{baseUrl}}/api/notifications/send/targeted",
-					"description": "Send notification to users matching specific ward/booth access combinations and role. Pass an array of access objects with exact ward-booth pairs. Single notification log entry created with all combinations stored. Example targets users with role 3 who have access in booths 1 and 3 of ward 5, or booth 2 of ward 6."
+					"description": "Send notification to users matching specific ward/booth access combinations and optional role. `accesses` is optional; if omitted or empty, the sender's access list (wardNumberId/boothNumberId) is used. Use -1 for ward/booth to target all wards/booths respectively; -1 for both targets all. Single notification log entry created with all combinations stored."
 				},
 				"response": []
 			},
