@@ -22,47 +22,107 @@ export const sendTargetedNotification = asyncHandler(
       return;
     }
 
-    if (accesses !== undefined && (!Array.isArray(accesses) || accesses.length === 0)) {
-      // If accesses is provided, it must be a non-empty array
-      // Empty array is treated as not provided and will fallback to user access list
-      if (!Array.isArray(accesses)) {
-        res.status(400).json({
-          success: false,
-          message:
-            "accesses must be an array of {wardNumberId, boothNumberId} objects when provided"
-        });
-        return;
-      }
+    if (roleId === undefined || roleId === null) {
+      res.status(400).json({ success: false, message: "roleId is required" });
+      return;
     }
+
+    if (accesses !== undefined && !Array.isArray(accesses)) {
+      res.status(400).json({
+        success: false,
+        message: "accesses must be an array of {wardNumberId, boothNumberId} objects when provided"
+      });
+      return;
+    }
+
+    if (!userId) {
+      res.status(400).json({
+        success: false,
+        message: "Authenticated user required to send targeted notifications"
+      });
+      return;
+    }
+
+    const userAccessList = await getUserAccessList(userId);
+    console.log("User access list:", JSON.stringify(userAccessList, null, 2));
+    const senderAccesses = userAccessList
+      .map((access) => ({
+        wardNumberId: access.wardNumberId ?? null,
+        boothNumberId: access.boothNumberId ?? null
+      }))
+      .filter(
+        (access) =>
+          (access.wardNumberId !== null && access.wardNumberId !== undefined) ||
+          (access.boothNumberId !== null && access.boothNumberId !== undefined)
+      );
+
+    const normalizedSenderAccesses =
+      senderAccesses.length > 0 ? senderAccesses : [{ wardNumberId: -1, boothNumberId: -1 }];
+    console.log("Normalized sender accesses:", JSON.stringify(normalizedSenderAccesses, null, 2));
 
     let effectiveAccesses = accesses;
-    const hasProvidedAccesses = Array.isArray(accesses) && accesses.length > 0;
+    const providedAccesses = Array.isArray(accesses) ? accesses : [];
+    const sanitizedAccesses = providedAccesses.filter(
+      (access: any) =>
+        (access?.wardNumberId !== null && access?.wardNumberId !== undefined) ||
+        (access?.boothNumberId !== null && access?.boothNumberId !== undefined)
+    );
+    const hasProvidedAccesses = sanitizedAccesses.length > 0;
 
     if (!hasProvidedAccesses) {
-      if (!userId) {
-        res.status(400).json({
-          success: false,
-          message: "Authenticated user required when accesses is not provided"
+      effectiveAccesses = normalizedSenderAccesses;
+    } else {
+      const isSpecific = (value: number | null | undefined): boolean =>
+        value !== null && value !== undefined && value !== -1;
+
+      const intersection: Array<{ wardNumberId?: number | null; boothNumberId?: number | null }> =
+        [];
+
+      for (const requested of sanitizedAccesses) {
+        console.log("Requested access:", JSON.stringify(requested, null, 2));
+        const requestedWard = requested?.wardNumberId ?? null;
+        const requestedBooth = requested?.boothNumberId ?? null;
+
+        const matches = normalizedSenderAccesses.filter((access) => {
+          const wardMatch =
+            !isSpecific(requestedWard) ||
+            access.wardNumberId === -1 ||
+            access.wardNumberId === requestedWard;
+          const boothMatch =
+            !isSpecific(requestedBooth) ||
+            access.boothNumberId === -1 ||
+            access.boothNumberId === requestedBooth;
+          return wardMatch && boothMatch;
         });
-        return;
+        console.log("Matched sender accesses:", JSON.stringify(matches, null, 2));
+
+        if (matches.length === 0) {
+          res.status(400).json({
+            success: false,
+            message: "accesses contain values outside your access scope"
+          });
+          return;
+        }
+
+        for (const match of matches) {
+          const wardNumberId = isSpecific(requestedWard) ? requestedWard : match.wardNumberId;
+          const boothNumberId = isSpecific(requestedBooth) ? requestedBooth : match.boothNumberId;
+          intersection.push({ wardNumberId, boothNumberId });
+        }
       }
 
-      const userAccessList = await getUserAccessList(userId);
-      const mappedAccesses = userAccessList
-        .map((access) => ({
-          wardNumberId: access.wardNumberId ?? null,
-          boothNumberId: access.boothNumberId ?? null
-        }))
-        .filter(
-          (access) =>
-            (access.wardNumberId !== null && access.wardNumberId !== undefined) ||
-            (access.boothNumberId !== null && access.boothNumberId !== undefined)
-        );
+      const unique = new Map<
+        string,
+        { wardNumberId?: number | null; boothNumberId?: number | null }
+      >();
+      for (const access of intersection) {
+        const key = `${access.wardNumberId ?? "null"}:${access.boothNumberId ?? "null"}`;
+        unique.set(key, access);
+      }
 
-      // If user has no access list, treat as access to all
-      effectiveAccesses =
-        mappedAccesses.length > 0 ? mappedAccesses : [{ wardNumberId: -1, boothNumberId: -1 }];
+      effectiveAccesses = Array.from(unique.values());
     }
+    console.log("Effective accesses:", JSON.stringify(effectiveAccesses, null, 2));
 
     if (!effectiveAccesses || !Array.isArray(effectiveAccesses) || effectiveAccesses.length === 0) {
       res.status(400).json({
@@ -96,7 +156,7 @@ export const sendTargetedNotification = asyncHandler(
       },
       {
         accesses: effectiveAccesses,
-        roleId: roleId || null,
+        roleId,
         triggeredBy: userId
       }
     );

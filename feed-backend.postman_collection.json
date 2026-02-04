@@ -7890,7 +7890,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"title\": \"Ward Meeting Update\",\n  \"body\": \"Important meeting scheduled for your booth\",\n  \"data\": {\n    \"type\": \"ward_meeting\",\n    \"priority\": \"high\",\n    \"meetingDate\": \"2026-01-10\"\n  }\n}",
+					"raw": "{\n  \"title\": \"Ward Meeting Update\",\n  \"body\": \"Important meeting scheduled for your booth\",\n  \"roleId\": 2,\n  \"data\": {\n    \"type\": \"ward_meeting\",\n    \"priority\": \"high\",\n    \"meetingDate\": \"2026-01-10\"\n  }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -7898,7 +7898,7 @@
 					}
 				},
 				"url": "{{baseUrl}}/api/notifications/send/targeted",
-				"description": "Send notification to users matching specific ward/booth access combinations and optional role. `accesses` is optional; if omitted or empty, the sender's access list (wardNumberId/boothNumberId) is used. Use -1 for ward/booth to target all wards/booths respectively; -1 for both targets all. Single notification log entry created with all combinations stored."
+				"description": "Send notification to users matching specific ward/booth access combinations and role. `roleId` is required. `accesses` is optional; if omitted or empty, the sender's access list (wardNumberId/boothNumberId) is used. When `accesses` is provided, it must be within the sender's access scope; out-of-scope values are rejected. Use -1 in the body to target all within the sender's access. Single notification log entry created with all combinations stored."
 			},
 			"response": []
 		},

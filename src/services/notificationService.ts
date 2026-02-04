@@ -1,6 +1,8 @@
 import { getMessaging } from "../config/firebase";
 import type { Message, MulticastMessage, BatchResponse } from "firebase-admin/messaging";
 import logger from "../utils/logger";
+import { PUBLIC_ROLE_NAME } from "../config/rbac";
+import { getRoleByName } from "./rbacService";
 
 export interface NotificationPayload {
   title: string;
@@ -404,7 +406,7 @@ class NotificationService {
     notification: NotificationPayload,
     options: {
       accesses: Array<{ wardNumberId?: number | null; boothNumberId?: number | null }>;
-      roleId?: number | null;
+      roleId: number;
       triggeredBy?: number;
     }
   ): Promise<BatchResponse> {
@@ -438,26 +440,38 @@ class NotificationService {
       );
       const sequelize = require("../config/database").default;
 
+      const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
+      if (!publicRole) {
+        throw new Error("Public role is not configured");
+      }
+
+      const isPublicRole = options.roleId === publicRole.id;
+
       // Build OR conditions for each access combination
       const accessConditions = options.accesses.map((access) => {
         let condition = "tbl_user.status = 1";
         const params: any[] = [];
 
-        // Always filter by role if specified
-        if (options.roleId && options.roleId !== -1) {
-          condition += " AND tbl_user_access.access_role_id = ?";
-          params.push(options.roleId);
-        }
+        // Always filter by role for the user
+        condition += " AND tbl_user_role.role_id = ?";
+        params.push(options.roleId);
+
+        const wardField = isPublicRole
+          ? "tbl_user_profile.ward_number_id"
+          : "tbl_user_access.ward_number_id";
+        const boothField = isPublicRole
+          ? "tbl_user_profile.booth_number_id"
+          : "tbl_user_access.booth_number_id";
 
         // Filter by ward if specified in this access
         if (access.wardNumberId && access.wardNumberId !== -1) {
-          condition += " AND tbl_user_access.ward_number_id = ?";
+          condition += ` AND ${wardField} = ?`;
           params.push(access.wardNumberId);
         }
 
         // Filter by booth if specified in this access
         if (access.boothNumberId && access.boothNumberId !== -1) {
-          condition += " AND tbl_user_access.booth_number_id = ?";
+          condition += ` AND ${boothField} = ?`;
           params.push(access.boothNumberId);
         }
 
@@ -467,7 +481,13 @@ class NotificationService {
       // Build query to find matching users
       let query = `
         SELECT DISTINCT tbl_user.id FROM tbl_user
-        INNER JOIN tbl_user_access ON tbl_user.id = tbl_user_access.user_id
+        INNER JOIN ${
+          isPublicRole ? "tbl_user_profile" : "tbl_user_access"
+        } ON tbl_user.id = ${
+          isPublicRole ? "tbl_user_profile.user_id" : "tbl_user_access.user_id"
+        }
+        INNER JOIN tbl_xref_user_role AS tbl_user_role
+          ON tbl_user.id = tbl_user_role.user_id AND tbl_user_role.status = 1
         WHERE (`;
 
       const allParams: any[] = [];
@@ -487,6 +507,7 @@ class NotificationService {
       });
 
       const userIds = (matchedUsers as any[]).map((u) => u.id);
+      console.log("Matched user count:", userIds.length);
 
       if (userIds.length === 0) {
         logger.warn("No users found matching targeting criteria");
@@ -534,7 +555,7 @@ class NotificationService {
         notificationLogId: logIdValue,
         wardNumberId: null,
         boothNumberId: null,
-        roleId: options.roleId || null
+        roleId: options.roleId
       });
 
       targetedLogId = targetedLog.id;
