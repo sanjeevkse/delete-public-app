@@ -70,6 +70,7 @@ import NotificationRecipient from "./NotificationRecipient";
 import Sidebar from "./Sidebar";
 import RoleSidebar from "./RoleSidebar";
 import PermissionGroupSidebar from "./PermissionGroupSidebar";
+import ConditionalListItem from "./ConditionalListItem";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -698,5 +699,6 @@ export {
   FormFieldValue,
   DeviceToken,
   NotificationLog,
-  NotificationRecipient
+  NotificationRecipient,
+  ConditionalListItem
 };

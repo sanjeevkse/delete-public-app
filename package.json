@@ -42,7 +42,8 @@
     "mysql2": "^3.11.3",
     "pino": "^8.17.2",
     "sequelize": "^6.37.3",
-    "uuid": "13.0.0"
+    "uuid": "13.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

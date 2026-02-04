@@ -33,7 +33,8 @@ export const UPLOAD_PATHS = {
 export const UPLOAD_LIMITS = {
   MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5 MB
   MAX_VIDEO_SIZE: 20 * 1024 * 1024, // 20 MB
-  MAX_RESUME_SIZE: 2 * 1024 * 1024 // 2 MB
+  MAX_RESUME_SIZE: 2 * 1024 * 1024, // 2 MB
+  MAX_SPREADSHEET_SIZE: 5 * 1024 * 1024 // 5 MB
 } as const;
 
 // Upload counts per module
@@ -47,6 +48,9 @@ export const UPLOAD_COUNTS = {
     MAX_IMAGES: 4,
     MAX_VIDEOS: 4,
     MAX_TOTAL: 4
+  },
+  EVENT_REGISTRATION: {
+    MAX_FILES: 1
   },
   PROFILE: {
     MAX_IMAGES: 1
@@ -78,6 +82,10 @@ export const ALLOWED_MIME_TYPES = {
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ],
+  SPREADSHEETS: [
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   ]
 } as const;
 
@@ -98,5 +106,6 @@ export const ASSET_TYPES = {
   IMAGES: "images",
   VIDEOS: "videos",
   RESUMES: "resumes",
-  DOCUMENTS: "documents"
+  DOCUMENTS: "documents",
+  REGISTRATIONS: "registrations"
 } as const;

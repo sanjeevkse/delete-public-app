@@ -34,6 +34,7 @@ import targetedNotificationRoutes from "./targetedNotificationRoutes";
 import roleRoutes from "./roleRoutes";
 import permissionRoutes from "./permissionRoutes";
 import reportRoutes from "./reportRoutes";
+import conditionalListRoutes from "./conditionalListRoutes";
 
 const router = Router();
 
@@ -76,5 +77,6 @@ router.use("/permissions", permissionRoutes);
 router.use("/sidebar-view", sidebarViewRoutes);
 router.use("/admin", adminRoutes);
 router.use("/reports", reportRoutes);
+router.use("/", conditionalListRoutes);
 
 export default router;

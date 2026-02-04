@@ -6,6 +6,7 @@ import {
   getEvent,
   listEvents,
   listEventRegistrations,
+  uploadEventRegistrations,
   registerForEvent,
   unregisterFromEvent,
   unregisterRegistration,
@@ -16,6 +17,7 @@ import {
 import { authenticate } from "../middlewares/authMiddleware";
 import { authorizePermissions } from "../middlewares/authorizationMiddleware";
 import { eventMediaUpload } from "../middlewares/eventUploadMiddleware";
+import { eventRegistrationUpload } from "../middlewares/eventRegistrationUploadMiddleware";
 
 const router = Router();
 
@@ -29,6 +31,12 @@ router.delete("/events/:id/media", authenticate(), removeEventMedia);
 router.delete("/events/:id", authenticate(), deleteEvent);
 router.post("/events/:id/register", authenticate(), registerForEvent);
 router.post("/events/:id/unregister", authenticate(), unregisterFromEvent);
+router.post(
+  "/events/:id/registrations/upload",
+  authenticate(),
+  eventRegistrationUpload,
+  uploadEventRegistrations
+);
 router.delete("/registrations/:registrationId", authenticate(), unregisterRegistration);
 
 export default router;

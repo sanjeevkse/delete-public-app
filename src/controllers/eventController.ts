@@ -1,4 +1,6 @@
 import type { Request, Response, Express } from "express";
+import fs from "fs/promises";
+import xlsx from "xlsx";
 import type { FindAttributeOptions, WhereOptions } from "sequelize";
 import { Op } from "sequelize";
 
@@ -102,6 +104,7 @@ const baseEventInclude = [
 const REFERRED_BY_MAX_LENGTH = 45;
 
 type PlainEventRegistration = {
+  id?: number | null;
   eventId: number;
   userId: number | null;
   fullName: string | null;
@@ -131,7 +134,7 @@ const toRegisteredAttendee = (registration: PlainEventRegistration): RegisteredA
   // Check if it's a guest registration (no userId)
   if (!registration.userId && registration.fullName) {
     return {
-      id: null,
+      id: registration.id ?? null,
       fullName: registration.fullName,
       email: registration.email,
       contactNumber: registration.contactNumber,
@@ -164,7 +167,7 @@ const loadRegisteredUsersForEventIds = async (
   }
 
   const registrations = await EventRegistration.findAll({
-    attributes: ["eventId", "userId", "fullName", "contactNumber", "email"],
+    attributes: ["id", "eventId", "userId", "fullName", "contactNumber", "email"],
     where: {
       eventId: { [Op.in]: eventIds },
       status: 1
@@ -281,6 +284,113 @@ const parseOptionalDateOnly = (value: unknown, field: string): string | undefine
     throw new ApiError(`${field} must be a valid date (YYYY-MM-DD)`, 400);
   }
   return value;
+};
+
+const normalizeHeaderKey = (value: unknown): string => {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+};
+
+const REGISTRATION_HEADER_ALIASES: Record<string, string[]> = {
+  fullName: ["fullname", "full name", "name"],
+  contactNumber: ["contactnumber", "contact number", "phone", "mobile", "phone number"],
+  userId: ["userid", "user id", "user_id"],
+  email: ["email"],
+  registeredBy: ["registeredby", "registered by", "registered_by"],
+  fullAddress: ["fulladdress", "full address", "address", "full_address"],
+  wardNumberId: ["wardnumberid", "ward number id", "ward", "ward number", "ward_number_id"],
+  boothNumberId: ["boothnumberid", "booth number id", "booth", "booth number", "booth_number_id"],
+  dateOfBirth: ["dateofbirth", "date of birth", "dob", "date_of_birth"],
+  age: ["age"]
+};
+
+const REGISTRATION_HEADER_LOOKUP = new Map<string, string>(
+  Object.entries(REGISTRATION_HEADER_ALIASES).flatMap(([field, aliases]) =>
+    aliases.map((alias) => [normalizeHeaderKey(alias), field])
+  )
+);
+
+const buildRegistrationHeaderIndex = (headerRow: unknown[]): Record<string, number> => {
+  const index: Record<string, number> = {};
+  headerRow.forEach((cell, idx) => {
+    const normalized = normalizeHeaderKey(cell);
+    if (!normalized) {
+      return;
+    }
+    const field = REGISTRATION_HEADER_LOOKUP.get(normalized);
+    if (field && index[field] === undefined) {
+      index[field] = idx;
+    }
+  });
+  return index;
+};
+
+const isRowEmpty = (row: unknown[]): boolean => {
+  return row.every((cell) => {
+    if (cell === null || cell === undefined) {
+      return true;
+    }
+    if (typeof cell === "string") {
+      return cell.trim().length === 0;
+    }
+    return false;
+  });
+};
+
+const normalizeStringCell = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  return String(value);
+};
+
+const normalizeNumberCell = (value: unknown): unknown => {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  return value;
+};
+
+const formatDateOnly = (date: Date): string => date.toISOString().slice(0, 10);
+
+const normalizeDateOnlyCell = (value: unknown, field: string): string | undefined => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  if (value instanceof Date) {
+    return formatDateOnly(value);
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const parsed = xlsx.SSF.parse_date_code(value);
+    if (parsed && parsed.y && parsed.m && parsed.d) {
+      const date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+      return formatDateOnly(date);
+    }
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    if (isValidDateOnly(trimmed)) {
+      return trimmed;
+    }
+    const parsedDate = new Date(trimmed);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return formatDateOnly(parsedDate);
+    }
+  }
+  throw new ApiError(`${field} must be a valid date`, 400);
 };
 
 const _parseOptionalTime = (value: unknown, field: string): string | undefined => {
@@ -1024,6 +1134,194 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   return sendNoContent(res);
 });
+
+export const uploadEventRegistrations = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id: loggedInUserId } = requireAuthenticatedUser(req);
+
+    const eventId = Number.parseInt(req.params.id, 10);
+    if (Number.isNaN(eventId)) {
+      return sendBadRequest(res, "Invalid event id");
+    }
+
+    const event = await Event.findOne({ where: { id: eventId, status: 1 } });
+    if (!event) {
+      return sendNotFound(res, "Event not found", "event");
+    }
+
+    if (!isWithinEventWindow(event)) {
+      return sendBadRequest(res, "Event registration window is closed for this event");
+    }
+
+    const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : [];
+    if (uploadedFiles.length === 0) {
+      return sendBadRequest(res, "Excel file is required");
+    }
+
+    const file = uploadedFiles[0];
+    const summary = {
+      totalRows: 0,
+      processedRows: 0,
+      created: 0,
+      reactivated: 0,
+      skipped: 0,
+      errors: [] as { row: number; message: string }[]
+    };
+
+    try {
+      const workbook = xlsx.readFile(file.path, { cellDates: true });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        return sendBadRequest(res, "Excel file must have at least one sheet");
+      }
+
+      const sheet = workbook.Sheets[sheetName];
+      const rows = xlsx.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: null,
+        blankrows: false
+      }) as unknown[][];
+
+      if (rows.length < 2) {
+        return sendBadRequest(res, "Excel file must include a header row and at least one data row");
+      }
+
+      const headerIndex = buildRegistrationHeaderIndex(rows[0] ?? []);
+      const missingColumns: string[] = [];
+      if (headerIndex.fullName === undefined) {
+        missingColumns.push("fullName");
+      }
+      if (headerIndex.contactNumber === undefined) {
+        missingColumns.push("contactNumber");
+      }
+      if (missingColumns.length > 0) {
+        return sendBadRequest(res, `Missing required column(s): ${missingColumns.join(", ")}`);
+      }
+
+      for (let i = 1; i < rows.length; i += 1) {
+        const row = rows[i] ?? [];
+        if (isRowEmpty(row)) {
+          continue;
+        }
+
+        summary.totalRows += 1;
+        const rowNumber = i + 1;
+
+        try {
+          const rawFullName = row[headerIndex.fullName];
+          const rawContactNumber = row[headerIndex.contactNumber];
+          const rawUserId =
+            headerIndex.userId !== undefined
+              ? normalizeNumberCell(row[headerIndex.userId])
+              : undefined;
+          const rawEmail = headerIndex.email !== undefined ? row[headerIndex.email] : undefined;
+          const rawRegisteredBy =
+            headerIndex.registeredBy !== undefined ? row[headerIndex.registeredBy] : undefined;
+          const rawFullAddress =
+            headerIndex.fullAddress !== undefined ? row[headerIndex.fullAddress] : undefined;
+          const rawWardNumberId =
+            headerIndex.wardNumberId !== undefined
+              ? normalizeNumberCell(row[headerIndex.wardNumberId])
+              : undefined;
+          const rawBoothNumberId =
+            headerIndex.boothNumberId !== undefined
+              ? normalizeNumberCell(row[headerIndex.boothNumberId])
+              : undefined;
+          const rawDateOfBirth =
+            headerIndex.dateOfBirth !== undefined ? row[headerIndex.dateOfBirth] : undefined;
+          const rawAge =
+            headerIndex.age !== undefined ? normalizeNumberCell(row[headerIndex.age]) : undefined;
+
+          const fullNameValue = normalizeStringCell(rawFullName);
+          if (!fullNameValue) {
+            throw new ApiError("fullName is required", 400);
+          }
+          const parsedFullName = parseRequiredString(fullNameValue, "fullName");
+
+          const contactValue = normalizeStringCell(rawContactNumber);
+          if (!contactValue) {
+            throw new ApiError("contactNumber is required", 400);
+          }
+          const parsedContactNumber = parseRequiredString(contactValue, "contactNumber");
+
+          const parsedUserIdRaw = parseOptionalNumber(rawUserId, "userId");
+          const parsedUserId = parsedUserIdRaw === undefined ? null : parsedUserIdRaw;
+
+          const emailValue = normalizeStringCell(rawEmail);
+          const parsedEmail = parseOptionalString(emailValue, "email", 255);
+
+          const registeredByValue = normalizeStringCell(rawRegisteredBy);
+          const parsedRegisteredBy = parseOptionalString(registeredByValue, "registeredBy");
+
+          const fullAddressValue = normalizeStringCell(rawFullAddress);
+          const parsedFullAddress = parseOptionalString(fullAddressValue, "fullAddress");
+
+          const parsedWardNumberId = parseOptionalNumber(rawWardNumberId, "wardNumberId");
+          const parsedBoothNumberId = parseOptionalNumber(rawBoothNumberId, "boothNumberId");
+
+          const dateOnly = normalizeDateOnlyCell(rawDateOfBirth, "dateOfBirth");
+          const parsedDateOfBirth = parseOptionalDateOnly(dateOnly, "dateOfBirth");
+
+          const parsedAge = parseOptionalNumber(rawAge, "age");
+
+          let existingRegistration = null;
+
+          if (parsedUserId) {
+            existingRegistration = await EventRegistration.findOne({
+              where: { eventId, userId: parsedUserId }
+            });
+          } else if (parsedContactNumber) {
+            existingRegistration = await EventRegistration.findOne({
+              where: { eventId, contactNumber: parsedContactNumber }
+            });
+          }
+
+          const registrationData = {
+            eventId,
+            userId: parsedUserId,
+            fullName: parsedFullName,
+            contactNumber: parsedContactNumber,
+            email: parsedEmail,
+            registeredBy: parsedRegisteredBy,
+            fullAddress: parsedFullAddress,
+            wardNumberId: parsedWardNumberId,
+            boothNumberId: parsedBoothNumberId,
+            dateOfBirth: parsedDateOfBirth ? new Date(parsedDateOfBirth) : null,
+            age: parsedAge,
+            status: 1,
+            deregisterReason: null,
+            deregisteredAt: null,
+            createdBy: loggedInUserId,
+            updatedBy: loggedInUserId
+          };
+
+          if (existingRegistration) {
+            if (existingRegistration.status === 1) {
+              summary.skipped += 1;
+              continue;
+            }
+
+            await existingRegistration.update(registrationData);
+            summary.reactivated += 1;
+            summary.processedRows += 1;
+            continue;
+          }
+
+          await EventRegistration.create(registrationData);
+          summary.created += 1;
+          summary.processedRows += 1;
+        } catch (rowError) {
+          const message = rowError instanceof Error ? rowError.message : "Invalid row data";
+          summary.errors.push({ row: rowNumber, message });
+        }
+      }
+
+      return sendSuccess(res, summary, "Event registrations processed");
+    } finally {
+      await fs.unlink(file.path).catch(() => undefined);
+    }
+  }
+);
 
 export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: loggedInUserId } = requireAuthenticatedUser(req);
