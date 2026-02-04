@@ -6212,6 +6212,11 @@
 										"value": "25"
 									},
 									{
+										"key": "appendOther",
+										"value": "1",
+										"disabled": true
+									},
+									{
 										"key": "search",
 										"value": "",
 										"disabled": true
@@ -6228,7 +6233,8 @@
 										"value": "businessType"
 									}
 								]
-							}
+							},
+							"description": "List meta table data with pagination/search/status filters. Use appendOther=1 (or append_other=1) to append an \"Other\" entry with id -1 at the end. Use need_all=1 to include -ALL- at the beginning."
 						},
 						"response": []
 					},

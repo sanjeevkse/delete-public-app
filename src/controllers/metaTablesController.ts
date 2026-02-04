@@ -208,6 +208,11 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
   const needAll = req.query.need_all === "1";
+  const appendOther =
+    req.query.appendOther === "1" ||
+    req.query.appendOther === "true" ||
+    req.query.append_other === "1" ||
+    req.query.append_other === "true";
 
   const metaTables = await getMetaTables();
   const config = metaTables[tableName];
@@ -251,6 +256,20 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   let responseData = rows;
   if (needAll) {
     responseData = [{ id: -1, dispName: "-ALL-" }, ...rows];
+  }
+
+  // Append "Other" option at the end only when requested
+  if (appendOther) {
+    responseData = [
+      ...responseData,
+      {
+        id: -1,
+        dispName: "Other",
+        description: null,
+        icon: "null",
+        status: 1
+      }
+    ];
   }
 
   const pagination = calculatePagination(count, page, limit);
