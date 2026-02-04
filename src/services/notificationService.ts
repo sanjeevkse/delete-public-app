@@ -438,6 +438,7 @@ class NotificationService {
       const { default: TargetedNotificationLog } = await import(
         "../models/TargetedNotificationLog"
       );
+      const { default: MetaUserRole } = await import("../models/MetaUserRole");
       const sequelize = require("../config/database").default;
 
       const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
@@ -445,7 +446,16 @@ class NotificationService {
         throw new Error("Public role is not configured");
       }
 
-      const isPublicRole = options.roleId === publicRole.id;
+      const roleById = await MetaUserRole.findByPk(options.roleId);
+      const isPublicRole =
+        options.roleId === publicRole.id ||
+        roleById?.dispName?.toLowerCase() === PUBLIC_ROLE_NAME.toLowerCase();
+      console.log("Public role resolved:", {
+        configuredPublicRoleId: publicRole.id,
+        requestedRoleId: options.roleId,
+        requestedRoleName: roleById?.dispName ?? null,
+        isPublicRole
+      });
 
       // Build OR conditions for each access combination
       const accessConditions = options.accesses.map((access) => {
