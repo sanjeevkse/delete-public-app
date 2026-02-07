@@ -24,11 +24,248 @@ import FormFieldValue from "../models/FormFieldValue";
 import FormEvent from "../models/FormEvent";
 import Form from "../models/Form";
 import FormField from "../models/FormField";
+import FormFieldOption from "../models/FormFieldOption";
+import MetaFieldType from "../models/MetaFieldType";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
 import { UPLOAD_PATHS } from "../config/uploadConstants";
 
 const DEFAULT_SORT_COLUMNS = ["submittedAt", "createdAt", "id"];
+
+type ResolvedOption = {
+  id: number;
+  fieldId: number;
+  optionLabel: string;
+  optionValue: string;
+};
+
+const DATE_FIELD_TYPES = new Set(["date"]);
+const TIME_FIELD_TYPES = new Set(["time"]);
+const DATETIME_FIELD_TYPES = new Set(["datetime"]);
+
+const pad2 = (num: number) => String(num).padStart(2, "0");
+
+const formatDateOnlyValue = (raw: string): string | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const [, yyyy, mm, dd] = match;
+    return `${dd}-${mm}-${yyyy}`;
+  }
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${pad2(date.getDate())}-${pad2(date.getMonth() + 1)}-${date.getFullYear()}`;
+};
+
+const formatTimeOnlyValue = (raw: string): string | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const match = trimmed.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (match) {
+    const [, hh, mm, ss] = match;
+    return `${hh}:${mm}:${ss ?? "00"}`;
+  }
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+};
+
+const formatDateTimeValue = (raw: string): string | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const match = trimmed.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
+  );
+  if (match) {
+    const [, yyyy, mm, dd, hh = "00", min = "00", ss = "00"] = match;
+    return `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
+  }
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${pad2(date.getDate())}-${pad2(date.getMonth() + 1)}-${date.getFullYear()} ${pad2(
+    date.getHours()
+  )}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+};
+
+const formatValueByFieldType = (value: string, fieldType?: string): string | null => {
+  if (!fieldType) return null;
+  if (DATE_FIELD_TYPES.has(fieldType)) return formatDateOnlyValue(value);
+  if (TIME_FIELD_TYPES.has(fieldType)) return formatTimeOnlyValue(value);
+  if (DATETIME_FIELD_TYPES.has(fieldType)) return formatDateTimeValue(value);
+  return null;
+};
+
+const buildFieldTypeLookup = async (fieldIds: number[]) => {
+  if (fieldIds.length === 0) return new Map<number, string>();
+
+  const fields = await FormField.findAll({
+    attributes: ["id"],
+    where: { id: { [Op.in]: fieldIds } },
+    include: [
+      {
+        model: MetaFieldType,
+        as: "fieldType",
+        attributes: ["fieldType"]
+      }
+    ]
+  });
+
+  const lookup = new Map<number, string>();
+  for (const field of fields) {
+    const type = (field as any).fieldType?.fieldType;
+    if (typeof type === "string") {
+      lookup.set(field.id, type);
+    }
+  }
+  return lookup;
+};
+
+const looksLikeFilePayload = (value: unknown): boolean => {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  const hasPath = typeof record.uri === "string" || typeof record.path === "string";
+  const hasType = typeof record.type === "string" || typeof record.mime === "string";
+  const hasName = typeof record.name === "string";
+  return (hasPath && hasType) || (hasPath && hasName);
+};
+
+const parseJsonFileValue = (value: string): unknown => {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return value;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      if (parsed.length === 0) return parsed;
+      return parsed.every((entry) => looksLikeFilePayload(entry)) ? parsed : value;
+    }
+    return looksLikeFilePayload(parsed) ? parsed : value;
+  } catch (error) {
+    return value;
+  }
+};
+
+const normalizeFieldValue = (rawValue: unknown): string | null => {
+  if (rawValue === undefined || rawValue === null) return null;
+  if (typeof rawValue === "string") return rawValue.trim();
+  if (typeof rawValue === "object") {
+    try {
+      return JSON.stringify(rawValue);
+    } catch (error) {
+      throw new ApiError("fieldValues contains a circular structure", 400);
+    }
+  }
+  return String(rawValue);
+};
+
+const parseCsvIds = (value: string): string[] => {
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+};
+
+const buildOptionLookup = async (fieldIds: number[]) => {
+  if (fieldIds.length === 0) return new Map<number, Map<string, ResolvedOption>>();
+
+  const options = await FormFieldOption.findAll({
+    attributes: ["id", "fieldId", "optionLabel", "optionValue", "status"],
+    where: {
+      fieldId: { [Op.in]: fieldIds },
+      status: 1
+    }
+  });
+
+  const optionLookup = new Map<number, Map<string, ResolvedOption>>();
+  for (const option of options) {
+    const fieldId = option.fieldId;
+    if (!optionLookup.has(fieldId)) {
+      optionLookup.set(fieldId, new Map());
+    }
+    optionLookup
+      .get(fieldId)!
+      .set(String(option.id), {
+        id: option.id,
+        fieldId: option.fieldId,
+        optionLabel: option.optionLabel,
+        optionValue: option.optionValue
+      });
+  }
+
+  return optionLookup;
+};
+
+const attachResolvedOptions = (
+  fieldValues: any[],
+  optionLookup: Map<number, Map<string, ResolvedOption>>,
+  fieldTypeLookup: Map<number, string>
+) => {
+  for (const fv of fieldValues) {
+    if (typeof fv.value === "string") {
+      const decoded = parseJsonFileValue(fv.value);
+      if (decoded !== fv.value) {
+        const target = fv.dataValues ?? fv;
+        target.value = decoded;
+      }
+    }
+
+    const fieldId = fv.formFieldId;
+    const fieldType = fieldTypeLookup.get(fieldId);
+    if (fieldType && typeof fv.value === "string") {
+      const formatted = formatValueByFieldType(fv.value, fieldType);
+      if (formatted) {
+        const target = fv.dataValues ?? fv;
+        target.value = formatted;
+      }
+    }
+
+    const optionsForField = optionLookup.get(fieldId);
+    if (!optionsForField) continue;
+
+    const rawValue = typeof fv.value === "string" ? fv.value.trim() : "";
+    const target = fv.dataValues ?? fv;
+
+    if (!rawValue) {
+      target.resolved = null;
+      continue;
+    }
+
+    if (rawValue.includes(",")) {
+      const ids = parseCsvIds(rawValue);
+      const resolved = ids
+        .map((id) => optionsForField.get(id))
+        .filter((entry): entry is ResolvedOption => Boolean(entry));
+      target.resolved = resolved;
+    } else {
+      const resolved = optionsForField.get(rawValue) || null;
+      target.resolved = resolved;
+    }
+  }
+};
+
+const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
+  const submissionList = Array.isArray(submissions) ? submissions : [submissions];
+  const allFieldValues: any[] = [];
+  const fieldIds = new Set<number>();
+
+  for (const submission of submissionList) {
+    const fieldValues = submission?.fieldValues || [];
+    if (!Array.isArray(fieldValues)) continue;
+    for (const fv of fieldValues) {
+      if (fv?.formFieldId) {
+        fieldIds.add(fv.formFieldId);
+      }
+    }
+    allFieldValues.push(...fieldValues);
+  }
+
+  if (fieldIds.size === 0 || allFieldValues.length === 0) return;
+
+  const optionLookup = await buildOptionLookup(Array.from(fieldIds));
+  const fieldTypeLookup = await buildFieldTypeLookup(Array.from(fieldIds));
+  attachResolvedOptions(allFieldValues, optionLookup, fieldTypeLookup);
+};
 
 /**
  * Submit a form for a specific form event
@@ -253,7 +490,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     // Create field values (including file URLs if any)
     const fieldValueRecords = fieldValues.map((fv: any) => {
       const field = fieldMap.get(fv.formFieldId)!;
-      let finalValue = fv.value ? String(fv.value) : null;
+      let finalValue = normalizeFieldValue(fv.value);
 
       // If field has file uploads, include them (as JSON array or URL string)
       if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
@@ -295,6 +532,10 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       ]
     });
 
+    if (fullSubmission) {
+      await resolveFieldValuesForSubmissions(fullSubmission);
+    }
+
     sendCreated(res, fullSubmission, "Form submitted successfully");
   } catch (error) {
     // Only rollback if transaction is still pending
@@ -304,6 +545,289 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw error;
   }
 });
+
+/**
+ * Update a form submission by ID
+ */
+export const updateFormSubmission = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { submissionId } = req.params;
+    let fieldValues = req.body.fieldValues;
+    const userId = req.user?.id;
+    const uploadedFiles = (req as any).files || [];
+
+    // Parse fieldValues if it's a JSON string (from multipart form-data)
+    if (typeof fieldValues === "string") {
+      try {
+        fieldValues = JSON.parse(fieldValues);
+      } catch (e) {
+        throw new ApiError("fieldValues must be a valid JSON array", 400);
+      }
+    }
+
+    if (!userId) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
+    const submissionIdNum = Number(submissionId);
+    if (!Number.isFinite(submissionIdNum) || submissionIdNum <= 0) {
+      throw new ApiError("Invalid submissionId", 400);
+    }
+
+    if (!Array.isArray(fieldValues) || fieldValues.length === 0) {
+      throw new ApiError("fieldValues must be a non-empty array", 400);
+    }
+
+    // Validate field values structure
+    for (const fv of fieldValues) {
+      if (!fv.formFieldId) {
+        throw new ApiError("Each fieldValue must have formFieldId", 400);
+      }
+    }
+
+    const submission = await FormSubmission.findByPk(submissionIdNum);
+    if (!submission || submission.status === 0) {
+      throw new ApiError("Form submission not found", 404);
+    }
+
+    // Check authorization - user can update their own submissions; Admins can update all
+    if (submission.submittedBy !== userId && !req.user?.roles.includes("admin")) {
+      throw new ApiError("You don't have permission to update this submission", 403);
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      // Load form event and fields for validation
+      const formEvent = await FormEvent.findByPk(submission.formEventId, {
+        include: [
+          {
+            model: Form,
+            as: "form",
+            include: [
+              {
+                model: FormField,
+                as: "fields"
+              }
+            ]
+          }
+        ],
+        transaction
+      });
+
+      if (!formEvent) {
+        throw new ApiError("Form event not found", 404);
+      }
+
+      const form = formEvent.form;
+      if (!form) {
+        throw new ApiError("Form not found", 404);
+      }
+
+      const formFields = form.fields || [];
+      const fieldMap = new Map(formFields.map((f) => [f.id, f]));
+
+      // Parse uploaded files by field name
+      const filesByFieldName = new Map<string, Express.Multer.File[]>();
+      for (const file of uploadedFiles) {
+        if (!filesByFieldName.has(file.fieldname)) {
+          filesByFieldName.set(file.fieldname, []);
+        }
+        filesByFieldName.get(file.fieldname)!.push(file);
+      }
+
+      // Validate files per field (max 5 files per field)
+      for (const [fieldName, files] of filesByFieldName) {
+        if (files.length > 5) {
+          throw new ApiError(`Field "${fieldName}" can have at most 5 files`, 400);
+        }
+      }
+
+      // Map field names to field IDs from fieldValues
+      const fileUrlsByFieldId = new Map<number, string[]>();
+      for (const fv of fieldValues) {
+        const fieldId = fv.formFieldId;
+        const fieldName = String(fieldId);
+
+        if (filesByFieldName.has(fieldName)) {
+          const files = filesByFieldName.get(fieldName)!;
+          fileUrlsByFieldId.set(
+            fieldId,
+            files.map((f) => f.path)
+          );
+        }
+      }
+
+      // Validate each submitted field value
+      for (const fv of fieldValues) {
+        const field = fieldMap.get(fv.formFieldId);
+
+        if (!field) {
+          throw new ApiError(`Field ID ${fv.formFieldId} does not belong to this form`, 400);
+        }
+
+        const value = fv.value !== undefined && fv.value !== null ? String(fv.value).trim() : "";
+
+        if (field.isRequired === 1 && !value && !fileUrlsByFieldId.has(fv.formFieldId)) {
+          throw new ApiError(`Field "${field.label}" is required`, 400);
+        }
+
+        if (!value && !fileUrlsByFieldId.has(fv.formFieldId)) continue;
+
+        if (field.minLength && value.length < field.minLength) {
+          throw new ApiError(`"${field.label}" must be at least ${field.minLength} characters`, 400);
+        }
+
+        if (field.maxLength && value.length > field.maxLength) {
+          throw new ApiError(`"${field.label}" must not exceed ${field.maxLength} characters`, 400);
+        }
+
+        if (field.validationRegex && value) {
+          const regex = new RegExp(field.validationRegex);
+          if (!regex.test(value)) {
+            throw new ApiError(`"${field.label}" format is invalid`, 400);
+          }
+        }
+
+        if (value) {
+          const num = Number(value);
+          if (!Number.isNaN(num)) {
+            if (field.minValue && num < Number(field.minValue)) {
+              throw new ApiError(`"${field.label}" must be at least ${field.minValue}`, 400);
+            }
+            if (field.maxValue && num > Number(field.maxValue)) {
+              throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
+            }
+          }
+        }
+      }
+
+      // Reorganize files to final directory structure
+      const finalFileUrlsByFieldId = new Map<number, string[]>();
+      for (const [fieldId, filePaths] of fileUrlsByFieldId) {
+        const finalUrls: string[] = [];
+        const finalDir = path.join(
+          UPLOAD_PATHS.BASE_DIR,
+          String(formEvent.id),
+          String(submission.id),
+          String(fieldId)
+        );
+        ensureDirectory(finalDir);
+
+        for (const filePath of filePaths) {
+          if (fs.existsSync(filePath)) {
+            const ext = path.extname(filePath);
+            const uuid = randomUUID();
+            const finalFileName = `${uuid}${ext}`;
+            const finalFilePath = path.join(finalDir, finalFileName);
+
+            fs.renameSync(filePath, finalFilePath);
+
+            const relativePath = path.relative(UPLOAD_PATHS.BASE_DIR, finalFilePath);
+            const normalizedPath = relativePath.split(path.sep).join("/");
+            finalUrls.push(normalizedPath);
+          }
+        }
+
+        if (finalUrls.length > 0) {
+          finalFileUrlsByFieldId.set(fieldId, finalUrls);
+        }
+      }
+
+      const fieldValueRecords = fieldValues.map((fv: any) => {
+        const field = fieldMap.get(fv.formFieldId)!;
+        let finalValue = normalizeFieldValue(fv.value);
+
+        if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
+          const fileUrls = finalFileUrlsByFieldId.get(fv.formFieldId)!;
+          finalValue = fileUrls.length === 1 ? fileUrls[0] : JSON.stringify(fileUrls);
+        }
+
+        return {
+          formSubmissionId: submission.id,
+          formFieldId: fv.formFieldId,
+          fieldKey: field.fieldKey,
+          value: finalValue
+        };
+      });
+
+      const fieldIds = fieldValueRecords.map((record) => record.formFieldId);
+      const existingValues = await FormFieldValue.findAll({
+        where: {
+          formSubmissionId: submission.id,
+          formFieldId: { [Op.in]: fieldIds }
+        },
+        transaction
+      });
+      const existingMap = new Map<number, FormFieldValue>();
+      for (const existing of existingValues) {
+        existingMap.set(existing.formFieldId, existing);
+      }
+
+      const creates: any[] = [];
+      const updates: Promise<any>[] = [];
+
+      for (const record of fieldValueRecords) {
+        const existing = existingMap.get(record.formFieldId);
+        if (existing) {
+          updates.push(
+            existing.update(
+              {
+                fieldKey: record.fieldKey,
+                value: record.value
+              },
+              { transaction }
+            )
+          );
+        } else {
+          creates.push(record);
+        }
+      }
+
+      if (creates.length > 0) {
+        await FormFieldValue.bulkCreate(creates, { transaction });
+      }
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      await transaction.commit();
+
+      const updatedSubmission = await FormSubmission.findByPk(submission.id, {
+        attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
+        include: [
+          {
+            model: FormFieldValue,
+            as: "fieldValues",
+            attributes: ["id", "formFieldId", "fieldKey", "value"]
+          },
+          {
+            model: FormEvent,
+            as: "formEvent",
+            attributes: ["id", "title", "formId"]
+          },
+          {
+            model: User,
+            as: "user",
+            attributes: ["id", "email"]
+          }
+        ]
+      });
+
+      if (updatedSubmission) {
+        await resolveFieldValuesForSubmissions(updatedSubmission);
+      }
+
+      sendSuccess(res, updatedSubmission, "Form submission updated successfully");
+    } catch (error) {
+      // Only rollback if transaction is still pending
+      // if (!transaction.finished) {
+      //   await transaction.rollback();
+      // }
+      throw error;
+    }
+  }
+);
 
 /**
  * Get form submission by ID
@@ -363,6 +887,8 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
   if (submission.submittedBy !== userId && !req.user?.roles.includes("admin")) {
     throw new ApiError("You don't have permission to view this submission", 403);
   }
+
+  await resolveFieldValuesForSubmissions(submission);
 
   sendSuccess(res, submission);
 });
@@ -431,6 +957,8 @@ export const listFormSubmissions = asyncHandler(
       distinct: true
     });
 
+    await resolveFieldValuesForSubmissions(rows);
+
     sendSuccessWithPagination(res, rows, {
       page: pageNum,
       limit: limitNum,
@@ -493,6 +1021,8 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
     offset,
     distinct: true
   });
+
+  await resolveFieldValuesForSubmissions(rows);
 
   sendSuccessWithPagination(res, rows, {
     page: pageNum,

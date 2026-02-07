@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   submitForm,
+  updateFormSubmission,
   getFormSubmission,
   listFormSubmissions,
   listMySubmissions,
@@ -26,6 +27,13 @@ router.post("/events/:formEventId/submit", authenticate(), formSubmissionUpload,
  * GET /form-submissions/:submissionId
  */
 router.get("/:submissionId", authenticate(), getFormSubmission);
+
+/**
+ * Update a form submission
+ * PUT /form-submissions/:submissionId
+ * Accepts multipart form-data with optional file attachments
+ */
+router.put("/:submissionId", authenticate(), formSubmissionUpload, updateFormSubmission);
 
 /**
  * List all submissions for a specific form event

@@ -596,15 +596,42 @@
 
       async function loadRoles() {
         try {
-          const response = await fetch(`${API_BASE}/roles`);
-          const data = await response.json();
-          allRoles = data.data || [];
+          allRoles = await fetchAllRoles();
           renderRolesList();
           updateStats();
         } catch (error) {
           console.error("Error loading roles:", error);
           showAlert("Error loading roles", "error");
         }
+      }
+
+      async function fetchAllRoles() {
+        const roles = [];
+        const limit = 100;
+        let page = 1;
+        let totalPages = 1;
+
+        while (page <= totalPages) {
+          const response = await fetch(`${API_BASE}/roles?page=${page}&limit=${limit}`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          const pageRoles = data.data || [];
+          roles.push(...pageRoles);
+
+          if (data.pagination && typeof data.pagination.totalPages === "number") {
+            totalPages = data.pagination.totalPages;
+          } else if (pageRoles.length < limit) {
+            totalPages = page;
+          } else {
+            totalPages = page + 1;
+          }
+
+          page += 1;
+        }
+
+        return roles;
       }
 
       async function loadPermissions() {
