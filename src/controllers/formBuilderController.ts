@@ -29,6 +29,7 @@ import FormEvent from "../models/FormEvent";
 import FormEventAccessibility from "../models/FormEventAccessibility";
 import UserProfile from "../models/UserProfile";
 import sequelize from "../config/database";
+import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 
 type PaginationQuery = {
   page?: string;
@@ -188,7 +189,102 @@ type FormFieldInput = {
   minValue?: unknown;
   maxValue?: unknown;
   attrsJson?: unknown;
+  metaTable?: unknown;
   options?: unknown;
+};
+
+const normalizeMetaTable = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new ApiError("metaTable must be a string", 400);
+};
+
+const ensureMetaTableExists = async (tableName: string | null): Promise<void> => {
+  if (!tableName) {
+    return;
+  }
+  const config = await getMetaTableByTableName(tableName);
+  if (!config) {
+    throw new ApiError("Invalid metaTable", 400);
+  }
+};
+
+const extractMetaTable = (field: any): string | null => {
+  if (!field) {
+    return null;
+  }
+  const value = field.metaTable !== undefined ? field.metaTable : undefined;
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  return String(value);
+};
+
+const applyMetaTableOptionsToFields = (
+  fields: any[],
+  optionsByTable: Record<string, FormFieldOptionInput[]>
+): void => {
+  for (const field of fields) {
+    const tableName = extractMetaTable(field);
+    if (tableName && optionsByTable[tableName]) {
+      field.options = optionsByTable[tableName];
+    }
+  }
+};
+
+const buildMetaTableOptionsMap = async (
+  fields: any[]
+): Promise<Record<string, FormFieldOptionInput[]>> => {
+  const tableNames = new Set<string>();
+  for (const field of fields) {
+    const tableName = extractMetaTable(field);
+    if (tableName) {
+      tableNames.add(tableName);
+    }
+  }
+
+  const optionsByTable: Record<string, FormFieldOptionInput[]> = {};
+  await Promise.all(
+    Array.from(tableNames).map(async (tableName) => {
+      const metaTable = await getMetaTableByTableName(tableName);
+      if (!metaTable) {
+        return;
+      }
+
+      const where = metaTable.hasStatus ? { status: 1 } : undefined;
+      const rows = await metaTable.model.findAll({
+        where,
+        order: [[metaTable.primaryKey, "ASC"]]
+      });
+
+      optionsByTable[tableName] = rows.map((row: any) => {
+        const data =
+          row && typeof row === "object" && "dataValues" in row
+            ? (row as any).dataValues
+            : row;
+        const labelValue = data.dispName ?? data.title;
+        const optionLabel =
+          labelValue !== undefined && labelValue !== null ? String(labelValue) : "";
+        const valueRaw = data[metaTable.primaryKey];
+        const optionValue = valueRaw !== undefined && valueRaw !== null ? valueRaw : null;
+        const sortOrder = Number(valueRaw);
+
+        return {
+          id: valueRaw !== undefined && valueRaw !== null ? valueRaw : null,
+          optionLabel,
+          optionValue,
+          sortOrder: Number.isNaN(sortOrder) ? 0 : sortOrder,
+          isDefault: 0
+        };
+      });
+    })
+  );
+
+  return optionsByTable;
 };
 
 const createFormFieldsWithOptions = async (
@@ -218,6 +314,7 @@ const createFormFieldsWithOptions = async (
       minValue,
       maxValue,
       attrsJson,
+      metaTable,
       options
     } = rawField;
 
@@ -251,6 +348,8 @@ const createFormFieldsWithOptions = async (
     const normalizedPlaceholder = normalizeOptionalString(placeholder, "placeholder");
     const normalizedDefaultValue = normalizeOptionalString(defaultValue, "defaultValue");
     const normalizedValidationRegex = normalizeOptionalString(validationRegex, "validationRegex");
+    const normalizedMetaTable = normalizeMetaTable(metaTable);
+    await ensureMetaTableExists(normalizedMetaTable);
 
     if (options !== undefined && !Array.isArray(options)) {
       throw new ApiError("options must be an array when provided", 400);
@@ -274,13 +373,15 @@ const createFormFieldsWithOptions = async (
         minValue: minValue !== undefined && minValue !== null ? String(minValue) : null,
         maxValue: maxValue !== undefined && maxValue !== null ? String(maxValue) : null,
         attrsJson: normalizeJsonValue(attrsJson),
+        metaTable: normalizedMetaTable,
         createdBy: userId,
         updatedBy: userId
       },
       { transaction }
     );
 
-    const optionInputs: FormFieldOptionInput[] = Array.isArray(options) ? options : [];
+    const optionInputs: FormFieldOptionInput[] =
+      normalizedMetaTable || !Array.isArray(options) ? [] : options;
     for (const rawOption of optionInputs) {
       if (!rawOption || typeof rawOption !== "object" || Array.isArray(rawOption)) {
         throw new ApiError("Each field option must be an object", 400);
@@ -690,9 +791,23 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     ]
   });
 
+  const rowsPlain = rows.map((form) => (typeof form.toJSON === "function" ? form.toJSON() : form));
+  const fieldsForOptions: any[] = [];
+  for (const form of rowsPlain as any[]) {
+    const fields = Array.isArray(form?.fields) ? form.fields : [];
+    if (fields.length > 0) {
+      fieldsForOptions.push(...fields);
+    }
+  }
+
+  if (fieldsForOptions.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
+    applyMetaTableOptionsToFields(fieldsForOptions, optionsByTable);
+  }
+
   const pagination = calculatePagination(count, page, limit);
 
-  sendSuccessWithPagination(res, rows, pagination, "Forms retrieved successfully");
+  sendSuccessWithPagination(res, rowsPlain, pagination, "Forms retrieved successfully");
 });
 
 export const getForm = asyncHandler(async (req: Request, res: Response) => {
@@ -715,7 +830,14 @@ export const getForm = asyncHandler(async (req: Request, res: Response) => {
     return sendNotFound(res, "Form not found");
   }
 
-  sendSuccess(res, form, "Form retrieved successfully");
+  const formPlain = typeof form.toJSON === "function" ? form.toJSON() : form;
+  const fields = Array.isArray((formPlain as any).fields) ? (formPlain as any).fields : [];
+  if (fields.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fields);
+    applyMetaTableOptionsToFields(fields, optionsByTable);
+  }
+
+  sendSuccess(res, formPlain, "Form retrieved successfully");
 });
 
 export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -783,7 +905,19 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       ]
     })) ?? form;
 
-  sendCreated(res, formWithFields, "Form created successfully");
+  const formPlain =
+    typeof (formWithFields as any).toJSON === "function"
+      ? (formWithFields as any).toJSON()
+      : formWithFields;
+  const createdFields = Array.isArray((formPlain as any).fields)
+    ? (formPlain as any).fields
+    : [];
+  if (createdFields.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(createdFields);
+    applyMetaTableOptionsToFields(createdFields, optionsByTable);
+  }
+
+  sendCreated(res, formPlain, "Form created successfully");
 });
 
 export const updateForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -878,7 +1012,16 @@ export const listFormFields = asyncHandler(async (req: Request, res: Response) =
     ]
   });
 
-  sendSuccess(res, fields, "Form fields retrieved successfully");
+  const fieldsPlain = fields.map((field) =>
+    typeof field.toJSON === "function" ? field.toJSON() : field
+  );
+
+  if (fieldsPlain.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fieldsPlain);
+    applyMetaTableOptionsToFields(fieldsPlain, optionsByTable);
+  }
+
+  sendSuccess(res, fieldsPlain, "Form fields retrieved successfully");
 });
 
 export const getFormField = asyncHandler(async (req: Request, res: Response) => {
@@ -909,7 +1052,11 @@ export const getFormField = asyncHandler(async (req: Request, res: Response) => 
     return sendNotFound(res, "Form field not found");
   }
 
-  sendSuccess(res, field, "Form field retrieved successfully");
+  const fieldPlain = typeof field.toJSON === "function" ? field.toJSON() : field;
+  const optionsByTable = await buildMetaTableOptionsMap([fieldPlain]);
+  applyMetaTableOptionsToFields([fieldPlain], optionsByTable);
+
+  sendSuccess(res, fieldPlain, "Form field retrieved successfully");
 });
 
 export const createFormField = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -933,7 +1080,8 @@ export const createFormField = asyncHandler(async (req: AuthenticatedRequest, re
     maxLength,
     minValue,
     maxValue,
-    attrsJson
+    attrsJson,
+    metaTable
   } = req.body;
 
   if (!fieldKey || !label || fieldTypeId === undefined || fieldTypeId === null) {
@@ -956,6 +1104,8 @@ export const createFormField = asyncHandler(async (req: AuthenticatedRequest, re
     minLength !== undefined && minLength !== null ? ensureNumber(minLength, "minLength") : null;
   const maxLengthValue =
     maxLength !== undefined && maxLength !== null ? ensureNumber(maxLength, "maxLength") : null;
+  const normalizedMetaTable = normalizeMetaTable(metaTable);
+  await ensureMetaTableExists(normalizedMetaTable);
 
   const field = await FormField.create({
     formId: form.id,
@@ -974,6 +1124,7 @@ export const createFormField = asyncHandler(async (req: AuthenticatedRequest, re
     minValue: minValue !== undefined ? String(minValue) : null,
     maxValue: maxValue !== undefined ? String(maxValue) : null,
     attrsJson: normalizeJsonValue(attrsJson),
+    metaTable: normalizedMetaTable,
     createdBy: userId,
     updatedBy: userId
   });
@@ -1002,7 +1153,8 @@ export const updateFormField = asyncHandler(async (req: AuthenticatedRequest, re
     maxLength,
     minValue,
     maxValue,
-    attrsJson
+    attrsJson,
+    metaTable
   } = req.body;
 
   if (fieldTypeId !== undefined) {
@@ -1038,6 +1190,11 @@ export const updateFormField = asyncHandler(async (req: AuthenticatedRequest, re
   if (minValue !== undefined) field.minValue = minValue !== null ? String(minValue) : null;
   if (maxValue !== undefined) field.maxValue = maxValue !== null ? String(maxValue) : null;
   if (attrsJson !== undefined) field.attrsJson = normalizeJsonValue(attrsJson);
+  if (metaTable !== undefined) {
+    const normalizedMetaTable = normalizeMetaTable(metaTable);
+    await ensureMetaTableExists(normalizedMetaTable);
+    field.metaTable = normalizedMetaTable;
+  }
   if (userId) field.updatedBy = userId;
 
   await field.save();

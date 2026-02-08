@@ -34,6 +34,7 @@ class FormField extends Model<
   declare minValue: CreationOptional<string | null>;
   declare maxValue: CreationOptional<string | null>;
   declare attrsJson: CreationOptional<Record<string, unknown> | null>;
+  declare metaTable: CreationOptional<string | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -131,6 +132,11 @@ FormField.init(
     attrsJson: {
       field: "attrs_json",
       type: DataTypes.JSON,
+      allowNull: true
+    },
+    metaTable: {
+      field: "meta_table",
+      type: DataTypes.STRING(100),
       allowNull: true
     },
     status: {

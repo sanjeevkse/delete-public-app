@@ -40,3 +40,4 @@ lens.db-wal
 migrations
 AGENTS.override.md
 tasks.md
+project/

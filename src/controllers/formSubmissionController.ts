@@ -30,6 +30,7 @@ import User from "../models/User";
 import UserProfile from "../models/UserProfile";
 import { UPLOAD_PATHS } from "../config/uploadConstants";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
+import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 
 const DEFAULT_SORT_COLUMNS = ["submittedAt", "createdAt", "id"];
 
@@ -39,6 +40,15 @@ type ResolvedOption = {
   optionLabel: string;
   optionValue: string;
 };
+
+type MetaTableRecord = Record<string, any>;
+type MetaTableResolvedLookup = Map<
+  string,
+  {
+    primaryKey: string;
+    records: Map<string, MetaTableRecord>;
+  }
+>;
 
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
@@ -201,11 +211,50 @@ const normalizeFieldValue = (rawValue: unknown): string | null => {
   return String(rawValue);
 };
 
+const ensureMetaTableValuesExist = async (
+  metaTableName: string,
+  ids: string[],
+  fieldLabel: string
+): Promise<void> => {
+  if (ids.length === 0) return;
+  const metaTable = await getMetaTableByTableName(metaTableName);
+  if (!metaTable) {
+    throw new ApiError(`Invalid metaTable for "${fieldLabel}"`, 400);
+  }
+
+  const where: any = {
+    [metaTable.primaryKey]: { [Op.in]: ids }
+  };
+  if (metaTable.hasStatus) {
+    where.status = 1;
+  }
+
+  const rows = await metaTable.model.findAll({ where });
+  const foundIds = new Set(
+    (rows as any[]).map((row) => {
+      const data =
+        row && typeof row === "object" && "dataValues" in row ? row.dataValues : row;
+      return String(data?.[metaTable.primaryKey]);
+    })
+  );
+
+  const missing = ids.filter((id) => !foundIds.has(id));
+  if (missing.length > 0) {
+    throw new ApiError(`Invalid selection for "${fieldLabel}"`, 400);
+  }
+};
+
 const parseCsvIds = (value: string): string[] => {
   return value
     .split(",")
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
+};
+
+const parseValueIds = (raw: string): string[] => {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  return trimmed.includes(",") ? parseCsvIds(trimmed) : [trimmed];
 };
 
 const buildOptionLookup = async (fieldIds: number[]) => {
@@ -238,10 +287,113 @@ const buildOptionLookup = async (fieldIds: number[]) => {
   return optionLookup;
 };
 
+const buildMetaTableFieldLookup = async (fieldIds: number[]) => {
+  const lookup = new Map<number, string>();
+  if (fieldIds.length === 0) return lookup;
+
+  const fields = await FormField.findAll({
+    attributes: ["id", "metaTable"],
+    where: { id: { [Op.in]: fieldIds }, metaTable: { [Op.ne]: null } }
+  });
+
+  for (const field of fields) {
+    const metaTable = (field as any).metaTable;
+    if (typeof metaTable === "string" && metaTable.trim()) {
+      lookup.set(field.id, metaTable);
+    }
+  }
+
+  return lookup;
+};
+
+const buildMetaTableValueLookup = async (
+  fieldValues: any[],
+  fieldMetaTableLookup: Map<number, string>
+): Promise<MetaTableResolvedLookup> => {
+  const tableIdsMap = new Map<string, Set<string>>();
+
+  for (const fv of fieldValues) {
+    const tableName = fieldMetaTableLookup.get(fv.formFieldId);
+    if (!tableName) continue;
+    if (typeof fv.value !== "string") continue;
+    for (const id of parseValueIds(fv.value)) {
+      if (!tableIdsMap.has(tableName)) {
+        tableIdsMap.set(tableName, new Set());
+      }
+      tableIdsMap.get(tableName)!.add(id);
+    }
+  }
+
+  const lookup: MetaTableResolvedLookup = new Map();
+
+  await Promise.all(
+    Array.from(tableIdsMap.entries()).map(async ([tableName, ids]) => {
+      const metaTable = await getMetaTableByTableName(tableName);
+      if (!metaTable) return;
+
+      const idList = Array.from(ids);
+      if (idList.length === 0) return;
+
+      const where: any = {
+        [metaTable.primaryKey]: { [Op.in]: idList }
+      };
+      if (metaTable.hasStatus) {
+        where.status = 1;
+      }
+
+      const rows = await metaTable.model.findAll({ where });
+      const rowMap = new Map<string, MetaTableRecord>();
+      for (const row of rows as any[]) {
+        const data =
+          row && typeof row === "object" && "dataValues" in row ? row.dataValues : row;
+        const key = data?.[metaTable.primaryKey];
+        if (key !== undefined && key !== null) {
+          rowMap.set(String(key), data as MetaTableRecord);
+        }
+      }
+      lookup.set(tableName, { primaryKey: metaTable.primaryKey, records: rowMap });
+    })
+  );
+
+  return lookup;
+};
+
+const resolveMetaTableOptionValue = (record: MetaTableRecord, primaryKey: string): string | number => {
+  const fallback = record?.[primaryKey];
+  const valueCandidates = [
+    record?.value,
+    record?.targetValue,
+    record?.code,
+    record?.shortName,
+    record?.short_name,
+    record?.dispName,
+    record?.title,
+    fallback
+  ];
+  for (const candidate of valueCandidates) {
+    if (candidate !== undefined && candidate !== null && candidate !== "") {
+      return candidate as string | number;
+    }
+  }
+  return fallback as string | number;
+};
+
+const resolveMetaTableOptionLabel = (record: MetaTableRecord, optionValue: string | number) => {
+  const labelCandidates = [record?.dispName, record?.title, record?.name, record?.label];
+  for (const candidate of labelCandidates) {
+    if (candidate !== undefined && candidate !== null && candidate !== "") {
+      return String(candidate);
+    }
+  }
+  return String(optionValue ?? "");
+};
+
 const attachResolvedOptions = (
   fieldValues: any[],
   optionLookup: Map<number, Map<string, ResolvedOption>>,
-  fieldTypeLookup: Map<number, string>
+  fieldTypeLookup: Map<number, string>,
+  fieldMetaTableLookup: Map<number, string>,
+  metaTableValueLookup: MetaTableResolvedLookup
 ) => {
   for (const fv of fieldValues) {
     if (typeof fv.value === "string") {
@@ -263,8 +415,6 @@ const attachResolvedOptions = (
     }
 
     const optionsForField = optionLookup.get(fieldId);
-    if (!optionsForField) continue;
-
     const rawValue = typeof fv.value === "string" ? fv.value.trim() : "";
     const target = fv.dataValues ?? fv;
 
@@ -272,6 +422,47 @@ const attachResolvedOptions = (
       target.resolved = null;
       continue;
     }
+
+    const metaTableName = fieldMetaTableLookup.get(fieldId);
+    if (metaTableName) {
+      const metaEntry = metaTableValueLookup.get(metaTableName);
+      if (metaEntry) {
+        const { primaryKey, records } = metaEntry;
+        if (rawValue.includes(",")) {
+          const ids = parseCsvIds(rawValue);
+          const resolved = ids
+            .map((id) => {
+              const record = records.get(id);
+              if (!record) return null;
+              const optionValue = resolveMetaTableOptionValue(record, primaryKey);
+              return {
+                id: record?.[primaryKey],
+                fieldId,
+                optionLabel: resolveMetaTableOptionLabel(record, optionValue),
+                optionValue
+              };
+            })
+            .filter(Boolean);
+          target.resolved = resolved;
+        } else {
+          const record = records.get(rawValue);
+          if (!record) {
+            target.resolved = null;
+          } else {
+            const optionValue = resolveMetaTableOptionValue(record, primaryKey);
+            target.resolved = {
+              id: record?.[primaryKey],
+              fieldId,
+              optionLabel: resolveMetaTableOptionLabel(record, optionValue),
+              optionValue
+            };
+          }
+        }
+        continue;
+      }
+    }
+
+    if (!optionsForField) continue;
 
     if (rawValue.includes(",")) {
       const ids = parseCsvIds(rawValue);
@@ -306,7 +497,18 @@ const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
 
   const optionLookup = await buildOptionLookup(Array.from(fieldIds));
   const fieldTypeLookup = await buildFieldTypeLookup(Array.from(fieldIds));
-  attachResolvedOptions(allFieldValues, optionLookup, fieldTypeLookup);
+  const fieldMetaTableLookup = await buildMetaTableFieldLookup(Array.from(fieldIds));
+  const metaTableValueLookup = await buildMetaTableValueLookup(
+    allFieldValues,
+    fieldMetaTableLookup
+  );
+  attachResolvedOptions(
+    allFieldValues,
+    optionLookup,
+    fieldTypeLookup,
+    fieldMetaTableLookup,
+    metaTableValueLookup
+  );
 };
 
 /**
@@ -448,6 +650,11 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
             throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
           }
         }
+      }
+
+      if (field.metaTable && value) {
+        const ids = parseValueIds(value);
+        await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
       }
     }
 
@@ -648,7 +855,7 @@ export const updateFormSubmission = asyncHandler(
         }
       }
 
-      // Validate each submitted field value
+      // Validate each submitted field value (only for provided fields)
       for (const fv of fieldValues) {
         const field = fieldMap.get(fv.formFieldId);
 
@@ -657,10 +864,6 @@ export const updateFormSubmission = asyncHandler(
         }
 
         const value = fv.value !== undefined && fv.value !== null ? String(fv.value).trim() : "";
-
-        if (field.isRequired === 1 && !value && !filesByFieldId.has(fv.formFieldId)) {
-          throw new ApiError(`Field "${field.label}" is required`, 400);
-        }
 
         if (!value && !filesByFieldId.has(fv.formFieldId)) continue;
 
@@ -690,15 +893,10 @@ export const updateFormSubmission = asyncHandler(
             }
           }
         }
-      }
 
-      // Validate required fields that were not submitted at all
-      for (const field of formFields) {
-        if (field.isRequired !== 1) continue;
-        const hasValue = fieldValues.some((fv) => fv.formFieldId === field.id);
-        const hasFiles = filesByFieldId.has(field.id);
-        if (!hasValue && !hasFiles) {
-          throw new ApiError(`Field "${field.label}" is required`, 400);
+        if (field.metaTable && value) {
+          const ids = parseValueIds(value);
+          await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
         }
       }
 

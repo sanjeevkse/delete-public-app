@@ -21,6 +21,7 @@ import FormField from "../models/FormField";
 import FormFieldOption from "../models/FormFieldOption";
 import FormEventAccessibility from "../models/FormEventAccessibility";
 import sequelize from "../config/database";
+import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 import {
   buildAccessibilityInclude,
   validateAccessibilityPayload,
@@ -162,6 +163,88 @@ const replaceAccessibility = async (
   );
 };
 
+const extractMetaTable = (field: any): string | null => {
+  if (!field) {
+    return null;
+  }
+  const value = field.metaTable !== undefined ? field.metaTable : undefined;
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  return String(value);
+};
+
+const buildMetaTableOptionsMap = async (
+  fields: any[]
+): Promise<Record<string, { optionLabel: string; optionValue: any; sortOrder: number; isDefault: 0 }[]>> => {
+  const tableNames = new Set<string>();
+  for (const field of fields) {
+    const tableName = extractMetaTable(field);
+    if (tableName) {
+      tableNames.add(tableName);
+    }
+  }
+
+  const optionsByTable: Record<
+    string,
+    { optionLabel: string; optionValue: any; sortOrder: number; isDefault: 0 }[]
+  > = {};
+
+  await Promise.all(
+    Array.from(tableNames).map(async (tableName) => {
+      const metaTable = await getMetaTableByTableName(tableName);
+      if (!metaTable) {
+        return;
+      }
+
+      const where = metaTable.hasStatus ? { status: 1 } : undefined;
+      const rows = await metaTable.model.findAll({
+        where,
+        order: [[metaTable.primaryKey, "ASC"]]
+      });
+
+      optionsByTable[tableName] = rows.map((row: any) => {
+        const data =
+          row && typeof row === "object" && "dataValues" in row ? row.dataValues : row;
+        const labelValue = data?.dispName ?? data?.title ?? "";
+        const valueRaw = data?.[metaTable.primaryKey];
+        const sortOrder = Number(valueRaw);
+
+        return {
+          id: valueRaw !== undefined && valueRaw !== null ? valueRaw : null,
+          optionLabel: String(labelValue),
+          optionValue: valueRaw !== undefined && valueRaw !== null ? valueRaw : null,
+          sortOrder: Number.isNaN(sortOrder) ? 0 : sortOrder,
+          isDefault: 0
+        };
+      });
+    })
+  );
+
+  return optionsByTable;
+};
+
+const applyMetaTableOptionsToEvents = (
+  events: any[],
+  optionsByTable: Record<
+    string,
+    { optionLabel: string; optionValue: any; sortOrder: number; isDefault: 0 }[]
+  >
+): void => {
+  for (const event of events) {
+    const fields = event?.form?.fields;
+    if (!Array.isArray(fields)) {
+      continue;
+    }
+    for (const field of fields) {
+      const tableName = extractMetaTable(field);
+      if (tableName && optionsByTable[tableName]) {
+        field.options = optionsByTable[tableName];
+      }
+    }
+  }
+};
+
 export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 
@@ -226,9 +309,29 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
     order: [[sortColumn, sortDirection]]
   });
 
+  const rowsPlain = rows.map((event) =>
+    typeof (event as any).toJSON === "function" ? (event as any).toJSON() : event
+  );
+  const fieldsForOptions: any[] = [];
+  for (const event of rowsPlain) {
+    const fields = event?.form?.fields;
+    if (Array.isArray(fields) && fields.length > 0) {
+      fieldsForOptions.push(...fields);
+    }
+  }
+  if (fieldsForOptions.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
+    applyMetaTableOptionsToEvents(rowsPlain, optionsByTable);
+  }
+
   const pagination = calculatePagination(count, page, limit);
 
-  return sendSuccessWithPagination(res, rows, pagination, "Form events fetched successfully");
+  return sendSuccessWithPagination(
+    res,
+    rowsPlain,
+    pagination,
+    "Form events fetched successfully"
+  );
 });
 
 export const getFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -242,7 +345,17 @@ export const getFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: 
     throw new ApiError("Form event not found", 404);
   }
 
-  return sendSuccess(res, event, "Form event retrieved successfully");
+  const eventPlain =
+    typeof (event as any).toJSON === "function" ? (event as any).toJSON() : event;
+  const fieldsForOptions = Array.isArray(eventPlain?.form?.fields)
+    ? eventPlain.form.fields
+    : [];
+  if (fieldsForOptions.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
+    applyMetaTableOptionsToEvents([eventPlain], optionsByTable);
+  }
+
+  return sendSuccess(res, eventPlain, "Form event retrieved successfully");
 });
 
 export const createFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -297,7 +410,17 @@ export const createFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
     include: getBaseIncludes()
   });
 
-  return sendCreated(res, fresh, "Form event created successfully");
+  const freshPlain =
+    fresh && typeof (fresh as any).toJSON === "function" ? (fresh as any).toJSON() : fresh;
+  const fieldsForOptions = Array.isArray(freshPlain?.form?.fields)
+    ? freshPlain.form.fields
+    : [];
+  if (fieldsForOptions.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
+    applyMetaTableOptionsToEvents([freshPlain], optionsByTable);
+  }
+
+  return sendCreated(res, freshPlain, "Form event created successfully");
 });
 
 export const updateFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -376,7 +499,17 @@ export const updateFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
     include: getBaseIncludes()
   });
 
-  return sendSuccess(res, fresh, "Form event updated successfully");
+  const freshPlain =
+    fresh && typeof (fresh as any).toJSON === "function" ? (fresh as any).toJSON() : fresh;
+  const fieldsForOptions = Array.isArray(freshPlain?.form?.fields)
+    ? freshPlain.form.fields
+    : [];
+  if (fieldsForOptions.length > 0) {
+    const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
+    applyMetaTableOptionsToEvents([freshPlain], optionsByTable);
+  }
+
+  return sendSuccess(res, freshPlain, "Form event updated successfully");
 });
 
 export const deleteFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

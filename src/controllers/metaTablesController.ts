@@ -22,6 +22,7 @@ const excludeFields = ["createdBy", "updatedBy", "createdAt", "updatedAt"];
 
 // Define meta table configuration
 interface MetaTableConfig {
+  id: number;
   name: string;
   tableName: string;
   displayName: string;
@@ -74,6 +75,7 @@ const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig
   for (const config of configs) {
     const model = loadModel(config.modelName);
     registry[config.name] = {
+      id: config.id,
       name: config.name,
       tableName: config.tableName,
       displayName: config.displayName,
@@ -180,6 +182,7 @@ const getFieldsWithRelations = (model: ModelStatic<any>, config: MetaTableConfig
 export const listMetaTables = asyncHandler(async (_req: Request, res: Response) => {
   const metaTables = await getMetaTables();
   const tables = Object.values(metaTables).map((config) => ({
+    id: config.id,
     name: config.name,
     tableName: config.tableName,
     displayName: config.displayName,
@@ -253,9 +256,14 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   const { rows, count } = await config.model.findAndCountAll(queryOptions);
 
   // Add "ALL" option at the beginning if needed_all parameter is present
-  let responseData = rows;
+  let responseData = rows.map((row: any) => {
+    if (row && typeof row === "object" && "dataValues" in row) {
+      return row.dataValues;
+    }
+    return row;
+  });
   if (needAll) {
-    responseData = [{ id: -1, dispName: "-ALL-" }, ...rows];
+    responseData = [{ id: -1, dispName: "-ALL-" }, ...responseData];
   }
 
   // Append "Other" option at the end only when requested
@@ -311,7 +319,10 @@ export const getMetaTableRecord = asyncHandler(async (req: Request, res: Respons
     return sendNotFound(res, `Record not found in ${config.displayName}`);
   }
 
-  sendSuccess(res, record, `${config.displayName} record retrieved successfully`);
+  const cleanRecord =
+    record && typeof record === "object" && "dataValues" in record ? record.dataValues : record;
+
+  sendSuccess(res, cleanRecord, `${config.displayName} record retrieved successfully`);
 });
 
 /**
@@ -345,7 +356,12 @@ export const createMetaTableRecord = asyncHandler(
       attributes: { exclude: excludeFields }
     });
 
-    sendCreated(res, cleanRecord, `${config.displayName} record created successfully`);
+    const responseRecord =
+      cleanRecord && typeof cleanRecord === "object" && "dataValues" in cleanRecord
+        ? cleanRecord.dataValues
+        : cleanRecord;
+
+    sendCreated(res, responseRecord, `${config.displayName} record created successfully`);
   }
 );
 
@@ -385,7 +401,12 @@ export const updateMetaTableRecord = asyncHandler(
       attributes: { exclude: excludeFields }
     });
 
-    sendSuccess(res, cleanRecord, `${config.displayName} record updated successfully`);
+    const responseRecord =
+      cleanRecord && typeof cleanRecord === "object" && "dataValues" in cleanRecord
+        ? cleanRecord.dataValues
+        : cleanRecord;
+
+    sendSuccess(res, responseRecord, `${config.displayName} record updated successfully`);
   }
 );
 

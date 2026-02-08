@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { Op } from "sequelize";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
@@ -11,6 +12,7 @@ import FormField from "../models/FormField";
 import FormFieldOption from "../models/FormFieldOption";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
+import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
@@ -97,6 +99,49 @@ const formatDateTime = (value: Date | string | null | undefined): string | null 
   return `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
 };
 
+const parseCsvIds = (value: string): string[] => {
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+};
+
+const parseValueIds = (raw: string): string[] => {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  return trimmed.includes(",") ? parseCsvIds(trimmed) : [trimmed];
+};
+
+const resolveMetaTableOptionValue = (record: any, primaryKey: string): string | number => {
+  const fallback = record?.[primaryKey];
+  const valueCandidates = [
+    record?.value,
+    record?.targetValue,
+    record?.code,
+    record?.shortName,
+    record?.short_name,
+    record?.dispName,
+    record?.title,
+    fallback
+  ];
+  for (const candidate of valueCandidates) {
+    if (candidate !== undefined && candidate !== null && candidate !== "") {
+      return candidate as string | number;
+    }
+  }
+  return fallback as string | number;
+};
+
+const resolveMetaTableOptionLabel = (record: any, optionValue: string | number) => {
+  const labelCandidates = [record?.dispName, record?.title, record?.name, record?.label];
+  for (const candidate of labelCandidates) {
+    if (candidate !== undefined && candidate !== null && candidate !== "") {
+      return String(candidate);
+    }
+  }
+  return String(optionValue ?? "");
+};
+
 /**
  * Get form event report with details, metrics, and tabular data
  * GET /reports/form-events/:formEventId
@@ -131,7 +176,15 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: FormField,
         as: "fields",
-        attributes: ["id", "fieldKey", "label", "fieldTypeId", "inputFormatId", "sortOrder"],
+        attributes: [
+          "id",
+          "fieldKey",
+          "label",
+          "fieldTypeId",
+          "inputFormatId",
+          "sortOrder",
+          "metaTable"
+        ],
         include: [
           {
             association: "fieldType",
@@ -210,7 +263,11 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
   }
 
   const optionLabelLookup = new Map<number, Map<string, string>>();
+  const metaTableFieldLookup = new Map<number, string>();
   for (const field of formFields) {
+    if ((field as any).metaTable) {
+      metaTableFieldLookup.set(field.id, (field as any).metaTable);
+    }
     const options = (field as any).options || [];
     if (!Array.isArray(options) || options.length === 0) continue;
     const optionMap = new Map<string, string>();
@@ -218,9 +275,60 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
       if (option?.status !== 1) continue;
       optionMap.set(String(option.id), option.optionLabel);
     }
-    if (optionMap.size > 0) {
-      optionLabelLookup.set(field.id, optionMap);
+  if (optionMap.size > 0) {
+    optionLabelLookup.set(field.id, optionMap);
+  }
+  }
+
+  const metaTableRecordsLookup = new Map<string, { primaryKey: string; records: Map<string, any> }>();
+  if (metaTableFieldLookup.size > 0) {
+    const idsByTable = new Map<string, Set<string>>();
+    for (const submission of submissions) {
+      if (!submission.fieldValues) continue;
+      for (const fv of submission.fieldValues) {
+        const tableName = metaTableFieldLookup.get(fv.formFieldId);
+        if (!tableName) continue;
+        const rawValue = typeof fv.value === "string" ? fv.value.trim() : "";
+        if (!rawValue) continue;
+        const ids = parseValueIds(rawValue);
+        if (!idsByTable.has(tableName)) {
+          idsByTable.set(tableName, new Set());
+        }
+        const set = idsByTable.get(tableName)!;
+        for (const id of ids) set.add(id);
+      }
     }
+
+    await Promise.all(
+      Array.from(idsByTable.entries()).map(async ([tableName, ids]) => {
+        const metaTable = await getMetaTableByTableName(tableName);
+        if (!metaTable) return;
+        const idList = Array.from(ids);
+        if (idList.length === 0) return;
+
+        const where: any = {
+          [metaTable.primaryKey]: { [Op.in]: idList }
+        };
+        if (metaTable.hasStatus) {
+          where.status = 1;
+        }
+
+        const rows = await metaTable.model.findAll({ where });
+        const rowMap = new Map<string, any>();
+        for (const row of rows as any[]) {
+          const data =
+            row && typeof row === "object" && "dataValues" in row ? row.dataValues : row;
+          const key = data?.[metaTable.primaryKey];
+          if (key !== undefined && key !== null) {
+            rowMap.set(String(key), data);
+          }
+        }
+        metaTableRecordsLookup.set(tableName, {
+          primaryKey: metaTable.primaryKey,
+          records: rowMap
+        });
+      })
+    );
   }
 
   // Build data rows from submissions
@@ -242,6 +350,30 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
       const value =
         fieldValueMap.has(field.id) ? fieldValueMap.get(field.id) ?? "" : "";
       const optionMap = optionLabelLookup.get(field.id);
+      const metaTableName = metaTableFieldLookup.get(field.id);
+      const metaTableRecords = metaTableName ? metaTableRecordsLookup.get(metaTableName) : null;
+
+      if (value && metaTableRecords) {
+        const trimmed = value.trim();
+        if (trimmed.includes(",")) {
+          const labels = parseCsvIds(trimmed)
+            .map((entry) => metaTableRecords.records.get(entry))
+            .filter(Boolean)
+            .map((record) => {
+              const optionValue = resolveMetaTableOptionValue(record, metaTableRecords.primaryKey);
+              return resolveMetaTableOptionLabel(record, optionValue);
+            });
+          row.push(labels.join(", "));
+          continue;
+        }
+
+        const record = metaTableRecords.records.get(trimmed);
+        if (record) {
+          const optionValue = resolveMetaTableOptionValue(record, metaTableRecords.primaryKey);
+          row.push(resolveMetaTableOptionLabel(record, optionValue));
+          continue;
+        }
+      }
 
       if (value && optionMap) {
         const trimmed = value.trim();
