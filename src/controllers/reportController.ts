@@ -195,7 +195,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
     const bOrder = typeof (b as any).sortOrder === "number" ? (b as any).sortOrder : 0;
     return aOrder - bOrder;
   });
-  const headers = ["Id", ...formFields.map((f) => f.label), "Created by", "Created date", "Actions"];
+  const headers = ["SI No.", ...formFields.map((f) => f.label), "Created by", "Created date", "Actions"];
 
   // Prepare tabular data
   type TabularCell = string | number | null | { submissionId: number };
@@ -239,7 +239,8 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
     // Build row with values in field order
     for (let i = 0; i < formFields.length; i++) {
       const field = formFields[i];
-      const value = fieldValueMap.get(field.id) || null;
+      const value =
+        fieldValueMap.has(field.id) ? fieldValueMap.get(field.id) ?? "" : "";
       const optionMap = optionLabelLookup.get(field.id);
 
       if (value && optionMap) {
@@ -280,7 +281,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
           row.push(value);
         }
       } else {
-        row.push(null);
+        row.push("");
       }
     }
 

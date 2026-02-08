@@ -29,6 +29,7 @@ import MetaFieldType from "../models/MetaFieldType";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
 import { UPLOAD_PATHS } from "../config/uploadConstants";
+import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 
 const DEFAULT_SORT_COLUMNS = ["submittedAt", "createdAt", "id"];
 
@@ -124,10 +125,51 @@ const buildFieldTypeLookup = async (fieldIds: number[]) => {
 const looksLikeFilePayload = (value: unknown): boolean => {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  const hasPath = typeof record.uri === "string" || typeof record.path === "string";
-  const hasType = typeof record.type === "string" || typeof record.mime === "string";
+  const hasPath =
+    typeof record.uri === "string" ||
+    typeof record.url === "string" ||
+    typeof record.path === "string";
+  const hasType =
+    typeof record.type === "string" ||
+    typeof record.mime === "string" ||
+    typeof record.mimeType === "string";
   const hasName = typeof record.name === "string";
   return (hasPath && hasType) || (hasPath && hasName);
+};
+
+const buildFieldValuesFromBody = (body: Record<string, unknown>) => {
+  const fieldValues: { formFieldId: number; value: unknown }[] = [];
+
+  for (const [key, rawValue] of Object.entries(body || {})) {
+    const fieldId = Number(key);
+    if (!Number.isFinite(fieldId) || fieldId <= 0) continue;
+
+    if (Array.isArray(rawValue)) {
+      if (rawValue.length === 1) {
+        fieldValues.push({ formFieldId: fieldId, value: rawValue[0] });
+      } else if (rawValue.length > 1) {
+        fieldValues.push({ formFieldId: fieldId, value: rawValue.join(",") });
+      }
+      continue;
+    }
+
+    fieldValues.push({ formFieldId: fieldId, value: rawValue });
+  }
+
+  return fieldValues;
+};
+
+const mapFilesByFieldId = (uploadedFiles: Express.Multer.File[]) => {
+  const filesByFieldId = new Map<number, Express.Multer.File[]>();
+  for (const file of uploadedFiles) {
+    const fieldId = Number(file.fieldname);
+    if (!Number.isFinite(fieldId) || fieldId <= 0) continue;
+    if (!filesByFieldId.has(fieldId)) {
+      filesByFieldId.set(fieldId, []);
+    }
+    filesByFieldId.get(fieldId)!.push(file);
+  }
+  return filesByFieldId;
 };
 
 const parseJsonFileValue = (value: string): unknown => {
@@ -272,18 +314,11 @@ const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
  */
 export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { formEventId } = req.params;
-  let fieldValues = req.body.fieldValues;
+  const fieldValuesFromBody = buildFieldValuesFromBody(req.body as Record<string, unknown>);
   const userId = req.user?.id;
-  const uploadedFiles = (req as any).files || [];
-
-  // Parse fieldValues if it's a JSON string (from multipart form-data)
-  if (typeof fieldValues === "string") {
-    try {
-      fieldValues = JSON.parse(fieldValues);
-    } catch (e) {
-      throw new ApiError("fieldValues must be a valid JSON array", 400);
-    }
-  }
+  const uploadedFiles = Array.isArray((req as any).files)
+    ? ((req as any).files as Express.Multer.File[])
+    : [];
 
   if (!userId) {
     throw new ApiError("Unauthorized", 401);
@@ -294,15 +329,8 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw new ApiError("Invalid formEventId", 400);
   }
 
-  if (!Array.isArray(fieldValues) || fieldValues.length === 0) {
-    throw new ApiError("fieldValues must be a non-empty array", 400);
-  }
-
-  // Validate field values structure
-  for (const fv of fieldValues) {
-    if (!fv.formFieldId) {
-      throw new ApiError("Each fieldValue must have formFieldId", 400);
-    }
+  if (fieldValuesFromBody.length === 0 && uploadedFiles.length === 0) {
+    throw new ApiError("Form data must include at least one field value", 400);
   }
 
   // Start transaction
@@ -356,36 +384,19 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const formFields = form.fields || [];
     const fieldMap = new Map(formFields.map((f) => [f.id, f]));
 
-    // Parse uploaded files by field name
-    // Files come in via .any() middleware, so they have fieldname property
-    const filesByFieldName = new Map<string, Express.Multer.File[]>();
-    for (const file of uploadedFiles) {
-      if (!filesByFieldName.has(file.fieldname)) {
-        filesByFieldName.set(file.fieldname, []);
+    const filesByFieldId = mapFilesByFieldId(uploadedFiles);
+    const fieldValues = [...fieldValuesFromBody];
+
+    for (const fieldId of filesByFieldId.keys()) {
+      if (!fieldValues.some((fv) => fv.formFieldId === fieldId)) {
+        fieldValues.push({ formFieldId: fieldId, value: "" });
       }
-      filesByFieldName.get(file.fieldname)!.push(file);
     }
 
     // Validate files per field (max 5 files per field)
-    for (const [fieldName, files] of filesByFieldName) {
+    for (const [fieldId, files] of filesByFieldId) {
       if (files.length > 5) {
-        throw new ApiError(`Field "${fieldName}" can have at most 5 files`, 400);
-      }
-    }
-
-    // Map field names to field IDs from fieldValues
-    // fieldValues should include a mapping from fieldId to the files
-    const fileUrlsByFieldId = new Map<number, string[]>();
-    for (const fv of fieldValues) {
-      const fieldId = fv.formFieldId;
-      const fieldName = String(fieldId); // Field name convention: use fieldId as string
-
-      if (filesByFieldName.has(fieldName)) {
-        const files = filesByFieldName.get(fieldName)!;
-        fileUrlsByFieldId.set(
-          fieldId,
-          files.map((f) => f.path)
-        );
+        throw new ApiError(`Field "${fieldId}" can have at most 5 files`, 400);
       }
     }
 
@@ -401,12 +412,12 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       const value = fv.value ? String(fv.value).trim() : "";
 
       // Check required
-      if (field.isRequired === 1 && !value && !fileUrlsByFieldId.has(fv.formFieldId)) {
+      if (field.isRequired === 1 && !value && !filesByFieldId.has(fv.formFieldId)) {
         throw new ApiError(`Field "${field.label}" is required`, 400);
       }
 
       // Skip other validations if field is empty and optional
-      if (!value && !fileUrlsByFieldId.has(fv.formFieldId)) continue;
+      if (!value && !filesByFieldId.has(fv.formFieldId)) continue;
 
       // Check min length
       if (field.minLength && value.length < field.minLength) {
@@ -440,6 +451,16 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       }
     }
 
+    // Validate required fields that were not submitted at all
+    for (const field of formFields) {
+      if (field.isRequired !== 1) continue;
+      const hasValue = fieldValues.some((fv) => fv.formFieldId === field.id);
+      const hasFiles = filesByFieldId.has(field.id);
+      if (!hasValue && !hasFiles) {
+        throw new ApiError(`Field "${field.label}" is required`, 400);
+      }
+    }
+
     // Create submission
     const submission = await FormSubmission.create(
       {
@@ -455,7 +476,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
     // Reorganize files to final directory structure: formEventId/submissionId/fieldId/uuid.ext
     const finalFileUrlsByFieldId = new Map<number, string[]>();
-    for (const [fieldId, filePaths] of fileUrlsByFieldId) {
+    for (const [fieldId, files] of filesByFieldId) {
       const finalUrls: string[] = [];
       const finalDir = path.join(
         UPLOAD_PATHS.BASE_DIR,
@@ -465,20 +486,18 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       );
       ensureDirectory(finalDir);
 
-      for (const filePath of filePaths) {
-        if (fs.existsSync(filePath)) {
-          const ext = path.extname(filePath);
+      for (const file of files) {
+        if (fs.existsSync(file.path)) {
+          const ext = path.extname(file.path);
           const uuid = randomUUID();
           const finalFileName = `${uuid}${ext}`;
           const finalFilePath = path.join(finalDir, finalFileName);
 
           // Move file to final location
-          fs.renameSync(filePath, finalFilePath);
+          fs.renameSync(file.path, finalFilePath);
 
           // Store relative path for database: formEventId/submissionId/fieldId/uuid.ext
-          const relativePath = path.relative(UPLOAD_PATHS.BASE_DIR, finalFilePath);
-          const normalizedPath = relativePath.split(path.sep).join("/");
-          finalUrls.push(normalizedPath);
+          finalUrls.push(buildPublicUploadPath(finalFilePath));
         }
       }
 
@@ -552,18 +571,11 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 export const updateFormSubmission = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { submissionId } = req.params;
-    let fieldValues = req.body.fieldValues;
+    const fieldValuesFromBody = buildFieldValuesFromBody(req.body as Record<string, unknown>);
     const userId = req.user?.id;
-    const uploadedFiles = (req as any).files || [];
-
-    // Parse fieldValues if it's a JSON string (from multipart form-data)
-    if (typeof fieldValues === "string") {
-      try {
-        fieldValues = JSON.parse(fieldValues);
-      } catch (e) {
-        throw new ApiError("fieldValues must be a valid JSON array", 400);
-      }
-    }
+    const uploadedFiles = Array.isArray((req as any).files)
+      ? ((req as any).files as Express.Multer.File[])
+      : [];
 
     if (!userId) {
       throw new ApiError("Unauthorized", 401);
@@ -574,15 +586,8 @@ export const updateFormSubmission = asyncHandler(
       throw new ApiError("Invalid submissionId", 400);
     }
 
-    if (!Array.isArray(fieldValues) || fieldValues.length === 0) {
-      throw new ApiError("fieldValues must be a non-empty array", 400);
-    }
-
-    // Validate field values structure
-    for (const fv of fieldValues) {
-      if (!fv.formFieldId) {
-        throw new ApiError("Each fieldValue must have formFieldId", 400);
-      }
+    if (fieldValuesFromBody.length === 0 && uploadedFiles.length === 0) {
+      throw new ApiError("Form data must include at least one field value", 400);
     }
 
     const submission = await FormSubmission.findByPk(submissionIdNum);
@@ -627,34 +632,19 @@ export const updateFormSubmission = asyncHandler(
       const formFields = form.fields || [];
       const fieldMap = new Map(formFields.map((f) => [f.id, f]));
 
-      // Parse uploaded files by field name
-      const filesByFieldName = new Map<string, Express.Multer.File[]>();
-      for (const file of uploadedFiles) {
-        if (!filesByFieldName.has(file.fieldname)) {
-          filesByFieldName.set(file.fieldname, []);
+      const filesByFieldId = mapFilesByFieldId(uploadedFiles);
+      const fieldValues = [...fieldValuesFromBody];
+
+      for (const fieldId of filesByFieldId.keys()) {
+        if (!fieldValues.some((fv) => fv.formFieldId === fieldId)) {
+          fieldValues.push({ formFieldId: fieldId, value: "" });
         }
-        filesByFieldName.get(file.fieldname)!.push(file);
       }
 
       // Validate files per field (max 5 files per field)
-      for (const [fieldName, files] of filesByFieldName) {
+      for (const [fieldId, files] of filesByFieldId) {
         if (files.length > 5) {
-          throw new ApiError(`Field "${fieldName}" can have at most 5 files`, 400);
-        }
-      }
-
-      // Map field names to field IDs from fieldValues
-      const fileUrlsByFieldId = new Map<number, string[]>();
-      for (const fv of fieldValues) {
-        const fieldId = fv.formFieldId;
-        const fieldName = String(fieldId);
-
-        if (filesByFieldName.has(fieldName)) {
-          const files = filesByFieldName.get(fieldName)!;
-          fileUrlsByFieldId.set(
-            fieldId,
-            files.map((f) => f.path)
-          );
+          throw new ApiError(`Field "${fieldId}" can have at most 5 files`, 400);
         }
       }
 
@@ -668,11 +658,11 @@ export const updateFormSubmission = asyncHandler(
 
         const value = fv.value !== undefined && fv.value !== null ? String(fv.value).trim() : "";
 
-        if (field.isRequired === 1 && !value && !fileUrlsByFieldId.has(fv.formFieldId)) {
+        if (field.isRequired === 1 && !value && !filesByFieldId.has(fv.formFieldId)) {
           throw new ApiError(`Field "${field.label}" is required`, 400);
         }
 
-        if (!value && !fileUrlsByFieldId.has(fv.formFieldId)) continue;
+        if (!value && !filesByFieldId.has(fv.formFieldId)) continue;
 
         if (field.minLength && value.length < field.minLength) {
           throw new ApiError(`"${field.label}" must be at least ${field.minLength} characters`, 400);
@@ -702,9 +692,19 @@ export const updateFormSubmission = asyncHandler(
         }
       }
 
+      // Validate required fields that were not submitted at all
+      for (const field of formFields) {
+        if (field.isRequired !== 1) continue;
+        const hasValue = fieldValues.some((fv) => fv.formFieldId === field.id);
+        const hasFiles = filesByFieldId.has(field.id);
+        if (!hasValue && !hasFiles) {
+          throw new ApiError(`Field "${field.label}" is required`, 400);
+        }
+      }
+
       // Reorganize files to final directory structure
       const finalFileUrlsByFieldId = new Map<number, string[]>();
-      for (const [fieldId, filePaths] of fileUrlsByFieldId) {
+      for (const [fieldId, files] of filesByFieldId) {
         const finalUrls: string[] = [];
         const finalDir = path.join(
           UPLOAD_PATHS.BASE_DIR,
@@ -714,18 +714,16 @@ export const updateFormSubmission = asyncHandler(
         );
         ensureDirectory(finalDir);
 
-        for (const filePath of filePaths) {
-          if (fs.existsSync(filePath)) {
-            const ext = path.extname(filePath);
+        for (const file of files) {
+          if (fs.existsSync(file.path)) {
+            const ext = path.extname(file.path);
             const uuid = randomUUID();
             const finalFileName = `${uuid}${ext}`;
             const finalFilePath = path.join(finalDir, finalFileName);
 
-            fs.renameSync(filePath, finalFilePath);
+            fs.renameSync(file.path, finalFilePath);
 
-            const relativePath = path.relative(UPLOAD_PATHS.BASE_DIR, finalFilePath);
-            const normalizedPath = relativePath.split(path.sep).join("/");
-            finalUrls.push(normalizedPath);
+            finalUrls.push(buildPublicUploadPath(finalFilePath));
           }
         }
 
