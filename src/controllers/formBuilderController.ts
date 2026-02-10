@@ -843,7 +843,17 @@ export const getForm = asyncHandler(async (req: Request, res: Response) => {
 export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
 
-  const { title, description, slug, isPublic, startAt, endAt, fields, formFields } = req.body;
+  const {
+    title,
+    description,
+    slug,
+    isPublic,
+    startAt,
+    endAt,
+    fields,
+    formFields,
+    includeWardAndBooth
+  } = req.body;
   const userId = req.user?.id ?? null;
 
   if (!title) {
@@ -864,6 +874,92 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     ? (fieldsInput as FormFieldInput[])
     : [];
 
+  const includeWardAndBoothValue =
+    includeWardAndBooth !== undefined
+      ? ensureBooleanLike(includeWardAndBooth, "includeWardAndBooth")
+      : 0;
+
+  let fieldsForCreate = normalizedFields;
+  if (includeWardAndBoothValue === 1) {
+    const selectFieldType = await MetaFieldType.findOne({
+      where: { fieldType: "select" },
+      attributes: ["id"]
+    });
+
+    if (!selectFieldType) {
+      throw new ApiError("Select field type not found", 400);
+    }
+
+    const selectFieldTypeId = selectFieldType.id;
+    const existingKeys = new Set(
+      fieldsForCreate
+        .map((field) => (field && typeof field === "object" ? (field as any).fieldKey : undefined))
+        .filter((key): key is string => typeof key === "string")
+    );
+
+    const defaultFields: FormFieldInput[] = [];
+    if (!existingKeys.has("ward_number_id")) {
+      defaultFields.push({
+        fieldKey: "__ward_number_id",
+        label: "Ward Number",
+        helpText: "Select ward number",
+        fieldTypeId: selectFieldTypeId,
+        inputFormatId: null,
+        isRequired: 0,
+        sortOrder: 0,
+        placeholder: null,
+        defaultValue: null,
+        validationRegex: null,
+        minLength: null,
+        maxLength: null,
+        minValue: null,
+        maxValue: null,
+        attrsJson: null,
+        options: []
+      });
+    }
+
+    if (!existingKeys.has("booth_number_id")) {
+      defaultFields.push({
+        fieldKey: "__booth_number_id",
+        label: "Booth Number",
+        helpText: "Select booth number",
+        fieldTypeId: selectFieldTypeId,
+        inputFormatId: null,
+        isRequired: 0,
+        sortOrder: 0,
+        placeholder: null,
+        defaultValue: null,
+        validationRegex: null,
+        minLength: null,
+        maxLength: null,
+        minValue: null,
+        maxValue: null,
+        attrsJson: null,
+        options: []
+      });
+    }
+
+    if (defaultFields.length > 0) {
+      const normalized = fieldsForCreate.map((field, index) => {
+        if (!field || typeof field !== "object" || Array.isArray(field)) {
+          return field;
+        }
+
+        if ((field as any).sortOrder !== undefined && (field as any).sortOrder !== null) {
+          return field;
+        }
+
+        return {
+          ...field,
+          sortOrder: defaultFields.length + index + 1
+        };
+      });
+
+      fieldsForCreate = [...defaultFields, ...normalized];
+    }
+  }
+
   const form = await sequelize.transaction(async (transaction) => {
     const createdForm = await Form.create(
       {
@@ -879,9 +975,9 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       { transaction }
     );
 
-    if (normalizedFields.length > 0) {
+    if (fieldsForCreate.length > 0) {
       await createFormFieldsWithOptions(
-        normalizedFields,
+        fieldsForCreate,
         createdForm.id,
         userId ?? null,
         transaction

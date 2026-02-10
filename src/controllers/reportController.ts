@@ -20,6 +20,11 @@ const DATETIME_FIELD_TYPES = new Set(["datetime"]);
 const DATE_INPUT_FORMATS = new Set([7]);
 const TIME_INPUT_FORMATS = new Set([8]);
 const DATETIME_INPUT_FORMATS = new Set([9]);
+const WARD_BOOTH_FIELD_KEYS = new Set(["__ward_number_id", "__booth_number_id"]);
+const WARD_BOOTH_META_TABLES = new Map<string, string>([
+  ["__ward_number_id", "tbl_meta_ward_number"],
+  ["__booth_number_id", "tbl_meta_booth_number"]
+]);
 
 const pad2 = (num: number) => String(num).padStart(2, "0");
 
@@ -248,7 +253,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
     const bOrder = typeof (b as any).sortOrder === "number" ? (b as any).sortOrder : 0;
     return aOrder - bOrder;
   });
-  const headers = ["SI No.", ...formFields.map((f) => f.label), "Created by", "Created date", "Actions"];
+  const headers = ["SL No.", ...formFields.map((f) => f.label), "Created by", "Created date", "Actions"];
 
   // Prepare tabular data
   type TabularCell = string | number | null | { submissionId: number };
@@ -267,6 +272,12 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
   for (const field of formFields) {
     if ((field as any).metaTable) {
       metaTableFieldLookup.set(field.id, (field as any).metaTable);
+    } else if (typeof (field as any).fieldKey === "string") {
+      const fieldKey = (field as any).fieldKey;
+      const metaTable = WARD_BOOTH_META_TABLES.get(fieldKey);
+      if (metaTable) {
+        metaTableFieldLookup.set(field.id, metaTable);
+      }
     }
     const options = (field as any).options || [];
     if (!Array.isArray(options) || options.length === 0) continue;

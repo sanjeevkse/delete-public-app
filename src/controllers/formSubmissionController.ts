@@ -53,6 +53,11 @@ type MetaTableResolvedLookup = Map<
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
 const DATETIME_FIELD_TYPES = new Set(["datetime"]);
+const WARD_BOOTH_FIELD_KEYS = new Set(["__ward_number_id", "__booth_number_id"]);
+const WARD_BOOTH_META_TABLES = new Map<string, string>([
+  ["__ward_number_id", "tbl_meta_ward_number"],
+  ["__booth_number_id", "tbl_meta_booth_number"]
+]);
 
 const pad2 = (num: number) => String(num).padStart(2, "0");
 
@@ -127,6 +132,24 @@ const buildFieldTypeLookup = async (fieldIds: number[]) => {
     const type = (field as any).fieldType?.fieldType;
     if (typeof type === "string") {
       lookup.set(field.id, type);
+    }
+  }
+  return lookup;
+};
+
+const buildFieldKeyLookup = async (fieldIds: number[]) => {
+  if (fieldIds.length === 0) return new Map<number, string>();
+
+  const fields = await FormField.findAll({
+    attributes: ["id", "fieldKey"],
+    where: { id: { [Op.in]: fieldIds } }
+  });
+
+  const lookup = new Map<number, string>();
+  for (const field of fields) {
+    const key = (field as any).fieldKey;
+    if (typeof key === "string") {
+      lookup.set(field.id, key);
     }
   }
   return lookup;
@@ -211,6 +234,22 @@ const normalizeFieldValue = (rawValue: unknown): string | null => {
   return String(rawValue);
 };
 
+const normalizeWardBoothValue = (rawValue: unknown): string | null => {
+  if (rawValue === undefined || rawValue === null) return null;
+  const trimmed = String(rawValue).trim();
+  if (!trimmed) return null;
+  const ids = parseValueIds(trimmed);
+  if (ids.length === 0) return null;
+  if (ids.length > 1) {
+    throw new ApiError("Ward/Booth field must be a single value", 400);
+  }
+  const num = Number(ids[0]);
+  if (!Number.isFinite(num)) {
+    throw new ApiError("Ward/Booth field must be a number", 400);
+  }
+  return String(num);
+};
+
 const ensureMetaTableValuesExist = async (
   metaTableName: string,
   ids: string[],
@@ -292,7 +331,7 @@ const buildMetaTableFieldLookup = async (fieldIds: number[]) => {
   if (fieldIds.length === 0) return lookup;
 
   const fields = await FormField.findAll({
-    attributes: ["id", "metaTable"],
+    attributes: ["id", "metaTable", "fieldKey"],
     where: { id: { [Op.in]: fieldIds }, metaTable: { [Op.ne]: null } }
   });
 
@@ -300,6 +339,22 @@ const buildMetaTableFieldLookup = async (fieldIds: number[]) => {
     const metaTable = (field as any).metaTable;
     if (typeof metaTable === "string" && metaTable.trim()) {
       lookup.set(field.id, metaTable);
+    }
+  }
+
+  if (lookup.size < fieldIds.length) {
+    const keyFields = await FormField.findAll({
+      attributes: ["id", "fieldKey"],
+      where: { id: { [Op.in]: fieldIds } }
+    });
+    for (const field of keyFields) {
+      if (lookup.has(field.id)) continue;
+      const fieldKey = (field as any).fieldKey;
+      if (typeof fieldKey !== "string") continue;
+      const metaTable = WARD_BOOTH_META_TABLES.get(fieldKey);
+      if (metaTable) {
+        lookup.set(field.id, metaTable);
+      }
     }
   }
 
@@ -392,6 +447,7 @@ const attachResolvedOptions = (
   fieldValues: any[],
   optionLookup: Map<number, Map<string, ResolvedOption>>,
   fieldTypeLookup: Map<number, string>,
+  fieldKeyLookup: Map<number, string>,
   fieldMetaTableLookup: Map<number, string>,
   metaTableValueLookup: MetaTableResolvedLookup
 ) => {
@@ -423,6 +479,7 @@ const attachResolvedOptions = (
       continue;
     }
 
+    const fieldKey = fieldKeyLookup.get(fieldId);
     const metaTableName = fieldMetaTableLookup.get(fieldId);
     if (metaTableName) {
       const metaEntry = metaTableValueLookup.get(metaTableName);
@@ -434,7 +491,9 @@ const attachResolvedOptions = (
             .map((id) => {
               const record = records.get(id);
               if (!record) return null;
-              const optionValue = resolveMetaTableOptionValue(record, primaryKey);
+              const optionValue = WARD_BOOTH_FIELD_KEYS.has(fieldKey ?? "")
+                ? record?.[primaryKey]
+                : resolveMetaTableOptionValue(record, primaryKey);
               return {
                 id: record?.[primaryKey],
                 fieldId,
@@ -449,7 +508,9 @@ const attachResolvedOptions = (
           if (!record) {
             target.resolved = null;
           } else {
-            const optionValue = resolveMetaTableOptionValue(record, primaryKey);
+            const optionValue = WARD_BOOTH_FIELD_KEYS.has(fieldKey ?? "")
+              ? record?.[primaryKey]
+              : resolveMetaTableOptionValue(record, primaryKey);
             target.resolved = {
               id: record?.[primaryKey],
               fieldId,
@@ -497,6 +558,7 @@ const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
 
   const optionLookup = await buildOptionLookup(Array.from(fieldIds));
   const fieldTypeLookup = await buildFieldTypeLookup(Array.from(fieldIds));
+  const fieldKeyLookup = await buildFieldKeyLookup(Array.from(fieldIds));
   const fieldMetaTableLookup = await buildMetaTableFieldLookup(Array.from(fieldIds));
   const metaTableValueLookup = await buildMetaTableValueLookup(
     allFieldValues,
@@ -506,6 +568,7 @@ const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
     allFieldValues,
     optionLookup,
     fieldTypeLookup,
+    fieldKeyLookup,
     fieldMetaTableLookup,
     metaTableValueLookup
   );
@@ -656,6 +719,14 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
         const ids = parseValueIds(value);
         await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
       }
+
+      if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
+        const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
+        if (metaTableName) {
+          const ids = parseValueIds(value);
+          await ensureMetaTableValuesExist(metaTableName, ids, field.label);
+        }
+      }
     }
 
     // Validate required fields that were not submitted at all
@@ -717,6 +788,9 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     const fieldValueRecords = fieldValues.map((fv: any) => {
       const field = fieldMap.get(fv.formFieldId)!;
       let finalValue = normalizeFieldValue(fv.value);
+      if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey)) {
+        finalValue = normalizeWardBoothValue(fv.value);
+      }
 
       // If field has file uploads, include them (as JSON array or URL string)
       if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
@@ -898,6 +972,14 @@ export const updateFormSubmission = asyncHandler(
           const ids = parseValueIds(value);
           await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
         }
+
+        if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
+          const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
+          if (metaTableName) {
+            const ids = parseValueIds(value);
+            await ensureMetaTableValuesExist(metaTableName, ids, field.label);
+          }
+        }
       }
 
       // Reorganize files to final directory structure
@@ -933,6 +1015,9 @@ export const updateFormSubmission = asyncHandler(
       const fieldValueRecords = fieldValues.map((fv: any) => {
         const field = fieldMap.get(fv.formFieldId)!;
         let finalValue = normalizeFieldValue(fv.value);
+        if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey)) {
+          finalValue = normalizeWardBoothValue(fv.value);
+        }
 
         if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
           const fileUrls = finalFileUrlsByFieldId.get(fv.formFieldId)!;
