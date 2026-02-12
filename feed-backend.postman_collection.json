@@ -7683,7 +7683,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/reports/form-events/{{formEventId}}",
+              "raw": "{{baseUrl}}/api/reports/form-events/{{formEventId}}?ward_number_id=&booth_number_id=&submitted_by=&submitted_from=&submitted_to=",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -7692,6 +7692,33 @@
                 "reports",
                 "form-events",
                 "{{formEventId}}"
+              ],
+              "query": [
+                {
+                  "key": "ward_number_id",
+                  "value": "",
+                  "description": "Filter by ward id (uses __ward_number_id field)"
+                },
+                {
+                  "key": "booth_number_id",
+                  "value": "",
+                  "description": "Filter by booth id (uses __booth_number_id field)"
+                },
+                {
+                  "key": "submitted_by",
+                  "value": "",
+                  "description": "Filter by submitted by (submission user id)"
+                },
+                {
+                  "key": "submitted_from",
+                  "value": "",
+                  "description": "Filter by submitted date from (YYYY-MM-DD)"
+                },
+                {
+                  "key": "submitted_to",
+                  "value": "",
+                  "description": "Filter by submitted date to (YYYY-MM-DD)"
+                }
               ]
             },
             "description": "Get a report for a form event including summary metrics and tabular data. Option fields in tabular data return labels. The first tabular header is \"SL No.\"."

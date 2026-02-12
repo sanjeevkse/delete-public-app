@@ -598,149 +598,148 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw new ApiError("Form data must include at least one field value", 400);
   }
 
-  // Start transaction
-  const transaction = await sequelize.transaction();
-
-  try {
-    // Check if form event exists and is active
-    const formEvent = await FormEvent.findByPk(formEventIdNum, {
-      include: [
-        {
-          model: Form,
-          as: "form",
-          include: [
-            {
-              model: FormField,
-              as: "fields"
-            }
-          ]
-        }
-      ],
-      transaction
-    });
-
-    if (!formEvent) {
-      throw new ApiError("Form event not found", 404);
-    }
-
-    if (formEvent.status !== 1) {
-      throw new ApiError("Form event is not active", 400);
-    }
-
-    // Check dates
-    const today = new Date();
-    const startDate = new Date(formEvent.startDate);
-    const endDate = formEvent.endDate ? new Date(formEvent.endDate) : null;
-
-    if (today < startDate) {
-      throw new ApiError("Form submission has not started yet", 400);
-    }
-
-    if (endDate && today > endDate) {
-      throw new ApiError("Form submission has ended", 400);
-    }
-
-    // Get form and fields for validation
-    const form = formEvent.form;
-    if (!form) {
-      throw new ApiError("Form not found", 404);
-    }
-
-    const formFields = form.fields || [];
-    const fieldMap = new Map(formFields.map((f) => [f.id, f]));
-
-    const filesByFieldId = mapFilesByFieldId(uploadedFiles);
-    const fieldValues = [...fieldValuesFromBody];
-
-    for (const fieldId of filesByFieldId.keys()) {
-      if (!fieldValues.some((fv) => fv.formFieldId === fieldId)) {
-        fieldValues.push({ formFieldId: fieldId, value: "" });
-      }
-    }
-
-    // Validate files per field (max 5 files per field)
-    for (const [fieldId, files] of filesByFieldId) {
-      if (files.length > 5) {
-        throw new ApiError(`Field "${fieldId}" can have at most 5 files`, 400);
-      }
-    }
-
-    // Validate each submitted field value
-    for (const fv of fieldValues) {
-      const field = fieldMap.get(fv.formFieldId);
-
-      // Check field belongs to form
-      if (!field) {
-        throw new ApiError(`Field ID ${fv.formFieldId} does not belong to this form`, 400);
-      }
-
-      const value = fv.value ? String(fv.value).trim() : "";
-
-      // Check required
-      if (field.isRequired === 1 && !value && !filesByFieldId.has(fv.formFieldId)) {
-        throw new ApiError(`Field "${field.label}" is required`, 400);
-      }
-
-      // Skip other validations if field is empty and optional
-      if (!value && !filesByFieldId.has(fv.formFieldId)) continue;
-
-      // Check min length
-      if (field.minLength && value.length < field.minLength) {
-        throw new ApiError(`"${field.label}" must be at least ${field.minLength} characters`, 400);
-      }
-
-      // Check max length
-      if (field.maxLength && value.length > field.maxLength) {
-        throw new ApiError(`"${field.label}" must not exceed ${field.maxLength} characters`, 400);
-      }
-
-      // Check regex pattern
-      if (field.validationRegex && value) {
-        const regex = new RegExp(field.validationRegex);
-        if (!regex.test(value)) {
-          throw new ApiError(`"${field.label}" format is invalid`, 400);
-        }
-      }
-
-      // Check min/max value for numbers
-      if (value) {
-        const num = Number(value);
-        if (!Number.isNaN(num)) {
-          if (field.minValue && num < Number(field.minValue)) {
-            throw new ApiError(`"${field.label}" must be at least ${field.minValue}`, 400);
+  // Check if form event exists and is active (outside transaction)
+  const formEvent = await FormEvent.findByPk(formEventIdNum, {
+    include: [
+      {
+        model: Form,
+        as: "form",
+        include: [
+          {
+            model: FormField,
+            as: "fields"
           }
-          if (field.maxValue && num > Number(field.maxValue)) {
-            throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
-          }
+        ]
+      }
+    ]
+  });
+
+  if (!formEvent) {
+    throw new ApiError("Form event not found", 404);
+  }
+
+  if (formEvent.status !== 1) {
+    throw new ApiError("Form event is not active", 400);
+  }
+
+  // Check dates
+  const today = new Date();
+  const startDate = new Date(formEvent.startDate);
+  const endDate = formEvent.endDate ? new Date(formEvent.endDate) : null;
+
+  if (today < startDate) {
+    throw new ApiError("Form submission has not started yet", 400);
+  }
+
+  if (endDate && today > endDate) {
+    throw new ApiError("Form submission has ended", 400);
+  }
+
+  // Get form and fields for validation
+  const form = formEvent.form;
+  if (!form) {
+    throw new ApiError("Form not found", 404);
+  }
+
+  const formFields = form.fields || [];
+  const fieldMap = new Map(formFields.map((f) => [f.id, f]));
+
+  const filesByFieldId = mapFilesByFieldId(uploadedFiles);
+  const fieldValues = [...fieldValuesFromBody];
+
+  for (const fieldId of filesByFieldId.keys()) {
+    if (!fieldValues.some((fv) => fv.formFieldId === fieldId)) {
+      fieldValues.push({ formFieldId: fieldId, value: "" });
+    }
+  }
+
+  // Validate files per field (max 5 files per field)
+  for (const [fieldId, files] of filesByFieldId) {
+    if (files.length > 5) {
+      throw new ApiError(`Field "${fieldId}" can have at most 5 files`, 400);
+    }
+  }
+
+  // Validate each submitted field value
+  for (const fv of fieldValues) {
+    const field = fieldMap.get(fv.formFieldId);
+
+    // Check field belongs to form
+    if (!field) {
+      throw new ApiError(`Field ID ${fv.formFieldId} does not belong to this form`, 400);
+    }
+
+    const value = fv.value ? String(fv.value).trim() : "";
+
+    // Check required
+    if (field.isRequired === 1 && !value && !filesByFieldId.has(fv.formFieldId)) {
+      throw new ApiError(`Field "${field.label}" is required`, 400);
+    }
+
+    // Skip other validations if field is empty and optional
+    if (!value && !filesByFieldId.has(fv.formFieldId)) continue;
+
+    // Check min length
+    if (field.minLength && value.length < field.minLength) {
+      throw new ApiError(`"${field.label}" must be at least ${field.minLength} characters`, 400);
+    }
+
+    // Check max length
+    if (field.maxLength && value.length > field.maxLength) {
+      throw new ApiError(`"${field.label}" must not exceed ${field.maxLength} characters`, 400);
+    }
+
+    // Check regex pattern
+    if (field.validationRegex && value) {
+      const regex = new RegExp(field.validationRegex);
+      if (!regex.test(value)) {
+        throw new ApiError(`"${field.label}" format is invalid`, 400);
+      }
+    }
+
+    // Check min/max value for numbers
+    if (value) {
+      const num = Number(value);
+      if (!Number.isNaN(num)) {
+        if (field.minValue && num < Number(field.minValue)) {
+          throw new ApiError(`"${field.label}" must be at least ${field.minValue}`, 400);
+        }
+        if (field.maxValue && num > Number(field.maxValue)) {
+          throw new ApiError(`"${field.label}" must not exceed ${field.maxValue}`, 400);
         }
       }
+    }
 
-      if (field.metaTable && value) {
+    if (field.metaTable && value) {
+      const ids = parseValueIds(value);
+      await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
+    }
+
+    if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
+      const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
+      if (metaTableName) {
         const ids = parseValueIds(value);
-        await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
-      }
-
-      if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
-        const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
-        if (metaTableName) {
-          const ids = parseValueIds(value);
-          await ensureMetaTableValuesExist(metaTableName, ids, field.label);
-        }
+        await ensureMetaTableValuesExist(metaTableName, ids, field.label);
       }
     }
+  }
 
-    // Validate required fields that were not submitted at all
-    for (const field of formFields) {
-      if (field.isRequired !== 1) continue;
-      const hasValue = fieldValues.some((fv) => fv.formFieldId === field.id);
-      const hasFiles = filesByFieldId.has(field.id);
-      if (!hasValue && !hasFiles) {
-        throw new ApiError(`Field "${field.label}" is required`, 400);
-      }
+  // Validate required fields that were not submitted at all
+  for (const field of formFields) {
+    if (field.isRequired !== 1) continue;
+    const hasValue = fieldValues.some((fv) => fv.formFieldId === field.id);
+    const hasFiles = filesByFieldId.has(field.id);
+    if (!hasValue && !hasFiles) {
+      throw new ApiError(`Field "${field.label}" is required`, 400);
     }
+  }
 
+  let submission!: FormSubmission;
+  let fileMovePlans: Array<{ sourcePath: string; destinationPath: string }> = [];
+
+  await sequelize.transaction(async (transaction) => {
     // Create submission
-    const submission = await FormSubmission.create(
+    submission = await FormSubmission.create(
       {
         formEventId: formEventIdNum,
         submittedBy: userId,
@@ -752,8 +751,10 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       { transaction }
     );
 
-    // Reorganize files to final directory structure: formEventId/submissionId/fieldId/uuid.ext
-    const finalFileUrlsByFieldId = new Map<number, string[]>();
+    // Plan file moves and URLs (defer actual IO until after commit)
+    const plannedFileMoves: Array<{ sourcePath: string; destinationPath: string }> = [];
+    const plannedFileUrlsByFieldId = new Map<number, string[]>();
+
     for (const [fieldId, files] of filesByFieldId) {
       const finalUrls: string[] = [];
       const finalDir = path.join(
@@ -762,7 +763,6 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
         String(submission.id),
         String(fieldId)
       );
-      ensureDirectory(finalDir);
 
       for (const file of files) {
         if (fs.existsSync(file.path)) {
@@ -771,8 +771,10 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
           const finalFileName = `${uuid}${ext}`;
           const finalFilePath = path.join(finalDir, finalFileName);
 
-          // Move file to final location
-          fs.renameSync(file.path, finalFilePath);
+          plannedFileMoves.push({
+            sourcePath: file.path,
+            destinationPath: finalFilePath
+          });
 
           // Store relative path for database: formEventId/submissionId/fieldId/uuid.ext
           finalUrls.push(buildPublicUploadPath(finalFilePath));
@@ -780,7 +782,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       }
 
       if (finalUrls.length > 0) {
-        finalFileUrlsByFieldId.set(fieldId, finalUrls);
+        plannedFileUrlsByFieldId.set(fieldId, finalUrls);
       }
     }
 
@@ -793,8 +795,8 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       }
 
       // If field has file uploads, include them (as JSON array or URL string)
-      if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
-        const fileUrls = finalFileUrlsByFieldId.get(fv.formFieldId)!;
+      if (plannedFileUrlsByFieldId.has(fv.formFieldId)) {
+        const fileUrls = plannedFileUrlsByFieldId.get(fv.formFieldId)!;
         finalValue = fileUrls.length === 1 ? fileUrls[0] : JSON.stringify(fileUrls);
       }
 
@@ -808,42 +810,50 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
     await FormFieldValue.bulkCreate(fieldValueRecords, { transaction });
 
-    await transaction.commit();
+    fileMovePlans = plannedFileMoves;
+  });
 
-    // Fetch full submission with values
-    const fullSubmission = await FormSubmission.findByPk(submission.id, {
-      attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
-      include: [
-        {
-          model: FormFieldValue,
-          as: "fieldValues",
-          attributes: ["id", "formFieldId", "fieldKey", "value"]
-        },
-        {
-          model: FormEvent,
-          as: "formEvent",
-          attributes: ["id", "title", "formId"]
-        },
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "email"]
-        }
-      ]
-    });
-
-    if (fullSubmission) {
-      await resolveFieldValuesForSubmissions(fullSubmission);
+  // Execute file moves after commit to reduce transaction hold time
+  const ensuredDirs = new Set<string>();
+  for (const plan of fileMovePlans) {
+    const finalDir = path.dirname(plan.destinationPath);
+    if (!ensuredDirs.has(finalDir)) {
+      ensureDirectory(finalDir);
+      ensuredDirs.add(finalDir);
     }
 
-    sendCreated(res, fullSubmission, "Form submitted successfully");
-  } catch (error) {
-    // Only rollback if transaction is still pending
-    // if (!transaction.finished) {
-    //   await transaction.rollback();
-    // }
-    throw error;
+    if (fs.existsSync(plan.sourcePath)) {
+      fs.renameSync(plan.sourcePath, plan.destinationPath);
+    }
   }
+
+  // Fetch full submission with values
+  const fullSubmission = await FormSubmission.findByPk(submission.id, {
+    attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
+    include: [
+      {
+        model: FormFieldValue,
+        as: "fieldValues",
+        attributes: ["id", "formFieldId", "fieldKey", "value"]
+      },
+      {
+        model: FormEvent,
+        as: "formEvent",
+        attributes: ["id", "title", "formId"]
+      },
+      {
+        model: User,
+        as: "user",
+        attributes: ["id", "email"]
+      }
+    ]
+  });
+
+  if (fullSubmission) {
+    await resolveFieldValuesForSubmissions(fullSubmission);
+  }
+
+  sendCreated(res, fullSubmission, "Form submitted successfully");
 });
 
 /**
