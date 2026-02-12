@@ -7697,27 +7697,57 @@
                 {
                   "key": "ward_number_id",
                   "value": "",
-                  "description": "Filter by ward id (uses __ward_number_id field)"
+                  "description": "Filter by ward id (uses __ward_number_id field). Alias: wardNumberId."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Alias of ward_number_id.",
+                  "disabled": true
                 },
                 {
                   "key": "booth_number_id",
                   "value": "",
-                  "description": "Filter by booth id (uses __booth_number_id field)"
+                  "description": "Filter by booth id (uses __booth_number_id field). Alias: boothNumberId."
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "",
+                  "description": "Alias of booth_number_id.",
+                  "disabled": true
                 },
                 {
                   "key": "submitted_by",
                   "value": "",
-                  "description": "Filter by submitted by (submission user id)"
+                  "description": "Filter by submitted by (submission user id). Alias: submittedBy."
+                },
+                {
+                  "key": "submittedBy",
+                  "value": "",
+                  "description": "Alias of submitted_by.",
+                  "disabled": true
                 },
                 {
                   "key": "submitted_from",
                   "value": "",
-                  "description": "Filter by submitted date from (YYYY-MM-DD)"
+                  "description": "Filter by submitted date from (YYYY-MM-DD). Alias: submittedFrom."
+                },
+                {
+                  "key": "submittedFrom",
+                  "value": "",
+                  "description": "Alias of submitted_from.",
+                  "disabled": true
                 },
                 {
                   "key": "submitted_to",
                   "value": "",
-                  "description": "Filter by submitted date to (YYYY-MM-DD)"
+                  "description": "Filter by submitted date to (YYYY-MM-DD). Alias: submittedTo."
+                },
+                {
+                  "key": "submittedTo",
+                  "value": "",
+                  "description": "Alias of submitted_to.",
+                  "disabled": true
                 }
               ]
             },
