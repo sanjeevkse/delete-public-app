@@ -887,7 +887,9 @@ export const updateFormSubmission = asyncHandler(
     }
 
     // Check authorization - user can update their own submissions; Admins can update all
-    if (submission.submittedBy !== userId && !req.user?.roles.includes("admin")) {
+    const normalizedRoles = (req.user?.roles ?? []).map((role) => role.toLowerCase());
+    const isAdmin = normalizedRoles.includes("admin");
+    if (submission.submittedBy !== userId && !isAdmin) {
       throw new ApiError("You don't have permission to update this submission", 403);
     }
 
@@ -1175,7 +1177,9 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
   }
 
   // Check authorization - user can view their own submissions; Admins can view all
-  if (submission.submittedBy !== userId && !req.user?.roles.includes("admin")) {
+  const normalizedRoles = (req.user?.roles ?? []).map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
+  if (submission.submittedBy !== userId && !isAdmin) {
     throw new ApiError("You don't have permission to view this submission", 403);
   }
 
