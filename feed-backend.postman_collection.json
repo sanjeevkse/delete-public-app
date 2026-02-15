@@ -7754,6 +7754,61 @@
             "description": "Get a report for a form event including summary metrics and tabular data. Option fields in tabular data return labels. The first tabular header is \"SL No.\"."
           },
           "response": []
+        },
+        {
+          "name": "Get Posts Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/posts?wardNumberId=&boothNumberId=&days=7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Filter by ward id (-1 or empty uses accessibility). Alias: ward_number_id."
+                },
+                {
+                  "key": "ward_number_id",
+                  "value": "",
+                  "description": "Alias of wardNumberId.",
+                  "disabled": true
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "",
+                  "description": "Filter by booth id (-1 or empty uses accessibility). Alias: booth_number_id."
+                },
+                {
+                  "key": "booth_number_id",
+                  "value": "",
+                  "description": "Alias of boothNumberId.",
+                  "disabled": true
+                },
+                {
+                  "key": "days",
+                  "value": "7",
+                  "description": "Number of days for postsLastDays (default 7)."
+                }
+              ]
+            },
+            "description": "Get posts report (stats, last days, reactions). Enforces accessibility; out-of-scope filters return 403."
+          },
+          "response": []
         }
       ]
     },
