@@ -135,6 +135,15 @@ const establishAssociations = (): void => {
     as: "eventRegistrations"
   });
 
+  EventRegistration.belongsTo(MetaDesignation, {
+    foreignKey: "designationId",
+    as: "designation"
+  });
+  MetaDesignation.hasMany(EventRegistration, {
+    foreignKey: "designationId",
+    as: "eventRegistrations"
+  });
+
   MetaUserRole.belongsToMany(MetaPermission, {
     through: RolePermission,
     foreignKey: "roleId",

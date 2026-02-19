@@ -23,6 +23,9 @@ class Business extends Model<InferAttributes<Business>, InferCreationAttributes<
   declare totalEmployees: CreationOptional<number | null>;
   declare turnoverYearly: number | null;
   declare fullAddress: string | null;
+  declare photoUrl: CreationOptional<string | null>;
+  declare latitude: CreationOptional<number | null>;
+  declare longitude: CreationOptional<number | null>;
   declare status: CreationOptional<number>;
   declare createdBy: CreationOptional<number | null>;
   declare updatedBy: CreationOptional<number | null>;
@@ -91,6 +94,19 @@ Business.init(
     fullAddress: {
       field: "full_address",
       type: DataTypes.TEXT,
+      allowNull: true
+    },
+    photoUrl: {
+      field: "photo_url",
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(11, 8),
       allowNull: true
     },
     status: {

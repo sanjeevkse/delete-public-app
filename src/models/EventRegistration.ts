@@ -10,6 +10,7 @@ import {
 import type Event from "./Event";
 import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaWardNumber from "./MetaWardNumber";
+import type MetaDesignation from "./MetaDesignation";
 import type User from "./User";
 
 import sequelize from "../config/database";
@@ -28,6 +29,7 @@ class EventRegistration extends Model<
   declare fullAddress: CreationOptional<string | null>;
   declare wardNumberId: CreationOptional<number | null>;
   declare boothNumberId: CreationOptional<number | null>;
+  declare designationId: CreationOptional<number | null>;
   declare dateOfBirth: CreationOptional<Date | null>;
   declare age: CreationOptional<number | null>;
   declare status: CreationOptional<number>;
@@ -41,6 +43,7 @@ class EventRegistration extends Model<
   declare user?: NonAttribute<User>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
+  declare designation?: NonAttribute<MetaDesignation | null>;
 }
 
 EventRegistration.init(
@@ -93,6 +96,11 @@ EventRegistration.init(
     boothNumberId: {
       field: "booth_number_id",
       type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    designationId: {
+      field: "designation_id",
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
     dateOfBirth: {

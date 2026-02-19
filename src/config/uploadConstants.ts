@@ -39,6 +39,9 @@ export const UPLOAD_LIMITS = {
 
 // Upload counts per module
 export const UPLOAD_COUNTS = {
+  BUSINESS: {
+    MAX_IMAGES: 1
+  },
   POST: {
     MAX_IMAGES: 4,
     MAX_VIDEOS: 4,
@@ -91,6 +94,7 @@ export const ALLOWED_MIME_TYPES = {
 
 // Module names for file organization
 export const UPLOAD_MODULES = {
+  BUSINESSES: "businesses",
   POSTS: "posts",
   EVENTS: "events",
   PROFILE: "profile",

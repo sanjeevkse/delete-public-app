@@ -9,6 +9,7 @@ import {
   toggleBusinessStatus
 } from "../controllers/businessController";
 import { authenticate } from "../middlewares/authMiddleware";
+import { businessPhotoUpload } from "../middlewares/businessUploadMiddleware";
 
 const router = Router();
 
@@ -17,7 +18,7 @@ const router = Router();
  * @desc    Create a new business
  * @access  Protected
  */
-router.post("/businesses", authenticate(), createBusiness);
+router.post("/businesses", authenticate(), businessPhotoUpload, createBusiness);
 
 /**
  * @route   GET /api/businesses

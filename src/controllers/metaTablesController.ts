@@ -68,7 +68,7 @@ const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig
 
   // Fetch only active meta table configurations from database (status = 1)
   const configs = await MetaTableRegistry.findAll({
-    // where: { status: 1 },
+    where: { status: 1 },
     attributes: { exclude: ["createdBy", "updatedBy", "createdAt", "updatedAt"] }
   });
 

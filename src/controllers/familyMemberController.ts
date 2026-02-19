@@ -153,7 +153,7 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
 
   let normalizedUserId: number | null = null;
   if (userId === undefined || userId === null || userId === "") {
-    fieldErrors.push({ field: "userId", message: "User ID is required" });
+    normalizedUserId = currentUserId;
   } else if (typeof userId === "number" && Number.isFinite(userId)) {
     normalizedUserId = userId;
   } else if (typeof userId === "string" && userId.trim()) {
@@ -165,6 +165,10 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     }
   } else {
     fieldErrors.push({ field: "userId", message: "User ID must be a numeric value" });
+  }
+
+  if (!normalizedUserId) {
+    fieldErrors.push({ field: "userId", message: "User ID is required" });
   }
 
   const normalizedFullName =

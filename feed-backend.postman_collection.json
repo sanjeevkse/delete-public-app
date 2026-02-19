@@ -1661,6 +1661,10 @@
                   "pm.test(\"Registration object present\", function () {",
                   "  pm.expect(jsonData && jsonData.data).to.exist;",
                   "});"
+                  ,
+                  "pm.test(\"Registration includes designationId\", function () {",
+                  "  pm.expect(jsonData && jsonData.data).to.have.property(\"designationId\");",
+                  "});"
                 ]
               }
             }
@@ -1675,10 +1679,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"1234567890\",\n  \"email\": \"john@example.com\",\n  \"fullAddress\": \"123 Main Street\",\n  \"wardNumberId\": 5,\n  \"boothNumberId\": 10,\n  \"dateOfBirth\": \"1990-01-01\",\n  \"age\": 34,\n  \"registeredBy\": \"Self\"\n}"
+              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"1234567890\",\n  \"email\": \"john@example.com\",\n  \"fullAddress\": \"123 Main Street\",\n  \"wardNumberId\": 5,\n  \"boothNumberId\": 10,\n  \"designationId\": 2,\n  \"dateOfBirth\": \"1990-01-01\",\n  \"age\": 34,\n  \"registeredBy\": \"Self\"\n}"
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/register",
-            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, and other fields are optional."
+            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, designationId (MetaDesignation id), and other fields are optional."
           },
           "response": []
         },
@@ -1702,6 +1706,9 @@
                   "pm.test(\"Registration object present\", function () {",
                   "  pm.expect(jsonData && jsonData.data).to.exist;",
                   "});",
+                  "pm.test(\"Registration includes designationId\", function () {",
+                  "  pm.expect(jsonData && jsonData.data).to.have.property(\"designationId\");",
+                  "});",
                   "pm.test(\"Guest registration (no userId)\", function () {",
                   "  pm.expect(jsonData && jsonData.data && jsonData.data.isGuest).to.be.true;",
                   "});"
@@ -1719,10 +1726,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Jane Guest\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"jane@example.com\",\n  \"fullAddress\": \"456 Oak Avenue\",\n  \"wardNumberId\": 3,\n  \"boothNumberId\": 8,\n  \"dateOfBirth\": \"1985-05-15\",\n  \"age\": 39,\n  \"registeredBy\": \"John Doe\"\n}"
+              "raw": "{\n  \"fullName\": \"Jane Guest\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"jane@example.com\",\n  \"fullAddress\": \"456 Oak Avenue\",\n  \"wardNumberId\": 3,\n  \"boothNumberId\": 8,\n  \"designationId\": 4,\n  \"dateOfBirth\": \"1985-05-15\",\n  \"age\": 39,\n  \"registeredBy\": \"John Doe\"\n}"
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/register",
-            "description": "Registers a guest (non-user) for an event. Requires fullName and contactNumber (mandatory). Do not send userId for guest registration."
+            "description": "Registers a guest (non-user) for an event. Requires fullName and contactNumber (mandatory). Do not send userId for guest registration. designationId (MetaDesignation id) is optional."
           },
           "response": []
         },
@@ -1851,6 +1858,12 @@
                   "    pm.expect(first).to.have.property(\"registeredAt\");",
                   "    pm.expect(first).to.have.property(\"isGuest\");",
                   "  });",
+                  "  pm.test(\"Registration includes designationId\", function () {",
+                  "    pm.expect(first).to.have.property(\"designationId\");",
+                  "  });",
+                  "  pm.test(\"Registration includes designation\", function () {",
+                  "    pm.expect(first).to.have.property(\"designation\");",
+                  "  });",
                   "  if (!first.isGuest && first.user) {",
                   "    pm.test(\"User registration has user details\", function () {",
                   "      pm.expect(first.user && first.user.id).to.exist;",
@@ -1912,7 +1925,7 @@
                 }
               ]
             },
-            "description": "Lists registrations for a specific event, including both user and guest registrations. Each registration has an isGuest flag and registeredAt timestamp. User registrations have user details, guest registrations have guestDetails. Use includeUnregistered=true to include soft-unregistered entries. Use sortBy=registeredAt and sort=ASC|DSC to control ordering."
+            "description": "Lists registrations for a specific event, including both user and guest registrations. Each registration includes all registration columns (including designationId), plus designation (id, dispName), isGuest and registeredAt. User registrations have user details, guest registrations have guestDetails. Use includeUnregistered=true to include soft-unregistered entries. Use sortBy=registeredAt and sort=ASC|DSC to control ordering."
           },
           "response": []
         },
@@ -1937,7 +1950,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/registrations/upload",
-            "description": "Uploads an Excel sheet and creates/updates registrations in bulk. Required columns: fullName, contactNumber. Optional: userId, email, registeredBy, fullAddress, wardNumberId, boothNumberId, dateOfBirth (YYYY-MM-DD), age. File is discarded after processing."
+            "description": "Uploads an Excel sheet and creates/updates registrations in bulk. Required columns: fullName, contactNumber. Optional: userId, email, registeredBy, fullAddress, wardNumberId, boothNumberId, designationId, dateOfBirth (YYYY-MM-DD), age. File is discarded after processing."
           },
           "response": []
         }
@@ -4494,18 +4507,79 @@
           "name": "Create Business",
           "request": {
             "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"businessName\": \"ABC Retail Store\",\n  \"businessTypeId\": 1,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcretail.com\",\n  \"totalEmployees\": 50,\n  \"turnoverYearly\": 5000000.00,\n  \"fullAddress\": \"123 Main Street, City, State - 400001\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
               }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "businessName",
+                  "value": "ABC Retail Store",
+                  "type": "text"
+                },
+                {
+                  "key": "businessTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "pan",
+                  "value": "ABCDE1234F",
+                  "type": "text"
+                },
+                {
+                  "key": "gstin",
+                  "value": "22ABCDE1234F1Z5",
+                  "type": "text"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "9876543210",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "contact@abcretail.com",
+                  "type": "text"
+                },
+                {
+                  "key": "totalEmployees",
+                  "value": "50",
+                  "type": "text"
+                },
+                {
+                  "key": "turnoverYearly",
+                  "value": "5000000.00",
+                  "type": "text"
+                },
+                {
+                  "key": "fullAddress",
+                  "value": "123 Main Street, City, State - 400001",
+                  "type": "text"
+                },
+                {
+                  "key": "latitude",
+                  "value": "12.9716",
+                  "type": "text"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.5946",
+                  "type": "text"
+                },
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": "/path/to/business-photo.jpg"
+                }
+              ]
             },
             "url": "{{baseUrl}}/api/businesses",
-            "description": "Create a new business"
+            "description": "Create a new business. Required: businessName, businessTypeId. Optional: latitude, longitude, photo (image), pan, gstin, contactNumber, email, totalEmployees, turnoverYearly, fullAddress."
           },
           "response": []
         },
@@ -4554,7 +4628,7 @@
                 }
               ]
             },
-            "description": "Get all businesses"
+            "description": "Get all businesses (includes photoUrl when available)."
           },
           "response": []
         },
@@ -4684,12 +4758,48 @@
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "multipart/form-data"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\\n  \"userId\": 1,\\n  \"fullName\": \"John Doe Sr.\",\\n  \"contactNumber\": \"9876543210\",\\n  \"email\": \"john.sr@example.com\",\\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\\n  \"aadhaarNumber\": \"123456789012\",\\n  \"relationTypeId\": 1\\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "userId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "fullName",
+                  "value": "John Doe Sr.",
+                  "type": "text"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "9876543210",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "john.sr@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "fullAddress",
+                  "value": "123 Main Street, City, State 12345",
+                  "type": "text"
+                },
+                {
+                  "key": "aadhaarNumber",
+                  "value": "123456789012",
+                  "type": "text"
+                },
+                {
+                  "key": "relationTypeId",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
             },
             "url": "{{baseUrl}}/api/family-members",
             "description": "Create a new family member"
@@ -7752,6 +7862,32 @@
               ]
             },
             "description": "Get a report for a form event including summary metrics and tabular data. Metrics include totalSubmissions, totalForms, publicRegistrationForms, crfRegistrationForms, and notAssignedForms. Option fields in tabular data return labels. The first tabular header is \"SL No.\"."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Family Members Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/family-members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "family-members"
+              ]
+            },
+            "description": "Get a report for the authenticated user's family members with tabular data (headers + data rows)."
           },
           "response": []
         },

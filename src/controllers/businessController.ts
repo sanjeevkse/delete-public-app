@@ -16,10 +16,12 @@ import {
   sendSuccessWithPagination,
   parsePaginationParams,
   calculatePagination,
+  parseOptionalNumber,
   parseSortDirection,
   validateSortColumn
 } from "../utils/apiResponse";
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
+import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 
 /**
  * List all businesses with pagination and search
@@ -144,6 +146,12 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   if (!businessName || !businessTypeId) {
     throw new ApiError("Missing required fields: businessName, businessTypeId", 400);
   }
+  const latitude = parseOptionalNumber(req.body?.latitude, "latitude") ?? null;
+  const longitude = parseOptionalNumber(req.body?.longitude, "longitude") ?? null;
+
+  const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : [];
+  const uploadedPhoto = uploadedFiles.length > 0 ? uploadedFiles[0] : null;
+  const photoUrl = uploadedPhoto ? buildPublicUploadPath(uploadedPhoto.path) : null;
 
   // Verify business type exists
   const businessType = await MetaBusinessType.findByPk(businessTypeId);
@@ -177,6 +185,9 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     totalEmployees: totalEmployees || null,
     turnoverYearly: turnoverYearly || null,
     fullAddress: fullAddress || null,
+    photoUrl,
+    latitude,
+    longitude,
     status: 1,
     createdBy: userId || null,
     updatedBy: userId || null
@@ -267,6 +278,14 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   if (totalEmployees !== undefined) business.totalEmployees = totalEmployees;
   if (turnoverYearly !== undefined) business.turnoverYearly = turnoverYearly;
   if (fullAddress !== undefined) business.fullAddress = fullAddress;
+  if (Object.prototype.hasOwnProperty.call(req.body, "latitude")) {
+    const parsedLatitude = parseOptionalNumber(req.body.latitude, "latitude");
+    business.latitude = parsedLatitude ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body, "longitude")) {
+    const parsedLongitude = parseOptionalNumber(req.body.longitude, "longitude");
+    business.longitude = parsedLongitude ?? null;
+  }
   if (userId) business.updatedBy = userId;
 
   await business.save();

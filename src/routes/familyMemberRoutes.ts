@@ -9,6 +9,7 @@ import {
   toggleFamilyMemberStatus
 } from "../controllers/familyMemberController";
 import { authenticate } from "../middlewares/authMiddleware";
+import { parseFormData } from "../middlewares/formDataMiddleware";
 
 const router = Router();
 
@@ -17,7 +18,7 @@ const router = Router();
  * @desc    Create a new family member
  * @access  Protected
  */
-router.post("/family-members", authenticate(), createFamilyMember);
+router.post("/family-members", authenticate(), parseFormData, createFamilyMember);
 
 /**
  * @route   GET /api/family-members

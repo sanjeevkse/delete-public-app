@@ -302,6 +302,7 @@ const REGISTRATION_HEADER_ALIASES: Record<string, string[]> = {
   fullAddress: ["fulladdress", "full address", "address", "full_address"],
   wardNumberId: ["wardnumberid", "ward number id", "ward", "ward number", "ward_number_id"],
   boothNumberId: ["boothnumberid", "booth number id", "booth", "booth number", "booth_number_id"],
+  designationId: ["designationid", "designation id", "designation", "designation_id"],
   dateOfBirth: ["dateofbirth", "date of birth", "dob", "date_of_birth"],
   age: ["age"]
 };
@@ -764,6 +765,50 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
   return sendSuccessWithPagination(res, data, pagination, "Events retrieved successfully");
 });
 
+const buildRegistrationResponse = (
+  registration: EventRegistration,
+  options?: { includeDetails?: boolean }
+) => {
+  const plainRegistration = registration.get({ plain: true }) as Record<string, any>;
+  const isGuest = !plainRegistration.userId;
+  const registeredAt = plainRegistration.createdAt
+    ? new Date(plainRegistration.createdAt).toISOString()
+    : null;
+  const includeDetails = options?.includeDetails ?? false;
+
+  return {
+    ...plainRegistration,
+    registeredAt,
+    isGuest,
+    ...(includeDetails
+      ? {
+          designation: plainRegistration.designation
+            ? {
+                id: plainRegistration.designation.id,
+                dispName: plainRegistration.designation.dispName
+              }
+            : null,
+          user: plainRegistration.user
+            ? {
+                id: plainRegistration.user.id,
+                fullName: plainRegistration.user.fullName,
+                email: plainRegistration.user.email,
+                contactNumber: plainRegistration.user.contactNumber,
+                profileImageUrl: plainRegistration.user.profile?.profileImageUrl ?? null
+              }
+            : null,
+          guestDetails: isGuest
+            ? {
+                name: plainRegistration.fullName,
+                contactNumber: plainRegistration.contactNumber,
+                email: plainRegistration.email
+              }
+            : null
+        }
+      : {})
+  };
+};
+
 export const listEventRegistrations = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const eventId = Number.parseInt(req.params.id, 10);
@@ -825,6 +870,7 @@ export const listEventRegistrations = asyncHandler(
             }
           ]
         },
+        { association: "designation", attributes: ["id", "dispName"], required: false },
         { association: "wardNumber", attributes: ["id", "dispName"], required: false },
         { association: "boothNumber", attributes: ["id", "dispName"], required: false }
       ],
@@ -834,34 +880,9 @@ export const listEventRegistrations = asyncHandler(
       distinct: true
     });
 
-    const data = rows.map((registration) => {
-      const isGuest = !registration.userId;
-      const registeredAt = registration.createdAt ? registration.createdAt.toISOString() : null;
-
-      return {
-        id: registration.id,
-        registeredAt,
-        deregisterReason: registration.deregisterReason,
-        deregisteredAt: registration.deregisteredAt,
-        isGuest,
-        user: registration.user
-          ? {
-              id: registration.user.id,
-              fullName: registration.user.fullName,
-              email: registration.user.email,
-              contactNumber: registration.user.contactNumber,
-              profileImageUrl: registration.user.profile?.profileImageUrl ?? null
-            }
-          : null,
-        guestDetails: isGuest
-          ? {
-              name: registration.fullName,
-              contactNumber: registration.contactNumber,
-              email: registration.email
-            }
-          : null
-      };
-    });
+    const data = rows.map((registration) =>
+      buildRegistrationResponse(registration, { includeDetails: true })
+    );
 
     const pagination = calculatePagination(count, page, limit);
     return sendSuccess(
@@ -1227,6 +1248,10 @@ export const uploadEventRegistrations = asyncHandler(
             headerIndex.boothNumberId !== undefined
               ? normalizeNumberCell(row[headerIndex.boothNumberId])
               : undefined;
+          const rawDesignationId =
+            headerIndex.designationId !== undefined
+              ? normalizeNumberCell(row[headerIndex.designationId])
+              : undefined;
           const rawDateOfBirth =
             headerIndex.dateOfBirth !== undefined ? row[headerIndex.dateOfBirth] : undefined;
           const rawAge =
@@ -1258,6 +1283,7 @@ export const uploadEventRegistrations = asyncHandler(
 
           const parsedWardNumberId = parseOptionalNumber(rawWardNumberId, "wardNumberId");
           const parsedBoothNumberId = parseOptionalNumber(rawBoothNumberId, "boothNumberId");
+          const parsedDesignationId = parseOptionalNumber(rawDesignationId, "designationId");
 
           const dateOnly = normalizeDateOnlyCell(rawDateOfBirth, "dateOfBirth");
           const parsedDateOfBirth = parseOptionalDateOnly(dateOnly, "dateOfBirth");
@@ -1286,6 +1312,7 @@ export const uploadEventRegistrations = asyncHandler(
             fullAddress: parsedFullAddress,
             wardNumberId: parsedWardNumberId,
             boothNumberId: parsedBoothNumberId,
+            designationId: parsedDesignationId,
             dateOfBirth: parsedDateOfBirth ? new Date(parsedDateOfBirth) : null,
             age: parsedAge,
             status: 1,
@@ -1353,6 +1380,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   const parsedFullAddress = parseOptionalString(req.body.fullAddress, "fullAddress");
   const parsedWardNumberId = parseOptionalNumber(req.body.wardNumberId, "wardNumberId");
   const parsedBoothNumberId = parseOptionalNumber(req.body.boothNumberId, "boothNumberId");
+  const parsedDesignationId = parseOptionalNumber(req.body.designationId, "designationId");
   const parsedDateOfBirth = parseOptionalDateOnly(req.body.dateOfBirth, "dateOfBirth");
   const parsedAge = parseOptionalNumber(req.body.age, "age");
 
@@ -1380,6 +1408,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     fullAddress: parsedFullAddress,
     wardNumberId: parsedWardNumberId,
     boothNumberId: parsedBoothNumberId,
+    designationId: parsedDesignationId,
     dateOfBirth: parsedDateOfBirth ? new Date(parsedDateOfBirth) : null,
     age: parsedAge,
     status: 1,
@@ -1399,11 +1428,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
 
     return sendSuccess(
       res,
-      {
-        id: existingRegistration.id,
-        eventId: existingRegistration.eventId,
-        isGuest: !parsedUserId
-      },
+      buildRegistrationResponse(existingRegistration),
       "Registration reactivated"
     );
   }
@@ -1413,11 +1438,7 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
 
   return sendCreated(
     res,
-    {
-      id: registration.id,
-      eventId: registration.eventId,
-      isGuest: !parsedUserId
-    },
+    buildRegistrationResponse(registration),
     "Registered successfully"
   );
 });
