@@ -644,9 +644,27 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
     tabularRows.push(fullRow);
   }
 
+  const [
+    totalForms,
+    publicRegistrationForms,
+    crfRegistrationForms,
+    assignedFormsCount
+  ] = await Promise.all([
+    Form.count(),
+    Form.count({ where: { isPublic: 1 } }),
+    Form.count({ where: { isPublic: { [Op.ne]: 1 } } }),
+    FormEvent.count({ distinct: true, col: "formId" })
+  ]);
+
+  const notAssignedForms = Math.max(0, totalForms - assignedFormsCount);
+
   // Prepare metrics
   const metrics = {
-    totalSubmissions
+    totalSubmissions,
+    totalForms,
+    publicRegistrationForms,
+    crfRegistrationForms,
+    notAssignedForms
   };
 
   // Prepare tabular data object

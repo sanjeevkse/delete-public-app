@@ -7751,7 +7751,7 @@
                 }
               ]
             },
-            "description": "Get a report for a form event including summary metrics and tabular data. Option fields in tabular data return labels. The first tabular header is \"SL No.\"."
+            "description": "Get a report for a form event including summary metrics and tabular data. Metrics include totalSubmissions, totalForms, publicRegistrationForms, crfRegistrationForms, and notAssignedForms. Option fields in tabular data return labels. The first tabular header is \"SL No.\"."
           },
           "response": []
         },

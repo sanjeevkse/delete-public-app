@@ -643,6 +643,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   const formFields = form.fields || [];
   const fieldMap = new Map(formFields.map((f) => [f.id, f]));
+  const fieldTypeLookup = await buildFieldTypeLookup(formFields.map((f) => f.id));
 
   const filesByFieldId = mapFilesByFieldId(uploadedFiles);
   const fieldValues = [...fieldValuesFromBody];
@@ -794,6 +795,14 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
         finalValue = normalizeWardBoothValue(fv.value);
       }
 
+      if (typeof finalValue === "string") {
+        const fieldType = fieldTypeLookup.get(fv.formFieldId);
+        const formatted = formatValueByFieldType(finalValue, fieldType);
+        if (formatted) {
+          finalValue = formatted;
+        }
+      }
+
       // If field has file uploads, include them (as JSON array or URL string)
       if (plannedFileUrlsByFieldId.has(fv.formFieldId)) {
         const fileUrls = plannedFileUrlsByFieldId.get(fv.formFieldId)!;
@@ -924,6 +933,7 @@ export const updateFormSubmission = asyncHandler(
 
       const formFields = form.fields || [];
       const fieldMap = new Map(formFields.map((f) => [f.id, f]));
+      const fieldTypeLookup = await buildFieldTypeLookup(formFields.map((f) => f.id));
 
       const filesByFieldId = mapFilesByFieldId(uploadedFiles);
       const fieldValues = [...fieldValuesFromBody];
@@ -1029,6 +1039,14 @@ export const updateFormSubmission = asyncHandler(
         let finalValue = normalizeFieldValue(fv.value);
         if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey)) {
           finalValue = normalizeWardBoothValue(fv.value);
+        }
+
+        if (typeof finalValue === "string") {
+          const fieldType = fieldTypeLookup.get(fv.formFieldId);
+          const formatted = formatValueByFieldType(finalValue, fieldType);
+          if (formatted) {
+            finalValue = formatted;
+          }
         }
 
         if (finalFileUrlsByFieldId.has(fv.formFieldId)) {
