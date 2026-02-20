@@ -1660,8 +1660,7 @@
                   "}",
                   "pm.test(\"Registration object present\", function () {",
                   "  pm.expect(jsonData && jsonData.data).to.exist;",
-                  "});"
-                  ,
+                  "});",
                   "pm.test(\"Registration includes designationId\", function () {",
                   "  pm.expect(jsonData && jsonData.data).to.have.property(\"designationId\");",
                   "});"
@@ -4527,6 +4526,11 @@
                   "type": "text"
                 },
                 {
+                  "key": "businessCategoryId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
                   "key": "pan",
                   "value": "ABCDE1234F",
                   "type": "text"
@@ -4579,7 +4583,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/businesses",
-            "description": "Create a new business. Required: businessName, businessTypeId. Optional: latitude, longitude, photo (image), pan, gstin, contactNumber, email, totalEmployees, turnoverYearly, fullAddress."
+            "description": "Create a new business. Required: businessName, businessTypeId. Optional: businessCategoryId, latitude, longitude, photo (image), pan, gstin, contactNumber, email, totalEmployees, turnoverYearly, fullAddress."
           },
           "response": []
         },
@@ -4589,7 +4593,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=&sortBy=createdAt&sort=DESC",
+              "raw": "{{baseUrl}}/api/businesses?page=1&limit=10&search=&status=1&businessTypeId=&businessCategoryId=&sortBy=createdAt&sort=DESC",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -4616,6 +4620,10 @@
                 },
                 {
                   "key": "businessTypeId",
+                  "value": ""
+                },
+                {
+                  "key": "businessCategoryId",
                   "value": ""
                 },
                 {
@@ -4665,7 +4673,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"businessName\": \"ABC Wholesale Store\",\n  \"businessTypeId\": 2,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcwholesale.com\",\n  \"totalEmployees\": 75,\n  \"turnoverYearly\": 7500000.00,\n  \"fullAddress\": \"456 Business Park, City, State - 400002\"\n}",
+              "raw": "{\n  \"businessName\": \"ABC Wholesale Store\",\n  \"businessTypeId\": 2,\n  \"businessCategoryId\": 1,\n  \"pan\": \"ABCDE1234F\",\n  \"gstin\": \"22ABCDE1234F1Z5\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"contact@abcwholesale.com\",\n  \"totalEmployees\": 75,\n  \"turnoverYearly\": 7500000.00,\n  \"fullAddress\": \"456 Business Park, City, State - 400002\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -4809,6 +4817,12 @@
         {
           "name": "List Family Members",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -4840,18 +4854,13 @@
                   "disabled": true
                 },
                 {
-                  "key": "userId",
-                  "value": "",
-                  "disabled": true
-                },
-                {
                   "key": "relationTypeId",
                   "value": "",
                   "disabled": true
                 }
               ]
             },
-            "description": "List all family members"
+            "description": "List family members created by the authenticated user"
           },
           "response": []
         },
@@ -7866,32 +7875,6 @@
           "response": []
         },
         {
-          "name": "Get Family Members Report",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": {
-                "token": "{{authToken}}"
-              }
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/reports/family-members",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "family-members"
-              ]
-            },
-            "description": "Get a report for the authenticated user's family members with tabular data (headers + data rows)."
-          },
-          "response": []
-        },
-        {
           "name": "Get Posts Report",
           "request": {
             "auth": {
@@ -7943,6 +7926,54 @@
               ]
             },
             "description": "Get posts report (stats, last days, reactions). Enforces accessibility; out-of-scope filters return 403."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Business Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/business?businessCategoryId=&businessTypeId=&search=&status=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "business"
+              ],
+              "query": [
+                {
+                  "key": "businessCategoryId",
+                  "value": "",
+                  "description": "Filter by business category id."
+                },
+                {
+                  "key": "businessTypeId",
+                  "value": "",
+                  "description": "Filter by business type id."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by business name, PAN, GSTIN, contact number, email, or address."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status (0/1)."
+                }
+              ]
+            },
+            "description": "Get business report with category metrics and tabular data (only businesses created by the authenticated user)."
           },
           "response": []
         }

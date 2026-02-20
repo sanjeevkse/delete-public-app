@@ -8,6 +8,7 @@ import {
 } from "sequelize";
 
 import type MetaBusinessType from "./MetaBusinessType";
+import type MetaBusinessCategory from "./MetaBusinessCategory";
 
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
@@ -16,6 +17,7 @@ class Business extends Model<InferAttributes<Business>, InferCreationAttributes<
   declare id: CreationOptional<number>;
   declare businessName: string;
   declare businessTypeId: number;
+  declare businessCategoryId: number | null;
   declare pan: string | null;
   declare gstin: string | null;
   declare contactNumber: string | null;
@@ -32,6 +34,7 @@ class Business extends Model<InferAttributes<Business>, InferCreationAttributes<
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare businessType?: NonAttribute<MetaBusinessType>;
+  declare businessCategory?: NonAttribute<MetaBusinessCategory>;
 }
 
 Business.init(
@@ -50,6 +53,11 @@ Business.init(
       field: "business_type_id",
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false
+    },
+    businessCategoryId: {
+      field: "business_category_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     pan: {
       type: DataTypes.STRING(10),

@@ -8,6 +8,7 @@ import FamilyMember from "./FamilyMember";
 import GeoPolitical from "./GeoPolitical";
 import Member from "./Member";
 import MetaBusinessType from "./MetaBusinessType";
+import MetaBusinessCategory from "./MetaBusinessCategory";
 import MetaBoothNumber from "./MetaBoothNumber";
 import MetaCommunityType from "./MetaCommunityType";
 import MetaMlaConstituency from "./MetaMlaConstituency";
@@ -78,6 +79,14 @@ const establishAssociations = (): void => {
 
   Business.belongsTo(MetaBusinessType, { foreignKey: "businessTypeId", as: "businessType" });
   MetaBusinessType.hasMany(Business, { foreignKey: "businessTypeId", as: "businesses" });
+  Business.belongsTo(MetaBusinessCategory, {
+    foreignKey: "businessCategoryId",
+    as: "businessCategory"
+  });
+  MetaBusinessCategory.hasMany(Business, {
+    foreignKey: "businessCategoryId",
+    as: "businesses"
+  });
 
   MetaBoothNumber.belongsTo(MetaMlaConstituency, {
     foreignKey: "mlaConstituencyId",
@@ -665,6 +674,7 @@ export {
   Member,
   MetaBoothNumber,
   MetaBusinessType,
+  MetaBusinessCategory,
   MetaCommunityType,
   MetaMlaConstituency,
   MetaPermission,

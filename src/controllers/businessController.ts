@@ -5,6 +5,7 @@ import type { Attributes, WhereOptions } from "sequelize";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import Business from "../models/Business";
+import MetaBusinessCategory from "../models/MetaBusinessCategory";
 import MetaBusinessType from "../models/MetaBusinessType";
 import asyncHandler from "../utils/asyncHandler";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
@@ -39,6 +40,7 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;
   const businessTypeId = req.query.businessTypeId as string;
+  const businessCategoryId = req.query.businessCategoryId as string;
   const includeAuditFields = shouldIncludeAuditFields(req.query);
   const sortBy = validateSortColumn(
     req.query.sortBy,
@@ -69,6 +71,9 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
   if (businessTypeId) {
     filters.push({ businessTypeId: Number.parseInt(businessTypeId, 10) });
   }
+  if (businessCategoryId) {
+    filters.push({ businessCategoryId: Number.parseInt(businessCategoryId, 10) });
+  }
 
   const where: WhereOptions<Attributes<Business>> | undefined = filters.length
     ? { [Op.and]: filters }
@@ -81,6 +86,11 @@ export const listBusinesses = asyncHandler(async (req: Request, res: Response) =
       {
         model: MetaBusinessType,
         as: "businessType",
+        attributes: ["id", "dispName", "description", "icon"]
+      },
+      {
+        model: MetaBusinessCategory,
+        as: "businessCategory",
         attributes: ["id", "dispName", "description", "icon"]
       }
     ],
@@ -111,6 +121,11 @@ export const getBusiness = asyncHandler(async (req: Request, res: Response) => {
         model: MetaBusinessType,
         as: "businessType",
         attributes: ["id", "dispName", "description", "icon"]
+      },
+      {
+        model: MetaBusinessCategory,
+        as: "businessCategory",
+        attributes: ["id", "dispName", "description", "icon"]
       }
     ]
   });
@@ -132,6 +147,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   const {
     businessName,
     businessTypeId,
+    businessCategoryId,
     pan,
     gstin,
     contactNumber,
@@ -158,6 +174,12 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   if (!businessType) {
     throw new ApiError("Invalid business type ID", 400);
   }
+  if (businessCategoryId !== undefined && businessCategoryId !== null) {
+    const businessCategory = await MetaBusinessCategory.findByPk(businessCategoryId);
+    if (!businessCategory) {
+      throw new ApiError("Invalid business category ID", 400);
+    }
+  }
 
   // Check if PAN already exists
   if (pan) {
@@ -178,6 +200,7 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   const business = await Business.create({
     businessName,
     businessTypeId,
+    businessCategoryId: businessCategoryId ?? null,
     pan: pan || null,
     gstin: gstin || null,
     contactNumber: contactNumber || null,
@@ -200,6 +223,11 @@ export const createBusiness = asyncHandler(async (req: AuthenticatedRequest, res
         model: MetaBusinessType,
         as: "businessType",
         attributes: ["id", "dispName", "description", "icon"]
+      },
+      {
+        model: MetaBusinessCategory,
+        as: "businessCategory",
+        attributes: ["id", "dispName", "description", "icon"]
       }
     ]
   });
@@ -218,6 +246,7 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   const {
     businessName,
     businessTypeId,
+    businessCategoryId,
     pan,
     gstin,
     contactNumber,
@@ -239,6 +268,16 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
     const businessType = await MetaBusinessType.findByPk(businessTypeId);
     if (!businessType) {
       throw new ApiError("Invalid business type ID", 400);
+    }
+  }
+  if (businessCategoryId !== undefined && businessCategoryId !== business.businessCategoryId) {
+    if (businessCategoryId === null) {
+      // allow clearing
+    } else {
+      const businessCategory = await MetaBusinessCategory.findByPk(businessCategoryId);
+      if (!businessCategory) {
+        throw new ApiError("Invalid business category ID", 400);
+      }
     }
   }
 
@@ -271,6 +310,7 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
   // Update only provided fields
   if (businessName !== undefined) business.businessName = businessName;
   if (businessTypeId !== undefined) business.businessTypeId = businessTypeId;
+  if (businessCategoryId !== undefined) business.businessCategoryId = businessCategoryId;
   if (pan !== undefined) business.pan = pan;
   if (gstin !== undefined) business.gstin = gstin;
   if (contactNumber !== undefined) business.contactNumber = contactNumber;
@@ -296,6 +336,11 @@ export const updateBusiness = asyncHandler(async (req: AuthenticatedRequest, res
       {
         model: MetaBusinessType,
         as: "businessType",
+        attributes: ["id", "dispName", "description", "icon"]
+      },
+      {
+        model: MetaBusinessCategory,
+        as: "businessCategory",
         attributes: ["id", "dispName", "description", "icon"]
       }
     ]
@@ -351,6 +396,11 @@ export const toggleBusinessStatus = asyncHandler(
         {
           model: MetaBusinessType,
           as: "businessType",
+          attributes: ["id", "dispName", "description", "icon"]
+        },
+        {
+          model: MetaBusinessCategory,
+          as: "businessCategory",
           attributes: ["id", "dispName", "description", "icon"]
         }
       ]

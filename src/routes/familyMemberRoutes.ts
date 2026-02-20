@@ -26,7 +26,7 @@ router.post("/family-members", authenticate(), parseFormData, createFamilyMember
  * @access  Public
  * @query   ?page=1&limit=25&search=keyword&status=1&userId=1&relationTypeId=1
  */
-router.get("/family-members", listFamilyMembers);
+router.get("/family-members", authenticate(), listFamilyMembers);
 
 /**
  * @route   GET /api/family-members/:id

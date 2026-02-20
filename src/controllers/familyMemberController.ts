@@ -4,6 +4,7 @@ import type { Attributes, WhereOptions } from "sequelize";
 
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import FamilyMember from "../models/FamilyMember";
 import MetaRelationType from "../models/MetaRelationType";
 import User from "../models/User";
@@ -24,7 +25,7 @@ import { assertNoRestrictedFields } from "../utils/payloadValidation";
  * List all family members with pagination and search
  * GET /api/family-members
  */
-export const listFamilyMembers = asyncHandler(async (req: Request, res: Response) => {
+export const listFamilyMembers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
     req.query.limit as string,
@@ -33,8 +34,8 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
   );
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string | undefined;
-  const userId = req.query.userId as string;
   const relationTypeId = req.query.relationTypeId as string;
+  const { id: userId } = requireAuthenticatedUser(req);
 
   const filters: WhereOptions<Attributes<FamilyMember>>[] = [];
 
@@ -58,9 +59,7 @@ export const listFamilyMembers = asyncHandler(async (req: Request, res: Response
     }
   }
 
-  if (userId) {
-    filters.push({ userId: Number.parseInt(userId, 10) });
-  }
+  filters.push({ userId });
 
   if (relationTypeId) {
     filters.push({ relationTypeId: Number.parseInt(relationTypeId, 10) });

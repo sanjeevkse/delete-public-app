@@ -14,8 +14,6 @@ import FormFieldOption from "../models/FormFieldOption";
 import UserRole from "../models/UserRole";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
-import FamilyMember from "../models/FamilyMember";
-import MetaRelationType from "../models/MetaRelationType";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 import { getDescendantRoleIds } from "../services/userHierarchyService";
 
@@ -694,63 +692,4 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
   sendSuccess(res, reportData, "Form event report retrieved successfully");
 });
 
-/**
- * Get family members report (tabular data)
- * GET /reports/family-members
- */
-export const getFamilyMembersReport = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { id: userId } = requireAuthenticatedUser(req);
-
-    const members = await FamilyMember.findAll({
-      where: { userId, status: 1 },
-      include: [
-        {
-          model: MetaRelationType,
-          as: "relationType",
-          attributes: ["id", "dispName"]
-        }
-      ],
-      order: [["createdAt", "DESC"]]
-    });
-
-    const headers = [
-      "SL No.",
-      "Full Name",
-      "Relation",
-      "Contact Number",
-      "Email",
-      "Full Address",
-      "Aadhaar Number",
-      "Actions"
-    ];
-
-    const data = members.map((member, index) => {
-      const relationLabel = member.relationType?.dispName ?? "";
-      return [
-        index + 1,
-        member.fullName ?? "",
-        relationLabel,
-        member.contactNumber ?? "",
-        member.email ?? "",
-        member.fullAddress ?? "",
-        member.aadhaarNumber ?? "",
-        member.id
-      ];
-    });
-
-    const reportData = {
-      metrics: {
-        totalFamilyMembers: members.length
-      },
-      tabularData: {
-        headers,
-        data
-      }
-    };
-
-    sendSuccess(res, reportData, "Family members report retrieved successfully");
-  }
-);
-
-export default { getFormEventReport, getFamilyMembersReport };
+export default { getFormEventReport };
