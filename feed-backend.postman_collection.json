@@ -7875,6 +7875,33 @@
           "response": []
         },
         {
+          "name": "Get Form Event Metrics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/form-events/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "form-events",
+                "metrics"
+              ]
+            },
+            "description": "Get global form event metrics (no formEventId required). Metrics include totalSubmissions, totalForms, publicRegistrationForms, crfRegistrationForms, and notAssignedForms."
+          },
+          "response": []
+        },
+        {
           "name": "Get Posts Report",
           "request": {
             "auth": {
@@ -7974,6 +8001,76 @@
               ]
             },
             "description": "Get business report with category metrics and tabular data (only businesses created by the authenticated user)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Events Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/public-events?eventId=&wardNumberId=&boothNumberId=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "public-events"
+              ],
+              "query": [
+                {
+                  "key": "eventId",
+                  "value": "",
+                  "description": "Event id (required)."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Filter by ward id (-1 or empty for all)."
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "",
+                  "description": "Filter by booth id (-1 or empty for all)."
+                }
+              ]
+            },
+            "description": "Get public events report with metrics and tabular registration data. Event filter is mandatory."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Events Metrics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/public-events/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reports",
+                "public-events",
+                "metrics"
+              ]
+            },
+            "description": "Public events metrics (no eventId required). Metrics include totalEvents, registeredUsers, upcomingEvents, eventsThisMonth, and eventsThisWeek."
           },
           "response": []
         }

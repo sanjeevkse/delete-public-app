@@ -692,4 +692,43 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
   sendSuccess(res, reportData, "Form event report retrieved successfully");
 });
 
-export default { getFormEventReport };
+/**
+ * Get global form event metrics (no formEventId required)
+ * GET /reports/form-events/metrics
+ */
+export const getFormEventMetrics = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const submissionWhere: Record<string | symbol, unknown> = { status: 1 };
+
+  const hierarchyUserIds = await resolveHierarchyUserIds(req.user);
+  if (hierarchyUserIds && hierarchyUserIds.length > 0) {
+    submissionWhere.submittedBy = { [Op.in]: hierarchyUserIds };
+  }
+
+  const [
+    totalSubmissions,
+    totalForms,
+    publicRegistrationForms,
+    crfRegistrationForms,
+    assignedFormsCount
+  ] = await Promise.all([
+    FormSubmission.count({ where: submissionWhere }),
+    Form.count(),
+    Form.count({ where: { isPublic: 1 } }),
+    Form.count({ where: { isPublic: { [Op.ne]: 1 } } }),
+    FormEvent.count({ distinct: true, col: "formId" })
+  ]);
+
+  const notAssignedForms = Math.max(0, totalForms - assignedFormsCount);
+
+  const metrics = {
+    totalSubmissions,
+    totalForms,
+    publicRegistrationForms,
+    crfRegistrationForms,
+    notAssignedForms
+  };
+
+  sendSuccess(res, { metrics }, "Form event metrics retrieved successfully");
+});
+
+export default { getFormEventReport, getFormEventMetrics };
