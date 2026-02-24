@@ -389,7 +389,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const { rows, count } = await User.findAndCountAll({
     where: userWhere,
-    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
+    attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt", "status"] }),
     include: [
       {
         model: UserProfile,
@@ -505,7 +505,7 @@ export const listUsersPendingApproval = asyncHandler(
 
     const { rows, count } = await User.findAndCountAll({
       where: whereClause,
-      attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt"] }),
+      attributes: buildQueryAttributes({ includeAuditFields, keepFields: ["createdAt", "status"] }),
       include: [
         {
           model: UserProfile,

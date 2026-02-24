@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { ApiError } from "./errorHandler";
+import User from "../models/User";
 import { verifyAccessToken } from "../utils/auth";
 
 export interface AuthenticatedRequest extends Request {
@@ -13,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 
 export const authenticate =
   () =>
-  (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+  async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
     const header = req.headers.authorization?.trim();
     if (!header) {
       throw new ApiError("Authorization header missing", 401);
@@ -33,6 +34,13 @@ export const authenticate =
     try {
       const payload = verifyAccessToken(token);
       console.log("[AUTH DEBUG] Token verified:", payload);
+      const user = await User.findByPk(payload.userId, { attributes: ["id", "status"] });
+      if (!user) {
+        throw new ApiError("User not found", 401);
+      }
+      if (user.status !== 1) {
+        throw new ApiError("Account is inactive", 403);
+      }
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
@@ -56,7 +64,7 @@ export const authenticate =
  */
 export const authenticateOptional =
   () =>
-  (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+  async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
     const header = req.headers.authorization?.trim();
 
     // If no authorization header, allow access (public)
@@ -80,6 +88,13 @@ export const authenticateOptional =
     try {
       const payload = verifyAccessToken(token);
       console.log("[AUTH DEBUG] Optional token verified:", payload);
+      const user = await User.findByPk(payload.userId, { attributes: ["id", "status"] });
+      if (!user) {
+        throw new ApiError("User not found", 401);
+      }
+      if (user.status !== 1) {
+        throw new ApiError("Account is inactive", 403);
+      }
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],

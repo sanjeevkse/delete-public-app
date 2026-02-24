@@ -3299,6 +3299,7 @@
         },
         {
           "name": "List Users",
+          "description": "Returns users with status from tbl_user (1=active, 0=inactive, 2=pending approval).",
           "request": {
             "auth": {
               "type": "bearer",
