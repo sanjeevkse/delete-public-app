@@ -53,6 +53,8 @@ type MetaTableResolvedLookup = Map<
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
 const DATETIME_FIELD_TYPES = new Set(["datetime"]);
+const DROPDOWN_FIELD_TYPES = new Set(["select", "dropdown"]);
+const MULTI_VALUE_FIELD_TYPES = new Set(["checkbox"]);
 const WARD_BOOTH_FIELD_KEYS = new Set(["__ward_number_id", "__booth_number_id"]);
 const WARD_BOOTH_META_TABLES = new Map<string, string>([
   ["__ward_number_id", "tbl_meta_ward_number"],
@@ -110,6 +112,11 @@ const formatValueByFieldType = (value: string, fieldType?: string): string | nul
   if (TIME_FIELD_TYPES.has(fieldType)) return formatTimeOnlyValue(value);
   if (DATETIME_FIELD_TYPES.has(fieldType)) return formatDateTimeValue(value);
   return null;
+};
+
+const isDropdownFieldId = (fieldTypeLookup: Map<number, string>, fieldId: number): boolean => {
+  const fieldType = fieldTypeLookup.get(fieldId);
+  return fieldType ? DROPDOWN_FIELD_TYPES.has(fieldType) : false;
 };
 
 const buildFieldTypeLookup = async (fieldIds: number[]) => {
@@ -290,9 +297,25 @@ const parseCsvIds = (value: string): string[] => {
     .filter((entry) => entry.length > 0);
 };
 
+const parseJsonArrayIds = (value: string): string[] | null => {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return null;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!Array.isArray(parsed)) return null;
+    return parsed
+      .map((entry) => (entry === null || entry === undefined ? "" : String(entry).trim()))
+      .filter((entry) => entry.length > 0);
+  } catch (error) {
+    return null;
+  }
+};
+
 const parseValueIds = (raw: string): string[] => {
   const trimmed = raw.trim();
   if (!trimmed) return [];
+  const jsonArray = parseJsonArrayIds(trimmed);
+  if (jsonArray) return jsonArray;
   return trimmed.includes(",") ? parseCsvIds(trimmed) : [trimmed];
 };
 
@@ -326,7 +349,10 @@ const buildOptionLookup = async (fieldIds: number[]) => {
   return optionLookup;
 };
 
-const buildMetaTableFieldLookup = async (fieldIds: number[]) => {
+const buildMetaTableFieldLookup = async (
+  fieldIds: number[],
+  fieldTypeLookup: Map<number, string>
+) => {
   const lookup = new Map<number, string>();
   if (fieldIds.length === 0) return lookup;
 
@@ -336,6 +362,8 @@ const buildMetaTableFieldLookup = async (fieldIds: number[]) => {
   });
 
   for (const field of fields) {
+    const fieldType = fieldTypeLookup.get(field.id);
+    if (!fieldType || !DROPDOWN_FIELD_TYPES.has(fieldType)) continue;
     const metaTable = (field as any).metaTable;
     if (typeof metaTable === "string" && metaTable.trim()) {
       lookup.set(field.id, metaTable);
@@ -349,6 +377,8 @@ const buildMetaTableFieldLookup = async (fieldIds: number[]) => {
     });
     for (const field of keyFields) {
       if (lookup.has(field.id)) continue;
+      const fieldType = fieldTypeLookup.get(field.id);
+      if (!fieldType || !DROPDOWN_FIELD_TYPES.has(fieldType)) continue;
       const fieldKey = (field as any).fieldKey;
       if (typeof fieldKey !== "string") continue;
       const metaTable = WARD_BOOTH_META_TABLES.get(fieldKey);
@@ -473,6 +503,7 @@ const attachResolvedOptions = (
     const optionsForField = optionLookup.get(fieldId);
     const rawValue = typeof fv.value === "string" ? fv.value.trim() : "";
     const target = fv.dataValues ?? fv;
+    const isMultiValueField = fieldType ? MULTI_VALUE_FIELD_TYPES.has(fieldType) : false;
 
     if (!rawValue) {
       target.resolved = null;
@@ -485,8 +516,10 @@ const attachResolvedOptions = (
       const metaEntry = metaTableValueLookup.get(metaTableName);
       if (metaEntry) {
         const { primaryKey, records } = metaEntry;
-        if (rawValue.includes(",")) {
-          const ids = parseCsvIds(rawValue);
+        const jsonArrayIds = parseJsonArrayIds(rawValue);
+        const isArrayValue = isMultiValueField || Boolean(jsonArrayIds) || rawValue.includes(",");
+        if (isArrayValue) {
+          const ids = jsonArrayIds ?? parseValueIds(rawValue);
           const resolved = ids
             .map((id) => {
               const record = records.get(id);
@@ -525,8 +558,10 @@ const attachResolvedOptions = (
 
     if (!optionsForField) continue;
 
-    if (rawValue.includes(",")) {
-      const ids = parseCsvIds(rawValue);
+    const jsonArrayIds = parseJsonArrayIds(rawValue);
+    const isArrayValue = isMultiValueField || Boolean(jsonArrayIds) || rawValue.includes(",");
+    if (isArrayValue) {
+      const ids = jsonArrayIds ?? parseValueIds(rawValue);
       const resolved = ids
         .map((id) => optionsForField.get(id))
         .filter((entry): entry is ResolvedOption => Boolean(entry));
@@ -559,7 +594,10 @@ const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
   const optionLookup = await buildOptionLookup(Array.from(fieldIds));
   const fieldTypeLookup = await buildFieldTypeLookup(Array.from(fieldIds));
   const fieldKeyLookup = await buildFieldKeyLookup(Array.from(fieldIds));
-  const fieldMetaTableLookup = await buildMetaTableFieldLookup(Array.from(fieldIds));
+  const fieldMetaTableLookup = await buildMetaTableFieldLookup(
+    Array.from(fieldIds),
+    fieldTypeLookup
+  );
   const metaTableValueLookup = await buildMetaTableValueLookup(
     allFieldValues,
     fieldMetaTableLookup
@@ -711,16 +749,18 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       }
     }
 
-    if (field.metaTable && value) {
-      const ids = parseValueIds(value);
-      await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
-    }
-
-    if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
-      const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
-      if (metaTableName) {
+    if (isDropdownFieldId(fieldTypeLookup, field.id)) {
+      if (field.metaTable && value) {
         const ids = parseValueIds(value);
-        await ensureMetaTableValuesExist(metaTableName, ids, field.label);
+        await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
+      }
+
+      if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
+        const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
+        if (metaTableName) {
+          const ids = parseValueIds(value);
+          await ensureMetaTableValuesExist(metaTableName, ids, field.label);
+        }
       }
     }
   }
@@ -990,16 +1030,18 @@ export const updateFormSubmission = asyncHandler(
           }
         }
 
-        if (field.metaTable && value) {
-          const ids = parseValueIds(value);
-          await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
-        }
-
-        if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
-          const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
-          if (metaTableName) {
+        if (isDropdownFieldId(fieldTypeLookup, field.id)) {
+          if (field.metaTable && value) {
             const ids = parseValueIds(value);
-            await ensureMetaTableValuesExist(metaTableName, ids, field.label);
+            await ensureMetaTableValuesExist(field.metaTable, ids, field.label);
+          }
+
+          if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey) && value) {
+            const metaTableName = WARD_BOOTH_META_TABLES.get(field.fieldKey);
+            if (metaTableName) {
+              const ids = parseValueIds(value);
+              await ensureMetaTableValuesExist(metaTableName, ids, field.label);
+            }
           }
         }
       }

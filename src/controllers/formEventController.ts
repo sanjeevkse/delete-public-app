@@ -31,6 +31,7 @@ import {
 import { buildAccessibilityFilter } from "../services/userHierarchyService";
 
 const DEFAULT_SORT_COLUMNS = ["startDate", "endDate", "createdAt", "title"];
+const DROPDOWN_FIELD_TYPES = new Set(["select", "dropdown"]);
 
 const getBaseIncludes = () => [
   buildAccessibilityInclude(),
@@ -45,6 +46,11 @@ const getBaseIncludes = () => [
           {
             model: FormFieldOption,
             as: "options"
+          },
+          {
+            association: "fieldType",
+            required: false,
+            attributes: ["id", "fieldType", "dispName"]
           }
         ]
       }
@@ -174,11 +180,22 @@ const extractMetaTable = (field: any): string | null => {
   return String(value);
 };
 
+const isDropdownField = (field: any): boolean => {
+  const fieldType =
+    typeof field?.fieldType?.fieldType === "string"
+      ? field.fieldType.fieldType
+      : undefined;
+  return fieldType ? DROPDOWN_FIELD_TYPES.has(fieldType) : false;
+};
+
 const buildMetaTableOptionsMap = async (
   fields: any[]
 ): Promise<Record<string, { optionLabel: string; optionValue: any; sortOrder: number; isDefault: 0 }[]>> => {
   const tableNames = new Set<string>();
   for (const field of fields) {
+    if (!isDropdownField(field)) {
+      continue;
+    }
     const tableName = extractMetaTable(field);
     if (tableName) {
       tableNames.add(tableName);
@@ -237,6 +254,9 @@ const applyMetaTableOptionsToEvents = (
       continue;
     }
     for (const field of fields) {
+      if (!isDropdownField(field)) {
+        continue;
+      }
       const tableName = extractMetaTable(field);
       if (tableName && optionsByTable[tableName]) {
         field.options = optionsByTable[tableName];

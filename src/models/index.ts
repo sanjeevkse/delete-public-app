@@ -56,6 +56,8 @@ import ComplaintMedia from "./ComplaintMedia";
 import MetaComplaintStatus from "./MetaComplaintStatus";
 import ComplaintStatusHistory from "./ComplaintStatusHistory";
 import ComplaintStatusHistoryMedia from "./ComplaintStatusHistoryMedia";
+import ScheduleEvent from "./ScheduleEvent";
+import ScheduleEventMedia from "./ScheduleEventMedia";
 import MetaFieldType from "./MetaFieldType";
 import MetaInputFormat from "./MetaInputFormat";
 import Form from "./Form";
@@ -120,6 +122,15 @@ const establishAssociations = (): void => {
 
   Event.hasMany(EventMedia, { foreignKey: "eventId", as: "media" });
   EventMedia.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+
+  ScheduleEvent.hasMany(ScheduleEventMedia, {
+    foreignKey: "scheduleEventId",
+    as: "media"
+  });
+  ScheduleEventMedia.belongsTo(ScheduleEvent, {
+    foreignKey: "scheduleEventId",
+    as: "scheduleEvent"
+  });
 
   Event.hasMany(EventRegistration, { foreignKey: "eventId", as: "registrations" });
   EventRegistration.belongsTo(Event, { foreignKey: "eventId", as: "event" });

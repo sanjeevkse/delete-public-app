@@ -1,0 +1,138 @@
+import {
+  Model,
+  DataTypes,
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes
+} from "sequelize";
+import sequelize from "../config/database";
+
+class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationAttributes<ScheduleEvent>> {
+  declare id: CreationOptional<number>;
+  declare title: string;
+  declare description: string | null;
+  declare eventType: string | null;
+  declare priority: string | null;
+  declare start: Date;
+  declare end: Date;
+  declare allDay: CreationOptional<number>;
+  declare locationText: string | null;
+  declare latitude: number;
+  declare longitude: number;
+  declare wardNumberId: number | null;
+  declare boothNumberId: number | null;
+  declare createdBy: number | null;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedBy: number | null;
+  declare updatedAt: CreationOptional<Date>;
+  declare status: CreationOptional<number>;
+}
+
+ScheduleEvent.init(
+  {
+    id: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    title: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    eventType: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: "event_type"
+    },
+    priority: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    start: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "start_at"
+    },
+    end: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      field: "end_at"
+    },
+    allDay: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+      field: "all_day"
+    },
+    locationText: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: "location_text"
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: false,
+      validate: {
+        min: -90,
+        max: 90
+      }
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: false,
+      validate: {
+        min: -180,
+        max: 180
+      }
+    },
+    wardNumberId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      field: "ward_number_id"
+    },
+    boothNumberId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      field: "booth_number_id"
+    },
+    createdBy: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: "created_by"
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: "created_at"
+    },
+    updatedBy: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: "updated_by"
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      field: "updated_at"
+    },
+    status: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1
+    }
+  },
+  {
+    sequelize,
+    tableName: "tbl_schedule_event",
+    modelName: "ScheduleEvent",
+    timestamps: false
+  }
+);
+
+export default ScheduleEvent;

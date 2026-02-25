@@ -203,6 +203,8 @@ const normalizeMetaTable = (value: unknown): string | null => {
   throw new ApiError("metaTable must be a string", 400);
 };
 
+const DROPDOWN_FIELD_TYPES = new Set(["select", "dropdown"]);
+
 const ensureMetaTableExists = async (tableName: string | null): Promise<void> => {
   if (!tableName) {
     return;
@@ -224,11 +226,22 @@ const extractMetaTable = (field: any): string | null => {
   return String(value);
 };
 
+const isDropdownField = (field: any): boolean => {
+  const fieldType =
+    typeof field?.fieldType?.fieldType === "string"
+      ? field.fieldType.fieldType
+      : undefined;
+  return fieldType ? DROPDOWN_FIELD_TYPES.has(fieldType) : false;
+};
+
 const applyMetaTableOptionsToFields = (
   fields: any[],
   optionsByTable: Record<string, FormFieldOptionInput[]>
 ): void => {
   for (const field of fields) {
+    if (!isDropdownField(field)) {
+      continue;
+    }
     const tableName = extractMetaTable(field);
     if (tableName && optionsByTable[tableName]) {
       field.options = optionsByTable[tableName];
@@ -241,6 +254,9 @@ const buildMetaTableOptionsMap = async (
 ): Promise<Record<string, FormFieldOptionInput[]>> => {
   const tableNames = new Set<string>();
   for (const field of fields) {
+    if (!isDropdownField(field)) {
+      continue;
+    }
     const tableName = extractMetaTable(field);
     if (tableName) {
       tableNames.add(tableName);

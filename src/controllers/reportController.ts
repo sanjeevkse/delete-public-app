@@ -20,6 +20,7 @@ import { getDescendantRoleIds } from "../services/userHierarchyService";
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
 const DATETIME_FIELD_TYPES = new Set(["datetime"]);
+const DROPDOWN_FIELD_TYPES = new Set(["select", "dropdown"]);
 const DATE_INPUT_FORMATS = new Set([7]);
 const TIME_INPUT_FORMATS = new Set([8]);
 const DATETIME_INPUT_FORMATS = new Set([9]);
@@ -91,6 +92,14 @@ const formatValueByFieldType = (value: string, field: any): string | null => {
     return formatDateTimeValue(value);
   }
   return null;
+};
+
+const isDropdownFieldType = (field: any): boolean => {
+  const fieldType =
+    typeof field?.fieldType?.fieldType === "string"
+      ? field.fieldType.fieldType
+      : undefined;
+  return fieldType ? DROPDOWN_FIELD_TYPES.has(fieldType) : false;
 };
 
 const formatDateTime = (value: Date | string | null | undefined): string | null => {
@@ -471,13 +480,15 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
   const optionLabelLookup = new Map<number, Map<string, string>>();
   const metaTableFieldLookup = new Map<number, string>();
   for (const field of formFields) {
-    if ((field as any).metaTable) {
-      metaTableFieldLookup.set(field.id, (field as any).metaTable);
-    } else if (typeof (field as any).fieldKey === "string") {
-      const fieldKey = (field as any).fieldKey;
-      const metaTable = WARD_BOOTH_META_TABLES.get(fieldKey);
-      if (metaTable) {
-        metaTableFieldLookup.set(field.id, metaTable);
+    if (isDropdownFieldType(field)) {
+      if ((field as any).metaTable) {
+        metaTableFieldLookup.set(field.id, (field as any).metaTable);
+      } else if (typeof (field as any).fieldKey === "string") {
+        const fieldKey = (field as any).fieldKey;
+        const metaTable = WARD_BOOTH_META_TABLES.get(fieldKey);
+        if (metaTable) {
+          metaTableFieldLookup.set(field.id, metaTable);
+        }
       }
     }
     const options = (field as any).options || [];

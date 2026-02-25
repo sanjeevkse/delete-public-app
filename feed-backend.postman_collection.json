@@ -6095,6 +6095,297 @@
       ]
     },
     {
+      "name": "Schedule-Events",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Vet Appointment",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Annual checkup",
+                  "type": "text"
+                },
+                {
+                  "key": "eventType",
+                  "value": "Appointment",
+                  "type": "text"
+                },
+                {
+                  "key": "priority",
+                  "value": "Normal",
+                  "type": "text"
+                },
+                {
+                  "key": "start",
+                  "value": "2026-02-22T10:00:00.000Z",
+                  "type": "text"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-02-22T11:00:00.000Z",
+                  "type": "text"
+                },
+                {
+                  "key": "allDay",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "locationText",
+                  "value": "City Clinic",
+                  "type": "text"
+                },
+                {
+                  "key": "latitude",
+                  "value": "12.9715987",
+                  "type": "text"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.5945627",
+                  "type": "text"
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "12",
+                  "type": "text"
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "45",
+                  "type": "text"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/local/image.jpg"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/schedule-events"
+          },
+          "response": []
+        },
+        {
+          "name": "List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventType=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "schedule-events"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search across title, description, locationText, eventType, priority"
+                },
+                {
+                  "key": "title",
+                  "value": "",
+                  "description": "Filter by title (partial match)"
+                },
+                {
+                  "key": "eventType",
+                  "value": "",
+                  "description": "Filter by event type (partial match)"
+                },
+                {
+                  "key": "priority",
+                  "value": "",
+                  "description": "Filter by priority (partial match)"
+                },
+                {
+                  "key": "locationText",
+                  "value": "",
+                  "description": "Filter by location text (partial match)"
+                },
+                {
+                  "key": "allDay",
+                  "value": "",
+                  "description": "Filter by all-day flag (true/false/1/0)"
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Filter by ward number id"
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "",
+                  "description": "Filter by booth number id"
+                },
+                {
+                  "key": "latitude",
+                  "value": "",
+                  "description": "Filter by latitude"
+                },
+                {
+                  "key": "longitude",
+                  "value": "",
+                  "description": "Filter by longitude"
+                },
+                {
+                  "key": "startFrom",
+                  "value": "",
+                  "description": "Filter start >= ISO datetime"
+                },
+                {
+                  "key": "startTo",
+                  "value": "",
+                  "description": "Filter start <= ISO datetime"
+                },
+                {
+                  "key": "endFrom",
+                  "value": "",
+                  "description": "Filter end >= ISO datetime"
+                },
+                {
+                  "key": "endTo",
+                  "value": "",
+                  "description": "Filter end <= ISO datetime"
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Sort direction: ASC or DESC"
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "start",
+                  "description": "Sort by: start, end, title, createdAt, updatedAt, priority, eventType"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Event-Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/schedule-events/1"
+          },
+          "response": []
+        },
+        {
+          "name": "Update",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Medicine Follow-up",
+                  "type": "text"
+                },
+                {
+                  "key": "start",
+                  "value": "2026-02-22T14:00:00.000Z",
+                  "type": "text"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-02-22T15:00:00.000Z",
+                  "type": "text"
+                },
+                {
+                  "key": "priority",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "latitude",
+                  "value": "12.971599",
+                  "type": "text"
+                },
+                {
+                  "key": "longitude",
+                  "value": "77.594563",
+                  "type": "text"
+                },
+                {
+                  "key": "media",
+                  "type": "file",
+                  "src": "/path/to/local/updated-image.jpg"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/schedule-events/1"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/schedule-events/1"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Ward Numbers",
       "item": [
         {
