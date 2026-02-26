@@ -14,33 +14,33 @@ export interface AuthenticatedRequest extends Request {
 
 export const authenticate =
   () =>
-  async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
+  (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+    const header = req.headers.authorization?.trim();
+    if (!header) {
+      throw new ApiError("Authorization header missing", 401);
+    }
+
+    const match = header.match(/^(\S+)\s+(.+)$/);
+    if (!match) {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
+    const [, scheme, rawToken] = match;
+    const token = rawToken.trim();
+    if (!/^(Bearer)$/i.test(scheme) || token === "") {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
     try {
-      const header = req.headers.authorization?.trim();
-      if (!header) {
-        throw new ApiError("Authorization header missing", 401);
-      }
-
-      const match = header.match(/^(\S+)\s+(.+)$/);
-      if (!match) {
-        throw new ApiError("Invalid authorization header format", 401);
-      }
-
-      const [, scheme, rawToken] = match;
-      const token = rawToken.trim();
-      if (!/^(Bearer)$/i.test(scheme) || token === "") {
-        throw new ApiError("Invalid authorization header format", 401);
-      }
-
       const payload = verifyAccessToken(token);
       console.log("[AUTH DEBUG] Token verified:", payload);
-      const user = await User.findByPk(payload.userId, { attributes: ["id", "status"] });
-      if (!user) {
-        throw new ApiError("User not found", 401);
-      }
-      if (user.status !== 1) {
-        throw new ApiError("Account is inactive", 403);
-      }
+      // const user = await User.findByPk(payload.userId, { attributes: ["id", "status"] });
+      // if (!user) {
+      //   throw new ApiError("User not found", 401);
+      // }
+      // if (user.status !== 1) {
+      //   throw new ApiError("Account is inactive", 403);
+      // }
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
@@ -51,11 +51,8 @@ export const authenticate =
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.log("[AUTH DEBUG] Token verification failed:", errorMsg);
-      if (req.headers.authorization) {
-        const rawToken = req.headers.authorization?.trim().split(/\s+/)[1] ?? "";
-        console.log("[AUTH DEBUG] Token:", rawToken.substring(0, 50) + "...");
-      }
-      next(err instanceof ApiError ? err : new ApiError("Invalid or expired token", 401));
+      console.log("[AUTH DEBUG] Token:", token.substring(0, 50) + "...");
+      throw new ApiError("Invalid or expired token", 401);
     }
   };
 
@@ -67,37 +64,37 @@ export const authenticate =
  */
 export const authenticateOptional =
   () =>
-  async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
+  (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
+    const header = req.headers.authorization?.trim();
+
+    // If no authorization header, allow access (public)
+    if (!header) {
+      console.log("[AUTH DEBUG] No token provided - public access");
+      next();
+      return;
+    }
+
+    const match = header.match(/^(\S+)\s+(.+)$/);
+    if (!match) {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
+    const [, scheme, rawToken] = match;
+    const token = rawToken.trim();
+    if (!/^(Bearer)$/i.test(scheme) || token === "") {
+      throw new ApiError("Invalid authorization header format", 401);
+    }
+
     try {
-      const header = req.headers.authorization?.trim();
-
-      // If no authorization header, allow access (public)
-      if (!header) {
-        console.log("[AUTH DEBUG] No token provided - public access");
-        next();
-        return;
-      }
-
-      const match = header.match(/^(\S+)\s+(.+)$/);
-      if (!match) {
-        throw new ApiError("Invalid authorization header format", 401);
-      }
-
-      const [, scheme, rawToken] = match;
-      const token = rawToken.trim();
-      if (!/^(Bearer)$/i.test(scheme) || token === "") {
-        throw new ApiError("Invalid authorization header format", 401);
-      }
-
       const payload = verifyAccessToken(token);
       console.log("[AUTH DEBUG] Optional token verified:", payload);
-      const user = await User.findByPk(payload.userId, { attributes: ["id", "status"] });
-      if (!user) {
-        throw new ApiError("User not found", 401);
-      }
-      if (user.status !== 1) {
-        throw new ApiError("Account is inactive", 403);
-      }
+      // const user = await User.findByPk(payload.userId, { attributes: ["id", "status"] });
+      // if (!user) {
+      //   throw new ApiError("User not found", 401);
+      // }
+      // if (user.status !== 1) {
+      //   throw new ApiError("Account is inactive", 403);
+      // }
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
@@ -108,19 +105,15 @@ export const authenticateOptional =
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.log("[AUTH DEBUG] Optional token verification failed:", errorMsg);
-      if (req.headers.authorization) {
-        const rawToken = req.headers.authorization?.trim().split(/\s+/)[1] ?? "";
-        console.log("[AUTH DEBUG] Token:", rawToken.substring(0, 50) + "...");
-      }
+      console.log("[AUTH DEBUG] Token:", token.substring(0, 50) + "...");
 
       // For debug purposes, attach error to request
       (req as any).authError = {
         message: errorMsg,
-        tokenPreview:
-          req.headers.authorization?.trim().split(/\s+/)[1]?.substring(0, 50) + "..."
+        tokenPreview: token.substring(0, 50) + "..."
       };
 
-      next(err instanceof ApiError ? err : new ApiError(`Invalid or expired token: ${errorMsg}`, 401));
+      throw new ApiError(`Invalid or expired token: ${errorMsg}`, 401);
     }
   };
 

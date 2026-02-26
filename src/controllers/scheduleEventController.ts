@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { Op } from "sequelize";
-import type { WhereOptions } from "sequelize";
+import type { Order, WhereOptions } from "sequelize";
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
 import {
@@ -432,11 +432,13 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     "start"
   );
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
-  const order = [
-    [sortColumn, sortDirection],
-    ...(sortColumn !== "start" ? [["start", "ASC"]] : []),
-    ...(sortColumn !== "end" ? [["end", "ASC"]] : [])
-  ];
+  const order: Order = [[sortColumn, sortDirection]];
+  if (sortColumn !== "start") {
+    order.push(["start", "ASC"]);
+  }
+  if (sortColumn !== "end") {
+    order.push(["end", "ASC"]);
+  }
 
   const rows = await ScheduleEvent.findAll({
     where: { [Op.and]: filters },
