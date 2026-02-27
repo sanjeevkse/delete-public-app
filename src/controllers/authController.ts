@@ -253,6 +253,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const token = generateAccessToken({
     userId: user.id,
     roles: accessProfile.roles,
+    roleIds: accessProfile.roleIds,
     permissions: ["*"] //accessProfile.permissions
   });
 

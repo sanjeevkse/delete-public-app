@@ -16,6 +16,7 @@ import User from "../models/User";
 import UserProfile from "../models/UserProfile";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 import { getDescendantRoleIds } from "../services/userHierarchyService";
+import { getRoleIdsByNames } from "../services/rbacService";
 
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
@@ -202,12 +203,17 @@ const buildDayRange = (date: Date): { from: Date; to: Date } => {
 const resolveHierarchyUserIds = async (
   user: AuthenticatedRequest["user"]
 ): Promise<number[] | null> => {
-  if (!user?.id || !user.roles || user.roles.length === 0) return null;
+  if (!user?.id) return null;
+
+  const roleIds =
+    user.roleIds && user.roleIds.length > 0
+      ? user.roleIds
+      : await getRoleIdsByNames(user.roles ?? []);
+
+  if (roleIds.length === 0) return null;
 
   const allDescendantRoleIds: Set<number> = new Set();
-  for (const roleIdStr of user.roles) {
-    const roleId = parseInt(roleIdStr, 10);
-    if (!Number.isFinite(roleId)) continue;
+  for (const roleId of roleIds) {
     const descendantRoles = await getDescendantRoleIds(roleId);
     descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
   }

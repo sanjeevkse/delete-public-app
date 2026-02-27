@@ -11,6 +11,7 @@ import UserProfile from "../models/UserProfile";
 
 export type UserAccessProfile = {
   roles: string[];
+  roleIds: number[];
   permissions: string[];
 };
 
@@ -218,11 +219,12 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
   });
 
   if (!user) {
-    return { roles: [], permissions: [] };
+    return { roles: [], roleIds: [], permissions: [] };
   }
 
   const roles = user.roles ?? [];
   const roleNames = roles.map((role) => role.dispName);
+  const roleIds = roles.map((role) => role.id);
   const isPostsBlocked = user.profile?.postsBlocked ?? false;
 
   // If user has Admin role, grant all permissions
@@ -240,6 +242,7 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
 
     return {
       roles: roleNames,
+      roleIds,
       permissions
     };
   }
@@ -262,6 +265,21 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
 
   return {
     roles: roleNames,
+    roleIds,
     permissions
   };
+};
+
+export const getRoleIdsByNames = async (roleNames: string[]): Promise<number[]> => {
+  if (!roleNames || roleNames.length === 0) {
+    return [];
+  }
+
+  const roles = await MetaUserRole.findAll({
+    where: { dispName: { [Op.in]: roleNames } },
+    attributes: ["id"],
+    raw: true
+  });
+
+  return roles.map((role: any) => Number(role.id)).filter((id) => Number.isFinite(id));
 };

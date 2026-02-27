@@ -8,6 +8,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
     roles: string[];
+    roleIds: number[];
     permissions: string[];
   };
 }
@@ -44,6 +45,9 @@ export const authenticate =
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
+        roleIds: Array.isArray(payload.roleIds)
+          ? payload.roleIds.filter((id) => Number.isFinite(id))
+          : [],
         permissions: Array.isArray(payload.permissions) ? payload.permissions : []
       };
       console.log("[AUTH DEBUG] User set:", req.user);
@@ -98,6 +102,9 @@ export const authenticateOptional =
       req.user = {
         id: payload.userId,
         roles: Array.isArray(payload.roles) ? payload.roles : [],
+        roleIds: Array.isArray(payload.roleIds)
+          ? payload.roleIds.filter((id) => Number.isFinite(id))
+          : [],
         permissions: Array.isArray(payload.permissions) ? payload.permissions : []
       };
       console.log("[AUTH DEBUG] User set:", req.user);

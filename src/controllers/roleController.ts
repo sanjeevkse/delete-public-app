@@ -12,7 +12,8 @@ import {
   resolveRoleIdsOrDefault,
   setUserRoles,
   hasAdminRole,
-  enrichAdminRolePermissions
+  enrichAdminRolePermissions,
+  getRoleIdsByNames
 } from "../services/rbacService";
 import {
   sendSuccess,
@@ -79,8 +80,14 @@ export const listRoles = asyncHandler(async (req: Request, res: Response) => {
   );
 
   // Get current user's roles with their depth paths
+  const tokenUser = (req as any).user;
+  const tokenRoleIds =
+    tokenUser?.roleIds && tokenUser.roleIds.length > 0
+      ? tokenUser.roleIds
+      : await getRoleIdsByNames(tokenUser?.roles ?? []);
+
   const userRoles = await MetaUserRole.findAll({
-    where: { id: (req as any).user?.roles || [] }
+    where: { id: tokenRoleIds }
   });
 
   // Build filter condition: only show roles that are descendants of user's roles
@@ -147,8 +154,14 @@ export const getRole = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Check if user has access to this role (it must be a descendant of one of their roles)
+  const tokenUser = (req as any).user;
+  const tokenRoleIds =
+    tokenUser?.roleIds && tokenUser.roleIds.length > 0
+      ? tokenUser.roleIds
+      : await getRoleIdsByNames(tokenUser?.roles ?? []);
+
   const userRoles = await MetaUserRole.findAll({
-    where: { id: (req as any).user?.roles || [] }
+    where: { id: tokenRoleIds }
   });
 
   const hasAccess = userRoles.some(

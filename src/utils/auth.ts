@@ -5,6 +5,7 @@ import env from "../config/env";
 export type JwtPayload = {
   userId: number;
   roles: string[];
+  roleIds?: number[];
   permissions: string[];
 };
 

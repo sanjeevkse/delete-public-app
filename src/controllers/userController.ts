@@ -14,7 +14,8 @@ import {
   parseRoleIdsInput,
   resolveRoleIdsOrDefault,
   setUserRoles,
-  enrichAdminRolePermissions
+  enrichAdminRolePermissions,
+  getRoleIdsByNames
 } from "../services/rbacService";
 import {
   canManageUser,
@@ -363,18 +364,22 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   // Apply both role hierarchy and accessibility filters
   let roleHierarchyFilter: { [Op.in]: number[] } | undefined;
-  if (loggedInUser?.id && loggedInUser.roles && loggedInUser.roles.length > 0) {
-    // Get all descendant roles for the logged-in user's roles
-    const allDescendantRoleIds: Set<number> = new Set();
-    for (const roleIdStr of loggedInUser.roles) {
-      const roleId = parseInt(roleIdStr, 10);
-      if (!isNaN(roleId)) {
+  if (loggedInUser?.id) {
+    const roleIds =
+      loggedInUser.roleIds && loggedInUser.roleIds.length > 0
+        ? loggedInUser.roleIds
+        : await getRoleIdsByNames(loggedInUser.roles ?? []);
+
+    if (roleIds.length > 0) {
+      // Get all descendant roles for the logged-in user's roles
+      const allDescendantRoleIds: Set<number> = new Set();
+      for (const roleId of roleIds) {
         const descendantRoles = await getDescendantRoleIds(roleId);
         descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
       }
-    }
-    if (allDescendantRoleIds.size > 0) {
-      roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
+      if (allDescendantRoleIds.size > 0) {
+        roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
+      }
     }
   }
 
@@ -484,17 +489,21 @@ export const listUsersPendingApproval = asyncHandler(
 
     // Apply role hierarchy filter
     let roleHierarchyFilter: { [Op.in]: number[] } | undefined;
-    if (loggedInUser?.id && loggedInUser.roles && loggedInUser.roles.length > 0) {
-      const allDescendantRoleIds: Set<number> = new Set();
-      for (const roleIdStr of loggedInUser.roles) {
-        const roleId = parseInt(roleIdStr, 10);
-        if (!isNaN(roleId)) {
+    if (loggedInUser?.id) {
+      const roleIds =
+        loggedInUser.roleIds && loggedInUser.roleIds.length > 0
+          ? loggedInUser.roleIds
+          : await getRoleIdsByNames(loggedInUser.roles ?? []);
+
+      if (roleIds.length > 0) {
+        const allDescendantRoleIds: Set<number> = new Set();
+        for (const roleId of roleIds) {
           const descendantRoles = await getDescendantRoleIds(roleId);
           descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
         }
-      }
-      if (allDescendantRoleIds.size > 0) {
-        roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
+        if (allDescendantRoleIds.size > 0) {
+          roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
+        }
       }
     }
 
