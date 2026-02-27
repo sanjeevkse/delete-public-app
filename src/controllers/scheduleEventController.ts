@@ -447,7 +447,18 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     order
   });
 
-  return sendSuccess(res, rows, rows.length ? "Schedule events fetched successfully" : "No events found");
+  const payload = rows.map((row) => ({
+    id: String(row.id),
+    title: row.title,
+    start: row.start instanceof Date ? row.start.toISOString() : new Date(row.start).toISOString(),
+    end: row.end instanceof Date ? row.end.toISOString() : new Date(row.end).toISOString()
+  }));
+
+  return sendSuccess(
+    res,
+    payload,
+    payload.length ? "Schedule events fetched successfully" : "No events found"
+  );
 });
 
 export const getScheduleEventById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

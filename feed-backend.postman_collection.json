@@ -6291,6 +6291,7 @@
               ]
             }
           },
+          "description": "List schedule events. Response data is an array of { id, title, start, end } where start/end are ISO strings.",
           "response": []
         },
         {
@@ -7705,7 +7706,7 @@
                 "{{submissionId}}"
               ]
             },
-            "description": "Retrieve a specific form submission with all field values and metadata. User can view their own submissions; admins can view all. Option fields include `resolved` in each fieldValue."
+            "description": "Retrieve a specific form submission with all field values and metadata. User can view their own submissions; admins can view all. Option fields include `resolved` in each fieldValue. Checkbox values are returned as arrays."
           },
           "response": []
         },
@@ -7781,7 +7782,7 @@
                 }
               ]
             },
-            "description": "List all submissions for a specific form event with pagination, filtering, and sorting. Option fields include `resolved` in each fieldValue."
+            "description": "List all submissions for a specific form event with pagination, filtering, and sorting. Option fields include `resolved` in each fieldValue. Checkbox values are returned as arrays."
           },
           "response": []
         },
@@ -7846,7 +7847,7 @@
                 }
               ]
             },
-            "description": "List authenticated user's own form submissions with pagination and sorting. Option fields include `resolved` in each fieldValue."
+            "description": "List authenticated user's own form submissions with pagination and sorting. Option fields include `resolved` in each fieldValue. Checkbox values are returned as arrays."
           },
           "response": []
         },
@@ -8162,7 +8163,7 @@
                 }
               ]
             },
-            "description": "Get a report for a form event including summary metrics and tabular data. Metrics include totalSubmissions, totalForms, publicRegistrationForms, crfRegistrationForms, and notAssignedForms. Option fields in tabular data return labels. The first tabular header is \"SL No.\"."
+            "description": "Get a report for a form event including summary metrics and tabular data. Metrics include totalSubmissions, totalForms, publicRegistrationForms, crfRegistrationForms, and notAssignedForms. Option fields in tabular data return labels. The first tabular header is \"SL No.\". Report datetime fields are formatted as DD-MM-YYYY HH:mm in IST."
           },
           "response": []
         },

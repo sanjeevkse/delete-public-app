@@ -505,6 +505,11 @@ const attachResolvedOptions = (
     const target = fv.dataValues ?? fv;
     const isMultiValueField = fieldType ? MULTI_VALUE_FIELD_TYPES.has(fieldType) : false;
 
+    if (isMultiValueField && typeof fv.value === "string") {
+      const ids = parseValueIds(fv.value);
+      target.value = ids;
+    }
+
     if (!rawValue) {
       target.resolved = null;
       continue;

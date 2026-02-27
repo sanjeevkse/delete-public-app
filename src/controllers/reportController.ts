@@ -31,6 +31,26 @@ const WARD_BOOTH_META_TABLES = new Map<string, string>([
 ]);
 
 const pad2 = (num: number) => String(num).padStart(2, "0");
+const IST_TIMEZONE = "Asia/Kolkata";
+
+const formatDateTimeIst = (value: Date): string => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: IST_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(value);
+
+  const byType: Record<string, string> = {};
+  for (const part of parts) {
+    byType[part.type] = part.value;
+  }
+
+  return `${byType.day}-${byType.month}-${byType.year} ${byType.hour}:${byType.minute}`;
+};
 
 const formatDateOnlyValue = (raw: string): string | null => {
   const trimmed = raw.trim();
@@ -66,13 +86,15 @@ const formatDateTimeValue = (raw: string): string | null => {
   );
   if (match) {
     const [, yyyy, mm, dd, hh = "00", min = "00", ss = "00"] = match;
-    return `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
+    const date = new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`);
+    if (!Number.isNaN(date.getTime())) {
+      return formatDateTimeIst(date);
+    }
+    return `${dd}-${mm}-${yyyy} ${hh}:${min}`;
   }
   const date = new Date(trimmed);
   if (Number.isNaN(date.getTime())) return null;
-  return `${pad2(date.getDate())}-${pad2(date.getMonth() + 1)}-${date.getFullYear()} ${pad2(
-    date.getHours()
-  )}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+  return formatDateTimeIst(date);
 };
 
 const formatValueByFieldType = (value: string, field: any): string | null => {
@@ -106,14 +128,7 @@ const formatDateTime = (value: Date | string | null | undefined): string | null 
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-
-  const dd = pad2(date.getDate());
-  const mm = pad2(date.getMonth() + 1);
-  const yyyy = date.getFullYear();
-  const hh = pad2(date.getHours());
-  const min = pad2(date.getMinutes());
-  const ss = pad2(date.getSeconds());
-  return `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
+  return formatDateTimeIst(date);
 };
 
 const parseCsvIds = (value: string): string[] => {
