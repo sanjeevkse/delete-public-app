@@ -27,9 +27,11 @@ import FormField from "../models/FormField";
 import FormFieldOption from "../models/FormFieldOption";
 import FormEvent from "../models/FormEvent";
 import FormEventAccessibility from "../models/FormEventAccessibility";
+import UserRole from "../models/UserRole";
 import UserProfile from "../models/UserProfile";
 import sequelize from "../config/database";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
+import { getUserAccessList } from "../services/userAccessibilityService";
 
 type PaginationQuery = {
   page?: string;
@@ -81,6 +83,66 @@ const ensureNumber = (value: unknown, fieldName: string): number => {
     throw new ApiError(`Invalid ${fieldName} value`, 400);
   }
   return num;
+};
+
+type UserAccessCombo = {
+  wardNumberId: number | null;
+  boothNumberId: number | null;
+};
+
+const roleMatches = (ruleRoleId: number, userRoleIds: number[]): boolean => {
+  return ruleRoleId === -1 || userRoleIds.includes(ruleRoleId);
+};
+
+const wardMatches = (ruleWardId: number, userWardId: number | null): boolean => {
+  return (
+    ruleWardId === -1 ||
+    userWardId === -1 ||
+    (userWardId !== null && ruleWardId === userWardId)
+  );
+};
+
+const boothMatches = (ruleBoothId: number, userBoothId: number | null): boolean => {
+  return (
+    ruleBoothId === -1 ||
+    userBoothId === -1 ||
+    (userBoothId !== null && ruleBoothId === userBoothId)
+  );
+};
+
+const isEventAccessible = (
+  event: any,
+  userRoleIds: number[],
+  accessCombos: UserAccessCombo[]
+): boolean => {
+  if (userRoleIds.length === 0) {
+    return false;
+  }
+
+  const rules = Array.isArray(event?.accessibility) ? event.accessibility : [];
+  if (rules.length === 0) {
+    return false;
+  }
+
+  return rules.some((rule: any) => {
+    const ruleRoleId = Number(rule?.userRoleId);
+    const ruleWardId = Number(rule?.wardNumberId);
+    const ruleBoothId = Number(rule?.boothNumberId);
+
+    if (!Number.isFinite(ruleRoleId) || !Number.isFinite(ruleWardId) || !Number.isFinite(ruleBoothId)) {
+      return false;
+    }
+
+    if (!roleMatches(ruleRoleId, userRoleIds)) {
+      return false;
+    }
+
+    return accessCombos.some((combo) => {
+      const userWardId = combo.wardNumberId ?? null;
+      const userBoothId = combo.boothNumberId ?? null;
+      return wardMatches(ruleWardId, userWardId) && boothMatches(ruleBoothId, userBoothId);
+    });
+  });
 };
 
 const ensureDateOrNull = (value: unknown, fieldName: string): Date | null => {
@@ -770,6 +832,23 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   const wardNumberId = userProfile?.wardNumberId ?? null;
   const boothNumberId = userProfile?.boothNumberId ?? null;
 
+  const userRoles = await UserRole.findAll({
+    where: { userId, status: 1 },
+    attributes: ["roleId"]
+  });
+  const userRoleIds = userRoles
+    .map((role) => Number(role.roleId))
+    .filter((roleId) => Number.isFinite(roleId));
+
+  const userAccessList = await getUserAccessList(userId);
+  const accessCombos: UserAccessCombo[] =
+    userAccessList.length > 0
+      ? userAccessList.map((access) => ({
+          wardNumberId: access.wardNumberId ?? null,
+          boothNumberId: access.boothNumberId ?? null
+        }))
+      : [{ wardNumberId, boothNumberId }];
+
   // if (search) {
   //   filters.push({
   //     [Op.or]: [{ title: { [Op.like]: `%${search}%` } }, { slug: { [Op.like]: `%${search}%` } }]
@@ -808,8 +887,19 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   });
 
   const rowsPlain = rows.map((form) => (typeof form.toJSON === "function" ? form.toJSON() : form));
+  const filteredRows = rowsPlain.map((form: any) => {
+    const events = Array.isArray(form?.events) ? form.events : [];
+    const filteredEvents = events.filter((event: any) =>
+      isEventAccessible(event, userRoleIds, accessCombos)
+    );
+
+    return {
+      ...form,
+      events: filteredEvents
+    };
+  });
   const fieldsForOptions: any[] = [];
-  for (const form of rowsPlain as any[]) {
+  for (const form of filteredRows as any[]) {
     const fields = Array.isArray(form?.fields) ? form.fields : [];
     if (fields.length > 0) {
       fieldsForOptions.push(...fields);
@@ -823,7 +913,7 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
   const pagination = calculatePagination(count, page, limit);
 
-  sendSuccessWithPagination(res, rowsPlain, pagination, "Forms retrieved successfully");
+  sendSuccessWithPagination(res, filteredRows, pagination, "Forms retrieved successfully");
 });
 
 export const getForm = asyncHandler(async (req: Request, res: Response) => {

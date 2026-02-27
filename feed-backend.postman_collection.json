@@ -7341,7 +7341,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/forms",
-            "description": "Returns paginated forms along with their fields, options, and any ward/booth mappings attached to each form. Requires authentication so the backend can determine the caller's ward/booth mapping."
+            "description": "Returns paginated forms along with their fields, options, and associated events. The events array is filtered by the logged-in user's accessibility (role, ward, booth), with -1 treated as a wildcard. Requires authentication so the backend can determine the caller's access."
           },
           "response": []
         },
