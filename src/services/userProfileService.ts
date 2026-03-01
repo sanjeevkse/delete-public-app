@@ -18,6 +18,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "educationalDetailGroupId",
   "dateOfJoining",
   "maritalStatusId",
+  "employmentId",
   "occupation",
   "profileImageUrl",
   "referredBy",
@@ -65,6 +66,10 @@ export const buildProfileAttributes = (
     if (alternateContact) {
       payload.alernativeContactNumber = alternateContact as never;
     }
+  }
+
+  if (payload.employmentId === undefined && "employment_id" in asRecord) {
+    payload.employmentId = asRecord["employment_id"] as never;
   }
 
   const socialLinks: Record<string, unknown> = existingProfile?.socialLinksJson

@@ -272,7 +272,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
         ]
       },
       {
@@ -338,7 +339,8 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] }
@@ -512,7 +514,8 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] }

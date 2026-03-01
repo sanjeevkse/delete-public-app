@@ -12,6 +12,7 @@ import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaEducationalDetail from "./MetaEducationalDetail";
 import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
+import type MetaEmploymentStatus from "./MetaEmploymentStatus";
 import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
 import type MetaComplaintDepartment from "./MetaComplaintDepartment";
@@ -37,6 +38,7 @@ class UserProfile extends Model<
   declare educationalDetailGroupId: CreationOptional<number | null>;
   declare dateOfJoining: CreationOptional<Date | null>;
   declare maritalStatusId: CreationOptional<number | null>;
+  declare employmentId: CreationOptional<number | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
   declare referredBy: CreationOptional<string | null>;
@@ -65,6 +67,7 @@ class UserProfile extends Model<
   declare gender?: NonAttribute<MetaGenderOption | null>;
   declare educationalDetail?: NonAttribute<MetaEducationalDetail | null>;
   declare educationalDetailGroup?: NonAttribute<MetaEducationalDetailGroup | null>;
+  declare employmentStatus?: NonAttribute<MetaEmploymentStatus | null>;
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
@@ -153,6 +156,11 @@ UserProfile.init(
     },
     maritalStatusId: {
       field: "marital_status_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    employmentId: {
+      field: "employment_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
