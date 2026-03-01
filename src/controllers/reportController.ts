@@ -42,7 +42,7 @@ const formatDateTimeIst = (value: Date): string => {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false
+    hour12: true
   }).formatToParts(value);
 
   const byType: Record<string, string> = {};
@@ -50,7 +50,8 @@ const formatDateTimeIst = (value: Date): string => {
     byType[part.type] = part.value;
   }
 
-  return `${byType.day}-${byType.month}-${byType.year} ${byType.hour}:${byType.minute}`;
+  const dayPeriod = (byType.dayPeriod || "").toUpperCase();
+  return `${byType.day}-${byType.month}-${byType.year} ${byType.hour}:${byType.minute} ${dayPeriod}`;
 };
 
 const formatDateOnlyValue = (raw: string): string | null => {
@@ -82,11 +83,19 @@ const formatTimeOnlyValue = (raw: string): string | null => {
 const formatDateTimeValue = (raw: string): string | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
+  const hasExplicitTimezone = /[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed);
   const match = trimmed.match(
     /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/
   );
   if (match) {
     const [, yyyy, mm, dd, hh = "00", min = "00", ss = "00"] = match;
+    if (!hasExplicitTimezone) {
+      const date = new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`);
+      if (!Number.isNaN(date.getTime())) {
+        return formatDateTimeIst(date);
+      }
+      return `${dd}-${mm}-${yyyy} ${hh}:${min}`;
+    }
     const date = new Date(`${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`);
     if (!Number.isNaN(date.getTime())) {
       return formatDateTimeIst(date);

@@ -13,19 +13,33 @@ import sequelize from "../config/database";
 import { sendSuccess } from "../utils/apiResponse";
 import { buildQueryAttributes } from "../utils/queryAttributes";
 
+const IST_TIMEZONE = "Asia/Kolkata";
+
+const formatDateTimeIst = (value: Date): string => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: IST_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  }).formatToParts(value);
+
+  const byType: Record<string, string> = {};
+  for (const part of parts) {
+    byType[part.type] = part.value;
+  }
+
+  const dayPeriod = (byType.dayPeriod || "").toUpperCase();
+  return `${byType.day}-${byType.month}-${byType.year} ${byType.hour}:${byType.minute} ${dayPeriod}`;
+};
+
 const formatDateTime = (value: Date | string | null | undefined): string | null => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-
-  const pad2 = (num: number) => String(num).padStart(2, "0");
-  const dd = pad2(date.getDate());
-  const mm = pad2(date.getMonth() + 1);
-  const yyyy = date.getFullYear();
-  const hh = pad2(date.getHours());
-  const min = pad2(date.getMinutes());
-  const ss = pad2(date.getSeconds());
-  return `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
+  return formatDateTimeIst(date);
 };
 
 const parseOptionalNumber = (raw: string | undefined, fieldLabel: string): number | undefined => {
