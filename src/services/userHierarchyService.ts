@@ -45,6 +45,61 @@ export const getDescendantRoleIds = async (roleId: number): Promise<number[]> =>
 };
 
 /**
+ * Get all descendant role IDs for multiple roles using depthPath
+ * Returns role IDs themselves plus all roles below them
+ */
+export const getDescendantRoleIdsForRoles = async (roleIds: number[]): Promise<number[]> => {
+  if (!Array.isArray(roleIds) || roleIds.length === 0) {
+    return [];
+  }
+
+  const roles = await MetaUserRole.findAll({
+    where: { id: { [Op.in]: roleIds } },
+    attributes: ["id", "depthPath"],
+    raw: true
+  });
+
+  if (roles.length === 0) {
+    return [];
+  }
+
+  const orConditions: Array<Record<string, any>> = [];
+  const fallbackIds: number[] = [];
+
+  for (const role of roles) {
+    const depthPath = role.depthPath as string | null;
+    if (!depthPath) {
+      fallbackIds.push(Number(role.id));
+      continue;
+    }
+    orConditions.push(
+      { depthPath },
+      { depthPath: { [Op.like]: `${depthPath}/%` } }
+    );
+  }
+
+  if (orConditions.length === 0) {
+    return Array.from(new Set(fallbackIds));
+  }
+
+  const descendantRoles = await MetaUserRole.findAll({
+    where: {
+      [Op.or]: orConditions,
+      status: 1
+    },
+    attributes: ["id"],
+    raw: true
+  });
+
+  const resultIds = descendantRoles.map((r) => Number(r.id));
+  for (const id of fallbackIds) {
+    resultIds.push(id);
+  }
+
+  return Array.from(new Set(resultIds)).filter((id) => Number.isFinite(id));
+};
+
+/**
  * Get accessibility constraints for a logged-in user
  * Compares user's accessibility with target user's accessibility
  * Returns WHERE clause conditions for filtering

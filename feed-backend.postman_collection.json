@@ -7342,7 +7342,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/forms",
-            "description": "Returns paginated forms along with their fields, options, and associated events. The events array is filtered by the logged-in user's accessibility (role, ward, booth), with -1 treated as a wildcard. Admin users receive all events without accessibility filtering. Requires authentication so the backend can determine the caller's access."
+            "description": "Returns paginated forms along with their fields, options, and associated events. The events array is filtered by the logged-in user's accessibility (role, ward, booth), with -1 treated as a wildcard. Parent roles include descendant roles for event access; ward and booth filters still apply. Admin users receive all events without accessibility filtering. Requires authentication so the backend can determine the caller's access."
           },
           "response": []
         },

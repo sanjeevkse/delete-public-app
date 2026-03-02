@@ -32,6 +32,7 @@ import UserProfile from "../models/UserProfile";
 import sequelize from "../config/database";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 import { getUserAccessList } from "../services/userAccessibilityService";
+import { getDescendantRoleIdsForRoles } from "../services/userHierarchyService";
 
 type PaginationQuery = {
   page?: string;
@@ -843,6 +844,8 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     .map((role) => Number(role.roleId))
     .filter((roleId) => Number.isFinite(roleId));
 
+  const expandedRoleIds = isAdmin ? userRoleIds : await getDescendantRoleIdsForRoles(userRoleIds);
+
   const userAccessList = await getUserAccessList(userId);
   const accessCombos: UserAccessCombo[] =
     userAccessList.length > 0
@@ -900,7 +903,7 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     }
 
     const filteredEvents = events.filter((event: any) =>
-      isEventAccessible(event, userRoleIds, accessCombos)
+      isEventAccessible(event, expandedRoleIds, accessCombos)
     );
 
     return {
