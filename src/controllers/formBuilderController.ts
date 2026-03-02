@@ -824,6 +824,9 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
     throw new ApiError("Authentication required", 401);
   }
 
+  const normalizedRoles = (req.user?.roles ?? []).map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
+
   const userProfile = await UserProfile.findOne({
     where: { userId },
     attributes: ["wardNumberId", "boothNumberId"]
@@ -889,6 +892,13 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
   const rowsPlain = rows.map((form) => (typeof form.toJSON === "function" ? form.toJSON() : form));
   const filteredRows = rowsPlain.map((form: any) => {
     const events = Array.isArray(form?.events) ? form.events : [];
+    if (isAdmin) {
+      return {
+        ...form,
+        events
+      };
+    }
+
     const filteredEvents = events.filter((event: any) =>
       isEventAccessible(event, userRoleIds, accessCombos)
     );
