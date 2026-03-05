@@ -13,9 +13,11 @@ import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaEducationalDetail from "./MetaEducationalDetail";
 import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 import type MetaEmploymentStatus from "./MetaEmploymentStatus";
+import type MetaFloor from "./MetaFloor";
 import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
 import type MetaComplaintDepartment from "./MetaComplaintDepartment";
+import type MetaRelationType from "./MetaRelationType";
 import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
 
@@ -39,6 +41,15 @@ class UserProfile extends Model<
   declare dateOfJoining: CreationOptional<Date | null>;
   declare maritalStatusId: CreationOptional<number | null>;
   declare employmentId: CreationOptional<number | null>;
+  declare relationshipTypeId: CreationOptional<number | null>;
+  declare relationshipName: CreationOptional<string | null>;
+  declare doorNumber: CreationOptional<string | null>;
+  declare floorId: CreationOptional<number | null>;
+  declare serviceConservancyRoad: CreationOptional<string | null>;
+  declare mainRoad: CreationOptional<string | null>;
+  declare crossRoad: CreationOptional<string | null>;
+  declare locationArea: CreationOptional<string | null>;
+  declare landmark: CreationOptional<string | null>;
   declare occupation: CreationOptional<string | null>;
   declare profileImageUrl: CreationOptional<string | null>;
   declare referredBy: CreationOptional<string | null>;
@@ -69,6 +80,8 @@ class UserProfile extends Model<
   declare educationalDetailGroup?: NonAttribute<MetaEducationalDetailGroup | null>;
   declare employmentStatus?: NonAttribute<MetaEmploymentStatus | null>;
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
+  declare relationshipType?: NonAttribute<MetaRelationType | null>;
+  declare floor?: NonAttribute<MetaFloor | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
   declare sector?: NonAttribute<MetaComplaintDepartment | null>;
@@ -162,6 +175,50 @@ UserProfile.init(
     employmentId: {
       field: "employment_id",
       type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    relationshipTypeId: {
+      field: "relationship_type_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    relationshipName: {
+      field: "relationship_name",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    doorNumber: {
+      field: "door_number",
+      type: DataTypes.STRING(64),
+      allowNull: true
+    },
+    floorId: {
+      field: "floor_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    serviceConservancyRoad: {
+      field: "service_conservancy_road",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    mainRoad: {
+      field: "main_road",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    crossRoad: {
+      field: "cross_road",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    locationArea: {
+      field: "location_area",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    landmark: {
+      type: DataTypes.STRING(191),
       allowNull: true
     },
     occupation: {

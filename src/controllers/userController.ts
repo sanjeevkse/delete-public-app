@@ -231,6 +231,10 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const maritalStatusFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["maritalStatusId", "marital_status_id"])
   );
+  const relationshipTypeFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["relationshipTypeId", "relationship_type_id"])
+  );
+  const floorFilter = parseNumberFilter(pickQueryValue(queryParams, ["floorId", "floor_id"]));
   const occupationFilter = parseStringFilter(pickQueryValue(queryParams, ["occupation"]));
   const cityFilter = parseStringFilter(pickQueryValue(queryParams, ["city"]));
   const stateFilter = parseStringFilter(pickQueryValue(queryParams, ["state"]));
@@ -262,6 +266,20 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const dateOfJoiningEnd = parseDateFilter(
     pickQueryValue(queryParams, ["dateOfJoiningEnd", "date_of_joining_end"])
   );
+  const doorNumberFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["doorNumber", "door_number"])
+  );
+  const serviceConservancyRoadFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["serviceConservancyRoad", "service_conservancy_road"])
+  );
+  const mainRoadFilter = parseStringFilter(pickQueryValue(queryParams, ["mainRoad", "main_road"]));
+  const crossRoadFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["crossRoad", "cross_road"])
+  );
+  const locationAreaFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["locationArea", "location_area"])
+  );
+  const landmarkFilter = parseStringFilter(pickQueryValue(queryParams, ["landmark"]));
 
   // Parse roleId - accepts array format like roleId=[1,2,3]
   let roleIds: number[] | undefined;
@@ -312,6 +330,12 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   if (maritalStatusFilter !== undefined) {
     profileFilters.maritalStatusId = maritalStatusFilter;
   }
+  if (relationshipTypeFilter !== undefined) {
+    profileFilters.relationshipTypeId = relationshipTypeFilter;
+  }
+  if (floorFilter !== undefined) {
+    profileFilters.floorId = floorFilter;
+  }
   if (occupationFilter) {
     profileFilters.occupation = { [Op.like]: `%${occupationFilter}%` };
   }
@@ -344,6 +368,24 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
   if (educationalDetailGroupFilter !== undefined) {
     profileFilters.educationalDetailGroupId = educationalDetailGroupFilter;
+  }
+  if (doorNumberFilter) {
+    profileFilters.doorNumber = { [Op.like]: `%${doorNumberFilter}%` };
+  }
+  if (serviceConservancyRoadFilter) {
+    profileFilters.serviceConservancyRoad = { [Op.like]: `%${serviceConservancyRoadFilter}%` };
+  }
+  if (mainRoadFilter) {
+    profileFilters.mainRoad = { [Op.like]: `%${mainRoadFilter}%` };
+  }
+  if (crossRoadFilter) {
+    profileFilters.crossRoad = { [Op.like]: `%${crossRoadFilter}%` };
+  }
+  if (locationAreaFilter) {
+    profileFilters.locationArea = { [Op.like]: `%${locationAreaFilter}%` };
+  }
+  if (landmarkFilter) {
+    profileFilters.landmark = { [Op.like]: `%${landmarkFilter}%` };
   }
 
   const profileFiltersApplied = Object.keys(profileFilters).length > 0;
@@ -412,7 +454,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+          { association: "floor", attributes: ["id", "dispName"], required: false }
         ]
       },
       {
@@ -531,7 +575,9 @@ export const listUsersPendingApproval = asyncHandler(
               attributes: ["id", "dispName"],
               required: false
             },
-            { association: "sector", attributes: ["id", "dispName"], required: false }
+            { association: "sector", attributes: ["id", "dispName"], required: false },
+            { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+            { association: "floor", attributes: ["id", "dispName"], required: false }
           ]
         },
         {
@@ -660,7 +706,9 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+          { association: "floor", attributes: ["id", "dispName"], required: false }
         ]
       },
       {
@@ -715,7 +763,9 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+          { association: "floor", attributes: ["id", "dispName"], required: false }
         ]
       },
       {
@@ -796,7 +846,9 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+          { association: "floor", attributes: ["id", "dispName"], required: false }
         ]
       },
       {
@@ -1097,7 +1149,9 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+          { association: "floor", attributes: ["id", "dispName"], required: false }
         ]
       },
       {
@@ -1161,7 +1215,9 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
               attributes: ["id", "dispName"],
               required: false
             },
-            { association: "sector", attributes: ["id", "dispName"], required: false }
+            { association: "sector", attributes: ["id", "dispName"], required: false },
+            { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+            { association: "floor", attributes: ["id", "dispName"], required: false }
           ]
         },
         { association: "roles", include: [{ association: "permissions" }] },
@@ -1216,7 +1272,9 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
             attributes: ["id", "dispName"],
             required: false
           },
-          { association: "sector", attributes: ["id", "dispName"], required: false }
+          { association: "sector", attributes: ["id", "dispName"], required: false },
+          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+          { association: "floor", attributes: ["id", "dispName"], required: false }
         ]
       },
       { association: "roles", include: [{ association: "permissions" }] },
@@ -1285,7 +1343,9 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
               attributes: ["id", "dispName"],
               required: false
             },
-            { association: "sector", attributes: ["id", "dispName"], required: false }
+            { association: "sector", attributes: ["id", "dispName"], required: false },
+            { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+            { association: "floor", attributes: ["id", "dispName"], required: false }
           ]
         },
         { association: "roles", include: [{ association: "permissions" }] },

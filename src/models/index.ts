@@ -31,6 +31,7 @@ import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
 import MetaEmploymentStatus from "./MetaEmploymentStatus";
+import MetaFloor from "./MetaFloor";
 import MetaEducationalDetail from "./MetaEducationalDetail";
 import MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
 import Job from "./Job";
@@ -378,6 +379,24 @@ const establishAssociations = (): void => {
     as: "userProfiles"
   });
 
+  UserProfile.belongsTo(MetaRelationType, {
+    foreignKey: "relationshipTypeId",
+    as: "relationshipType"
+  });
+  MetaRelationType.hasMany(UserProfile, {
+    foreignKey: "relationshipTypeId",
+    as: "userProfilesByRelationshipType"
+  });
+
+  UserProfile.belongsTo(MetaFloor, {
+    foreignKey: "floorId",
+    as: "floor"
+  });
+  MetaFloor.hasMany(UserProfile, {
+    foreignKey: "floorId",
+    as: "userProfiles"
+  });
+
   UserProfile.belongsTo(MetaWardNumber, {
     foreignKey: "wardNumberId",
     as: "wardNumber"
@@ -712,6 +731,7 @@ export {
   MetaWidowStatus,
   MetaDisabilityStatus,
   MetaEmploymentStatus,
+  MetaFloor,
   SchemeStep,
   Post,
   PostMedia,

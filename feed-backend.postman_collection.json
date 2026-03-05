@@ -457,7 +457,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"demo@example1.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"genderId\": 2,\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street, Marylebone, London, England NW1 6XE, UK\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"educationDetailId\": 2,\n    \"maritalStatusId\": 1,\n    \"employmentId\": 1,\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"profileImageUrl\": \"https://example.com/profile.jpg\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\",\n      \"instagram\": \"demo.insta\",\n      \"facebook\": \"demo.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"citizenAge\": 35,\n    \"dateOfJoining\": \"2025-01-15\",\n    \"isRegistrationAgreed\": 1,\n    \"postsBlocked\": false,\n    \"status\": 1\n  }\n}"
+              "raw": "{\n  \"email\": \"demo@example1.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"genderId\": 2,\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street, Marylebone, London, England NW1 6XE, UK\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"educationDetailId\": 2,\n    \"maritalStatusId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Spouse\",\n    \"doorNumber\": \"221B\",\n    \"floorId\": 2,\n    \"serviceConservancyRoad\": \"Service Road West\",\n    \"mainRoad\": \"Baker Street\",\n    \"crossRoad\": \"Marylebone Road\",\n    \"locationArea\": \"Marylebone\",\n    \"landmark\": \"Near Museum\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"profileImageUrl\": \"https://example.com/profile.jpg\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\",\n      \"instagram\": \"demo.insta\",\n      \"facebook\": \"demo.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"citizenAge\": 35,\n    \"dateOfJoining\": \"2025-01-15\",\n    \"isRegistrationAgreed\": 1,\n    \"postsBlocked\": false,\n    \"status\": 1\n  }\n}"
             },
             "url": "{{baseUrl}}/api/auth/profile",
             "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
@@ -700,10 +700,58 @@
                   "value": "2024-12-31",
                   "description": "Inclusive upper bound for date of joining (YYYY-MM-DD)",
                   "disabled": true
+                },
+                {
+                  "key": "relationshipTypeId",
+                  "value": "1",
+                  "description": "Filter by relationship type id",
+                  "disabled": true
+                },
+                {
+                  "key": "floorId",
+                  "value": "2",
+                  "description": "Filter by floor id",
+                  "disabled": true
+                },
+                {
+                  "key": "doorNumber",
+                  "value": "12/4",
+                  "description": "Filter profiles whose door number contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "serviceConservancyRoad",
+                  "value": "Service Road",
+                  "description": "Filter profiles whose service/conservancy road contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "mainRoad",
+                  "value": "Main Road",
+                  "description": "Filter profiles whose main road contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "crossRoad",
+                  "value": "1st Cross",
+                  "description": "Filter profiles whose cross road contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "locationArea",
+                  "value": "Rajajinagar",
+                  "description": "Filter profiles whose location/area contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "landmark",
+                  "value": "Near Metro",
+                  "description": "Filter profiles whose landmark contains the supplied value",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, and educational detail ids."
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
           },
           "response": []
         },
@@ -3291,7 +3339,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users"
           },
@@ -3488,10 +3536,58 @@
                   "value": "2024-12-31",
                   "description": "Inclusive upper bound for date of joining (YYYY-MM-DD)",
                   "disabled": true
+                },
+                {
+                  "key": "relationshipTypeId",
+                  "value": "1",
+                  "description": "Filter by relationship type id",
+                  "disabled": true
+                },
+                {
+                  "key": "floorId",
+                  "value": "2",
+                  "description": "Filter by floor id",
+                  "disabled": true
+                },
+                {
+                  "key": "doorNumber",
+                  "value": "12/4",
+                  "description": "Filter profiles whose door number contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "serviceConservancyRoad",
+                  "value": "Service Road",
+                  "description": "Filter profiles whose service/conservancy road contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "mainRoad",
+                  "value": "Main Road",
+                  "description": "Filter profiles whose main road contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "crossRoad",
+                  "value": "1st Cross",
+                  "description": "Filter profiles whose cross road contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "locationArea",
+                  "value": "Rajajinagar",
+                  "description": "Filter profiles whose location/area contains the supplied value",
+                  "disabled": true
+                },
+                {
+                  "key": "landmark",
+                  "value": "Near Metro",
+                  "description": "Filter profiles whose landmark contains the supplied value",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, and educational detail ids."
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
           },
           "response": []
         },
@@ -3628,7 +3724,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"UpdatedUser\",\n    \"bio\": \"Updated bio\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560002\",\n    \"citizenAge\": 30,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"genderId\": 1,\n    \"educationDetailId\": 3,\n    \"occupation\": \"Senior Engineer\"\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"UpdatedUser\",\n    \"bio\": \"Updated bio\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560002\",\n    \"citizenAge\": 30,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"genderId\": 1,\n    \"educationDetailId\": 3,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\"\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
             "description": "Updates user information including profile, roles, accessibility profiles, and approval status (0=inactive, 1=approved/active, 2=pending approval). All fields are optional - only provided fields will be updated."
