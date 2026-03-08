@@ -2,7 +2,9 @@ export const SUBMITTED_USER_REPORT_FIELDS = [
   { key: "name", label: "Submitted User Name" },
   { key: "email", label: "Submitted User Email" },
   { key: "contactNumber", label: "Submitted User Contact Number" },
-  { key: "address", label: "Submitted User Address" }
+  { key: "address", label: "Submitted User Address" },
+  { key: "state", label: "Submitted User State" },
+  { key: "phone", label: "Submitted User Phone" }
 ] as const;
 
 type SubmissionUserLike = {
@@ -16,6 +18,7 @@ type SubmissionUserLike = {
       addressLine1?: string | null;
       addressLine2?: string | null;
       city?: string | null;
+      stateId?: number | null;
     } | null;
   } | null;
 };
@@ -49,5 +52,12 @@ export const resolveSubmittedUserValue = (
   if (key === "contactNumber") {
     return submission.user?.contactNumber?.trim() || "";
   }
-  return resolveAddress(submission);
+  if (key === "address") {
+    return resolveAddress(submission);
+  }
+  if (key === "phone") {
+    return submission.user?.contactNumber?.trim() || "";
+  }
+  const stateId = submission.user?.profile?.stateId;
+  return stateId === undefined || stateId === null ? "" : String(stateId);
 };

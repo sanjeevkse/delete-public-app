@@ -7972,6 +7972,12 @@
               "mode": "formdata",
               "formdata": [
                 {
+                  "key": "userId",
+                  "value": "{{targetUserId}}",
+                  "type": "text",
+                  "description": "Optional target user. If omitted, target user defaults to authenticated user."
+                },
+                {
                   "key": "155",
                   "value": "9035444865",
                   "type": "text"
@@ -8087,7 +8093,7 @@
                 "submit"
               ]
             },
-            "description": "Submit a form using multipart form-data. Each field is sent as a form-data key matching the formFieldId. Text values are sent as text. File fields are sent as file parts using the same formFieldId as the key; repeat the key for multiple files (max 5 per field). For multi-select text fields, repeat the same key or send CSV; repeated keys are joined as CSV."
+            "description": "Submit a form using multipart form-data. Each field is sent as a form-data key matching the formFieldId. Text values are sent as text. File fields are sent as file parts using the same formFieldId as the key; repeat the key for multiple files (max 5 per field). For multi-select text fields, repeat the same key or send CSV; repeated keys are joined as CSV. `submitted_by` is always the authenticated actor; `user_id` is the target user from `userId`/`user_id` when provided, otherwise it remains null."
           },
           "response": []
         },

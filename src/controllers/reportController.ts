@@ -477,12 +477,31 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
           {
             model: UserProfile,
             as: "profile",
-            attributes: ["displayName", "fullAddress", "addressLine1", "addressLine2", "city"]
+            attributes: ["displayName"]
+          }
+        ]
+      },
+      {
+        model: User,
+        as: "targetUser",
+        attributes: ["id", "email", "fullName", "contactNumber"],
+        include: [
+          {
+            model: UserProfile,
+            as: "profile",
+            attributes: [
+              "displayName",
+              "fullAddress",
+              "addressLine1",
+              "addressLine2",
+              "city",
+              "stateId"
+            ]
           }
         ]
       }
     ],
-    attributes: ["id", "submittedBy", "submittedAt"],
+    attributes: ["id", "submittedBy", "userId", "submittedAt"],
     order: [["submittedAt", "DESC"]]
   });
 
@@ -678,7 +697,14 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
 
     if (form.includeUser === 1) {
       for (const field of SUBMITTED_USER_REPORT_FIELDS) {
-        row.push(resolveSubmittedUserValue(submission as any, field.key));
+        row.push(
+          resolveSubmittedUserValue(
+            {
+              user: (submission as any).targetUser ?? null
+            } as any,
+            field.key
+          )
+        );
       }
     }
 

@@ -199,6 +199,31 @@ const buildFieldValuesFromBody = (body: Record<string, unknown>) => {
   return fieldValues;
 };
 
+const hasUserIdPayload = (body: Record<string, unknown>): boolean =>
+  Object.prototype.hasOwnProperty.call(body, "userId") ||
+  Object.prototype.hasOwnProperty.call(body, "user_id");
+
+const parseBodyUserId = (body: Record<string, unknown>): number | undefined => {
+  const raw =
+    body.userId !== undefined
+      ? body.userId
+      : body.user_id !== undefined
+        ? body.user_id
+        : undefined;
+
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ApiError("userId must be a valid positive number", 400);
+  }
+
+  return parsed;
+};
+
 const mapFilesByFieldId = (uploadedFiles: Express.Multer.File[]) => {
   const filesByFieldId = new Map<number, Express.Multer.File[]>();
   for (const file of uploadedFiles) {
@@ -622,8 +647,10 @@ const resolveFieldValuesForSubmissions = async (submissions: any[] | any) => {
  */
 export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { formEventId } = req.params;
-  const fieldValuesFromBody = buildFieldValuesFromBody(req.body as Record<string, unknown>);
+  const requestBody = req.body as Record<string, unknown>;
+  const fieldValuesFromBody = buildFieldValuesFromBody(requestBody);
   const userId = req.user?.id;
+  const requestedUserId = parseBodyUserId(requestBody);
   const uploadedFiles = Array.isArray((req as any).files)
     ? ((req as any).files as Express.Multer.File[])
     : [];
@@ -631,6 +658,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
   if (!userId) {
     throw new ApiError("Unauthorized", 401);
   }
+  const targetUserId = requestedUserId ?? null;
 
   const formEventIdNum = Number(formEventId);
   if (!Number.isFinite(formEventIdNum) || formEventIdNum <= 0) {
@@ -639,6 +667,16 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   if (fieldValuesFromBody.length === 0 && uploadedFiles.length === 0) {
     throw new ApiError("Form data must include at least one field value", 400);
+  }
+
+  if (targetUserId !== null) {
+    const targetUser = await User.findOne({
+      attributes: ["id"],
+      where: { id: targetUserId, status: 1 }
+    });
+    if (!targetUser) {
+      throw new ApiError("Target user not found", 404);
+    }
   }
 
   // Check if form event exists and is active (outside transaction)
@@ -789,6 +827,7 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       {
         formEventId: formEventIdNum,
         submittedBy: userId,
+        userId: targetUserId,
         submittedAt: new Date(),
         ipAddress: req.ip || null,
         userAgent: req.get("user-agent") || null,
@@ -883,7 +922,15 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 
   // Fetch full submission with values
   const fullSubmission = await FormSubmission.findByPk(submission.id, {
-    attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
+    attributes: [
+      "id",
+      "formEventId",
+      "submittedBy",
+      "userId",
+      "submittedAt",
+      "ipAddress",
+      "userAgent"
+    ],
     include: [
       {
         model: FormFieldValue,
@@ -898,6 +945,11 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
       {
         model: User,
         as: "user",
+        attributes: ["id", "email"]
+      },
+      {
+        model: User,
+        as: "targetUser",
         attributes: ["id", "email"]
       }
     ]
@@ -916,7 +968,11 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
 export const updateFormSubmission = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { submissionId } = req.params;
-    const fieldValuesFromBody = buildFieldValuesFromBody(req.body as Record<string, unknown>);
+    const requestBody = req.body as Record<string, unknown>;
+    if (hasUserIdPayload(requestBody)) {
+      throw new ApiError("userId cannot be updated for existing submissions", 400);
+    }
+    const fieldValuesFromBody = buildFieldValuesFromBody(requestBody);
     const userId = req.user?.id;
     const uploadedFiles = Array.isArray((req as any).files)
       ? ((req as any).files as Express.Multer.File[])
@@ -1152,7 +1208,15 @@ export const updateFormSubmission = asyncHandler(
       await transaction.commit();
 
       const updatedSubmission = await FormSubmission.findByPk(submission.id, {
-        attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
+        attributes: [
+          "id",
+          "formEventId",
+          "submittedBy",
+          "userId",
+          "submittedAt",
+          "ipAddress",
+          "userAgent"
+        ],
         include: [
           {
             model: FormFieldValue,
@@ -1167,6 +1231,11 @@ export const updateFormSubmission = asyncHandler(
           {
             model: User,
             as: "user",
+            attributes: ["id", "email"]
+          },
+          {
+            model: User,
+            as: "targetUser",
             attributes: ["id", "email"]
           }
         ]
@@ -1201,7 +1270,15 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
 
   const submission = await FormSubmission.findOne({
     where: { id: submissionIdNum, status: { [Op.ne]: 0 } },
-    attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
+    attributes: [
+      "id",
+      "formEventId",
+      "submittedBy",
+      "userId",
+      "submittedAt",
+      "ipAddress",
+      "userAgent"
+    ],
     include: [
       {
         model: FormFieldValue,
@@ -1227,6 +1304,16 @@ export const getFormSubmission = asyncHandler(async (req: AuthenticatedRequest, 
       {
         model: User,
         as: "user",
+        include: [
+          {
+            model: UserProfile,
+            as: "profile"
+          }
+        ]
+      },
+      {
+        model: User,
+        as: "targetUser",
         include: [
           {
             model: UserProfile,
@@ -1292,7 +1379,15 @@ export const listFormSubmissions = asyncHandler(
     }
 
     const { count, rows } = await FormSubmission.findAndCountAll({
-      attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"],
+      attributes: [
+        "id",
+        "formEventId",
+        "submittedBy",
+        "userId",
+        "submittedAt",
+        "ipAddress",
+        "userAgent"
+      ],
       where,
       include: [
         {
@@ -1303,6 +1398,16 @@ export const listFormSubmissions = asyncHandler(
         {
           model: User,
           as: "user",
+          include: [
+            {
+              model: UserProfile,
+              as: "profile"
+            }
+          ]
+        },
+        {
+          model: User,
+          as: "targetUser",
           include: [
             {
               model: UserProfile,
@@ -1362,7 +1467,7 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
   }
 
   const { count, rows } = await FormSubmission.findAndCountAll({
-    attributes: ["id", "formEventId", "submittedBy", "submittedAt"],
+    attributes: ["id", "formEventId", "submittedBy", "userId", "submittedAt"],
     where,
     include: [
       {
@@ -1374,6 +1479,11 @@ export const listMySubmissions = asyncHandler(async (req: AuthenticatedRequest, 
         model: FormEvent,
         as: "formEvent",
         attributes: ["id", "title", "formId"]
+      },
+      {
+        model: User,
+        as: "targetUser",
+        attributes: ["id", "email"]
       }
     ],
     order: [[String(sortBy), direction]],
@@ -1424,7 +1534,22 @@ export const updateSubmissionStatus = asyncHandler(
     });
 
     const updated = await FormSubmission.findByPk(submissionIdNum, {
-      attributes: ["id", "formEventId", "submittedBy", "submittedAt", "ipAddress", "userAgent"]
+      attributes: [
+        "id",
+        "formEventId",
+        "submittedBy",
+        "userId",
+        "submittedAt",
+        "ipAddress",
+        "userAgent"
+      ],
+      include: [
+        {
+          model: User,
+          as: "targetUser",
+          attributes: ["id", "email"]
+        }
+      ]
     });
 
     sendSuccess(res, updated, "Submission status updated successfully");

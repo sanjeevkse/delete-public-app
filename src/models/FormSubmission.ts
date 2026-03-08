@@ -13,12 +13,16 @@ import type User from "./User";
 import type FormFieldValue from "./FormFieldValue";
 
 class FormSubmission extends Model<
-  InferAttributes<FormSubmission, { omit: "formEvent" | "user" | "fieldValues" }>,
-  InferCreationAttributes<FormSubmission, { omit: "formEvent" | "user" | "fieldValues" }>
+  InferAttributes<FormSubmission, { omit: "formEvent" | "user" | "targetUser" | "fieldValues" }>,
+  InferCreationAttributes<
+    FormSubmission,
+    { omit: "formEvent" | "user" | "targetUser" | "fieldValues" }
+  >
 > {
   declare id: CreationOptional<number>;
   declare formEventId: number;
   declare submittedBy: CreationOptional<number | null>;
+  declare userId: CreationOptional<number | null>;
   declare submittedAt: CreationOptional<Date>;
   declare ipAddress: CreationOptional<string | null>;
   declare userAgent: CreationOptional<string | null>;
@@ -30,6 +34,7 @@ class FormSubmission extends Model<
 
   declare formEvent?: NonAttribute<FormEvent>;
   declare user?: NonAttribute<User>;
+  declare targetUser?: NonAttribute<User>;
   declare fieldValues?: NonAttribute<FormFieldValue[]>;
 }
 
@@ -47,6 +52,11 @@ FormSubmission.init(
     },
     submittedBy: {
       field: "submitted_by",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    userId: {
+      field: "user_id",
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },

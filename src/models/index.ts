@@ -603,6 +603,8 @@ const establishAssociations = (): void => {
 
   FormSubmission.belongsTo(User, { foreignKey: "submittedBy", as: "user" });
   User.hasMany(FormSubmission, { foreignKey: "submittedBy", as: "formSubmissions" });
+  FormSubmission.belongsTo(User, { foreignKey: "userId", as: "targetUser" });
+  User.hasMany(FormSubmission, { foreignKey: "userId", as: "targetFormSubmissions" });
 
   FormSubmission.hasMany(FormFieldValue, {
     foreignKey: "formSubmissionId",
