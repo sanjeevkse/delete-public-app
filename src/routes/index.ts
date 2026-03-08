@@ -36,6 +36,8 @@ import roleRoutes from "./roleRoutes";
 import permissionRoutes from "./permissionRoutes";
 import reportRoutes from "./reportRoutes";
 import conditionalListRoutes from "./conditionalListRoutes";
+import geoLookupRoutes from "./geoLookupRoutes";
+import casteRelationRoutes from "./casteRelationRoutes";
 
 const router = Router();
 
@@ -80,5 +82,7 @@ router.use("/sidebar-view", sidebarViewRoutes);
 router.use("/admin", adminRoutes);
 router.use("/reports", reportRoutes);
 router.use("/", conditionalListRoutes);
+router.use("/", geoLookupRoutes);
+router.use("/", casteRelationRoutes);
 
 export default router;

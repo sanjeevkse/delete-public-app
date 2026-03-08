@@ -3,6 +3,10 @@ import UserAccess from "../models/UserAccess";
 import { ApiError } from "../middlewares/errorHandler";
 
 export interface AccessibleArea {
+  stateId?: number;
+  mainVillageId?: number;
+  governingBody?: "GBA" | "TMC" | "CMC" | "GP";
+  gramPanchayatId?: number;
   wardNumberId: number;
   boothNumberId: number;
   mlaConstituencyId?: number;
@@ -26,6 +30,10 @@ export const createUserAccessProfiles = async (
   const accessData = accessibles.map((accessible) => ({
     userId,
     accessRoleId,
+    stateId: accessible.stateId ?? null,
+    mainVillageId: accessible.mainVillageId ?? null,
+    governingBody: accessible.governingBody ?? null,
+    gramPanchayatId: accessible.gramPanchayatId ?? null,
     wardNumberId: accessible.wardNumberId,
     boothNumberId: accessible.boothNumberId,
     mlaConstituencyId: accessible.mlaConstituencyId ?? null,
@@ -86,6 +94,10 @@ export const updateUserAccessProfiles = async (
         {
           status: 1,
           accessRoleId,
+          stateId: accessible.stateId ?? null,
+          mainVillageId: accessible.mainVillageId ?? null,
+          governingBody: accessible.governingBody ?? null,
+          gramPanchayatId: accessible.gramPanchayatId ?? null,
           mlaConstituencyId: accessible.mlaConstituencyId ?? null,
           mpConstituencyId: accessible.mpConstituencyId ?? null,
           updatedBy
@@ -98,6 +110,10 @@ export const updateUserAccessProfiles = async (
         {
           userId,
           accessRoleId,
+          stateId: accessible.stateId ?? null,
+          mainVillageId: accessible.mainVillageId ?? null,
+          governingBody: accessible.governingBody ?? null,
+          gramPanchayatId: accessible.gramPanchayatId ?? null,
           wardNumberId: accessible.wardNumberId,
           boothNumberId: accessible.boothNumberId,
           mlaConstituencyId: accessible.mlaConstituencyId ?? null,
@@ -148,6 +164,10 @@ export const validateAccessibles = (accessibles: unknown): AccessibleArea[] => {
       string,
       unknown
     >;
+    const { stateId, mainVillageId, governingBody, gramPanchayatId } = item as Record<
+      string,
+      unknown
+    >;
 
     if (
       !wardNumberId ||
@@ -176,6 +196,20 @@ export const validateAccessibles = (accessibles: unknown): AccessibleArea[] => {
       boothNumberId
     };
 
+    if (stateId !== undefined && stateId !== null) {
+      if (typeof stateId !== "number" || stateId <= 0) {
+        throw new ApiError(`accessibles[${index}].stateId must be a positive number`, 400);
+      }
+      result.stateId = stateId;
+    }
+
+    if (mainVillageId !== undefined && mainVillageId !== null) {
+      if (typeof mainVillageId !== "number" || mainVillageId <= 0) {
+        throw new ApiError(`accessibles[${index}].mainVillageId must be a positive number`, 400);
+      }
+      result.mainVillageId = mainVillageId;
+    }
+
     // Optional fields
     if (mlaConstituencyId !== undefined && mlaConstituencyId !== null) {
       if (typeof mlaConstituencyId !== "number" || mlaConstituencyId <= 0) {
@@ -192,6 +226,30 @@ export const validateAccessibles = (accessibles: unknown): AccessibleArea[] => {
         throw new ApiError(`accessibles[${index}].mpConstituencyId must be a positive number`, 400);
       }
       result.mpConstituencyId = mpConstituencyId;
+    }
+
+    if (governingBody !== undefined && governingBody !== null && governingBody !== "") {
+      if (typeof governingBody !== "string" || !["GBA", "TMC", "CMC", "GP"].includes(governingBody)) {
+        throw new ApiError(
+          `accessibles[${index}].governingBody must be one of GBA, TMC, CMC, GP`,
+          400
+        );
+      }
+      result.governingBody = governingBody as AccessibleArea["governingBody"];
+    }
+
+    if (gramPanchayatId !== undefined && gramPanchayatId !== null) {
+      if (typeof gramPanchayatId !== "number" || gramPanchayatId <= 0) {
+        throw new ApiError(`accessibles[${index}].gramPanchayatId must be a positive number`, 400);
+      }
+      result.gramPanchayatId = gramPanchayatId;
+    }
+
+    if (result.governingBody === "GP" && !result.gramPanchayatId) {
+      throw new ApiError(
+        `accessibles[${index}].gramPanchayatId is required when governingBody is GP`,
+        400
+      );
     }
 
     return result;

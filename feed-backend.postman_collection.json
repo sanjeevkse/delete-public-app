@@ -449,18 +449,329 @@
               }
             },
             "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"demo@example1.com\",\n  \"fullName\": \"Demo User\",\n  \"profile\": {\n    \"displayName\": \"Demo User\",\n    \"bio\": \"Community volunteer\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"genderId\": 2,\n    \"occupation\": \"Organizer\",\n    \"fullAddress\": \"221B Baker Street, Marylebone, London, England NW1 6XE, UK\",\n    \"addressLine1\": \"221B Baker Street\",\n    \"addressLine2\": \"Marylebone\",\n    \"city\": \"London\",\n    \"state\": \"England\",\n    \"postalCode\": \"NW16XE\",\n    \"country\": \"UK\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"educationDetailId\": 2,\n    \"maritalStatusId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Spouse\",\n    \"doorNumber\": \"221B\",\n    \"floorId\": 2,\n    \"serviceConservancyRoad\": \"Service Road West\",\n    \"mainRoad\": \"Baker Street\",\n    \"crossRoad\": \"Marylebone Road\",\n    \"locationArea\": \"Marylebone\",\n    \"landmark\": \"Near Museum\",\n    \"wardNumberId\": 12,\n    \"boothNumberId\": 3,\n    \"latitude\": 27.7172,\n    \"longitude\": 85.324,\n    \"profileImageUrl\": \"https://example.com/profile.jpg\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"socialLinksJson\": {\n      \"twitter\": \"@demo\",\n      \"instagram\": \"demo.insta\",\n      \"facebook\": \"demo.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"citizenAge\": 35,\n    \"dateOfJoining\": \"2025-01-15\",\n    \"isRegistrationAgreed\": 1,\n    \"postsBlocked\": false,\n    \"status\": 1\n  }\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "demo@example1.com",
+                  "type": "text"
+                },
+                {
+                  "key": "fullName",
+                  "value": "Demo User",
+                  "type": "text"
+                },
+                {
+                  "key": "alernativeContactNumber",
+                  "value": "9876543211",
+                  "type": "text"
+                },
+                {
+                  "key": "emergencyContactNumber",
+                  "value": "9876543212",
+                  "type": "text"
+                },
+                {
+                  "key": "displayName",
+                  "value": "Demo User",
+                  "type": "text"
+                },
+                {
+                  "key": "bio",
+                  "value": "Community volunteer",
+                  "type": "text"
+                },
+                {
+                  "key": "dateOfBirth",
+                  "value": "1990-01-01",
+                  "type": "text"
+                },
+                {
+                  "key": "citizenAge",
+                  "value": "35",
+                  "type": "text"
+                },
+                {
+                  "key": "dateOfJoining",
+                  "value": "2025-01-15",
+                  "type": "text"
+                },
+                {
+                  "key": "genderId",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "maritalStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "disabilityStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "religionId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "mainCasteId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "subCasteId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "voterIdNumber",
+                  "value": "ABC1234567",
+                  "type": "text"
+                },
+                {
+                  "key": "aadhaarNumber",
+                  "value": "123456789012",
+                  "type": "text"
+                },
+                {
+                  "key": "rationCardNo",
+                  "value": "RC123456789",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentGroupId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "relationshipTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "relationshipName",
+                  "value": "Spouse",
+                  "type": "text"
+                },
+                {
+                  "key": "occupation",
+                  "value": "Organizer",
+                  "type": "text"
+                },
+                {
+                  "key": "doorNumber",
+                  "value": "221B",
+                  "type": "text"
+                },
+                {
+                  "key": "floorId",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "serviceConservancyRoad",
+                  "value": "Service Road West",
+                  "type": "text"
+                },
+                {
+                  "key": "mainRoad",
+                  "value": "Baker Street",
+                  "type": "text"
+                },
+                {
+                  "key": "crossRoad",
+                  "value": "Marylebone Road",
+                  "type": "text"
+                },
+                {
+                  "key": "locationArea",
+                  "value": "Marylebone",
+                  "type": "text"
+                },
+                {
+                  "key": "landmark",
+                  "value": "Near Museum",
+                  "type": "text"
+                },
+                {
+                  "key": "fullAddress",
+                  "value": "221B Baker Street, Marylebone, London, England NW1 6XE, UK",
+                  "type": "text"
+                },
+                {
+                  "key": "addressLine1",
+                  "value": "221B Baker Street",
+                  "type": "text"
+                },
+                {
+                  "key": "addressLine2",
+                  "value": "Marylebone",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "London",
+                  "type": "text"
+                },
+                {
+                  "key": "postalCode",
+                  "value": "NW16XE",
+                  "type": "text"
+                },
+                {
+                  "key": "country",
+                  "value": "UK",
+                  "type": "text"
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "12",
+                  "type": "text"
+                },
+                {
+                  "key": "boothNumberId",
+                  "value": "3",
+                  "type": "text"
+                },
+                {
+                  "key": "latitude",
+                  "value": "27.7172",
+                  "type": "text"
+                },
+                {
+                  "key": "longitude",
+                  "value": "85.324",
+                  "type": "text"
+                },
+                {
+                  "key": "educationalDetailGroupId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "educationalDetailId",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "socialLinksJson",
+                  "value": "{\"twitter\":\"@demo\",\"instagram\":\"demo.insta\",\"facebook\":\"demo.user\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "preferencesJson",
+                  "value": "{\"notifications\":true,\"language\":\"en\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "isRegistrationAgreed",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "postsBlocked",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "voterIdPhoto",
+                  "type": "file",
+                  "src": "/path/to/local/voter-id.jpg"
+                },
+                {
+                  "key": "aadhaarPhoto",
+                  "type": "file",
+                  "src": "/path/to/local/aadhaar.jpg"
+                },
+                {
+                  "key": "rationCardPhoto",
+                  "type": "file",
+                  "src": "/path/to/local/ration-card.jpg"
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "governingBody",
+                  "value": "GP",
+                  "type": "text"
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "mainVillageId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "voterListBoothNo",
+                  "value": "5040",
+                  "type": "text"
+                },
+                {
+                  "key": "voterListSlNo",
+                  "value": "221",
+                  "type": "text"
+                },
+                {
+                  "key": "mapBoothNo",
+                  "value": "5040",
+                  "type": "text"
+                },
+                {
+                  "key": "mapSlNo",
+                  "value": "221",
+                  "type": "text"
+                },
+                {
+                  "key": "mapSubSlNo",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "state_id",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
             },
             "url": "{{baseUrl}}/api/auth/profile",
-            "description": "Updates the authenticated user's editable fields across User and UserProfile models (contact number and administrative flags remain read-only). Requires a valid Bearer token obtained from the Login endpoint."
+            "description": "Updates authenticated user using top-level keys only. Keep `email` and `fullName` at top-level for user table, and send all profile fields at top-level (no nested `profile`). Optional multipart files: `voterIdPhoto`, `aadhaarPhoto`, `rationCardPhoto`. `subCasteId` should reference a sub-caste whose `categoryId` maps to `tbl_meta_sub_caste_category`."
           },
           "response": []
         },
@@ -636,9 +947,9 @@
                   "disabled": true
                 },
                 {
-                  "key": "state",
+                  "key": "stateId",
                   "value": "Maharashtra",
-                  "description": "Filter profiles whose state contains the supplied value",
+                  "description": "Filter profiles by state ID",
                   "disabled": true
                 },
                 {
@@ -1616,7 +1927,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/media",
-            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each \u2264 5MB). Update the file path before sending."
+            "description": "Uploads additional media for an existing event (max 4 images + 1 video in total, each ≤ 5MB). Update the file path before sending."
           },
           "response": []
         },
@@ -3339,7 +3650,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users"
           },
@@ -3472,9 +3783,9 @@
                   "disabled": true
                 },
                 {
-                  "key": "state",
+                  "key": "stateId",
                   "value": "Maharashtra",
-                  "description": "Filter profiles whose state contains the supplied value",
+                  "description": "Filter profiles by state ID",
                   "disabled": true
                 },
                 {
@@ -3724,7 +4035,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"UpdatedUser\",\n    \"bio\": \"Updated bio\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"city\": \"Bangalore\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560002\",\n    \"citizenAge\": 30,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"genderId\": 1,\n    \"educationDetailId\": 3,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\"\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"employmentId\": 1,\n    \"disabilityStatusId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentTypeId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
             "description": "Updates user information including profile, roles, accessibility profiles, and approval status (0=inactive, 1=approved/active, 2=pending approval). All fields are optional - only provided fields will be updated."
@@ -7460,10 +7771,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Ward Engagement Survey\",\n  \"description\": \"Collect feedback from ward residents\",\n  \"slug\": \"ward-engagement-survey\",\n  \"isPublic\": 1,\n  \"startAt\": \"2024-11-01T00:00:00Z\",\n  \"endAt\": null,\n  \"includeWardAndBooth\": true,\n  \"wardNumberId\": 12,\n  \"boothNumberId\": 34,\n  \"fields\": [\n    {\n      \"fieldKey\": \"full_name\",\n      \"label\": \"Full Name\",\n      \"helpText\": \"Enter your full legal name\",\n      \"fieldTypeId\": 1,\n      \"inputFormatId\": 1,\n      \"isRequired\": 1,\n      \"sortOrder\": 1,\n      \"placeholder\": \"John Doe\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": 2,\n      \"maxLength\": 100,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"email\",\n      \"label\": \"Email Address\",\n      \"helpText\": \"We'll never share your email\",\n      \"fieldTypeId\": 1,\n      \"inputFormatId\": 2,\n      \"isRequired\": 1,\n      \"sortOrder\": 2,\n      \"placeholder\": \"example@domain.com\",\n      \"defaultValue\": null,\n      \"validationRegex\": \"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\",\n      \"minLength\": null,\n      \"maxLength\": 255,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"satisfaction_rating\",\n      \"label\": \"How satisfied are you with ward services?\",\n      \"helpText\": \"Select one option\",\n      \"fieldTypeId\": 2,\n      \"inputFormatId\": null,\n      \"isRequired\": 1,\n      \"sortOrder\": 3,\n      \"placeholder\": null,\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": null,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": [\n        {\n          \"optionLabel\": \"Very Satisfied\",\n          \"optionValue\": \"very_satisfied\",\n          \"sortOrder\": 1,\n          \"isDefault\": 0\n        },\n        {\n          \"optionLabel\": \"Satisfied\",\n          \"optionValue\": \"satisfied\",\n          \"sortOrder\": 2,\n          \"isDefault\": 1\n        },\n        {\n          \"optionLabel\": \"Neutral\",\n          \"optionValue\": \"neutral\",\n          \"sortOrder\": 3,\n          \"isDefault\": 0\n        },\n        {\n          \"optionLabel\": \"Dissatisfied\",\n          \"optionValue\": \"dissatisfied\",\n          \"sortOrder\": 4,\n          \"isDefault\": 0\n        },\n        {\n          \"optionLabel\": \"Very Dissatisfied\",\n          \"optionValue\": \"very_dissatisfied\",\n          \"sortOrder\": 5,\n          \"isDefault\": 0\n        }\n      ]\n    },\n    {\n      \"fieldKey\": \"services_used\",\n      \"label\": \"Which services have you used? (Select all that apply)\",\n      \"helpText\": \"Check all relevant options\",\n      \"fieldTypeId\": 3,\n      \"inputFormatId\": null,\n      \"isRequired\": 0,\n      \"sortOrder\": 4,\n      \"placeholder\": null,\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": null,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"metaTable\": \"tbl_meta_ward_number\",\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"comments\",\n      \"label\": \"Additional Comments\",\n      \"helpText\": \"Share your thoughts or suggestions\",\n      \"fieldTypeId\": 4,\n      \"inputFormatId\": null,\n      \"isRequired\": 0,\n      \"sortOrder\": 5,\n      \"placeholder\": \"Enter your feedback here...\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": 1000,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"age\",\n      \"label\": \"Age\",\n      \"helpText\": \"Must be 18 or older\",\n      \"fieldTypeId\": 5,\n      \"inputFormatId\": null,\n      \"isRequired\": 0,\n      \"sortOrder\": 6,\n      \"placeholder\": \"25\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": null,\n      \"minValue\": \"18\",\n      \"maxValue\": \"120\",\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"marital_status\",\n      \"label\": \"Marital status\",\n      \"helpText\": \"Enter marital status\",\n      \"fieldTypeId\": 1,\n      \"inputFormatId\": 1,\n      \"isRequired\": 1,\n      \"sortOrder\": 1,\n      \"placeholder\": \"Married\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": 2,\n      \"maxLength\": 100,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"metaTable\": \"tbl_meta_marital_status\",\n      \"options\": []\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Ward Engagement Survey\",\n  \"description\": \"Collect feedback from ward residents\",\n  \"slug\": \"ward-engagement-survey\",\n  \"isPublic\": 1,\n  \"startAt\": \"2024-11-01T00:00:00Z\",\n  \"endAt\": null,\n  \"includeWardAndBooth\": true,\n  \"includeUser\": true,\n  \"wardNumberId\": 12,\n  \"boothNumberId\": 34,\n  \"fields\": [\n    {\n      \"fieldKey\": \"full_name\",\n      \"label\": \"Full Name\",\n      \"helpText\": \"Enter your full legal name\",\n      \"fieldTypeId\": 1,\n      \"inputFormatId\": 1,\n      \"isRequired\": 1,\n      \"sortOrder\": 1,\n      \"placeholder\": \"John Doe\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": 2,\n      \"maxLength\": 100,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"email\",\n      \"label\": \"Email Address\",\n      \"helpText\": \"We'll never share your email\",\n      \"fieldTypeId\": 1,\n      \"inputFormatId\": 2,\n      \"isRequired\": 1,\n      \"sortOrder\": 2,\n      \"placeholder\": \"example@domain.com\",\n      \"defaultValue\": null,\n      \"validationRegex\": \"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\",\n      \"minLength\": null,\n      \"maxLength\": 255,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"satisfaction_rating\",\n      \"label\": \"How satisfied are you with ward services?\",\n      \"helpText\": \"Select one option\",\n      \"fieldTypeId\": 2,\n      \"inputFormatId\": null,\n      \"isRequired\": 1,\n      \"sortOrder\": 3,\n      \"placeholder\": null,\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": null,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": [\n        {\n          \"optionLabel\": \"Very Satisfied\",\n          \"optionValue\": \"very_satisfied\",\n          \"sortOrder\": 1,\n          \"isDefault\": 0\n        },\n        {\n          \"optionLabel\": \"Satisfied\",\n          \"optionValue\": \"satisfied\",\n          \"sortOrder\": 2,\n          \"isDefault\": 1\n        },\n        {\n          \"optionLabel\": \"Neutral\",\n          \"optionValue\": \"neutral\",\n          \"sortOrder\": 3,\n          \"isDefault\": 0\n        },\n        {\n          \"optionLabel\": \"Dissatisfied\",\n          \"optionValue\": \"dissatisfied\",\n          \"sortOrder\": 4,\n          \"isDefault\": 0\n        },\n        {\n          \"optionLabel\": \"Very Dissatisfied\",\n          \"optionValue\": \"very_dissatisfied\",\n          \"sortOrder\": 5,\n          \"isDefault\": 0\n        }\n      ]\n    },\n    {\n      \"fieldKey\": \"services_used\",\n      \"label\": \"Which services have you used? (Select all that apply)\",\n      \"helpText\": \"Check all relevant options\",\n      \"fieldTypeId\": 3,\n      \"inputFormatId\": null,\n      \"isRequired\": 0,\n      \"sortOrder\": 4,\n      \"placeholder\": null,\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": null,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"metaTable\": \"tbl_meta_ward_number\",\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"comments\",\n      \"label\": \"Additional Comments\",\n      \"helpText\": \"Share your thoughts or suggestions\",\n      \"fieldTypeId\": 4,\n      \"inputFormatId\": null,\n      \"isRequired\": 0,\n      \"sortOrder\": 5,\n      \"placeholder\": \"Enter your feedback here...\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": 1000,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"age\",\n      \"label\": \"Age\",\n      \"helpText\": \"Must be 18 or older\",\n      \"fieldTypeId\": 5,\n      \"inputFormatId\": null,\n      \"isRequired\": 0,\n      \"sortOrder\": 6,\n      \"placeholder\": \"25\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": null,\n      \"maxLength\": null,\n      \"minValue\": \"18\",\n      \"maxValue\": \"120\",\n      \"attrsJson\": null,\n      \"options\": []\n    },\n    {\n      \"fieldKey\": \"marital_status\",\n      \"label\": \"Marital status\",\n      \"helpText\": \"Enter marital status\",\n      \"fieldTypeId\": 1,\n      \"inputFormatId\": 1,\n      \"isRequired\": 1,\n      \"sortOrder\": 1,\n      \"placeholder\": \"Married\",\n      \"defaultValue\": null,\n      \"validationRegex\": null,\n      \"minLength\": 2,\n      \"maxLength\": 100,\n      \"minValue\": null,\n      \"maxValue\": null,\n      \"attrsJson\": null,\n      \"metaTable\": \"tbl_meta_marital_status\",\n      \"options\": []\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/forms",
-            "description": "Creates a form. Provide optional `wardNumberId` and/or `boothNumberId` to automatically create a tbl_form_mapping record. Omit those fields or send them as null to leave the form unmapped. Set `includeWardAndBooth` to true to prepend ward/booth select fields to the form. Form fields can set `metaTable` to a meta table `tableName` to auto-populate options."
+            "description": "Creates a form. Provide optional `wardNumberId` and/or `boothNumberId` to automatically create a tbl_form_mapping record. Omit those fields or send them as null to leave the form unmapped. Set `includeWardAndBooth` to true to prepend ward/booth select fields to the form. Set `includeUser` to persist `include_user=1` on the form so form reports include submitter fields (name/email/contact/address). Form fields can set `metaTable` to a meta table `tableName` to auto-populate options."
           },
           "response": []
         }
@@ -8940,6 +9251,1222 @@
         "description": "Get detailed information about a targeted notification including targeting criteria, delivery statistics, and recipient list."
       },
       "response": []
+    },
+    {
+      "name": "Geo Lookup",
+      "item": [
+        {
+          "name": "Generic Geo Lookup",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "mp_constituency",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": [
+            {
+              "name": "Success - Paginated",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/geo-lookup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "geo-lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "request_entity",
+                      "value": "mp_constituency",
+                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                    },
+                    {
+                      "key": "stateId",
+                      "value": "1",
+                      "description": "Optional. Filter by state ID."
+                    },
+                    {
+                      "key": "mpConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MP constituency ID."
+                    },
+                    {
+                      "key": "mlaConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MLA constituency ID."
+                    },
+                    {
+                      "key": "gramPanchayatId",
+                      "value": "",
+                      "description": "Optional. Filter by gram panchayat ID."
+                    },
+                    {
+                      "key": "wardNumberId",
+                      "value": "",
+                      "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                    },
+                    {
+                      "key": "governing_body",
+                      "value": "",
+                      "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Optional. Page number for pagination."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25",
+                      "description": "Optional. Page size for pagination."
+                    },
+                    {
+                      "key": "search",
+                      "value": "",
+                      "description": "Optional. Search term applied on `dispName`."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "ASC",
+                      "description": "Optional. Sort direction: ASC or DESC."
+                    },
+                    {
+                      "key": "sortColumn",
+                      "value": "dispName",
+                      "description": "Optional. Sort column: id or dispName."
+                    },
+                    {
+                      "key": "need_all",
+                      "value": "0",
+                      "description": "Optional. Use 1 to prepend `-ALL-` option."
+                    }
+                  ]
+                },
+                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"dispName\": \"Example Option 1\"\n    },\n    {\n      \"id\": 2,\n      \"dispName\": \"Example Option 2\"\n    }\n  ],\n  \"pagination\": {\n    \"total\": 48,\n    \"page\": 1,\n    \"limit\": 25,\n    \"totalPages\": 2,\n    \"hasNextPage\": true,\n    \"hasPrevPage\": false\n  },\n  \"message\": \"Geo lookup data retrieved successfully\"\n}"
+            },
+            {
+              "name": "Success - Empty Result",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/geo-lookup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "geo-lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "request_entity",
+                      "value": "mp_constituency",
+                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                    },
+                    {
+                      "key": "stateId",
+                      "value": "1",
+                      "description": "Optional. Filter by state ID."
+                    },
+                    {
+                      "key": "mpConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MP constituency ID."
+                    },
+                    {
+                      "key": "mlaConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MLA constituency ID."
+                    },
+                    {
+                      "key": "gramPanchayatId",
+                      "value": "",
+                      "description": "Optional. Filter by gram panchayat ID."
+                    },
+                    {
+                      "key": "wardNumberId",
+                      "value": "",
+                      "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                    },
+                    {
+                      "key": "governing_body",
+                      "value": "",
+                      "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Optional. Page number for pagination."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25",
+                      "description": "Optional. Page size for pagination."
+                    },
+                    {
+                      "key": "search",
+                      "value": "",
+                      "description": "Optional. Search term applied on `dispName`."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "ASC",
+                      "description": "Optional. Sort direction: ASC or DESC."
+                    },
+                    {
+                      "key": "sortColumn",
+                      "value": "dispName",
+                      "description": "Optional. Sort column: id or dispName."
+                    },
+                    {
+                      "key": "need_all",
+                      "value": "0",
+                      "description": "Optional. Use 1 to prepend `-ALL-` option."
+                    }
+                  ]
+                },
+                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": [],\n  \"pagination\": {\n    \"total\": 0,\n    \"page\": 1,\n    \"limit\": 25,\n    \"totalPages\": 0,\n    \"hasNextPage\": false,\n    \"hasPrevPage\": false\n  },\n  \"message\": \"Geo lookup data retrieved successfully\"\n}"
+            },
+            {
+              "name": "Error - Invalid request_entity",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/geo-lookup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "geo-lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "request_entity",
+                      "value": "mp_constituency",
+                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                    },
+                    {
+                      "key": "stateId",
+                      "value": "1",
+                      "description": "Optional. Filter by state ID."
+                    },
+                    {
+                      "key": "mpConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MP constituency ID."
+                    },
+                    {
+                      "key": "mlaConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MLA constituency ID."
+                    },
+                    {
+                      "key": "gramPanchayatId",
+                      "value": "",
+                      "description": "Optional. Filter by gram panchayat ID."
+                    },
+                    {
+                      "key": "wardNumberId",
+                      "value": "",
+                      "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                    },
+                    {
+                      "key": "governing_body",
+                      "value": "",
+                      "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Optional. Page number for pagination."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25",
+                      "description": "Optional. Page size for pagination."
+                    },
+                    {
+                      "key": "search",
+                      "value": "",
+                      "description": "Optional. Search term applied on `dispName`."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "ASC",
+                      "description": "Optional. Sort direction: ASC or DESC."
+                    },
+                    {
+                      "key": "sortColumn",
+                      "value": "dispName",
+                      "description": "Optional. Sort column: id or dispName."
+                    },
+                    {
+                      "key": "need_all",
+                      "value": "0",
+                      "description": "Optional. Use 1 to prepend `-ALL-` option."
+                    }
+                  ]
+                },
+                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"request_entity is invalid\"\n}"
+            },
+            {
+              "name": "Error - Invalid numeric filter",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/geo-lookup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "geo-lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "request_entity",
+                      "value": "mp_constituency",
+                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                    },
+                    {
+                      "key": "stateId",
+                      "value": "1",
+                      "description": "Optional. Filter by state ID."
+                    },
+                    {
+                      "key": "mpConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MP constituency ID."
+                    },
+                    {
+                      "key": "mlaConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MLA constituency ID."
+                    },
+                    {
+                      "key": "gramPanchayatId",
+                      "value": "",
+                      "description": "Optional. Filter by gram panchayat ID."
+                    },
+                    {
+                      "key": "wardNumberId",
+                      "value": "",
+                      "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                    },
+                    {
+                      "key": "governing_body",
+                      "value": "",
+                      "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Optional. Page number for pagination."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25",
+                      "description": "Optional. Page size for pagination."
+                    },
+                    {
+                      "key": "search",
+                      "value": "",
+                      "description": "Optional. Search term applied on `dispName`."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "ASC",
+                      "description": "Optional. Sort direction: ASC or DESC."
+                    },
+                    {
+                      "key": "sortColumn",
+                      "value": "dispName",
+                      "description": "Optional. Sort column: id or dispName."
+                    },
+                    {
+                      "key": "need_all",
+                      "value": "0",
+                      "description": "Optional. Use 1 to prepend `-ALL-` option."
+                    }
+                  ]
+                },
+                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"stateId must be a valid positive number\"\n}"
+            },
+            {
+              "name": "Error - Invalid governing_body",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/geo-lookup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "geo-lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "request_entity",
+                      "value": "mp_constituency",
+                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                    },
+                    {
+                      "key": "stateId",
+                      "value": "1",
+                      "description": "Optional. Filter by state ID."
+                    },
+                    {
+                      "key": "mpConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MP constituency ID."
+                    },
+                    {
+                      "key": "mlaConstituencyId",
+                      "value": "",
+                      "description": "Optional. Filter by MLA constituency ID."
+                    },
+                    {
+                      "key": "gramPanchayatId",
+                      "value": "",
+                      "description": "Optional. Filter by gram panchayat ID."
+                    },
+                    {
+                      "key": "wardNumberId",
+                      "value": "",
+                      "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                    },
+                    {
+                      "key": "governing_body",
+                      "value": "",
+                      "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Optional. Page number for pagination."
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25",
+                      "description": "Optional. Page size for pagination."
+                    },
+                    {
+                      "key": "search",
+                      "value": "",
+                      "description": "Optional. Search term applied on `dispName`."
+                    },
+                    {
+                      "key": "sort",
+                      "value": "ASC",
+                      "description": "Optional. Sort direction: ASC or DESC."
+                    },
+                    {
+                      "key": "sortColumn",
+                      "value": "dispName",
+                      "description": "Optional. Sort column: id or dispName."
+                    },
+                    {
+                      "key": "need_all",
+                      "value": "0",
+                      "description": "Optional. Use 1 to prepend `-ALL-` option."
+                    }
+                  ]
+                },
+                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"governing_body must be one of GBA, TMC, CMC, GP\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "MP by state",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "mp_constituency",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        },
+        {
+          "name": "MLA by state+mp",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "mla_constituency",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        },
+        {
+          "name": "Gram Panchayat by state+mp+mla",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "gram_panchayat",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        },
+        {
+          "name": "Village with GP context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "village",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "1",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "GP",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        },
+        {
+          "name": "Ward with GP context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "ward",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "1",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "GP",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        },
+        {
+          "name": "Booth with ward filter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "booth",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "1",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "1",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "1",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "1",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "GP",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        },
+        {
+          "name": "Unfiltered entity list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/geo-lookup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "geo-lookup"
+              ],
+              "query": [
+                {
+                  "key": "request_entity",
+                  "value": "village",
+                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                },
+                {
+                  "key": "stateId",
+                  "value": "",
+                  "description": "Optional. Filter by state ID."
+                },
+                {
+                  "key": "mpConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MP constituency ID."
+                },
+                {
+                  "key": "mlaConstituencyId",
+                  "value": "",
+                  "description": "Optional. Filter by MLA constituency ID."
+                },
+                {
+                  "key": "gramPanchayatId",
+                  "value": "",
+                  "description": "Optional. Filter by gram panchayat ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                },
+                {
+                  "key": "governing_body",
+                  "value": "",
+                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional. Page number for pagination."
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Optional. Page size for pagination."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional. Search term applied on `dispName`."
+                },
+                {
+                  "key": "sort",
+                  "value": "ASC",
+                  "description": "Optional. Sort direction: ASC or DESC."
+                },
+                {
+                  "key": "sortColumn",
+                  "value": "dispName",
+                  "description": "Optional. Sort column: id or dispName."
+                },
+                {
+                  "key": "need_all",
+                  "value": "0",
+                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                }
+              ]
+            },
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Caste Relations",
+      "item": [
+        {
+          "name": "Get Caste Relations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "{{authToken}}"
+              }
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/caste-relations?religion_id=1&main_caste_id=&sub_caste_id=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "caste-relations"
+              ],
+              "query": [
+                {
+                  "key": "religion_id",
+                  "value": "1",
+                  "description": "Required. Religion ID."
+                },
+                {
+                  "key": "main_caste_id",
+                  "value": "",
+                  "description": "Optional. If provided, response returns sub-castes for that main caste only."
+                },
+                {
+                  "key": "sub_caste_id",
+                  "value": "",
+                  "description": "Optional. Further filters sub-caste list."
+                }
+              ]
+            },
+            "description": "Returns caste relations from tbl_meta_caste_relation. Rules: (1) religion_id only -> grouped main castes with sub-castes (with category). (2) religion_id + main_caste_id -> sub-caste list (with category)."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {

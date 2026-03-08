@@ -229,8 +229,47 @@ export const buildAccessibilityFilter = async (
     return null; // No accessibility constraints
   }
 
-  const orConditions = buildAccessibilityORConditions(loggedInAccess);
-  return orConditions;
+  // Form event accessibility table only stores ward/booth dimensions.
+  // Keep broader geo fields optional in user access, but don't project them here.
+  const conditions: Array<Record<string, any>> = [];
+  const seen = new Set<string>();
+
+  for (const access of loggedInAccess) {
+    const condition: Record<string, any> = {};
+
+    if (
+      access.wardNumberId !== -1 &&
+      access.wardNumberId !== null &&
+      access.wardNumberId !== undefined
+    ) {
+      condition.wardNumberId = access.wardNumberId;
+    }
+
+    if (
+      access.boothNumberId !== -1 &&
+      access.boothNumberId !== null &&
+      access.boothNumberId !== undefined
+    ) {
+      condition.boothNumberId = access.boothNumberId;
+    }
+
+    // -1 + -1 means all wards/booths.
+    if (Object.keys(condition).length === 0) {
+      return null;
+    }
+
+    const key = JSON.stringify(condition);
+    if (!seen.has(key)) {
+      seen.add(key);
+      conditions.push(condition);
+    }
+  }
+
+  if (conditions.length === 0) {
+    return null;
+  }
+
+  return { [Op.or]: conditions };
 };
 
 /**

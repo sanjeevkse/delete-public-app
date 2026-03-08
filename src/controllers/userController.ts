@@ -194,6 +194,25 @@ const applyRangeFilter = (
   };
 };
 
+const USER_PROFILE_INCLUDE = [
+  { association: "gender", attributes: ["id", "dispName"], required: false },
+  { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+  { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+  { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+  { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+  { association: "educationalDetailGroup", attributes: ["id", "dispName"], required: false },
+  { association: "sector", attributes: ["id", "dispName"], required: false },
+  { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+  { association: "floor", attributes: ["id", "dispName"], required: false },
+  { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
+  { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+  { association: "religion", attributes: ["id", "dispName"], required: false },
+  { association: "mainCaste", attributes: ["id", "dispName"], required: false },
+  { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },
+  { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
+  { association: "employmentType", attributes: ["id", "dispName"], required: false }
+];
+
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const loggedInUser = (req as AuthenticatedRequest).user;
   const { page, limit, offset } = parsePaginationParams(
@@ -237,7 +256,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const floorFilter = parseNumberFilter(pickQueryValue(queryParams, ["floorId", "floor_id"]));
   const occupationFilter = parseStringFilter(pickQueryValue(queryParams, ["occupation"]));
   const cityFilter = parseStringFilter(pickQueryValue(queryParams, ["city"]));
-  const stateFilter = parseStringFilter(pickQueryValue(queryParams, ["state"]));
+  const stateIdFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["stateId", "state_id"])
+  );
   const postalCodeFilter = parseStringFilter(
     pickQueryValue(queryParams, ["postalCode", "postal_code"])
   );
@@ -259,6 +280,30 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   );
   const educationalDetailGroupFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["educationalDetailGroupId", "educational_detail_group_id"])
+  );
+  const disabilityStatusFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["disabilityStatusId", "disability_status_id"])
+  );
+  const religionFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["religionId", "religion_id"])
+  );
+  const mainCasteFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["mainCasteId", "main_caste_id"])
+  );
+  const subCasteFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["subCasteId", "sub_caste_id"])
+  );
+  const employmentGroupFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["employmentGroupId", "employment_group_id"])
+  );
+  const employmentTypeFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["employmentTypeId", "employment_type_id"])
+  );
+  const voterIdNumberFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["voterIdNumber", "voter_id_number"])
+  );
+  const rationCardNoFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["rationCardNo", "ration_card_no"])
   );
   const dateOfJoiningStart = parseDateFilter(
     pickQueryValue(queryParams, ["dateOfJoiningStart", "date_of_joining_start"])
@@ -342,8 +387,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   if (cityFilter) {
     profileFilters.city = { [Op.like]: `%${cityFilter}%` };
   }
-  if (stateFilter) {
-    profileFilters.state = { [Op.like]: `%${stateFilter}%` };
+  if (stateIdFilter !== undefined) {
+    profileFilters.stateId = stateIdFilter;
   }
   if (postalCodeFilter) {
     profileFilters.postalCode = { [Op.like]: `%${postalCodeFilter}%` };
@@ -368,6 +413,30 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
   if (educationalDetailGroupFilter !== undefined) {
     profileFilters.educationalDetailGroupId = educationalDetailGroupFilter;
+  }
+  if (disabilityStatusFilter !== undefined) {
+    profileFilters.disabilityStatusId = disabilityStatusFilter;
+  }
+  if (religionFilter !== undefined) {
+    profileFilters.religionId = religionFilter;
+  }
+  if (mainCasteFilter !== undefined) {
+    profileFilters.mainCasteId = mainCasteFilter;
+  }
+  if (subCasteFilter !== undefined) {
+    profileFilters.subCasteId = subCasteFilter;
+  }
+  if (employmentGroupFilter !== undefined) {
+    profileFilters.employmentGroupId = employmentGroupFilter;
+  }
+  if (employmentTypeFilter !== undefined) {
+    profileFilters.employmentTypeId = employmentTypeFilter;
+  }
+  if (voterIdNumberFilter) {
+    profileFilters.voterIdNumber = { [Op.like]: `%${voterIdNumberFilter}%` };
+  }
+  if (rationCardNoFilter) {
+    profileFilters.rationCardNo = { [Op.like]: `%${rationCardNoFilter}%` };
   }
   if (doorNumberFilter) {
     profileFilters.doorNumber = { [Op.like]: `%${doorNumberFilter}%` };
@@ -443,21 +512,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
         as: "profile",
         ...(profileFiltersApplied && { where: profileFilters, required: true }),
         ...(accessibilityFilter && { where: accessibilityFilter, required: true }),
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_INCLUDE
       },
       {
         model: UserAccess,
@@ -564,21 +619,7 @@ export const listUsersPendingApproval = asyncHandler(
           model: UserProfile,
           as: "profile",
           ...(accessibilityFilter && { where: accessibilityFilter, required: true }),
-          include: [
-            { association: "gender", attributes: ["id", "dispName"], required: false },
-            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-            {
-              association: "educationalDetailGroup",
-              attributes: ["id", "dispName"],
-              required: false
-            },
-            { association: "sector", attributes: ["id", "dispName"], required: false },
-            { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-            { association: "floor", attributes: ["id", "dispName"], required: false }
-          ]
+          include: USER_PROFILE_INCLUDE
         },
         {
           model: UserAccess,
@@ -695,21 +736,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
       {
         model: UserProfile,
         as: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_INCLUDE
       },
       {
         model: UserAccess,
@@ -752,21 +779,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
       {
         model: UserProfile,
         as: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_INCLUDE
       },
       {
         model: UserAccess,
@@ -835,21 +848,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       {
         model: UserProfile,
         as: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_INCLUDE
       },
       {
         model: UserAccess,
@@ -1076,6 +1075,27 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     ...userUpdates
   } = req.body;
 
+  let profileInput: Record<string, unknown> | undefined;
+  if (profile !== undefined) {
+    if (profile === null || profile === "") {
+      profileInput = {};
+    } else if (typeof profile === "object" && !Array.isArray(profile)) {
+      profileInput = profile as Record<string, unknown>;
+    } else if (typeof profile === "string") {
+      try {
+        const parsed = JSON.parse(profile);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new ApiError("profile must be a JSON object", 400);
+        }
+        profileInput = parsed as Record<string, unknown>;
+      } catch (error) {
+        throw new ApiError("profile must be a valid JSON object", 400);
+      }
+    } else {
+      throw new ApiError("profile must be an object", 400);
+    }
+  }
+
   // Validate and handle status if provided (0=inactive, 1=active/approved, 2=pending approval)
   if (statusUpdate !== undefined && statusUpdate !== null) {
     const parsedStatus = Number(statusUpdate);
@@ -1089,23 +1109,14 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 
   await user.update(userUpdates);
 
-  if (profile) {
-    const profileAttributes = buildProfileAttributes(profile, user.profile ?? undefined);
+  if (profileInput !== undefined) {
+    const profileAttributes = buildProfileAttributes(profileInput, user.profile ?? undefined);
     if (Object.keys(profileAttributes).length > 0) {
       if (user.profile) {
         await user.profile.update(profileAttributes);
       } else {
-        // When creating a new profile, wardNumberId and boothNumberId are required
-        if (!profileAttributes.wardNumberId) {
-          throw new ApiError("profile.wardNumberId is required when creating profile", 400);
-        }
-        if (!profileAttributes.boothNumberId) {
-          throw new ApiError("profile.boothNumberId is required when creating profile", 400);
-        }
         await UserProfile.create({
           userId: user.id,
-          wardNumberId: profileAttributes.wardNumberId,
-          boothNumberId: profileAttributes.boothNumberId,
           ...profileAttributes
         });
       }
@@ -1138,21 +1149,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
       {
         model: UserProfile,
         as: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_INCLUDE
       },
       {
         model: UserAccess,
@@ -1204,21 +1201,7 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
         {
           model: UserProfile,
           as: "profile",
-          include: [
-            { association: "gender", attributes: ["id", "dispName"], required: false },
-            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-            {
-              association: "educationalDetailGroup",
-              attributes: ["id", "dispName"],
-              required: false
-            },
-            { association: "sector", attributes: ["id", "dispName"], required: false },
-            { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-            { association: "floor", attributes: ["id", "dispName"], required: false }
-          ]
+          include: USER_PROFILE_INCLUDE
         },
         { association: "roles", include: [{ association: "permissions" }] },
         {
@@ -1261,21 +1244,7 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
       {
         model: UserProfile,
         as: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] },
       {
@@ -1332,21 +1301,7 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
         {
           model: UserProfile,
           as: "profile",
-          include: [
-            { association: "gender", attributes: ["id", "dispName"], required: false },
-            { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-            { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-            { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-            { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-            {
-              association: "educationalDetailGroup",
-              attributes: ["id", "dispName"],
-              required: false
-            },
-            { association: "sector", attributes: ["id", "dispName"], required: false },
-            { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-            { association: "floor", attributes: ["id", "dispName"], required: false }
-          ]
+          include: USER_PROFILE_INCLUDE
         },
         { association: "roles", include: [{ association: "permissions" }] },
         {

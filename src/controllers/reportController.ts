@@ -15,6 +15,10 @@ import UserRole from "../models/UserRole";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
+import {
+  resolveSubmittedUserValue,
+  SUBMITTED_USER_REPORT_FIELDS
+} from "../utils/submittedUserFields";
 import { getDescendantRoleIds } from "../services/userHierarchyService";
 import { getRoleIdsByNames } from "../services/rbacService";
 
@@ -306,7 +310,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: Form,
         as: "form",
-        attributes: ["id", "title", "description"]
+        attributes: ["id", "title", "description", "includeUser"]
       }
     ]
   });
@@ -317,6 +321,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
 
   // Get form and all its fields
   const form = await Form.findByPk(formEvent.formId, {
+    attributes: ["id", "title", "description", "includeUser"],
     include: [
       {
         model: FormField,
@@ -467,12 +472,12 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
       {
         model: User,
         as: "user",
-        attributes: ["id", "email"],
+        attributes: ["id", "email", "fullName", "contactNumber"],
         include: [
           {
             model: UserProfile,
             as: "profile",
-            attributes: ["displayName"]
+            attributes: ["displayName", "fullAddress", "addressLine1", "addressLine2", "city"]
           }
         ]
       }
@@ -490,6 +495,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
   const headers = [
     "SL No.",
     ...formFields.map((f) => f.label),
+    ...(form.includeUser === 1 ? SUBMITTED_USER_REPORT_FIELDS.map((field) => field.label) : []),
     "Submitted by",
     "Submitted date",
     "Actions"
@@ -667,6 +673,12 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
         }
       } else {
         row.push("");
+      }
+    }
+
+    if (form.includeUser === 1) {
+      for (const field of SUBMITTED_USER_REPORT_FIELDS) {
+        row.push(resolveSubmittedUserValue(submission as any, field.key));
       }
     }
 

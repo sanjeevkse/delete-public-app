@@ -10,14 +10,20 @@ import {
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import type MetaBoothNumber from "./MetaBoothNumber";
+import type MetaDisabilityStatus from "./MetaDisabilityStatus";
 import type MetaEducationalDetail from "./MetaEducationalDetail";
 import type MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
+import type MetaEmployment from "./MetaEmployment";
+import type MetaEmploymentGroup from "./MetaEmploymentGroup";
 import type MetaEmploymentStatus from "./MetaEmploymentStatus";
 import type MetaFloor from "./MetaFloor";
 import type MetaGenderOption from "./MetaGenderOption";
+import type MetaMainCaste from "./MetaMainCaste";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
 import type MetaComplaintDepartment from "./MetaComplaintDepartment";
 import type MetaRelationType from "./MetaRelationType";
+import type MetaReligion from "./MetaReligion";
+import type MetaSubCaste from "./MetaSubCaste";
 import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
 
@@ -41,6 +47,17 @@ class UserProfile extends Model<
   declare dateOfJoining: CreationOptional<Date | null>;
   declare maritalStatusId: CreationOptional<number | null>;
   declare employmentId: CreationOptional<number | null>;
+  declare disabilityStatusId: CreationOptional<number | null>;
+  declare religionId: CreationOptional<number | null>;
+  declare mainCasteId: CreationOptional<number | null>;
+  declare subCasteId: CreationOptional<number | null>;
+  declare voterIdNumber: CreationOptional<string | null>;
+  declare voterIdPhoto: CreationOptional<string | null>;
+  declare aadhaarPhoto: CreationOptional<string | null>;
+  declare rationCardNo: CreationOptional<string | null>;
+  declare rationCardPhoto: CreationOptional<string | null>;
+  declare employmentGroupId: CreationOptional<number | null>;
+  declare employmentTypeId: CreationOptional<number | null>;
   declare relationshipTypeId: CreationOptional<number | null>;
   declare relationshipName: CreationOptional<string | null>;
   declare doorNumber: CreationOptional<string | null>;
@@ -57,9 +74,19 @@ class UserProfile extends Model<
   declare addressLine1: CreationOptional<string | null>;
   declare addressLine2: CreationOptional<string | null>;
   declare city: CreationOptional<string | null>;
-  declare state: CreationOptional<string | null>;
   declare postalCode: CreationOptional<string | null>;
   declare country: CreationOptional<string | null>;
+  declare stateId: CreationOptional<number | null>;
+  declare mpConstituencyId: CreationOptional<number | null>;
+  declare mlaConstituencyId: CreationOptional<number | null>;
+  declare governingBody: CreationOptional<"GBA" | "TMC" | "CMC" | "GP" | null>;
+  declare gramPanchayatId: CreationOptional<number | null>;
+  declare mainVillageId: CreationOptional<number | null>;
+  declare voterListBoothNo: CreationOptional<string | null>;
+  declare voterListSlNo: CreationOptional<string | null>;
+  declare mapBoothNo: CreationOptional<string | null>;
+  declare mapSlNo: CreationOptional<string | null>;
+  declare mapSubSlNo: CreationOptional<string | null>;
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
   declare sectorId: CreationOptional<number | null>;
@@ -78,7 +105,13 @@ class UserProfile extends Model<
   declare gender?: NonAttribute<MetaGenderOption | null>;
   declare educationalDetail?: NonAttribute<MetaEducationalDetail | null>;
   declare educationalDetailGroup?: NonAttribute<MetaEducationalDetailGroup | null>;
+  declare disabilityStatus?: NonAttribute<MetaDisabilityStatus | null>;
+  declare religion?: NonAttribute<MetaReligion | null>;
+  declare mainCaste?: NonAttribute<MetaMainCaste | null>;
+  declare subCaste?: NonAttribute<MetaSubCaste | null>;
   declare employmentStatus?: NonAttribute<MetaEmploymentStatus | null>;
+  declare employmentGroup?: NonAttribute<MetaEmploymentGroup | null>;
+  declare employmentType?: NonAttribute<MetaEmployment | null>;
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
   declare relationshipType?: NonAttribute<MetaRelationType | null>;
   declare floor?: NonAttribute<MetaFloor | null>;
@@ -177,6 +210,61 @@ UserProfile.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
+    disabilityStatusId: {
+      field: "disability_status_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    religionId: {
+      field: "religion_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    mainCasteId: {
+      field: "main_caste_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    subCasteId: {
+      field: "sub_caste_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    voterIdNumber: {
+      field: "voter_id_number",
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    voterIdPhoto: {
+      field: "voter_id_photo",
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    aadhaarPhoto: {
+      field: "aadhaar_photo",
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    rationCardNo: {
+      field: "ration_card_no",
+      type: DataTypes.STRING(30),
+      allowNull: true
+    },
+    rationCardPhoto: {
+      field: "ration_card_photo",
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    employmentGroupId: {
+      field: "employment_group_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    employmentTypeId: {
+      field: "employment_type_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
     relationshipTypeId: {
       field: "relationship_type_id",
       type: DataTypes.INTEGER.UNSIGNED,
@@ -254,10 +342,6 @@ UserProfile.init(
       type: DataTypes.STRING(120),
       allowNull: true
     },
-    state: {
-      type: DataTypes.STRING(120),
-      allowNull: true
-    },
     postalCode: {
       field: "postal_code",
       type: DataTypes.STRING(20),
@@ -265,6 +349,61 @@ UserProfile.init(
     },
     country: {
       type: DataTypes.STRING(120),
+      allowNull: true
+    },
+    stateId: {
+      field: "state_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    mpConstituencyId: {
+      field: "mp_constituency_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    mlaConstituencyId: {
+      field: "mla_constituency_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    governingBody: {
+      field: "governing_body",
+      type: DataTypes.ENUM("GBA", "TMC", "CMC", "GP"),
+      allowNull: true
+    },
+    gramPanchayatId: {
+      field: "gram_panchayat_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    mainVillageId: {
+      field: "main_village_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    voterListBoothNo: {
+      field: "voter_list_booth_no",
+      type: DataTypes.STRING(32),
+      allowNull: true
+    },
+    voterListSlNo: {
+      field: "voter_list_sl_no",
+      type: DataTypes.STRING(32),
+      allowNull: true
+    },
+    mapBoothNo: {
+      field: "map_booth_no",
+      type: DataTypes.STRING(32),
+      allowNull: true
+    },
+    mapSlNo: {
+      field: "map_sl_no",
+      type: DataTypes.STRING(32),
+      allowNull: true
+    },
+    mapSubSlNo: {
+      field: "map_sub_sl_no",
+      type: DataTypes.STRING(32),
       allowNull: true
     },
     wardNumberId: {

@@ -65,6 +65,66 @@ const upsertUserProfile = async (userId: number, profileInput?: Record<string, u
   }
 };
 
+const USER_PROFILE_ASSOCIATION_INCLUDE = [
+  { association: "gender", attributes: ["id", "dispName"], required: false },
+  { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+  { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+  { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+  { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+  { association: "educationalDetailGroup", attributes: ["id", "dispName"], required: false },
+  { association: "sector", attributes: ["id", "dispName"], required: false },
+  { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+  { association: "floor", attributes: ["id", "dispName"], required: false },
+  { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
+  { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+  { association: "religion", attributes: ["id", "dispName"], required: false },
+  { association: "mainCaste", attributes: ["id", "dispName"], required: false },
+  { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },
+  { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
+  { association: "employmentType", attributes: ["id", "dispName"], required: false }
+];
+
+const getUploadedProfileDocumentUrls = (req: Request): Record<string, string> => {
+  const uploadedFiles = Array.isArray((req as any).files)
+    ? ((req as any).files as Express.Multer.File[])
+    : [];
+  if (uploadedFiles.length === 0) {
+    return {};
+  }
+
+  const uploadedDocumentUrls: Record<string, string> = {};
+  uploadedFiles.forEach((file) => {
+    if (["voterIdPhoto", "aadhaarPhoto", "rationCardPhoto"].includes(file.fieldname)) {
+      uploadedDocumentUrls[file.fieldname] = buildPublicUploadPath(file.path);
+    }
+  });
+
+  return uploadedDocumentUrls;
+};
+
+const parseProfilePayload = (value: unknown): Record<string, unknown> => {
+  if (value === undefined || value === null || value === "") {
+    return {};
+  }
+
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch (error) {
+      throw new ApiError("profile must be a valid JSON object", 400);
+    }
+  }
+
+  throw new ApiError("profile must be an object", 400);
+};
+
 const verifyOtpForContactNumber = async (
   contactNumber: string,
   otp?: string | null
@@ -261,22 +321,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     include: [
       {
         association: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false },
-          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_ASSOCIATION_INCLUDE
       },
       {
         association: "roles",
@@ -330,22 +375,7 @@ export const getProfile = asyncHandler(async (req: AuthenticatedRequest, res: Re
     include: [
       {
         association: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false },
-          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_ASSOCIATION_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
@@ -451,11 +481,8 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
   }
 
   const profileInput: Record<string, unknown> = {};
-  const nestedProfile = payload.profile;
-
-  if (nestedProfile && typeof nestedProfile === "object") {
-    Object.assign(profileInput, nestedProfile as Record<string, unknown>);
-  }
+  const nestedProfile = parseProfilePayload(payload.profile);
+  Object.assign(profileInput, nestedProfile);
 
   const userFieldKeys = new Set([
     "contactNumber",
@@ -483,6 +510,8 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     }
   });
 
+  Object.assign(profileInput, getUploadedProfileDocumentUrls(req));
+
   if (normalizedFullName !== undefined && profileInput["displayName"] === undefined) {
     profileInput["displayName"] = normalizedFullName;
   }
@@ -507,22 +536,7 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
     include: [
       {
         association: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false },
-          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_ASSOCIATION_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
@@ -572,21 +586,7 @@ export const updateProfileImage = asyncHandler(async (req: AuthenticatedRequest,
     include: [
       {
         association: "profile",
-        include: [
-          { association: "gender", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          {
-            association: "educationalDetailGroup",
-            attributes: ["id", "dispName"],
-            required: false
-          },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "relationshipType", attributes: ["id", "dispName"], required: false },
-          { association: "floor", attributes: ["id", "dispName"], required: false }
-        ]
+        include: USER_PROFILE_ASSOCIATION_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] }
     ]

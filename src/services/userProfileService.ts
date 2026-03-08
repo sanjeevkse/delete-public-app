@@ -1,5 +1,6 @@
 import type { CreationAttributes } from "sequelize";
 
+import { ApiError } from "../middlewares/errorHandler";
 import type UserProfile from "../models/UserProfile";
 
 type ProfileInput = Record<string, unknown> | undefined | null;
@@ -19,6 +20,17 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "dateOfJoining",
   "maritalStatusId",
   "employmentId",
+  "disabilityStatusId",
+  "religionId",
+  "mainCasteId",
+  "subCasteId",
+  "voterIdNumber",
+  "voterIdPhoto",
+  "aadhaarPhoto",
+  "rationCardNo",
+  "rationCardPhoto",
+  "employmentGroupId",
+  "employmentTypeId",
   "relationshipTypeId",
   "relationshipName",
   "doorNumber",
@@ -35,9 +47,19 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "addressLine1",
   "addressLine2",
   "city",
-  "state",
   "postalCode",
   "country",
+  "stateId",
+  "mpConstituencyId",
+  "mlaConstituencyId",
+  "governingBody",
+  "gramPanchayatId",
+  "mainVillageId",
+  "voterListBoothNo",
+  "voterListSlNo",
+  "mapBoothNo",
+  "mapSlNo",
+  "mapSubSlNo",
   "wardNumberId",
   "boothNumberId",
   "sectorId",
@@ -125,6 +147,32 @@ export const buildProfileAttributes = (
       const trimmed = referredValue.trim();
       payload.referredBy = (trimmed === "" ? null : trimmed) as never;
     }
+  }
+
+  const governingBodyValue = payload.governingBody;
+  if (governingBodyValue !== undefined) {
+    if (governingBodyValue === null) {
+      payload.governingBody = null as never;
+    } else if (
+      typeof governingBodyValue === "string" &&
+      ["GBA", "TMC", "CMC", "GP"].includes(governingBodyValue)
+    ) {
+      payload.governingBody = governingBodyValue as never;
+    } else {
+      throw new ApiError("governingBody must be one of GBA, TMC, CMC, GP", 400);
+    }
+  }
+
+  const resolvedGoverningBody =
+    (payload.governingBody as string | null | undefined) ??
+    (existingProfile?.governingBody as string | null | undefined) ??
+    null;
+  const resolvedGramPanchayatId =
+    (payload.gramPanchayatId as number | null | undefined) ??
+    (existingProfile?.gramPanchayatId as number | null | undefined) ??
+    null;
+  if (resolvedGoverningBody === "GP" && !resolvedGramPanchayatId) {
+    throw new ApiError("gramPanchayatId is required when governingBody is GP", 400);
   }
 
   return payload;

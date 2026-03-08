@@ -18,6 +18,7 @@ class Form extends Model<
   declare description: CreationOptional<string | null>;
   declare slug: CreationOptional<string | null>;
   declare isPublic: CreationOptional<number>;
+  declare includeUser: CreationOptional<number>;
   declare startAt: CreationOptional<Date | null>;
   declare endAt: CreationOptional<Date | null>;
   declare status: CreationOptional<number>;
@@ -53,6 +54,12 @@ Form.init(
       type: DataTypes.TINYINT,
       allowNull: false,
       defaultValue: 1
+    },
+    includeUser: {
+      field: "include_user",
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0
     },
     startAt: {
       field: "start_at",

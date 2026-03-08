@@ -971,7 +971,8 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     endAt,
     fields,
     formFields,
-    includeWardAndBooth
+    includeWardAndBooth,
+    includeUser
   } = req.body;
   const userId = req.user?.id ?? null;
 
@@ -997,6 +998,8 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     includeWardAndBooth !== undefined
       ? ensureBooleanLike(includeWardAndBooth, "includeWardAndBooth")
       : 0;
+  const includeUserValue =
+    includeUser !== undefined ? ensureBooleanLike(includeUser, "includeUser") : 0;
 
   let fieldsForCreate = normalizedFields;
   if (includeWardAndBoothValue === 1) {
@@ -1086,6 +1089,7 @@ export const createForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
         description: description ?? null,
         slug: slug ?? null,
         isPublic: isPublicValue,
+        includeUser: includeUserValue,
         startAt: startDate,
         endAt: endDate,
         createdBy: userId,
@@ -1151,6 +1155,7 @@ export const updateForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     isPublic,
     startAt,
     endAt,
+    includeUser,
     fields: _fields,
     formFields: _formFields
   } = req.body;
@@ -1174,6 +1179,9 @@ export const updateForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
   }
   if (endAt !== undefined) {
     form.endAt = ensureDateOrNull(endAt, "endAt");
+  }
+  if (includeUser !== undefined) {
+    form.includeUser = ensureBooleanLike(includeUser, "includeUser");
   }
   if (userId) {
     form.updatedBy = userId;

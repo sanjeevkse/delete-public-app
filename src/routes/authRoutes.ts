@@ -10,7 +10,7 @@ import {
   updateProfileImage
 } from "../controllers/authController";
 import { authenticate } from "../middlewares/authMiddleware";
-import { profileImageUpload } from "../middlewares/profileUploadMiddleware";
+import { profileDocumentUpload, profileImageUpload } from "../middlewares/profileUploadMiddleware";
 import { listConditionalListItemsForUser } from "../controllers/conditionalListController";
 
 const router = Router();
@@ -19,7 +19,7 @@ router.post("/request-otp", requestOtp);
 router.post("/login", login);
 router.post("/logout", authenticate(), logout);
 router.get("/profile", authenticate(), getProfile);
-router.patch("/profile", authenticate(), updateProfile);
+router.patch("/profile", authenticate(), profileDocumentUpload, updateProfile);
 router.patch("/profile/image", authenticate(), profileImageUpload, updateProfileImage);
 router.get("/sidebar", authenticate(), getSidebar);
 router.get("/conditional-list", authenticate(), listConditionalListItemsForUser);

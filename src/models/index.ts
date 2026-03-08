@@ -30,10 +30,16 @@ import MetaDesignation from "./MetaDesignation";
 import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
+import MetaEmployment from "./MetaEmployment";
+import MetaEmploymentGroup from "./MetaEmploymentGroup";
 import MetaEmploymentStatus from "./MetaEmploymentStatus";
 import MetaFloor from "./MetaFloor";
 import MetaEducationalDetail from "./MetaEducationalDetail";
 import MetaEducationalDetailGroup from "./MetaEducationalDetailGroup";
+import MetaMainCaste from "./MetaMainCaste";
+import MetaReligion from "./MetaReligion";
+import MetaSubCaste from "./MetaSubCaste";
+import MetaSubCasteCategory from "./MetaSubCasteCategory";
 import Job from "./Job";
 import Post from "./Post";
 import PostMedia from "./PostMedia";
@@ -377,6 +383,78 @@ const establishAssociations = (): void => {
   MetaEmploymentStatus.hasMany(UserProfile, {
     foreignKey: "employmentId",
     as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaDisabilityStatus, {
+    foreignKey: "disabilityStatusId",
+    as: "disabilityStatus"
+  });
+  MetaDisabilityStatus.hasMany(UserProfile, {
+    foreignKey: "disabilityStatusId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaReligion, {
+    foreignKey: "religionId",
+    as: "religion"
+  });
+  MetaReligion.hasMany(UserProfile, {
+    foreignKey: "religionId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaMainCaste, {
+    foreignKey: "mainCasteId",
+    as: "mainCaste"
+  });
+  MetaMainCaste.hasMany(UserProfile, {
+    foreignKey: "mainCasteId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaSubCaste, {
+    foreignKey: "subCasteId",
+    as: "subCaste"
+  });
+  MetaSubCaste.hasMany(UserProfile, {
+    foreignKey: "subCasteId",
+    as: "userProfiles"
+  });
+
+  MetaSubCaste.belongsTo(MetaSubCasteCategory, {
+    foreignKey: "categoryId",
+    as: "category"
+  });
+  MetaSubCasteCategory.hasMany(MetaSubCaste, {
+    foreignKey: "categoryId",
+    as: "subCastes"
+  });
+
+  UserProfile.belongsTo(MetaEmploymentGroup, {
+    foreignKey: "employmentGroupId",
+    as: "employmentGroup"
+  });
+  MetaEmploymentGroup.hasMany(UserProfile, {
+    foreignKey: "employmentGroupId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaEmployment, {
+    foreignKey: "employmentTypeId",
+    as: "employmentType"
+  });
+  MetaEmployment.hasMany(UserProfile, {
+    foreignKey: "employmentTypeId",
+    as: "userProfiles"
+  });
+
+  MetaEmployment.belongsTo(MetaEmploymentGroup, {
+    foreignKey: "employmentGroupId",
+    as: "employmentGroup"
+  });
+  MetaEmploymentGroup.hasMany(MetaEmployment, {
+    foreignKey: "employmentGroupId",
+    as: "employmentTypes"
   });
 
   UserProfile.belongsTo(MetaRelationType, {
@@ -730,6 +808,12 @@ export {
   MetaMaritalStatus,
   MetaWidowStatus,
   MetaDisabilityStatus,
+  MetaReligion,
+  MetaMainCaste,
+  MetaSubCaste,
+  MetaSubCasteCategory,
+  MetaEmploymentGroup,
+  MetaEmployment,
   MetaEmploymentStatus,
   MetaFloor,
   SchemeStep,

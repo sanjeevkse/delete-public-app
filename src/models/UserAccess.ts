@@ -25,6 +25,7 @@ class UserAccess extends Model<InferAttributes<UserAccess>, InferCreationAttribu
   declare subVillageId: CreationOptional<number | null>;
   declare mpConstituencyId: CreationOptional<number | null>;
   declare mlaConstituencyId: CreationOptional<number | null>;
+  declare governingBody: CreationOptional<"GBA" | "TMC" | "CMC" | "GP" | null>;
   declare wardNumberId: CreationOptional<number | null>;
   declare pollingStationId: CreationOptional<number | null>;
   declare boothNumberId: CreationOptional<number | null>;
@@ -105,6 +106,11 @@ UserAccess.init(
     mlaConstituencyId: {
       field: "mla_constituency_id",
       type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    governingBody: {
+      field: "governing_body",
+      type: DataTypes.ENUM("GBA", "TMC", "CMC", "GP"),
       allowNull: true
     },
     wardNumberId: {
