@@ -10459,16 +10459,16 @@
                 {
                   "key": "main_caste_id",
                   "value": "",
-                  "description": "Optional. If provided, response returns sub-castes for that main caste only."
+                  "description": "Optional. When provided with religion_id, response data is a sub-caste array including category."
                 },
                 {
                   "key": "sub_caste_id",
                   "value": "",
-                  "description": "Optional. Further filters sub-caste list."
+                  "description": "Optional. Sub-caste filter; valid only when main_caste_id is provided."
                 }
               ]
             },
-            "description": "Returns caste relations from tbl_meta_caste_relation. Rules: (1) religion_id only -> grouped main castes with sub-castes (with category). (2) religion_id + main_caste_id -> sub-caste list (with category)."
+            "description": "Returns data as an array based on request scope. Rules: (1) religion_id only -> data is main caste array [{ id, dispName }] (no sub-castes). (2) religion_id + main_caste_id -> data is sub-caste array [{ id, dispName, category }], where category is { id, dispName } or null."
           },
           "response": []
         }

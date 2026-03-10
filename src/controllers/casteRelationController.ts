@@ -7,11 +7,14 @@ import sequelize from "../config/database";
 import asyncHandler from "../utils/asyncHandler";
 import { sendSuccess } from "../utils/apiResponse";
 
-type RelationRow = {
-  mainCasteId: number;
-  mainCasteName: string;
-  subCasteId: number;
-  subCasteName: string;
+type MainCasteRow = {
+  id: number;
+  dispName: string;
+};
+
+type SubCasteRow = {
+  id: number;
+  dispName: string;
   categoryId: number | null;
   categoryName: string | null;
 };
@@ -66,91 +69,63 @@ export const getCasteRelations = asyncHandler(async (req: AuthenticatedRequest, 
     "sub_caste_id"
   );
 
-  const where: string[] = ["cr.religion_id = :religionId"];
-  const replacements: Record<string, number> = { religionId };
-
-  if (mainCasteId !== undefined) {
-    where.push("cr.main_caste_id = :mainCasteId");
-    replacements.mainCasteId = mainCasteId;
+  if (subCasteId !== undefined && mainCasteId === undefined) {
+    throw new ApiError("main_caste_id is required when sub_caste_id is provided", 400);
   }
+
+  if (mainCasteId === undefined) {
+    const mainCastes = await sequelize.query<MainCasteRow>(
+      `
+        SELECT DISTINCT
+          mc.id AS id,
+          mc.disp_name AS dispName
+        FROM tbl_meta_caste_relation AS cr
+        INNER JOIN tbl_meta_main_caste AS mc ON mc.id = cr.main_caste_id AND mc.status = 1
+        WHERE cr.religion_id = :religionId
+        ORDER BY mc.disp_name ASC
+      `,
+      { replacements: { religionId }, type: QueryTypes.SELECT }
+    );
+
+    return sendSuccess(res, mainCastes, "Caste relations retrieved successfully");
+  }
+
+  const where: string[] = ["cr.religion_id = :religionId", "cr.main_caste_id = :mainCasteId"];
+  const replacements: Record<string, number> = { religionId, mainCasteId };
   if (subCasteId !== undefined) {
     where.push("cr.sub_caste_id = :subCasteId");
     replacements.subCasteId = subCasteId;
   }
 
-  const rows = await sequelize.query<RelationRow>(
+  const subCastes = await sequelize.query<SubCasteRow>(
     `
-      SELECT
-        mc.id AS mainCasteId,
-        mc.disp_name AS mainCasteName,
-        sc.id AS subCasteId,
-        sc.disp_name AS subCasteName,
+      SELECT DISTINCT
+        sc.id AS id,
+        sc.disp_name AS dispName,
         scc.id AS categoryId,
         scc.disp_name AS categoryName
       FROM tbl_meta_caste_relation AS cr
-      INNER JOIN tbl_meta_main_caste AS mc ON mc.id = cr.main_caste_id AND mc.status = 1
       INNER JOIN tbl_meta_sub_caste AS sc ON sc.id = cr.sub_caste_id AND sc.status = 1
       LEFT JOIN tbl_meta_sub_caste_category AS scc
         ON scc.id = cr.sub_caste_category_id AND scc.status = 1
       WHERE ${where.join(" AND ")}
-      ORDER BY mc.disp_name ASC, sc.disp_name ASC
+      ORDER BY sc.disp_name ASC
     `,
     { replacements, type: QueryTypes.SELECT }
   );
 
-  if (mainCasteId === undefined) {
-    const grouped = new Map<
-      number,
-      { id: number; dispName: string; subCastes: Array<Record<string, unknown>> }
-    >();
-
-    for (const row of rows) {
-      if (!grouped.has(row.mainCasteId)) {
-        grouped.set(row.mainCasteId, {
-          id: row.mainCasteId,
-          dispName: row.mainCasteName,
-          subCastes: []
-        });
-      }
-
-      grouped.get(row.mainCasteId)!.subCastes.push({
-        id: row.subCasteId,
-        dispName: row.subCasteName,
-        category: row.categoryId
-          ? {
-              id: row.categoryId,
-              dispName: row.categoryName
-            }
-          : null
-      });
-    }
-
-    return sendSuccess(
-      res,
-      {
-        religionId,
-        mainCastes: Array.from(grouped.values())
-      },
-      "Caste relations retrieved successfully"
-    );
-  }
-
   return sendSuccess(
     res,
-    {
-      religionId,
-      mainCasteId,
-      subCastes: rows.map((row) => ({
-        id: row.subCasteId,
-        dispName: row.subCasteName,
-        category: row.categoryId
-          ? {
-              id: row.categoryId,
-              dispName: row.categoryName
-            }
-          : null
-      }))
-    },
+    subCastes.map((row) => ({
+      id: row.id,
+      dispName: row.dispName,
+      category: row.categoryId
+        ? {
+            id: row.categoryId,
+            dispName: row.categoryName
+          }
+        : null
+    })),
     "Caste relations retrieved successfully"
   );
 });
