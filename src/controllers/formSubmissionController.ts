@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { Op, Transaction } from "sequelize";
+import { Op, UniqueConstraintError } from "sequelize";
 import path from "path";
 import fs from "fs";
 import { randomUUID } from "crypto";
@@ -60,6 +60,8 @@ const WARD_BOOTH_META_TABLES = new Map<string, string>([
   ["__ward_number_id", "tbl_meta_ward_number"],
   ["__booth_number_id", "tbl_meta_booth_number"]
 ]);
+const TARGET_USER_ALREADY_SUBMITTED_MESSAGE =
+  "This user has already submitted for this form event";
 
 const pad2 = (num: number) => String(num).padStart(2, "0");
 
@@ -677,6 +679,18 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
     if (!targetUser) {
       throw new ApiError("Target user not found", 404);
     }
+
+    const existingTargetSubmission = await FormSubmission.findOne({
+      attributes: ["id"],
+      where: {
+        formEventId: formEventIdNum,
+        userId: targetUserId,
+        status: { [Op.ne]: 0 }
+      }
+    });
+    if (existingTargetSubmission) {
+      throw new ApiError(TARGET_USER_ALREADY_SUBMITTED_MESSAGE, 409);
+    }
   }
 
   // Check if form event exists and is active (outside transaction)
@@ -821,90 +835,107 @@ export const submitForm = asyncHandler(async (req: AuthenticatedRequest, res: Re
   let submission!: FormSubmission;
   let fileMovePlans: Array<{ sourcePath: string; destinationPath: string }> = [];
 
-  await sequelize.transaction(async (transaction) => {
-    // Create submission
-    submission = await FormSubmission.create(
-      {
-        formEventId: formEventIdNum,
-        submittedBy: userId,
-        userId: targetUserId,
-        submittedAt: new Date(),
-        ipAddress: req.ip || null,
-        userAgent: req.get("user-agent") || null,
-        status: 1
-      },
-      { transaction }
-    );
-
-    // Plan file moves and URLs (defer actual IO until after commit)
-    const plannedFileMoves: Array<{ sourcePath: string; destinationPath: string }> = [];
-    const plannedFileUrlsByFieldId = new Map<number, string[]>();
-
-    for (const [fieldId, files] of filesByFieldId) {
-      const finalUrls: string[] = [];
-      const finalDir = path.join(
-        UPLOAD_PATHS.BASE_DIR,
-        String(formEventIdNum),
-        String(submission.id),
-        String(fieldId)
+  try {
+    await sequelize.transaction(async (transaction) => {
+      // Create submission
+      submission = await FormSubmission.create(
+        {
+          formEventId: formEventIdNum,
+          submittedBy: userId,
+          userId: targetUserId,
+          submittedAt: new Date(),
+          ipAddress: req.ip || null,
+          userAgent: req.get("user-agent") || null,
+          status: 1
+        },
+        { transaction }
       );
 
-      for (const file of files) {
-        if (fs.existsSync(file.path)) {
-          const ext = path.extname(file.path);
-          const uuid = randomUUID();
-          const finalFileName = `${uuid}${ext}`;
-          const finalFilePath = path.join(finalDir, finalFileName);
+      // Plan file moves and URLs (defer actual IO until after commit)
+      const plannedFileMoves: Array<{ sourcePath: string; destinationPath: string }> = [];
+      const plannedFileUrlsByFieldId = new Map<number, string[]>();
 
-          plannedFileMoves.push({
-            sourcePath: file.path,
-            destinationPath: finalFilePath
-          });
+      for (const [fieldId, files] of filesByFieldId) {
+        const finalUrls: string[] = [];
+        const finalDir = path.join(
+          UPLOAD_PATHS.BASE_DIR,
+          String(formEventIdNum),
+          String(submission.id),
+          String(fieldId)
+        );
 
-          // Store relative path for database: formEventId/submissionId/fieldId/uuid.ext
-          finalUrls.push(buildPublicUploadPath(finalFilePath));
+        for (const file of files) {
+          if (fs.existsSync(file.path)) {
+            const ext = path.extname(file.path);
+            const uuid = randomUUID();
+            const finalFileName = `${uuid}${ext}`;
+            const finalFilePath = path.join(finalDir, finalFileName);
+
+            plannedFileMoves.push({
+              sourcePath: file.path,
+              destinationPath: finalFilePath
+            });
+
+            // Store relative path for database: formEventId/submissionId/fieldId/uuid.ext
+            finalUrls.push(buildPublicUploadPath(finalFilePath));
+          }
+        }
+
+        if (finalUrls.length > 0) {
+          plannedFileUrlsByFieldId.set(fieldId, finalUrls);
         }
       }
 
-      if (finalUrls.length > 0) {
-        plannedFileUrlsByFieldId.set(fieldId, finalUrls);
-      }
-    }
-
-    // Create field values (including file URLs if any)
-    const fieldValueRecords = fieldValues.map((fv: any) => {
-      const field = fieldMap.get(fv.formFieldId)!;
-      let finalValue = normalizeFieldValue(fv.value);
-      if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey)) {
-        finalValue = normalizeWardBoothValue(fv.value);
-      }
-
-      if (typeof finalValue === "string") {
-        const fieldType = fieldTypeLookup.get(fv.formFieldId);
-        const formatted = formatValueByFieldType(finalValue, fieldType);
-        if (formatted) {
-          finalValue = formatted;
+      // Create field values (including file URLs if any)
+      const fieldValueRecords = fieldValues.map((fv: any) => {
+        const field = fieldMap.get(fv.formFieldId)!;
+        let finalValue = normalizeFieldValue(fv.value);
+        if (WARD_BOOTH_FIELD_KEYS.has(field.fieldKey)) {
+          finalValue = normalizeWardBoothValue(fv.value);
         }
-      }
 
-      // If field has file uploads, include them (as JSON array or URL string)
-      if (plannedFileUrlsByFieldId.has(fv.formFieldId)) {
-        const fileUrls = plannedFileUrlsByFieldId.get(fv.formFieldId)!;
-        finalValue = fileUrls.length === 1 ? fileUrls[0] : JSON.stringify(fileUrls);
-      }
+        if (typeof finalValue === "string") {
+          const fieldType = fieldTypeLookup.get(fv.formFieldId);
+          const formatted = formatValueByFieldType(finalValue, fieldType);
+          if (formatted) {
+            finalValue = formatted;
+          }
+        }
 
-      return {
-        formSubmissionId: submission.id,
-        formFieldId: fv.formFieldId,
-        fieldKey: field.fieldKey,
-        value: finalValue
-      };
+        // If field has file uploads, include them (as JSON array or URL string)
+        if (plannedFileUrlsByFieldId.has(fv.formFieldId)) {
+          const fileUrls = plannedFileUrlsByFieldId.get(fv.formFieldId)!;
+          finalValue = fileUrls.length === 1 ? fileUrls[0] : JSON.stringify(fileUrls);
+        }
+
+        return {
+          formSubmissionId: submission.id,
+          formFieldId: fv.formFieldId,
+          fieldKey: field.fieldKey,
+          value: finalValue
+        };
+      });
+
+      await FormFieldValue.bulkCreate(fieldValueRecords, { transaction });
+
+      fileMovePlans = plannedFileMoves;
     });
-
-    await FormFieldValue.bulkCreate(fieldValueRecords, { transaction });
-
-    fileMovePlans = plannedFileMoves;
-  });
+  } catch (error) {
+    const uniqueErrorMessage =
+      typeof (error as Error)?.message === "string" ? (error as Error).message : "";
+    const duplicateTargetSubmission =
+      targetUserId !== null &&
+      error instanceof UniqueConstraintError &&
+      (Object.prototype.hasOwnProperty.call(error.fields ?? {}, "form_event_id") ||
+        Object.prototype.hasOwnProperty.call(error.fields ?? {}, "user_id") ||
+        Object.prototype.hasOwnProperty.call(error.fields ?? {}, "formEventId") ||
+        Object.prototype.hasOwnProperty.call(error.fields ?? {}, "userId") ||
+        uniqueErrorMessage.includes("uq_form_submission_event_target_user"));
+    if (duplicateTargetSubmission) {
+      throw new ApiError(TARGET_USER_ALREADY_SUBMITTED_MESSAGE, 409);
+    }
+    throw error;
+  }
 
   // Execute file moves after commit to reduce transaction hold time
   const ensuredDirs = new Set<string>();

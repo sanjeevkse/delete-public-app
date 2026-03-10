@@ -1620,7 +1620,7 @@
       ]
     },
     {
-      "name": "Events",
+      "name": "Public-events",
       "item": [
         {
           "name": "List Events",
@@ -2040,7 +2040,7 @@
               "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"1234567890\",\n  \"email\": \"john@example.com\",\n  \"fullAddress\": \"123 Main Street\",\n  \"wardNumberId\": 5,\n  \"boothNumberId\": 10,\n  \"designationId\": 2,\n  \"dateOfBirth\": \"1990-01-01\",\n  \"age\": 34,\n  \"registeredBy\": \"Self\"\n}"
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/register",
-            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, designationId (MetaDesignation id), and other fields are optional."
+            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, designationId (MetaDesignation id), and other fields are optional. When userId is provided, only one active registration is allowed per (eventId, userId); duplicate active attempts return HTTP 409."
           },
           "response": []
         },
@@ -8093,7 +8093,7 @@
                 "submit"
               ]
             },
-            "description": "Submit a form using multipart form-data. Each field is sent as a form-data key matching the formFieldId. Text values are sent as text. File fields are sent as file parts using the same formFieldId as the key; repeat the key for multiple files (max 5 per field). For multi-select text fields, repeat the same key or send CSV; repeated keys are joined as CSV. `submitted_by` is always the authenticated actor; `user_id` is the target user from `userId`/`user_id` when provided, otherwise it remains null."
+            "description": "Submit a form using multipart form-data. Each field is sent as a form-data key matching the formFieldId. Text values are sent as text. File fields are sent as file parts using the same formFieldId as the key; repeat the key for multiple files (max 5 per field). For multi-select text fields, repeat the same key or send CSV; repeated keys are joined as CSV. `submitted_by` is always the authenticated actor; `user_id` is the target user from `userId`/`user_id` when provided, otherwise it remains null. When `user_id` is provided, only one active submission is allowed per `(formEventId, user_id)` and duplicates return HTTP 409."
           },
           "response": []
         },

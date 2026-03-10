@@ -15,6 +15,19 @@ const env = {
     masterOtp: process.env.MASTER_OTP ?? "999999",
     otpExpiryMinutes: Number.parseInt(process.env.OTP_EXPIRY_MINUTES ?? "5", 10)
   },
+  otp: {
+    provider: process.env.OTP_PROVIDER ?? "bulk9",
+    bulk9: {
+      url: process.env.OTP_BULK9_URL ?? "https://bulk9.com/dev/bulkV2",
+      apiKey: process.env.OTP_BULK9_API_KEY ?? "",
+      senderId: process.env.OTP_BULK9_SENDER_ID ?? "",
+      route: process.env.OTP_BULK9_ROUTE ?? "dlt",
+      flash: process.env.OTP_BULK9_FLASH ?? "0",
+      scheduleTime: process.env.OTP_BULK9_SCHEDULE_TIME ?? "",
+      smsDetails: process.env.OTP_BULK9_SMS_DETAILS ?? "1",
+      message: process.env.OTP_BULK9_MESSAGE ?? "0"
+    }
+  },
   database: {
     host: process.env.DB_HOST ?? "127.0.0.1",
     port: Number.parseInt(process.env.DB_PORT ?? "3306", 10),

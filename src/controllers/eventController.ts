@@ -1388,8 +1388,16 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   let existingRegistration = null;
 
   if (parsedUserId) {
+    const activeRegistration = await EventRegistration.findOne({
+      where: { eventId, userId: parsedUserId, status: 1 }
+    });
+    if (activeRegistration) {
+      return sendConflict(res, "Already registered for this event");
+    }
+
     existingRegistration = await EventRegistration.findOne({
-      where: { eventId, userId: parsedUserId }
+      where: { eventId, userId: parsedUserId, status: 0 },
+      order: [["id", "DESC"]]
     });
   } else if (parsedContactNumber) {
     existingRegistration = await EventRegistration.findOne({

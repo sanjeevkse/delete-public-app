@@ -23,6 +23,7 @@ import {
   enrichAdminRolePermissions,
   filterUserRolePermissions
 } from "../services/rbacService";
+import { sendLoginOtp } from "../services/otpDeliveryService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessToken, generateNumericOtp } from "../utils/auth";
@@ -229,7 +230,7 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
   const otp = generateNumericOtp();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-  await UserOtp.create({
+  const otpRecord = await UserOtp.create({
     contactNumber,
     purpose: UserOtpPurpose.LOGIN,
     otpPlain: otp,
@@ -237,10 +238,16 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
     attemptsLeft: attemptsAllowance
   });
 
+  try {
+    await sendLoginOtp({ contactNumber, otp });
+  } catch (error) {
+    await otpRecord.update({ status: 0 });
+    throw error;
+  }
+
   return sendSuccess(
     res,
     {
-      otp,
       attemptsLeft: attemptsAllowance
     },
     "OTP generated successfully"
