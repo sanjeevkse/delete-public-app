@@ -1090,7 +1090,7 @@
                 }
               ]
             },
-            "description": "Retrieves detailed information for a specific user by ID, including profile, roles, permissions, and access profiles. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
+            "description": "Retrieves detailed information for a specific user by ID, including profile, roles, permissions, and `accessProfiles` (no `accessibility` alias). Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
           },
           "response": []
         }
@@ -4020,7 +4020,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
-            "description": "Returns user details by ID. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
+            "description": "Returns user details by ID with `accessProfiles` (no `accessibility` alias). Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
           },
           "response": []
         },
@@ -7247,6 +7247,11 @@
                   "key": "status",
                   "value": "1",
                   "disabled": true
+                },
+                {
+                  "key": "dispName",
+                  "value": "Retail",
+                  "disabled": true
                 }
               ],
               "variable": [
@@ -7256,7 +7261,7 @@
                 }
               ]
             },
-            "description": "List meta table data with pagination/search/status filters. Use appendOther=1 (or append_other=1) to append an \"Other\" entry with id -1 at the end. Use need_all=1 to include -ALL- at the beginning."
+            "description": "List meta table data with pagination/search/status filters. You can also pass any query key that matches a column in the requested meta table (example: dispName=Retail) for exact-match filtering; unknown query params are ignored. Use appendOther=1 (or append_other=1) to append an \"Other\" entry with id -1 at the end. Use need_all=1 to include -ALL- at the beginning."
           },
           "response": []
         },
@@ -7847,7 +7852,7 @@
                 }
               ]
             },
-            "description": "Returns paginated form events with their accessibility matrix (ward, booth, and user role combinations) and the linked form template. Non-admin users are filtered by their `tbl_user_access` ward/booth scope; admin users receive all matching events."
+            "description": "Returns paginated form events with their accessibility matrix and linked form template. Each accessibility item includes ward/booth/role plus derived geo fields from `tbl_geo_political`: `stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, `mainVillageId`, and enriched objects `state`, `mp`, `mla`, `gp`, `village` (`{ id, displayName, dispName }`), when resolvable. Non-admin users are filtered by their `tbl_user_access` ward/booth scope; admin users receive all matching events."
           },
           "response": []
         },
@@ -7863,7 +7868,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/form-events/{{formEventId}}",
-            "description": "Retrieves a single form event along with its accessibility definitions. Set `formEventId` using the list call."
+            "description": "Retrieves a single form event along with its accessibility definitions. Accessibility entries include derived geo fields (`stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, `mainVillageId`) and geo objects (`state`, `mp`, `mla`, `gp`, `village`) when resolvable. Set `formEventId` using the list call."
           },
           "response": []
         },
@@ -7885,10 +7890,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"formId\": 1,\n  \"title\": \"Ward Volunteer Signup\",\n  \"description\": \"Collect volunteer information for Ward 12\",\n  \"startDate\": \"2024-12-10\",\n  \"endDate\": \"2024-12-20\",\n  \"accessibility\": [\n    {\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    },\n    {\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 102,\n      \"userRoleId\": 4\n    }\n  ]\n}"
+              "raw": "{\n  \"formId\": 1,\n  \"title\": \"Ward Volunteer Signup\",\n  \"description\": \"Collect volunteer information for Ward 12\",\n  \"startDate\": \"2024-12-10\",\n  \"endDate\": \"2024-12-20\",\n  \"accessibility\": [\n    {\n      \"stateId\": 1,\n      \"mpConstituencyId\": 2,\n      \"mlaConstituencyId\": 3,\n      \"gramPanchayatId\": 4,\n      \"mainVillageId\": 5,\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    },\n    {\n      \"stateId\": 1,\n      \"mpConstituencyId\": 2,\n      \"mlaConstituencyId\": 3,\n      \"gramPanchayatId\": 4,\n      \"mainVillageId\": 6,\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 102,\n      \"userRoleId\": 4\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/form-events",
-            "description": "Creates a form event for a specific form template and seeds one or more accessibility entries. All accessibility rows are created together so each event can target the right ward, booth, and role combination."
+            "description": "Creates a form event for a specific form template and seeds one or more accessibility entries. Include geo dimensions (`stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, `mainVillageId`) for boundary-aware workflows; `wardNumberId` and `boothNumberId` remain the primary event-mapping keys."
           },
           "response": []
         },
@@ -7910,10 +7915,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Ward Volunteer Signup (Evening Batch)\",\n  \"description\": \"Updated session window\",\n  \"startDate\": \"2024-12-12\",\n  \"endDate\": \"2024-12-22\",\n  \"status\": 1,\n  \"accessibility\": [\n    {\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Ward Volunteer Signup (Evening Batch)\",\n  \"description\": \"Updated session window\",\n  \"startDate\": \"2024-12-12\",\n  \"endDate\": \"2024-12-22\",\n  \"status\": 1,\n  \"accessibility\": [\n    {\n      \"stateId\": 1,\n      \"mpConstituencyId\": 2,\n      \"mlaConstituencyId\": 3,\n      \"gramPanchayatId\": 4,\n      \"mainVillageId\": 5,\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/form-events/{{formEventId}}",
-            "description": "Updates event metadata and replaces the accessibility matrix. Provide the complete accessibility array whenever you change ward/booth/role assignments."
+            "description": "Updates event metadata and replaces the accessibility matrix. Include geo dimensions (`stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, `mainVillageId`) for boundary-aware workflows; `wardNumberId` and `boothNumberId` remain the primary event-mapping keys."
           },
           "response": []
         },

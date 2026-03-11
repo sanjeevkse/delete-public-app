@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import { Op, Transaction, type Model, type ModelStatic } from "sequelize";
+import { Op, QueryTypes, Transaction, type Model, type ModelStatic } from "sequelize";
 
 import asyncHandler from "../utils/asyncHandler";
 import { ApiError } from "../middlewares/errorHandler";
@@ -32,6 +32,16 @@ import { buildAccessibilityFilter } from "../services/userHierarchyService";
 
 const DEFAULT_SORT_COLUMNS = ["startDate", "endDate", "createdAt", "title"];
 const DROPDOWN_FIELD_TYPES = new Set(["select", "dropdown"]);
+type FormEventRecord = Record<string, unknown>;
+type GeoEntity = "state" | "mp" | "mla" | "gp" | "village";
+
+const GEO_TABLE_CONFIG: Record<GeoEntity, { tableName: string }> = {
+  state: { tableName: "tbl_meta_state" },
+  mp: { tableName: "tbl_meta_mp_constituency" },
+  mla: { tableName: "tbl_meta_mla_constituency" },
+  gp: { tableName: "tbl_meta_gram_panchayat" },
+  village: { tableName: "tbl_meta_main_village" }
+};
 
 const getBaseIncludes = () => [
   buildAccessibilityInclude(),
@@ -57,6 +67,187 @@ const getBaseIncludes = () => [
     ]
   }
 ];
+
+const isPositiveInteger = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value > 0;
+
+const toIdDisplayName = (
+  id: unknown,
+  displayNameMap: Map<number, string>
+): { id: number; displayName: string | null; dispName: string | null } | null => {
+  if (!isPositiveInteger(id)) {
+    return null;
+  }
+
+  const displayName = displayNameMap.get(id) ?? null;
+  return {
+    id,
+    displayName,
+    dispName: displayName
+  };
+};
+
+const buildGeoLookupMap = async (
+  tableName: string,
+  ids: number[]
+): Promise<Map<number, string>> => {
+  const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isInteger(id) && id > 0)));
+  if (uniqueIds.length === 0) {
+    return new Map<number, string>();
+  }
+
+  const rows = await sequelize.query<{ id: number; dispName: string }>(
+    `SELECT id, CAST(disp_name AS CHAR(255)) AS dispName
+     FROM ${tableName}
+     WHERE status = 1 AND id IN (:ids)`,
+    {
+      replacements: { ids: uniqueIds },
+      type: QueryTypes.SELECT
+    }
+  );
+
+  return new Map(rows.map((row) => [Number(row.id), row.dispName]));
+};
+
+type GeoMappingRow = {
+  wardNumberId: number;
+  boothNumberId: number;
+  stateId: number;
+  mpConstituencyId: number;
+  mlaConstituencyId: number;
+  gramPanchayatId: number;
+  mainVillageId: number;
+};
+
+const enrichAccessibilityGeoFields = async (eventData: FormEventRecord): Promise<void> => {
+  const accessibility = Array.isArray(eventData.accessibility)
+    ? (eventData.accessibility as FormEventRecord[])
+    : [];
+  if (accessibility.length === 0) {
+    return;
+  }
+
+  const wardIds = Array.from(
+    new Set(
+      accessibility
+        .map((item) => item.wardNumberId)
+        .filter((id): id is number => typeof id === "number" && Number.isInteger(id) && id > 0)
+    )
+  );
+  const boothIds = Array.from(
+    new Set(
+      accessibility
+        .map((item) => item.boothNumberId)
+        .filter((id): id is number => typeof id === "number" && Number.isInteger(id) && id > 0)
+    )
+  );
+
+  if (wardIds.length === 0 && boothIds.length === 0) {
+    accessibility.forEach((target) => {
+      target.stateId = null;
+      target.mpConstituencyId = null;
+      target.mlaConstituencyId = null;
+      target.gramPanchayatId = null;
+      target.mainVillageId = null;
+      target.state = null;
+      target.mp = null;
+      target.mla = null;
+      target.gp = null;
+      target.village = null;
+    });
+    return;
+  }
+
+  const geoRows = await sequelize.query<GeoMappingRow>(
+    `
+      SELECT
+        gp.ward_number_id AS wardNumberId,
+        gp.booth_number_id AS boothNumberId,
+        gp.state_id AS stateId,
+        gp.mp_constituency_id AS mpConstituencyId,
+        gp.mla_constituency_id AS mlaConstituencyId,
+        gp.gram_panchayat_id AS gramPanchayatId,
+        gp.main_village_id AS mainVillageId
+      FROM tbl_geo_political gp
+      WHERE
+        (${wardIds.length > 0 ? "gp.ward_number_id IN (:wardIds)" : "1=0"})
+        OR
+        (${boothIds.length > 0 ? "gp.booth_number_id IN (:boothIds)" : "1=0"})
+    `,
+    {
+      replacements: { wardIds, boothIds },
+      type: QueryTypes.SELECT
+    }
+  );
+
+  const pairMap = new Map<string, GeoMappingRow>();
+  const boothMap = new Map<number, GeoMappingRow>();
+  const wardMap = new Map<number, GeoMappingRow>();
+  for (const row of geoRows) {
+    const pairKey = `${row.wardNumberId}:${row.boothNumberId}`;
+    if (!pairMap.has(pairKey)) {
+      pairMap.set(pairKey, row);
+    }
+    if (!boothMap.has(row.boothNumberId)) {
+      boothMap.set(row.boothNumberId, row);
+    }
+    if (!wardMap.has(row.wardNumberId)) {
+      wardMap.set(row.wardNumberId, row);
+    }
+  }
+
+  const selectedRows: GeoMappingRow[] = [];
+  for (const target of accessibility) {
+    const wardId = typeof target.wardNumberId === "number" ? target.wardNumberId : null;
+    const boothId = typeof target.boothNumberId === "number" ? target.boothNumberId : null;
+    const selected =
+      wardId && wardId > 0 && boothId && boothId > 0
+        ? pairMap.get(`${wardId}:${boothId}`) ?? boothMap.get(boothId) ?? wardMap.get(wardId)
+        : boothId && boothId > 0
+          ? boothMap.get(boothId)
+          : wardId && wardId > 0
+            ? wardMap.get(wardId)
+            : undefined;
+
+    target.stateId = selected?.stateId ?? null;
+    target.mpConstituencyId = selected?.mpConstituencyId ?? null;
+    target.mlaConstituencyId = selected?.mlaConstituencyId ?? null;
+    target.gramPanchayatId = selected?.gramPanchayatId ?? null;
+    target.mainVillageId = selected?.mainVillageId ?? null;
+
+    if (selected) {
+      selectedRows.push(selected);
+    }
+  }
+
+  const ids = {
+    state: Array.from(new Set(selectedRows.map((row) => row.stateId).filter((id) => id > 0))),
+    mp: Array.from(
+      new Set(selectedRows.map((row) => row.mpConstituencyId).filter((id) => id > 0))
+    ),
+    mla: Array.from(
+      new Set(selectedRows.map((row) => row.mlaConstituencyId).filter((id) => id > 0))
+    ),
+    gp: Array.from(new Set(selectedRows.map((row) => row.gramPanchayatId).filter((id) => id > 0))),
+    village: Array.from(new Set(selectedRows.map((row) => row.mainVillageId).filter((id) => id > 0)))
+  };
+
+  const [stateMap, mpMap, mlaMap, gpMap, villageMap] = await Promise.all([
+    buildGeoLookupMap(GEO_TABLE_CONFIG.state.tableName, ids.state),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.mp.tableName, ids.mp),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.mla.tableName, ids.mla),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.gp.tableName, ids.gp),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.village.tableName, ids.village)
+  ]);
+
+  for (const target of accessibility) {
+    target.state = toIdDisplayName(target.stateId, stateMap);
+    target.mp = toIdDisplayName(target.mpConstituencyId, mpMap);
+    target.mla = toIdDisplayName(target.mlaConstituencyId, mlaMap);
+    target.gp = toIdDisplayName(target.gramPanchayatId, gpMap);
+    target.village = toIdDisplayName(target.mainVillageId, villageMap);
+  }
+};
 
 const ensureNumber = (value: unknown, field: string): number => {
   if (value === undefined || value === null || value === "") {
@@ -345,6 +536,11 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
     const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
     applyMetaTableOptionsToEvents(rowsPlain, optionsByTable);
   }
+  await Promise.all(
+    rowsPlain.map((event) =>
+      enrichAccessibilityGeoFields(event as unknown as FormEventRecord)
+    )
+  );
 
   const pagination = calculatePagination(count, page, limit);
 
@@ -376,6 +572,7 @@ export const getFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: 
     const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
     applyMetaTableOptionsToEvents([eventPlain], optionsByTable);
   }
+  await enrichAccessibilityGeoFields(eventPlain as unknown as FormEventRecord);
 
   return sendSuccess(res, eventPlain, "Form event retrieved successfully");
 });
@@ -441,6 +638,7 @@ export const createFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
     const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
     applyMetaTableOptionsToEvents([freshPlain], optionsByTable);
   }
+  await enrichAccessibilityGeoFields(freshPlain as unknown as FormEventRecord);
 
   return sendCreated(res, freshPlain, "Form event created successfully");
 });
@@ -530,6 +728,7 @@ export const updateFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
     const optionsByTable = await buildMetaTableOptionsMap(fieldsForOptions);
     applyMetaTableOptionsToEvents([freshPlain], optionsByTable);
   }
+  await enrichAccessibilityGeoFields(freshPlain as unknown as FormEventRecord);
 
   return sendSuccess(res, freshPlain, "Form event updated successfully");
 });

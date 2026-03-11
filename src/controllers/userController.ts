@@ -372,10 +372,6 @@ const enrichGeoObjectFields = async (userData: UserPayloadRecord): Promise<UserP
     : ([] as unknown[]);
   accessProfiles.forEach(applyGeoObjects);
 
-  if (Array.isArray(userData.accessProfiles) && userData.accessibility === undefined) {
-    userData.accessibility = userData.accessProfiles;
-  }
-
   return userData;
 };
 

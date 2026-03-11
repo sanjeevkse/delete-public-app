@@ -224,6 +224,16 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   }
 
   const filters: any[] = [];
+  const modelFields = new Set(Object.keys(config.model.getAttributes()));
+  const reservedQueryParams = new Set([
+    "page",
+    "limit",
+    "search",
+    "status",
+    "need_all",
+    "appendOther",
+    "append_other"
+  ]);
 
   // Add search filter
   if (search && config.searchableFields.length > 0) {
@@ -236,6 +246,20 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
   // Add status filter
   if (config.hasStatus && status !== undefined) {
     filters.push({ status: Number.parseInt(status, 10) });
+  }
+
+  // Add dynamic filters only for valid table fields; ignore unknown query params
+  for (const [key, rawValue] of Object.entries(req.query)) {
+    if (reservedQueryParams.has(key) || !modelFields.has(key)) {
+      continue;
+    }
+
+    const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+    if (value === undefined || value === null || value === "") {
+      continue;
+    }
+
+    filters.push({ [key]: value });
   }
 
   const where = filters.length ? { [Op.and]: filters } : undefined;
