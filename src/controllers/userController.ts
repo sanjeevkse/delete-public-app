@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 
 import { AppEvent, emitEvent } from "../events/eventBus";
 import { PUBLIC_ROLE_NAME } from "../config/rbac";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import sequelize from "../config/database";
 import User from "../models/User";
 import UserRole from "../models/UserRole";
 import UserProfile from "../models/UserProfile";
@@ -212,6 +213,171 @@ const USER_PROFILE_INCLUDE = [
   { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
   { association: "employmentType", attributes: ["id", "dispName"], required: false }
 ];
+
+type UserPayloadRecord = Record<string, unknown>;
+type GeoEntity = "state" | "mp" | "mla" | "gp" | "village";
+
+const GEO_TABLE_CONFIG: Record<GeoEntity, { tableName: string }> = {
+  state: { tableName: "tbl_meta_state" },
+  mp: { tableName: "tbl_meta_mp_constituency" },
+  mla: { tableName: "tbl_meta_mla_constituency" },
+  gp: { tableName: "tbl_meta_gram_panchayat" },
+  village: { tableName: "tbl_meta_main_village" }
+};
+
+const GOVERNING_BODY_LABELS: Record<"GBA" | "TMC" | "CMC" | "GP", string> = {
+  GBA: "GBA",
+  TMC: "TMC",
+  CMC: "CMC",
+  GP: "GP"
+};
+
+const isPositiveInteger = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value > 0;
+
+const toIdDisplayName = (
+  id: unknown,
+  displayNameMap: Map<number, string>
+): { id: number; displayName: string | null; dispName: string | null } | null => {
+  if (!isPositiveInteger(id)) {
+    return null;
+  }
+
+  const displayName = displayNameMap.get(id) ?? null;
+  return {
+    id,
+    displayName,
+    dispName: displayName
+  };
+};
+
+const toGoverningBodyObject = (
+  governingBody: unknown
+): { id: string; displayName: string; dispName: string } | null => {
+  if (typeof governingBody !== "string") {
+    return null;
+  }
+
+  const normalized = governingBody.toUpperCase() as keyof typeof GOVERNING_BODY_LABELS;
+  const label = GOVERNING_BODY_LABELS[normalized];
+  if (!label) {
+    return null;
+  }
+
+  return {
+    id: normalized,
+    displayName: label,
+    dispName: label
+  };
+};
+
+const buildGeoLookupMap = async (
+  tableName: string,
+  ids: number[]
+): Promise<Map<number, string>> => {
+  const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isInteger(id) && id > 0)));
+  if (uniqueIds.length === 0) {
+    return new Map<number, string>();
+  }
+
+  const rows = await sequelize.query<{ id: number; dispName: string }>(
+    `SELECT id, CAST(disp_name AS CHAR(255)) AS dispName
+     FROM ${tableName}
+     WHERE status = 1 AND id IN (:ids)`,
+    {
+      replacements: { ids: uniqueIds },
+      type: QueryTypes.SELECT
+    }
+  );
+
+  return new Map(rows.map((row) => [Number(row.id), row.dispName]));
+};
+
+const collectGeoIds = (userData: UserPayloadRecord): Record<GeoEntity, number[]> => {
+  const ids = {
+    state: new Set<number>(),
+    mp: new Set<number>(),
+    mla: new Set<number>(),
+    gp: new Set<number>(),
+    village: new Set<number>()
+  };
+
+  const collectFromRecord = (record: unknown) => {
+    if (!record || typeof record !== "object") {
+      return;
+    }
+
+    const source = record as UserPayloadRecord;
+    if (isPositiveInteger(source.stateId)) {
+      ids.state.add(source.stateId);
+    }
+    if (isPositiveInteger(source.mpConstituencyId)) {
+      ids.mp.add(source.mpConstituencyId);
+    }
+    if (isPositiveInteger(source.mlaConstituencyId)) {
+      ids.mla.add(source.mlaConstituencyId);
+    }
+    if (isPositiveInteger(source.gramPanchayatId)) {
+      ids.gp.add(source.gramPanchayatId);
+    }
+    if (isPositiveInteger(source.mainVillageId)) {
+      ids.village.add(source.mainVillageId);
+    }
+  };
+
+  collectFromRecord(userData.profile);
+
+  const accessProfiles = Array.isArray(userData.accessProfiles)
+    ? userData.accessProfiles
+    : ([] as unknown[]);
+  accessProfiles.forEach(collectFromRecord);
+
+  return {
+    state: Array.from(ids.state),
+    mp: Array.from(ids.mp),
+    mla: Array.from(ids.mla),
+    gp: Array.from(ids.gp),
+    village: Array.from(ids.village)
+  };
+};
+
+const enrichGeoObjectFields = async (userData: UserPayloadRecord): Promise<UserPayloadRecord> => {
+  const ids = collectGeoIds(userData);
+  const [stateMap, mpMap, mlaMap, gpMap, villageMap] = await Promise.all([
+    buildGeoLookupMap(GEO_TABLE_CONFIG.state.tableName, ids.state),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.mp.tableName, ids.mp),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.mla.tableName, ids.mla),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.gp.tableName, ids.gp),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.village.tableName, ids.village)
+  ]);
+
+  const applyGeoObjects = (record: unknown) => {
+    if (!record || typeof record !== "object") {
+      return;
+    }
+
+    const target = record as UserPayloadRecord;
+    target.state = toIdDisplayName(target.stateId, stateMap);
+    target.mp = toIdDisplayName(target.mpConstituencyId, mpMap);
+    target.mla = toIdDisplayName(target.mlaConstituencyId, mlaMap);
+    target.gp = toIdDisplayName(target.gramPanchayatId, gpMap);
+    target.village = toIdDisplayName(target.mainVillageId, villageMap);
+    target.governingBodyObj = toGoverningBodyObject(target.governingBody);
+  };
+
+  applyGeoObjects(userData.profile);
+
+  const accessProfiles = Array.isArray(userData.accessProfiles)
+    ? userData.accessProfiles
+    : ([] as unknown[]);
+  accessProfiles.forEach(applyGeoObjects);
+
+  if (Array.isArray(userData.accessProfiles) && userData.accessibility === undefined) {
+    userData.accessibility = userData.accessProfiles;
+  }
+
+  return userData;
+};
 
 export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const loggedInUser = (req as AuthenticatedRequest).user;
@@ -823,16 +989,18 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Enrich Admin roles with all permissions
+  const userPayload = await enrichGeoObjectFields(user.toJSON() as UserPayloadRecord);
+
   if (user.roles && user.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(user.roles);
     const enrichedUser = {
-      ...user.toJSON(),
+      ...userPayload,
       roles: enrichedRoles.reverse()
     };
     return sendSuccess(res, enrichedUser, "User retrieved successfully");
   }
 
-  return sendSuccess(res, user, "User retrieved successfully");
+  return sendSuccess(res, userPayload, "User retrieved successfully");
 });
 
 export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Response) => {
@@ -1017,16 +1185,18 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
     }
   }
 
+  const userPayload = await enrichGeoObjectFields(user.toJSON() as UserPayloadRecord);
+
   if (user.roles && user.roles.length > 0) {
     const enrichedRoles = await enrichAdminRolePermissions(user.roles);
     const enrichedUser = {
-      ...user.toJSON(),
+      ...userPayload,
       roles: enrichedRoles.reverse()
     };
     return sendSuccess(res, enrichedUser, "User retrieved successfully");
   }
 
-  return sendSuccess(res, user, "User retrieved successfully");
+  return sendSuccess(res, userPayload, "User retrieved successfully");
 });
 
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {

@@ -266,7 +266,9 @@ const applyMetaTableOptionsToEvents = (
 };
 
 export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
+  const { id: userId, roles } = requireAuthenticatedUser(req);
+  const normalizedRoles = (roles ?? []).map((role) => String(role).toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
 
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string | undefined,
@@ -310,7 +312,7 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
   }
 
   // Build accessibility filter for geographic zones (geo-boundary only)
-  const accessibilityFilter = await buildAccessibilityFilter(userId);
+  const accessibilityFilter = isAdmin ? null : await buildAccessibilityFilter(userId);
 
   // Build include with accessibility filtering
   const includes = getBaseIncludes();

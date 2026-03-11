@@ -1090,7 +1090,7 @@
                 }
               ]
             },
-            "description": "Retrieves detailed information for a specific user by ID, including their profile, roles, permissions, and access profiles (ward, booth, MLA constituency)."
+            "description": "Retrieves detailed information for a specific user by ID, including profile, roles, permissions, and access profiles. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
           },
           "response": []
         }
@@ -3961,7 +3961,7 @@
                 }
               ]
             },
-            "description": "Get a user by mobile number including profile, access profiles, roles, family members, and event registrations."
+            "description": "Get a user by mobile number including profile, access profiles, roles, family members, and event registrations. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
           },
           "response": []
         },
@@ -4019,7 +4019,8 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/admin/users/{{userId}}"
+            "url": "{{baseUrl}}/api/admin/users/{{userId}}",
+            "description": "Returns user details by ID. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
           },
           "response": []
         },
@@ -7846,7 +7847,7 @@
                 }
               ]
             },
-            "description": "Returns paginated form events with their accessibility matrix (ward, booth, and user role combinations) and the linked form template."
+            "description": "Returns paginated form events with their accessibility matrix (ward, booth, and user role combinations) and the linked form template. Non-admin users are filtered by their `tbl_user_access` ward/booth scope; admin users receive all matching events."
           },
           "response": []
         },
@@ -9343,7 +9344,7 @@
                 }
               ]
             },
-            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n- `stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, and `wardNumberId` accept `-1` for ALL.\n- If any upstream selector is `-1`, downstream dropdown lookup returns only `{ id: -1, dispName: \"-ALL-\" }`.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
           },
           "response": [
             {
@@ -9428,7 +9429,7 @@
                     }
                   ]
                 },
-                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n- `stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, and `wardNumberId` accept `-1` for ALL.\n- If any upstream selector is `-1`, downstream dropdown lookup returns only `{ id: -1, dispName: \"-ALL-\" }`.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
               },
               "status": "OK",
               "code": 200,

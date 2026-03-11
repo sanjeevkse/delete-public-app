@@ -60,14 +60,14 @@ const ENTITY_CONFIG: Record<RequestEntity, EntityConfig> = {
   }
 };
 
-const parseOptionalPositiveInt = (value: unknown, field: string): number | undefined => {
+const parseOptionalPositiveIntOrAll = (value: unknown, field: string): number | undefined => {
   if (value === undefined || value === null || value === "") {
     return undefined;
   }
 
   const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new ApiError(`${field} must be a valid positive number`, 400);
+  if (!Number.isInteger(parsed) || (parsed <= 0 && parsed !== -1)) {
+    throw new ApiError(`${field} must be a valid positive number or -1 for all`, 400);
   }
 
   return parsed;
@@ -124,23 +124,23 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
   const sortColumn = validateSortColumn(req.query.sortColumn, ["id", "dispName"], "dispName");
   const search = parseOptionalString(req.query.search);
 
-  const stateId = parseOptionalPositiveInt(
+  const stateId = parseOptionalPositiveIntOrAll(
     getQueryValue(req.query, ["stateId", "state_id"]),
     "stateId"
   );
-  const mpConstituencyId = parseOptionalPositiveInt(
+  const mpConstituencyId = parseOptionalPositiveIntOrAll(
     getQueryValue(req.query, ["mpConstituencyId", "mp_constituency_id", "mpcontituencyId"]),
     "mpConstituencyId"
   );
-  const mlaConstituencyId = parseOptionalPositiveInt(
+  const mlaConstituencyId = parseOptionalPositiveIntOrAll(
     getQueryValue(req.query, ["mlaConstituencyId", "mla_constituency_id", "mlacontituencyId"]),
     "mlaConstituencyId"
   );
-  const gramPanchayatId = parseOptionalPositiveInt(
+  const gramPanchayatId = parseOptionalPositiveIntOrAll(
     getQueryValue(req.query, ["gramPanchayatId", "gram_panchayat_id", "grampanchayatId"]),
     "gramPanchayatId"
   );
-  const wardNumberId = parseOptionalPositiveInt(
+  const wardNumberId = parseOptionalPositiveIntOrAll(
     getQueryValue(req.query, ["wardNumberId", "ward_number_id", "wardnumberid"]),
     "wardNumberId"
   );
@@ -150,6 +150,40 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
   );
   if (governingBody && !["GBA", "TMC", "CMC", "GP"].includes(governingBody)) {
     throw new ApiError("governing_body must be one of GBA, TMC, CMC, GP", 400);
+  }
+
+  const shouldReturnOnlyAll =
+    (requestEntity === "mp_constituency" && stateId === -1) ||
+    (requestEntity === "mla_constituency" && (stateId === -1 || mpConstituencyId === -1)) ||
+    (requestEntity === "gram_panchayat" &&
+      (stateId === -1 || mpConstituencyId === -1 || mlaConstituencyId === -1)) ||
+    (requestEntity === "village" &&
+      (stateId === -1 ||
+        mpConstituencyId === -1 ||
+        mlaConstituencyId === -1 ||
+        gramPanchayatId === -1)) ||
+    (requestEntity === "ward" &&
+      (stateId === -1 ||
+        mpConstituencyId === -1 ||
+        mlaConstituencyId === -1 ||
+        gramPanchayatId === -1)) ||
+    (requestEntity === "booth" &&
+      (stateId === -1 ||
+        mpConstituencyId === -1 ||
+        mlaConstituencyId === -1 ||
+        gramPanchayatId === -1 ||
+        wardNumberId === -1));
+
+  // If any upstream selector is "-ALL-", child dropdown should only expose "-ALL-".
+  if (shouldReturnOnlyAll) {
+    const responseData = [{ id: -1, dispName: "-ALL-" }];
+    const pagination = calculatePagination(1, page, limit);
+    return sendSuccessWithPagination(
+      res,
+      responseData,
+      pagination,
+      "Geo lookup data retrieved successfully"
+    );
   }
 
   const whereClauses: string[] = ["meta.status = 1"];
