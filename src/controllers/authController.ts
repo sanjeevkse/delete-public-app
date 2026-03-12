@@ -82,7 +82,7 @@ const USER_PROFILE_ASSOCIATION_INCLUDE = [
   { association: "mainCaste", attributes: ["id", "dispName"], required: false },
   { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },
   { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
-  { association: "employmentType", attributes: ["id", "dispName"], required: false }
+  { association: "employment", attributes: ["id", "dispName"], required: false }
 ];
 
 const getUploadedProfileDocumentUrls = (req: Request): Record<string, string> => {

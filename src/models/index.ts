@@ -444,7 +444,7 @@ const establishAssociations = (): void => {
 
   UserProfile.belongsTo(MetaEmployment, {
     foreignKey: "employmentTypeId",
-    as: "employmentType"
+    as: "employment"
   });
   MetaEmployment.hasMany(UserProfile, {
     foreignKey: "employmentTypeId",

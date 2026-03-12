@@ -19,7 +19,6 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "educationalDetailGroupId",
   "dateOfJoining",
   "maritalStatusId",
-  "employmentId",
   "disabilityStatusId",
   "religionId",
   "mainCasteId",
@@ -30,7 +29,6 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "rationCardNo",
   "rationCardPhoto",
   "employmentGroupId",
-  "employmentTypeId",
   "relationshipTypeId",
   "relationshipName",
   "doorNumber",
@@ -99,8 +97,49 @@ export const buildProfileAttributes = (
     }
   }
 
-  if (payload.employmentId === undefined && "employment_id" in asRecord) {
-    payload.employmentId = asRecord["employment_id"] as never;
+  const normalizeAliasValue = (value: unknown): string => {
+    if (value === null || value === "") {
+      return "null";
+    }
+    return String(value);
+  };
+
+  const resolveAliasValue = (
+    logicalField: string,
+    aliases: Array<{ key: string; value: unknown }>
+  ): unknown => {
+    const provided = aliases.filter(({ value }) => value !== undefined);
+    if (provided.length === 0) {
+      return undefined;
+    }
+
+    const uniqueNormalizedValues = new Set(provided.map(({ value }) => normalizeAliasValue(value)));
+    if (uniqueNormalizedValues.size > 1) {
+      const keys = provided.map(({ key }) => key).join(", ");
+      throw new ApiError(`${logicalField} has conflicting values in: ${keys}`, 400);
+    }
+
+    return provided[0].value;
+  };
+
+  // employmentStatusId -> tbl_user_profile.employment_id -> tbl_meta_employment_status
+  const resolvedEmploymentStatusId = resolveAliasValue("employmentStatusId", [
+    { key: "employmentStatusId", value: asRecord["employmentStatusId"] },
+    { key: "employmentTypeId", value: asRecord["employmentTypeId"] },
+    { key: "employment_type_id", value: asRecord["employment_type_id"] },
+    { key: "employment_status_id", value: asRecord["employment_status_id"] },
+    { key: "employment_id", value: asRecord["employment_id"] }
+  ]);
+  if (resolvedEmploymentStatusId !== undefined) {
+    payload.employmentId = resolvedEmploymentStatusId as never;
+  }
+
+  // employmentId -> tbl_user_profile.employment_type_id -> tbl_meta_employment
+  const resolvedEmploymentId = resolveAliasValue("employmentId", [
+    { key: "employmentId", value: asRecord["employmentId"] }
+  ]);
+  if (resolvedEmploymentId !== undefined) {
+    payload.employmentTypeId = resolvedEmploymentId as never;
   }
 
   const socialLinks: Record<string, unknown> = existingProfile?.socialLinksJson

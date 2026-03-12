@@ -111,7 +111,7 @@ class UserProfile extends Model<
   declare subCaste?: NonAttribute<MetaSubCaste | null>;
   declare employmentStatus?: NonAttribute<MetaEmploymentStatus | null>;
   declare employmentGroup?: NonAttribute<MetaEmploymentGroup | null>;
-  declare employmentType?: NonAttribute<MetaEmployment | null>;
+  declare employment?: NonAttribute<MetaEmployment | null>;
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
   declare relationshipType?: NonAttribute<MetaRelationType | null>;
   declare floor?: NonAttribute<MetaFloor | null>;

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { Op, QueryTypes } from "sequelize";
 
 import { AppEvent, emitEvent } from "../events/eventBus";
-import { PUBLIC_ROLE_NAME } from "../config/rbac";
+import { ADMIN_ROLE_NAME, PUBLIC_ROLE_NAME } from "../config/rbac";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import sequelize from "../config/database";
@@ -10,6 +10,8 @@ import User from "../models/User";
 import UserRole from "../models/UserRole";
 import UserProfile from "../models/UserProfile";
 import UserAccess from "../models/UserAccess";
+import MetaEmployment from "../models/MetaEmployment";
+import MetaEmploymentStatus from "../models/MetaEmploymentStatus";
 import {
   getRoleByName,
   parseRoleIdsInput,
@@ -44,6 +46,15 @@ import { normalizePhoneNumber } from "../utils/phoneNumber";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 type QueryRecord = Record<string, unknown>;
+
+const isAdminRequester = (user?: AuthenticatedRequest["user"]): boolean => {
+  if (!user || !Array.isArray(user.roles)) {
+    return false;
+  }
+  return user.roles.some(
+    (role) => typeof role === "string" && role.toLowerCase() === ADMIN_ROLE_NAME.toLowerCase()
+  );
+};
 
 const firstQueryValue = (value: unknown): unknown => {
   if (Array.isArray(value)) {
@@ -211,7 +222,7 @@ const USER_PROFILE_INCLUDE = [
   { association: "mainCaste", attributes: ["id", "dispName"], required: false },
   { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },
   { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
-  { association: "employmentType", attributes: ["id", "dispName"], required: false }
+  { association: "employment", attributes: ["id", "dispName"], required: false }
 ];
 
 type UserPayloadRecord = Record<string, unknown>;
@@ -234,6 +245,53 @@ const GOVERNING_BODY_LABELS: Record<"GBA" | "TMC" | "CMC" | "GP", string> = {
 
 const isPositiveInteger = (value: unknown): value is number =>
   typeof value === "number" && Number.isInteger(value) && value > 0;
+
+const parseOptionalPositiveInteger = (value: unknown, fieldName: string): number | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ApiError(`${fieldName} must be a positive integer`, 400);
+  }
+
+  return parsed;
+};
+
+const validateProfileForeignKeys = async (
+  profileAttributes: Record<string, unknown>
+): Promise<void> => {
+  if (Object.prototype.hasOwnProperty.call(profileAttributes, "employmentId")) {
+    const employmentStatusId = parseOptionalPositiveInteger(
+      profileAttributes.employmentId,
+      "profile.employmentStatusId"
+    );
+    if (employmentStatusId !== null) {
+      const employmentStatus = await MetaEmploymentStatus.findByPk(employmentStatusId, {
+        attributes: ["id"]
+      });
+      if (!employmentStatus) {
+        throw new ApiError(`Invalid profile.employmentStatusId: ${employmentStatusId}`, 400);
+      }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(profileAttributes, "employmentTypeId")) {
+    const employmentId = parseOptionalPositiveInteger(
+      profileAttributes.employmentTypeId,
+      "profile.employmentId"
+    );
+    if (employmentId !== null) {
+      const employment = await MetaEmployment.findByPk(employmentId, {
+        attributes: ["id"]
+      });
+      if (!employment) {
+        throw new ApiError(`Invalid profile.employmentId: ${employmentId}`, 400);
+      }
+    }
+  }
+};
 
 const toIdDisplayName = (
   id: unknown,
@@ -458,8 +516,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const employmentGroupFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["employmentGroupId", "employment_group_id"])
   );
-  const employmentTypeFilter = parseNumberFilter(
-    pickQueryValue(queryParams, ["employmentTypeId", "employment_type_id"])
+  const employmentFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["employmentId", "employmentTypeId", "employment_type_id"])
   );
   const voterIdNumberFilter = parseStringFilter(
     pickQueryValue(queryParams, ["voterIdNumber", "voter_id_number"])
@@ -591,8 +649,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   if (employmentGroupFilter !== undefined) {
     profileFilters.employmentGroupId = employmentGroupFilter;
   }
-  if (employmentTypeFilter !== undefined) {
-    profileFilters.employmentTypeId = employmentTypeFilter;
+  if (employmentFilter !== undefined) {
+    profileFilters.employmentTypeId = employmentFilter;
   }
   if (voterIdNumberFilter) {
     profileFilters.voterIdNumber = { [Op.like]: `%${voterIdNumberFilter}%` };
@@ -867,6 +925,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   if (profile) {
     const profileAttributes = buildProfileAttributes(profile);
     if (Object.keys(profileAttributes).length > 0) {
+      await validateProfileForeignKeys(profileAttributes as Record<string, unknown>);
       // wardNumberId and boothNumberId are optional in profile
       // they can be provided separately in the accessible array
       const profileData: Record<string, unknown> = {
@@ -964,7 +1023,12 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Check if logged-in user can access this user (hierarchy and accessibility)
-  if (loggedInUser?.id && loggedInUser.id !== targetUserId && loggedInUser.roles) {
+  if (
+    loggedInUser?.id &&
+    loggedInUser.id !== targetUserId &&
+    loggedInUser.roles &&
+    !isAdminRequester(loggedInUser)
+  ) {
     const userRoles = await UserRole.findAll({
       where: { userId: loggedInUser.id },
       attributes: ["roleId"],
@@ -1161,7 +1225,12 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
   }
 
   const targetUserId = user.id;
-  if (loggedInUser?.id && loggedInUser.id !== targetUserId && loggedInUser.roles) {
+  if (
+    loggedInUser?.id &&
+    loggedInUser.id !== targetUserId &&
+    loggedInUser.roles &&
+    !isAdminRequester(loggedInUser)
+  ) {
     const userRoles = await UserRole.findAll({
       where: { userId: loggedInUser.id },
       attributes: ["roleId"],
@@ -1211,7 +1280,12 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Check if logged-in user can update this user (hierarchy and accessibility)
-  if (loggedInUser?.id && loggedInUser.id !== targetUserId && loggedInUser.roles) {
+  if (
+    loggedInUser?.id &&
+    loggedInUser.id !== targetUserId &&
+    loggedInUser.roles &&
+    !isAdminRequester(loggedInUser)
+  ) {
     const userRoles = await UserRole.findAll({
       where: { userId: loggedInUser.id },
       attributes: ["roleId"],
@@ -1278,6 +1352,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   if (profileInput !== undefined) {
     const profileAttributes = buildProfileAttributes(profileInput, user.profile ?? undefined);
     if (Object.keys(profileAttributes).length > 0) {
+      await validateProfileForeignKeys(profileAttributes as Record<string, unknown>);
       if (user.profile) {
         await user.profile.update(profileAttributes);
       } else {
