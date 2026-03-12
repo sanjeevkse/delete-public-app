@@ -2,10 +2,12 @@ import { DataTypes, Model, Optional } from "sequelize";
 
 import sequelize from "../config/database";
 import type MetaEmploymentGroup from "./MetaEmploymentGroup";
+import type MetaEmploymentStatus from "./MetaEmploymentStatus";
 
 interface MetaEmploymentAttributes {
   id: number;
   employmentGroupId?: number | null;
+  employmentStatusId?: number | null;
   dispName: string;
   description?: string | null;
   status: number;
@@ -17,7 +19,14 @@ interface MetaEmploymentAttributes {
 
 type MetaEmploymentCreationAttributes = Optional<
   MetaEmploymentAttributes,
-  "id" | "employmentGroupId" | "description" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
+  | "id"
+  | "employmentGroupId"
+  | "employmentStatusId"
+  | "description"
+  | "createdBy"
+  | "updatedBy"
+  | "createdAt"
+  | "updatedAt"
 >;
 
 class MetaEmployment
@@ -26,6 +35,7 @@ class MetaEmployment
 {
   declare id: number;
   declare employmentGroupId?: number | null;
+  declare employmentStatusId?: number | null;
   declare dispName: string;
   declare description?: string | null;
   declare status: number;
@@ -34,6 +44,7 @@ class MetaEmployment
   declare readonly createdAt?: Date;
   declare readonly updatedAt?: Date;
   declare employmentGroup?: MetaEmploymentGroup | null;
+  declare employmentStatus?: MetaEmploymentStatus | null;
 }
 
 MetaEmployment.init(
@@ -45,6 +56,11 @@ MetaEmployment.init(
     },
     employmentGroupId: {
       field: "employment_group_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    employmentStatusId: {
+      field: "employment_status_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },

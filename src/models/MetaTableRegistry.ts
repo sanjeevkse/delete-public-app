@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
+import type MetaTableCollection from "./MetaTableCollection";
 
 interface MetaTableRegistryAttributes {
   id: number;
@@ -57,6 +58,7 @@ class MetaTableRegistry extends Model<
   declare updatedBy?: number;
   declare readonly createdAt?: Date;
   declare readonly updatedAt?: Date;
+  declare collections?: MetaTableCollection[];
 }
 
 MetaTableRegistry.init(

@@ -6,7 +6,15 @@ import {
   updateRegistryEntry,
   deleteRegistryEntry,
   reloadRegistry,
-  getRegistryStats
+  getRegistryStats,
+  getCollections,
+  getCollection,
+  createCollection,
+  updateCollection,
+  deleteCollection,
+  getCollectionMetaTables,
+  addMetaTablesToCollection,
+  removeMetaTablesFromCollection
 } from "../controllers/metaTableRegistryController";
 import { authenticate } from "../middlewares/authMiddleware";
 import { authorizePermissions } from "../middlewares/authorizationMiddleware";
@@ -28,6 +36,74 @@ router.get("/stats", getRegistryStats);
  * @desc Reload registry cache
  */
 router.post("/reload", authorizePermissions("meta_table_registry.manage", "admin"), reloadRegistry);
+
+/**
+ * @route GET /api/meta-table-registry/collections
+ * @desc Get all collections
+ */
+router.get("/collections", getCollections);
+
+/**
+ * @route GET /api/meta-table-registry/collections/:id
+ * @desc Get a single collection
+ */
+router.get("/collections/:id", getCollection);
+
+/**
+ * @route POST /api/meta-table-registry/collections
+ * @desc Create a collection
+ */
+router.post(
+  "/collections",
+  authorizePermissions("meta_table_registry.create", "admin"),
+  createCollection
+);
+
+/**
+ * @route PUT /api/meta-table-registry/collections/:id
+ * @desc Update a collection
+ */
+router.put(
+  "/collections/:id",
+  authorizePermissions("meta_table_registry.update", "admin"),
+  updateCollection
+);
+
+/**
+ * @route DELETE /api/meta-table-registry/collections/:id
+ * @desc Delete (soft delete) a collection
+ */
+router.delete(
+  "/collections/:id",
+  authorizePermissions("meta_table_registry.delete", "admin"),
+  deleteCollection
+);
+
+/**
+ * @route GET /api/meta-table-registry/collections/:id/meta-tables
+ * @desc List mapped meta tables for a collection
+ */
+router.get("/collections/:id/meta-tables", getCollectionMetaTables);
+
+/**
+ * @route POST /api/meta-table-registry/collections/:id/meta-tables/add
+ * @desc Add specific or all meta tables to a collection
+ */
+router.post(
+  "/collections/:id/meta-tables/add",
+  authorizePermissions("meta_table_registry.update", "admin"),
+  addMetaTablesToCollection
+);
+
+/**
+ * @route POST /api/meta-table-registry/collections/:id/meta-tables/remove
+ * @desc Remove specific or all meta tables from a collection
+ */
+router.post(
+  "/collections/:id/meta-tables/remove",
+  authorizePermissions("meta_table_registry.update", "admin"),
+  removeMetaTablesFromCollection
+);
 
 /**
  * @route GET /api/meta-table-registry

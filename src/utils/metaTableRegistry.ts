@@ -64,9 +64,40 @@ const buildRegistryByTableName = async (): Promise<Record<string, MetaTableConfi
   return registry;
 };
 
+const ensureEmploymentIncludes = (config: MetaTableConfig): MetaTableConfig => {
+  if (config.name !== "employment") {
+    return config;
+  }
+
+  const includes = Array.isArray(config.customIncludes) ? [...config.customIncludes] : [];
+  const hasEmploymentGroup = includes.some((inc: any) => inc?.association === "employmentGroup");
+  const hasEmploymentStatus = includes.some(
+    (inc: any) => inc?.association === "employmentStatus"
+  );
+
+  if (!hasEmploymentGroup) {
+    includes.push({ association: "employmentGroup", attributes: ["id", "dispName"], required: false });
+  }
+  if (!hasEmploymentStatus) {
+    includes.push({
+      association: "employmentStatus",
+      attributes: ["id", "dispName"],
+      required: false
+    });
+  }
+
+  return {
+    ...config,
+    customIncludes: includes
+  };
+};
+
 const getRegistryByTableName = async (): Promise<Record<string, MetaTableConfig>> => {
   if (!registryByTableName) {
-    registryByTableName = await buildRegistryByTableName();
+    const rawRegistry = await buildRegistryByTableName();
+    registryByTableName = Object.fromEntries(
+      Object.entries(rawRegistry).map(([key, config]) => [key, ensureEmploymentIncludes(config)])
+    );
   }
   return registryByTableName;
 };

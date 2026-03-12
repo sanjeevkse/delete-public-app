@@ -81,6 +81,9 @@ import Sidebar from "./Sidebar";
 import RoleSidebar from "./RoleSidebar";
 import PermissionGroupSidebar from "./PermissionGroupSidebar";
 import ConditionalListItem from "./ConditionalListItem";
+import MetaTableRegistry from "./MetaTableRegistry";
+import MetaTableCollection from "./MetaTableCollection";
+import MetaTableRegistryCollection from "./MetaTableRegistryCollection";
 
 const establishAssociations = (): void => {
   AuditLog.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -456,6 +459,22 @@ const establishAssociations = (): void => {
     foreignKey: "employmentGroupId",
     as: "employmentTypes"
   });
+  MetaEmployment.belongsTo(MetaEmploymentStatus, {
+    foreignKey: "employmentStatusId",
+    as: "employmentStatus"
+  });
+  MetaEmploymentStatus.hasMany(MetaEmployment, {
+    foreignKey: "employmentStatusId",
+    as: "employmentTypes"
+  });
+  MetaEmploymentStatus.belongsTo(MetaEmploymentGroup, {
+    foreignKey: "employmentGroupId",
+    as: "employmentGroup"
+  });
+  MetaEmploymentGroup.hasMany(MetaEmploymentStatus, {
+    foreignKey: "employmentGroupId",
+    as: "employmentStatuses"
+  });
 
   UserProfile.belongsTo(MetaRelationType, {
     foreignKey: "relationshipTypeId",
@@ -776,6 +795,35 @@ const establishAssociations = (): void => {
     foreignKey: "notificationLogId",
     as: "notificationLog"
   });
+
+  MetaTableRegistry.belongsToMany(MetaTableCollection, {
+    through: MetaTableRegistryCollection,
+    foreignKey: "registryId",
+    otherKey: "collectionId",
+    as: "collections"
+  });
+  MetaTableCollection.belongsToMany(MetaTableRegistry, {
+    through: MetaTableRegistryCollection,
+    foreignKey: "collectionId",
+    otherKey: "registryId",
+    as: "metaTables"
+  });
+  MetaTableRegistryCollection.belongsTo(MetaTableRegistry, {
+    foreignKey: "registryId",
+    as: "registry"
+  });
+  MetaTableRegistryCollection.belongsTo(MetaTableCollection, {
+    foreignKey: "collectionId",
+    as: "collection"
+  });
+  MetaTableRegistry.hasMany(MetaTableRegistryCollection, {
+    foreignKey: "registryId",
+    as: "collectionMappings"
+  });
+  MetaTableCollection.hasMany(MetaTableRegistryCollection, {
+    foreignKey: "collectionId",
+    as: "metaTableMappings"
+  });
 };
 
 establishAssociations();
@@ -845,5 +893,8 @@ export {
   DeviceToken,
   NotificationLog,
   NotificationRecipient,
-  ConditionalListItem
+  ConditionalListItem,
+  MetaTableRegistry,
+  MetaTableCollection,
+  MetaTableRegistryCollection
 };

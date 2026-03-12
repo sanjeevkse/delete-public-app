@@ -5,6 +5,8 @@ import type { Model, ModelStatic } from "sequelize";
 import { ApiError } from "../middlewares/errorHandler";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import MetaTableRegistry from "../models/MetaTableRegistry";
+import MetaTableCollection from "../models/MetaTableCollection";
+import MetaTableRegistryCollection from "../models/MetaTableRegistryCollection";
 import asyncHandler from "../utils/asyncHandler";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import {
@@ -91,6 +93,34 @@ const buildMetaTablesRegistry = async (): Promise<Record<string, MetaTableConfig
   return registry;
 };
 
+const ensureEmploymentIncludes = (config: MetaTableConfig): MetaTableConfig => {
+  if (config.name !== "employment") {
+    return config;
+  }
+
+  const includes = Array.isArray(config.customIncludes) ? [...config.customIncludes] : [];
+  const hasEmploymentGroup = includes.some((inc: any) => inc?.association === "employmentGroup");
+  const hasEmploymentStatus = includes.some(
+    (inc: any) => inc?.association === "employmentStatus"
+  );
+
+  if (!hasEmploymentGroup) {
+    includes.push({ association: "employmentGroup", attributes: ["id", "dispName"], required: false });
+  }
+  if (!hasEmploymentStatus) {
+    includes.push({
+      association: "employmentStatus",
+      attributes: ["id", "dispName"],
+      required: false
+    });
+  }
+
+  return {
+    ...config,
+    customIncludes: includes
+  };
+};
+
 // Initialize the registry (will be populated on first use)
 let META_TABLES: Record<string, MetaTableConfig> | null = null;
 
@@ -99,7 +129,10 @@ let META_TABLES: Record<string, MetaTableConfig> | null = null;
  */
 const getMetaTables = async (): Promise<Record<string, MetaTableConfig>> => {
   if (!META_TABLES) {
-    META_TABLES = await buildMetaTablesRegistry();
+    const rawRegistry = await buildMetaTablesRegistry();
+    META_TABLES = Object.fromEntries(
+      Object.entries(rawRegistry).map(([key, config]) => [key, ensureEmploymentIncludes(config)])
+    );
   }
   return META_TABLES;
 };
@@ -175,13 +208,58 @@ const getFieldsWithRelations = (model: ModelStatic<any>, config: MetaTableConfig
   return fields;
 };
 
+const parseOptionalCollectionId = (rawValue: unknown): number | undefined => {
+  if (rawValue === undefined || rawValue === null || rawValue === "") {
+    return undefined;
+  }
+
+  const normalized = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+  const parsed = Number.parseInt(String(normalized), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ApiError("collection_id must be a positive integer", 400);
+  }
+
+  return parsed;
+};
+
+const getRegistryIdsByCollectionId = async (collectionId: number): Promise<Set<number>> => {
+  const rows = await MetaTableRegistryCollection.findAll({
+    where: {
+      collectionId,
+      status: 1
+    },
+    attributes: ["registryId"],
+    include: [
+      {
+        model: MetaTableCollection,
+        as: "collection",
+        attributes: [],
+        required: true,
+        where: { status: 1 }
+      }
+    ]
+  });
+
+  return new Set(rows.map((row) => Number(row.registryId)));
+};
+
 /**
  * List all available meta tables
  * GET /api/meta-tables
  */
-export const listMetaTables = asyncHandler(async (_req: Request, res: Response) => {
+export const listMetaTables = asyncHandler(async (req: Request, res: Response) => {
   const metaTables = await getMetaTables();
-  const tables = Object.values(metaTables).map((config) => ({
+  const requestedCollectionId = parseOptionalCollectionId(
+    req.query.collection_id ?? req.query.collectionId ?? req.query.group_id ?? req.query.groupId
+  );
+  const allowedIds =
+    requestedCollectionId !== undefined
+      ? await getRegistryIdsByCollectionId(requestedCollectionId)
+      : null;
+
+  const tables = Object.values(metaTables)
+    .filter((config) => (allowedIds ? allowedIds.has(config.id) : true))
+    .map((config) => ({
     id: config.id,
     name: config.name,
     tableName: config.tableName,
@@ -191,7 +269,7 @@ export const listMetaTables = asyncHandler(async (_req: Request, res: Response) 
     allFields: getAllFields(config.model),
     fieldsWithRelations: getFieldsWithRelations(config.model, config),
     searchableFields: config.searchableFields
-  }));
+    }));
 
   sendSuccess(res, tables, "Meta tables retrieved successfully");
 });
@@ -206,7 +284,7 @@ export const getMetaTableData = asyncHandler(async (req: Request, res: Response)
     req.query.page as string,
     req.query.limit as string,
     25,
-    100
+    1000
   );
   const search = (req.query.search as string) ?? "";
   const status = req.query.status as string;

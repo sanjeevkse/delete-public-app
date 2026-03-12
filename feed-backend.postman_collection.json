@@ -7198,7 +7198,25 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/meta-tables"
+            "url": {
+              "raw": "{{baseUrl}}/api/meta-tables?collection_id=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meta-tables"
+              ],
+              "query": [
+                {
+                  "key": "collection_id",
+                  "value": "1",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "List available meta tables. Optional: pass collection_id (or collectionId) to return only tables mapped to that collection."
           },
           "response": []
         },
@@ -7261,7 +7279,7 @@
                 }
               ]
             },
-            "description": "List meta table data with pagination/search/status filters. You can also pass any query key that matches a column in the requested meta table (example: dispName=Retail) for exact-match filtering; unknown query params are ignored. Use appendOther=1 (or append_other=1) to append an \"Other\" entry with id -1 at the end. Use need_all=1 to include -ALL- at the beginning."
+            "description": "List meta table data with pagination/search/status filters. Max limit for this endpoint is 1000. You can also pass any query key that matches a column in the requested meta table (example: dispName=Retail) for exact-match filtering; unknown query params are ignored. For tableName=employment, response includes both employmentGroup and employmentStatus relation objects (id, dispName). Use appendOther=1 (or append_other=1) to append an \"Other\" entry with id -1 at the end. Use need_all=1 to include -ALL- at the beginning."
           },
           "response": []
         },
@@ -7327,7 +7345,7 @@
               "variable": [
                 {
                   "key": "tableName",
-                  "value": "businessType"
+                  "value": "employmentStatus"
                 }
               ]
             }
@@ -7384,7 +7402,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \"dispName\": \"New Business Type\"\\n}"
+              "raw": "{\\n  \"dispName\": \"New Employment Status\",\\n  \"employmentGroupId\": 1\\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data",
@@ -7400,7 +7418,7 @@
               "variable": [
                 {
                   "key": "tableName",
-                  "value": "businessType"
+                  "value": "employmentStatus"
                 }
               ]
             }
@@ -7425,7 +7443,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \"dispName\": \"Updated Business Type\"\\n}"
+              "raw": "{\\n  \"dispName\": \"Updated Employment Status\",\\n  \"employmentGroupId\": 1\\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/meta-tables/:tableName/data/:id",
@@ -7442,7 +7460,7 @@
               "variable": [
                 {
                   "key": "tableName",
-                  "value": "businessType"
+                  "value": "employmentStatus"
                 },
                 {
                   "key": "id",
@@ -7737,6 +7755,430 @@
             "description": "Get statistics about registry entries (total, active, inactive counts)"
           },
           "response": []
+        },
+        {
+          "name": "Meta Table Collections",
+          "item": [
+            {
+              "name": "Collections - List",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections?page=1&limit=25&search=&status=1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25"
+                    },
+                    {
+                      "key": "search",
+                      "value": "",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Get One",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Create",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"publicLookup\",\n  \"dispName\": \"Public Lookup\",\n  \"description\": \"Tables visible in public lookup APIs\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Update",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"dispName\": \"Public Lookup Updated\",\n  \"description\": \"Updated description\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Delete",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - List Meta Tables",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id/meta-tables?page=1&limit=25",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id",
+                    "meta-tables"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "25"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Add Meta Tables",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registryIds\": [1, 2, 3]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id/meta-tables/add",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id",
+                    "meta-tables",
+                    "add"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Add All Meta Tables",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"addAll\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id/meta-tables/add",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id",
+                    "meta-tables",
+                    "add"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Remove Meta Tables",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registryIds\": [1, 2, 3]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id/meta-tables/remove",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id",
+                    "meta-tables",
+                    "remove"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            },
+            {
+              "name": "Collections - Remove All Meta Tables",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "token": "{{authToken}}"
+                  }
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"removeAll\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/meta-table-registry/collections/:id/meta-tables/remove",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "meta-table-registry",
+                    "collections",
+                    ":id",
+                    "meta-tables",
+                    "remove"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": ""
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },

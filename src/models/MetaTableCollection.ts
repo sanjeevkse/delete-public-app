@@ -1,11 +1,10 @@
 import { DataTypes, Model, Optional } from "sequelize";
 
 import sequelize from "../config/database";
-import type MetaEmploymentGroup from "./MetaEmploymentGroup";
 
-interface MetaEmploymentStatusAttributes {
+interface MetaTableCollectionAttributes {
   id: number;
-  employmentGroupId?: number | null;
+  name: string;
   dispName: string;
   description?: string | null;
   status: number;
@@ -15,23 +14,17 @@ interface MetaEmploymentStatusAttributes {
   updatedAt?: Date;
 }
 
-type MetaEmploymentStatusCreationAttributes = Optional<
-  MetaEmploymentStatusAttributes,
-  | "id"
-  | "employmentGroupId"
-  | "description"
-  | "createdBy"
-  | "updatedBy"
-  | "createdAt"
-  | "updatedAt"
+type MetaTableCollectionCreationAttributes = Optional<
+  MetaTableCollectionAttributes,
+  "id" | "description" | "status" | "createdBy" | "updatedBy" | "createdAt" | "updatedAt"
 >;
 
-class MetaEmploymentStatus
-  extends Model<MetaEmploymentStatusAttributes, MetaEmploymentStatusCreationAttributes>
-  implements MetaEmploymentStatusAttributes
+class MetaTableCollection
+  extends Model<MetaTableCollectionAttributes, MetaTableCollectionCreationAttributes>
+  implements MetaTableCollectionAttributes
 {
   declare id: number;
-  declare employmentGroupId?: number | null;
+  declare name: string;
   declare dispName: string;
   declare description?: string | null;
   declare status: number;
@@ -39,29 +32,27 @@ class MetaEmploymentStatus
   declare updatedBy?: number | null;
   declare readonly createdAt?: Date;
   declare readonly updatedAt?: Date;
-  declare employmentGroup?: MetaEmploymentGroup | null;
 }
 
-MetaEmploymentStatus.init(
+MetaTableCollection.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true
     },
-    employmentGroupId: {
-      field: "employment_group_id",
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: true
-    },
-    dispName: {
-      field: "disp_name",
-      type: DataTypes.STRING(80),
+    name: {
+      type: DataTypes.STRING(100),
       allowNull: false,
       unique: true
     },
-    description: {
+    dispName: {
+      field: "disp_name",
       type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
       allowNull: true
     },
     status: {
@@ -71,21 +62,21 @@ MetaEmploymentStatus.init(
     },
     createdBy: {
       field: "created_by",
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: true
     },
     updatedBy: {
       field: "updated_by",
-      type: DataTypes.BIGINT.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: true
     }
   },
   {
     sequelize,
-    tableName: "tbl_meta_employment_status",
+    tableName: "tbl_meta_table_collection",
     timestamps: true,
     underscored: true
   }
 );
 
-export default MetaEmploymentStatus;
+export default MetaTableCollection;
