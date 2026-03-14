@@ -12,6 +12,8 @@ import UserProfile from "../models/UserProfile";
 import UserAccess from "../models/UserAccess";
 import MetaEmployment from "../models/MetaEmployment";
 import MetaEmploymentStatus from "../models/MetaEmploymentStatus";
+import MetaResidenceType from "../models/MetaResidenceType";
+import MetaFamilyGod from "../models/MetaFamilyGod";
 import {
   getRoleByName,
   parseRoleIdsInput,
@@ -209,6 +211,8 @@ const applyRangeFilter = (
 const USER_PROFILE_INCLUDE = [
   { association: "gender", attributes: ["id", "dispName"], required: false },
   { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+  { association: "residenceType", attributes: ["id", "dispName"], required: false },
+  { association: "familyGod", attributes: ["id", "dispName"], required: false },
   { association: "wardNumber", attributes: ["id", "dispName"], required: false },
   { association: "boothNumber", attributes: ["id", "dispName"], required: false },
   { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
@@ -288,6 +292,36 @@ const validateProfileForeignKeys = async (
       });
       if (!employment) {
         throw new ApiError(`Invalid profile.employmentId: ${employmentId}`, 400);
+      }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(profileAttributes, "residenceTypeId")) {
+    const residenceTypeId = parseOptionalPositiveInteger(
+      profileAttributes.residenceTypeId,
+      "profile.residenceTypeId"
+    );
+    if (residenceTypeId !== null) {
+      const residenceType = await MetaResidenceType.findByPk(residenceTypeId, {
+        attributes: ["id"]
+      });
+      if (!residenceType) {
+        throw new ApiError(`Invalid profile.residenceTypeId: ${residenceTypeId}`, 400);
+      }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(profileAttributes, "familyGodId")) {
+    const familyGodId = parseOptionalPositiveInteger(
+      profileAttributes.familyGodId,
+      "profile.familyGodId"
+    );
+    if (familyGodId !== null) {
+      const familyGod = await MetaFamilyGod.findByPk(familyGodId, {
+        attributes: ["id"]
+      });
+      if (!familyGod) {
+        throw new ApiError(`Invalid profile.familyGodId: ${familyGodId}`, 400);
       }
     }
   }
@@ -470,6 +504,15 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const maritalStatusFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["maritalStatusId", "marital_status_id"])
   );
+  const residenceTypeFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["residenceTypeId", "residence_type_id"])
+  );
+  const familyGodFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["familyGodId", "family_god_id"])
+  );
+  const nativePlaceFilter = parseStringFilter(
+    pickQueryValue(queryParams, ["nativePlace", "native_place"])
+  );
   const relationshipTypeFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["relationshipTypeId", "relationship_type_id"])
   );
@@ -594,6 +637,15 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
   if (maritalStatusFilter !== undefined) {
     profileFilters.maritalStatusId = maritalStatusFilter;
+  }
+  if (residenceTypeFilter !== undefined) {
+    profileFilters.residenceTypeId = residenceTypeFilter;
+  }
+  if (familyGodFilter !== undefined) {
+    profileFilters.familyGodId = familyGodFilter;
+  }
+  if (nativePlaceFilter) {
+    profileFilters.nativePlace = { [Op.like]: `%${nativePlaceFilter}%` };
   }
   if (relationshipTypeFilter !== undefined) {
     profileFilters.relationshipTypeId = relationshipTypeFilter;
@@ -1099,7 +1151,14 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
             association: "relationType",
             attributes: ["id", "dispName", "description"],
             required: false
-          }
+          },
+          { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetailGroup", attributes: ["id", "dispName"], required: false },
+          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+          { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
+          { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
+          { association: "employment", attributes: ["id", "dispName"], required: false }
         ]
       },
       {

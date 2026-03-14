@@ -69,6 +69,8 @@ const upsertUserProfile = async (userId: number, profileInput?: Record<string, u
 const USER_PROFILE_ASSOCIATION_INCLUDE = [
   { association: "gender", attributes: ["id", "dispName"], required: false },
   { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+  { association: "residenceType", attributes: ["id", "dispName"], required: false },
+  { association: "familyGod", attributes: ["id", "dispName"], required: false },
   { association: "wardNumber", attributes: ["id", "dispName"], required: false },
   { association: "boothNumber", attributes: ["id", "dispName"], required: false },
   { association: "educationalDetail", attributes: ["id", "dispName"], required: false },

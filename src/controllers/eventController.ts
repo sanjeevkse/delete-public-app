@@ -14,6 +14,7 @@ import { MAX_EVENT_IMAGE_COUNT, MAX_EVENT_VIDEO_COUNT } from "../middlewares/eve
 import Event from "../models/Event";
 import EventMedia from "../models/EventMedia";
 import EventRegistration from "../models/EventRegistration";
+import MetaEventType from "../models/MetaEventType";
 import { MediaType } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -83,6 +84,11 @@ const buildEventAttributes = (
 };
 
 const baseEventInclude = [
+  {
+    association: "eventType",
+    attributes: ["id", "dispName"],
+    required: false
+  },
   {
     association: "media",
     attributes: [
@@ -252,6 +258,20 @@ const parseOptionalString = (
   }
 
   return trimmed;
+};
+
+const parseOptionalPositiveInteger = (value: unknown, field: string): number | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  const parsed = parseOptionalNumber(value, field);
+  if (parsed === undefined || parsed === null) {
+    return null;
+  }
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ApiError(`${field} must be a positive integer`, 400);
+  }
+  return parsed;
 };
 
 const isValidDateOnly = (value: string): boolean => {
@@ -555,6 +575,10 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const title = parseRequiredString(req.body?.title, "title");
   const description = parseRequiredString(req.body?.description, "description");
   const place = parseRequiredString(req.body?.place, "place");
+  const eventTypeId = parseOptionalPositiveInteger(
+    req.body?.eventTypeId ?? req.body?.event_type_id,
+    "eventTypeId"
+  );
   const googleMapLink = parseOptionalString(req.body?.googleMapLink, "googleMapLink");
   const latitude = parseRequiredNumber(req.body?.latitude, "latitude");
   const longitude = parseRequiredNumber(req.body?.longitude, "longitude");
@@ -567,12 +591,20 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
   const media = normalizeMediaInput(uploadedFiles, req.body?.media);
 
+  if (eventTypeId !== null) {
+    const eventType = await MetaEventType.findByPk(eventTypeId, { attributes: ["id"] });
+    if (!eventType) {
+      throw new ApiError("Invalid eventTypeId", 400);
+    }
+  }
+
   const createdEventId = await sequelize.transaction(async (transaction) => {
     const event = await Event.create(
       {
         title,
         description,
         place,
+        eventTypeId,
         googleMapLink,
         latitude,
         longitude,
@@ -692,6 +724,14 @@ export const listEvents = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const placeFilter = (req.query.place as string | undefined)?.trim();
   if (placeFilter) {
     where.place = { [Op.like]: `%${placeFilter}%` };
+  }
+
+  const eventTypeIdFilter = parseOptionalPositiveInteger(
+    req.query.eventTypeId ?? req.query.event_type_id,
+    "eventTypeId"
+  );
+  if (eventTypeIdFilter !== null) {
+    where.eventTypeId = eventTypeIdFilter;
   }
 
   const startDateFrom = parseOptionalDateOnly(req.query.startDateFrom, "startDateFrom");
@@ -927,6 +967,15 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   if (Object.prototype.hasOwnProperty.call(req.body, "place")) {
     updates.place = parseRequiredString(req.body.place, "place");
   }
+  if (
+    Object.prototype.hasOwnProperty.call(req.body, "eventTypeId") ||
+    Object.prototype.hasOwnProperty.call(req.body, "event_type_id")
+  ) {
+    updates.eventTypeId = parseOptionalPositiveInteger(
+      req.body.eventTypeId ?? req.body.event_type_id,
+      "eventTypeId"
+    );
+  }
   if (Object.prototype.hasOwnProperty.call(req.body, "googleMapLink")) {
     updates.googleMapLink = parseOptionalString(req.body.googleMapLink, "googleMapLink");
   }
@@ -955,6 +1004,16 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   }
 
   updates.updatedBy = userId;
+
+  if (Object.prototype.hasOwnProperty.call(updates, "eventTypeId")) {
+    const requestedEventTypeId = updates.eventTypeId as number | null;
+    if (requestedEventTypeId !== null) {
+      const eventType = await MetaEventType.findByPk(requestedEventTypeId, { attributes: ["id"] });
+      if (!eventType) {
+        throw new ApiError("Invalid eventTypeId", 400);
+      }
+    }
+  }
 
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : undefined;
   const media = normalizeMediaInput(uploadedFiles, req.body?.media);

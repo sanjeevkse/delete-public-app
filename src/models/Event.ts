@@ -9,6 +9,7 @@ import {
 
 import type EventMedia from "./EventMedia";
 import type EventRegistration from "./EventRegistration";
+import type MetaEventType from "./MetaEventType";
 
 import sequelize from "../config/database";
 
@@ -17,6 +18,7 @@ class Event extends Model<InferAttributes<Event>, InferCreationAttributes<Event>
   declare title: string;
   declare description: string;
   declare place: string;
+  declare eventTypeId: number | null;
   declare googleMapLink: string | null;
   declare latitude: number;
   declare longitude: number;
@@ -32,6 +34,7 @@ class Event extends Model<InferAttributes<Event>, InferCreationAttributes<Event>
   declare updatedAt: CreationOptional<Date>;
   declare media?: NonAttribute<EventMedia[]>;
   declare registrations?: NonAttribute<EventRegistration[]>;
+  declare eventType?: NonAttribute<MetaEventType | null>;
 }
 
 Event.init(
@@ -52,6 +55,11 @@ Event.init(
     place: {
       type: DataTypes.STRING(255),
       allowNull: false
+    },
+    eventTypeId: {
+      field: "event_type_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     googleMapLink: {
       field: "google_map_link",

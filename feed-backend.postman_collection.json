@@ -729,6 +729,21 @@
                   "type": "text"
                 },
                 {
+                  "key": "residenceTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "nativePlace",
+                  "value": "Mysuru",
+                  "type": "text"
+                },
+                {
+                  "key": "familyGodId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
                   "key": "gramPanchayatId",
                   "value": "1",
                   "type": "text"
@@ -935,6 +950,24 @@
                   "disabled": true
                 },
                 {
+                  "key": "residenceTypeId",
+                  "value": "1",
+                  "description": "Filter by residence type id",
+                  "disabled": true
+                },
+                {
+                  "key": "familyGodId",
+                  "value": "1",
+                  "description": "Filter by family god id",
+                  "disabled": true
+                },
+                {
+                  "key": "nativePlace",
+                  "value": "Mysuru",
+                  "description": "Filter profiles whose native place contains the supplied value",
+                  "disabled": true
+                },
+                {
                   "key": "occupation",
                   "value": "Engineer",
                   "description": "Filter profiles whose occupation contains the supplied value",
@@ -1062,7 +1095,7 @@
                 }
               ]
             },
-            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, residenceTypeId, familyGodId, nativePlace, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
           },
           "response": []
         },
@@ -1656,7 +1689,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
+              "raw": "{{baseUrl}}/api/events?title=cleanup&place=central&eventTypeId=1&startDateFrom=2024-01-01&startDateTo=2024-12-31&search=community&page=1&limit=20&sort=ASC",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1674,6 +1707,11 @@
                   "key": "place",
                   "value": "central",
                   "description": "Optional: filter by place substring."
+                },
+                {
+                  "key": "eventTypeId",
+                  "value": "1",
+                  "description": "Optional: filter by event type id (meta dropdown)."
                 },
                 {
                   "key": "startDateFrom",
@@ -1798,6 +1836,11 @@
                   "type": "text"
                 },
                 {
+                  "key": "eventTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
                   "key": "googleMapLink",
                   "value": "https://maps.google.com/?q=Central+Park",
                   "type": "text"
@@ -1835,7 +1878,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/events",
-            "description": "Creates a new event for the authenticated user. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
+            "description": "Creates a new event for the authenticated user. `eventTypeId` maps to Meta Event Type dropdown. Submit as multipart/form-data with optional `media` files (JPEG/PNG/WEBP/HEIC images or MP4 videos, max 4 photos + 1 video at 5MB each). Text-only submissions still work if media is omitted."
           },
           "response": []
         },
@@ -1876,10 +1919,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Updated agenda with additional workshops.\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"14:00\"\n}"
+              "raw": "{\n  \"description\": \"Updated agenda with additional workshops.\",\n  \"eventTypeId\": 2,\n  \"startTime\": \"10:00\",\n  \"endTime\": \"14:00\"\n}"
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}",
-            "description": "Updates event details. Media updates must be handled using the dedicated media endpoints."
+            "description": "Updates event details, including `eventTypeId` dropdown value. Media updates must be handled using the dedicated media endpoints."
           },
           "response": []
         },
@@ -3650,7 +3693,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Mysuru\",\n    \"familyGodId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users"
           },
@@ -3898,7 +3941,7 @@
                 }
               ]
             },
-            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, residenceTypeId, familyGodId, nativePlace, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
           },
           "response": []
         },
@@ -4036,7 +4079,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"employmentStatusId\": 1,\n    \"disabilityStatusId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Tumakuru\",\n    \"familyGodId\": 1,\n    \"employmentStatusId\": 1,\n    \"disabilityStatusId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
             "description": "Updates user information including profile, roles, accessibility profiles, and approval status (0=inactive, 1=approved/active, 2=pending approval). All fields are optional - only provided fields will be updated."
@@ -5202,6 +5245,21 @@
                   "type": "text"
                 },
                 {
+                  "key": "alternateContactNumber",
+                  "value": "9123456789",
+                  "type": "text"
+                },
+                {
+                  "key": "instagram",
+                  "value": "https://instagram.com/john_family",
+                  "type": "text"
+                },
+                {
+                  "key": "facebook",
+                  "value": "https://facebook.com/john.family",
+                  "type": "text"
+                },
+                {
                   "key": "fullAddress",
                   "value": "123 Main Street, City, State 12345",
                   "type": "text"
@@ -5213,6 +5271,61 @@
                 },
                 {
                   "key": "relationTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "relationshipName",
+                  "value": "Father",
+                  "type": "text"
+                },
+                {
+                  "key": "disabilityStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "maritalStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "voterIdNumber",
+                  "value": "WB/12/123/123456",
+                  "type": "text"
+                },
+                {
+                  "key": "voterIdProof",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "aadhaarPhoto",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "educationalDetailGroupId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "educationalDetailId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentGroupId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentId",
                   "value": "1",
                   "type": "text"
                 }
@@ -5303,15 +5416,111 @@
           "name": "Update Family Member",
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"John Doe Sr. Updated\",\n  \"contactNumber\": \"9876543211\",\n  \"email\": \"john.sr.updated@example.com\",\n  \"fullAddress\": \"123 Main Street, City, State 12345\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"relationTypeId\": 1\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fullName",
+                  "value": "John Doe Sr. Updated",
+                  "type": "text"
+                },
+                {
+                  "key": "contactNumber",
+                  "value": "9876543211",
+                  "type": "text"
+                },
+                {
+                  "key": "alternateContactNumber",
+                  "value": "9000000000",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "john.sr.updated@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "instagram",
+                  "value": "https://instagram.com/john_family_updated",
+                  "type": "text"
+                },
+                {
+                  "key": "facebook",
+                  "value": "https://facebook.com/john.family.updated",
+                  "type": "text"
+                },
+                {
+                  "key": "fullAddress",
+                  "value": "123 Main Street, City, State 12345",
+                  "type": "text"
+                },
+                {
+                  "key": "aadhaarNumber",
+                  "value": "123456789012",
+                  "type": "text"
+                },
+                {
+                  "key": "voterIdNumber",
+                  "value": "WB/12/123/123456",
+                  "type": "text"
+                },
+                {
+                  "key": "relationTypeId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "relationshipName",
+                  "value": "Father",
+                  "type": "text"
+                },
+                {
+                  "key": "disabilityStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "maritalStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "educationalDetailGroupId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "educationalDetailId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentGroupId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentStatusId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "employmentId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "aadhaarPhoto",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "voterIdProof",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
             },
             "url": {
               "raw": "{{baseUrl}}/api/family-members/:id",
@@ -6540,6 +6749,31 @@
                   "type": "text"
                 },
                 {
+                  "key": "eventSubNameId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "eventAddress",
+                  "value": "12 MG Road, Bengaluru",
+                  "type": "text"
+                },
+                {
+                  "key": "eventReferralPersonName",
+                  "value": "Ravi Kumar",
+                  "type": "text"
+                },
+                {
+                  "key": "referralContactNumber",
+                  "value": "9876543210",
+                  "type": "text"
+                },
+                {
+                  "key": "contactPersonRelationship",
+                  "value": "Brother",
+                  "type": "text"
+                },
+                {
                   "key": "priority",
                   "value": "Normal",
                   "type": "text"
@@ -6607,7 +6841,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventType=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
+              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventType=&eventSubNameId=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -6619,7 +6853,7 @@
                 {
                   "key": "search",
                   "value": "",
-                  "description": "Search across title, description, locationText, eventType, priority"
+                  "description": "Search across title, description, locationText, eventType, priority, eventAddress, eventReferralPersonName, referralContactNumber, contactPersonRelationship"
                 },
                 {
                   "key": "title",
@@ -6630,6 +6864,31 @@
                   "key": "eventType",
                   "value": "",
                   "description": "Filter by event type (partial match)"
+                },
+                {
+                  "key": "eventSubNameId",
+                  "value": "",
+                  "description": "Filter by event sub name id"
+                },
+                {
+                  "key": "eventAddress",
+                  "value": "",
+                  "description": "Filter by event address (partial match)"
+                },
+                {
+                  "key": "eventReferralPersonName",
+                  "value": "",
+                  "description": "Filter by referral person name (partial match)"
+                },
+                {
+                  "key": "referralContactNumber",
+                  "value": "",
+                  "description": "Filter by referral contact number (partial match)"
+                },
+                {
+                  "key": "contactPersonRelationship",
+                  "value": "",
+                  "description": "Filter by contact person relationship (partial match)"
                 },
                 {
                   "key": "priority",
@@ -6754,6 +7013,31 @@
                 {
                   "key": "priority",
                   "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "eventSubNameId",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "eventAddress",
+                  "value": "14 Church Street, Bengaluru",
+                  "type": "text"
+                },
+                {
+                  "key": "eventReferralPersonName",
+                  "value": "Anita",
+                  "type": "text"
+                },
+                {
+                  "key": "referralContactNumber",
+                  "value": "9988776655",
+                  "type": "text"
+                },
+                {
+                  "key": "contactPersonRelationship",
+                  "value": "Cousin",
                   "type": "text"
                 },
                 {

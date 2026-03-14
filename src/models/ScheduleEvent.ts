@@ -3,15 +3,23 @@ import {
   DataTypes,
   CreationOptional,
   InferAttributes,
-  InferCreationAttributes
+  InferCreationAttributes,
+  NonAttribute
 } from "sequelize";
 import sequelize from "../config/database";
+import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
+import type MetaEventSubName from "./MetaEventSubName";
 
 class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationAttributes<ScheduleEvent>> {
   declare id: CreationOptional<number>;
   declare title: string;
   declare description: string | null;
   declare eventType: string | null;
+  declare eventSubNameId: number | null;
+  declare eventAddress: string | null;
+  declare eventReferralPersonName: string | null;
+  declare referralContactNumber: string | null;
+  declare contactPersonRelationship: string | null;
   declare priority: string | null;
   declare start: Date;
   declare end: Date;
@@ -26,6 +34,7 @@ class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationA
   declare updatedBy: number | null;
   declare updatedAt: CreationOptional<Date>;
   declare status: CreationOptional<number>;
+  declare eventSubName?: NonAttribute<MetaEventSubName | null>;
 }
 
 ScheduleEvent.init(
@@ -47,6 +56,35 @@ ScheduleEvent.init(
       type: DataTypes.STRING(100),
       allowNull: true,
       field: "event_type"
+    },
+    eventSubNameId: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: "event_sub_name_id"
+    },
+    eventAddress: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      field: "event_address"
+    },
+    eventReferralPersonName: {
+      type: DataTypes.STRING(191),
+      allowNull: true,
+      field: "event_referral_person_name"
+    },
+    referralContactNumber: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      field: "referral_contact_number",
+      set(value: string | null) {
+        const normalized = normalizeOptionalPhoneNumber(value, "referralContactNumber");
+        this.setDataValue("referralContactNumber", normalized);
+      }
+    },
+    contactPersonRelationship: {
+      type: DataTypes.STRING(191),
+      allowNull: true,
+      field: "contact_person_relationship"
     },
     priority: {
       type: DataTypes.STRING(50),

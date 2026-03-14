@@ -9,7 +9,7 @@ import {
   toggleFamilyMemberStatus
 } from "../controllers/familyMemberController";
 import { authenticate } from "../middlewares/authMiddleware";
-import { parseFormData } from "../middlewares/formDataMiddleware";
+import { familyMemberDocumentUpload } from "../middlewares/familyMemberUploadMiddleware";
 
 const router = Router();
 
@@ -18,7 +18,7 @@ const router = Router();
  * @desc    Create a new family member
  * @access  Protected
  */
-router.post("/family-members", authenticate(), parseFormData, createFamilyMember);
+router.post("/family-members", authenticate(), familyMemberDocumentUpload, createFamilyMember);
 
 /**
  * @route   GET /api/family-members
@@ -40,7 +40,7 @@ router.get("/family-members/:id", getFamilyMember);
  * @desc    Update a family member
  * @access  Protected
  */
-router.put("/family-members/:id", authenticate(), updateFamilyMember);
+router.put("/family-members/:id", authenticate(), familyMemberDocumentUpload, updateFamilyMember);
 
 /**
  * @route   PATCH /api/family-members/:id/status

@@ -28,8 +28,11 @@ import MetaOwnershipType from "./MetaOwnershipType";
 import MetaGenderOption from "./MetaGenderOption";
 import MetaDesignation from "./MetaDesignation";
 import MetaMaritalStatus from "./MetaMaritalStatus";
+import MetaResidenceType from "./MetaResidenceType";
+import MetaFamilyGod from "./MetaFamilyGod";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
+import MetaEventType from "./MetaEventType";
 import MetaEmployment from "./MetaEmployment";
 import MetaEmploymentGroup from "./MetaEmploymentGroup";
 import MetaEmploymentStatus from "./MetaEmploymentStatus";
@@ -65,6 +68,7 @@ import ComplaintStatusHistory from "./ComplaintStatusHistory";
 import ComplaintStatusHistoryMedia from "./ComplaintStatusHistoryMedia";
 import ScheduleEvent from "./ScheduleEvent";
 import ScheduleEventMedia from "./ScheduleEventMedia";
+import MetaEventSubName from "./MetaEventSubName";
 import MetaFieldType from "./MetaFieldType";
 import MetaInputFormat from "./MetaInputFormat";
 import Form from "./Form";
@@ -129,9 +133,67 @@ const establishAssociations = (): void => {
   User.hasMany(FamilyMember, { foreignKey: "userId", as: "familyMembers" });
   FamilyMember.belongsTo(MetaRelationType, { foreignKey: "relationTypeId", as: "relationType" });
   MetaRelationType.hasMany(FamilyMember, { foreignKey: "relationTypeId", as: "familyMembers" });
+  FamilyMember.belongsTo(MetaDisabilityStatus, {
+    foreignKey: "disabilityStatusId",
+    as: "disabilityStatus"
+  });
+  MetaDisabilityStatus.hasMany(FamilyMember, {
+    foreignKey: "disabilityStatusId",
+    as: "familyMembers"
+  });
+  FamilyMember.belongsTo(MetaMaritalStatus, {
+    foreignKey: "maritalStatusId",
+    as: "maritalStatus"
+  });
+  MetaMaritalStatus.hasMany(FamilyMember, {
+    foreignKey: "maritalStatusId",
+    as: "familyMembers"
+  });
+  FamilyMember.belongsTo(MetaEducationalDetailGroup, {
+    foreignKey: "educationalDetailGroupId",
+    as: "educationalDetailGroup"
+  });
+  MetaEducationalDetailGroup.hasMany(FamilyMember, {
+    foreignKey: "educationalDetailGroupId",
+    as: "familyMembers"
+  });
+  FamilyMember.belongsTo(MetaEducationalDetail, {
+    foreignKey: "educationalDetailId",
+    as: "educationalDetail"
+  });
+  MetaEducationalDetail.hasMany(FamilyMember, {
+    foreignKey: "educationalDetailId",
+    as: "familyMembers"
+  });
+  FamilyMember.belongsTo(MetaEmploymentGroup, {
+    foreignKey: "employmentGroupId",
+    as: "employmentGroup"
+  });
+  MetaEmploymentGroup.hasMany(FamilyMember, {
+    foreignKey: "employmentGroupId",
+    as: "familyMembers"
+  });
+  FamilyMember.belongsTo(MetaEmploymentStatus, {
+    foreignKey: "employmentStatusId",
+    as: "employmentStatus"
+  });
+  MetaEmploymentStatus.hasMany(FamilyMember, {
+    foreignKey: "employmentStatusId",
+    as: "familyMembers"
+  });
+  FamilyMember.belongsTo(MetaEmployment, {
+    foreignKey: "employmentId",
+    as: "employment"
+  });
+  MetaEmployment.hasMany(FamilyMember, {
+    foreignKey: "employmentId",
+    as: "familyMembers"
+  });
 
   Event.hasMany(EventMedia, { foreignKey: "eventId", as: "media" });
   EventMedia.belongsTo(Event, { foreignKey: "eventId", as: "event" });
+  Event.belongsTo(MetaEventType, { foreignKey: "eventTypeId", as: "eventType" });
+  MetaEventType.hasMany(Event, { foreignKey: "eventTypeId", as: "events" });
 
   ScheduleEvent.hasMany(ScheduleEventMedia, {
     foreignKey: "scheduleEventId",
@@ -140,6 +202,14 @@ const establishAssociations = (): void => {
   ScheduleEventMedia.belongsTo(ScheduleEvent, {
     foreignKey: "scheduleEventId",
     as: "scheduleEvent"
+  });
+  ScheduleEvent.belongsTo(MetaEventSubName, {
+    foreignKey: "eventSubNameId",
+    as: "eventSubName"
+  });
+  MetaEventSubName.hasMany(ScheduleEvent, {
+    foreignKey: "eventSubNameId",
+    as: "scheduleEvents"
   });
 
   Event.hasMany(EventRegistration, { foreignKey: "eventId", as: "registrations" });
@@ -376,6 +446,24 @@ const establishAssociations = (): void => {
   });
   MetaMaritalStatus.hasMany(UserProfile, {
     foreignKey: "maritalStatusId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaResidenceType, {
+    foreignKey: "residenceTypeId",
+    as: "residenceType"
+  });
+  MetaResidenceType.hasMany(UserProfile, {
+    foreignKey: "residenceTypeId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaFamilyGod, {
+    foreignKey: "familyGodId",
+    as: "familyGod"
+  });
+  MetaFamilyGod.hasMany(UserProfile, {
+    foreignKey: "familyGodId",
     as: "userProfiles"
   });
 

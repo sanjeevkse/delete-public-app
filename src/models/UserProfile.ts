@@ -21,6 +21,8 @@ import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMainCaste from "./MetaMainCaste";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
 import type MetaComplaintDepartment from "./MetaComplaintDepartment";
+import type MetaResidenceType from "./MetaResidenceType";
+import type MetaFamilyGod from "./MetaFamilyGod";
 import type MetaRelationType from "./MetaRelationType";
 import type MetaReligion from "./MetaReligion";
 import type MetaSubCaste from "./MetaSubCaste";
@@ -60,6 +62,9 @@ class UserProfile extends Model<
   declare employmentTypeId: CreationOptional<number | null>;
   declare relationshipTypeId: CreationOptional<number | null>;
   declare relationshipName: CreationOptional<string | null>;
+  declare residenceTypeId: CreationOptional<number | null>;
+  declare nativePlace: CreationOptional<string | null>;
+  declare familyGodId: CreationOptional<number | null>;
   declare doorNumber: CreationOptional<string | null>;
   declare floorId: CreationOptional<number | null>;
   declare serviceConservancyRoad: CreationOptional<string | null>;
@@ -113,6 +118,8 @@ class UserProfile extends Model<
   declare employmentGroup?: NonAttribute<MetaEmploymentGroup | null>;
   declare employment?: NonAttribute<MetaEmployment | null>;
   declare maritalStatus?: NonAttribute<MetaMaritalStatus | null>;
+  declare residenceType?: NonAttribute<MetaResidenceType | null>;
+  declare familyGod?: NonAttribute<MetaFamilyGod | null>;
   declare relationshipType?: NonAttribute<MetaRelationType | null>;
   declare floor?: NonAttribute<MetaFloor | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
@@ -273,6 +280,21 @@ UserProfile.init(
     relationshipName: {
       field: "relationship_name",
       type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    residenceTypeId: {
+      field: "residence_type_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    nativePlace: {
+      field: "native_place",
+      type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    familyGodId: {
+      field: "family_god_id",
+      type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },
     doorNumber: {

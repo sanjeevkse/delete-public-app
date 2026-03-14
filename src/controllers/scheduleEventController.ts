@@ -17,6 +17,7 @@ import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import ScheduleEvent from "../models/ScheduleEvent";
 import ScheduleEventMedia from "../models/ScheduleEventMedia";
+import MetaEventSubName from "../models/MetaEventSubName";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import { MediaType } from "../types/enums";
 import sequelize from "../config/database";
@@ -25,6 +26,12 @@ const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updated
 const excludeMediaFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
 
 const baseScheduleEventInclude = [
+  {
+    model: MetaEventSubName,
+    as: "eventSubName",
+    attributes: ["id", "dispName"],
+    required: false
+  },
   {
     model: ScheduleEventMedia,
     as: "media",
@@ -97,6 +104,17 @@ const parseOptionalStatus = (value: unknown): number | undefined => {
   return parsed;
 };
 
+const parseOptionalPositiveInteger = (value: unknown, field: string): number | undefined => {
+  const parsed = parseOptionalNumber(value, field);
+  if (parsed === undefined) {
+    return undefined;
+  }
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${field} must be a positive integer`);
+  }
+  return parsed;
+};
+
 export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
 
@@ -145,6 +163,11 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
 
   let description: string | null = null;
   let eventType: string | null = null;
+  let eventSubNameId: number | null = null;
+  let eventAddress: string | null = null;
+  let eventReferralPersonName: string | null = null;
+  let referralContactNumber: string | null = null;
+  let contactPersonRelationship: string | null = null;
   let priority: string | null = null;
   let locationText: string | null = null;
   let allDay: boolean | undefined;
@@ -159,6 +182,46 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     eventType = parseOptionalString(req.body?.eventType, "eventType");
   } catch (error) {
     validationErrors.push({ field: "eventType", message: (error as Error).message });
+  }
+
+  try {
+    const parsedEventSubNameId = parseOptionalPositiveInteger(
+      req.body?.eventSubNameId ?? req.body?.event_sub_name_id,
+      "eventSubNameId"
+    );
+    eventSubNameId = parsedEventSubNameId ?? null;
+  } catch (error) {
+    validationErrors.push({ field: "eventSubNameId", message: (error as Error).message });
+  }
+
+  try {
+    eventAddress = parseOptionalString(req.body?.eventAddress, "eventAddress");
+  } catch (error) {
+    validationErrors.push({ field: "eventAddress", message: (error as Error).message });
+  }
+
+  try {
+    eventReferralPersonName = parseOptionalString(
+      req.body?.eventReferralPersonName,
+      "eventReferralPersonName"
+    );
+  } catch (error) {
+    validationErrors.push({ field: "eventReferralPersonName", message: (error as Error).message });
+  }
+
+  try {
+    referralContactNumber = parseOptionalString(req.body?.referralContactNumber, "referralContactNumber");
+  } catch (error) {
+    validationErrors.push({ field: "referralContactNumber", message: (error as Error).message });
+  }
+
+  try {
+    contactPersonRelationship = parseOptionalString(
+      req.body?.contactPersonRelationship,
+      "contactPersonRelationship"
+    );
+  } catch (error) {
+    validationErrors.push({ field: "contactPersonRelationship", message: (error as Error).message });
   }
 
   try {
@@ -201,6 +264,17 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     return sendValidationError(res, "Validation failed", validationErrors);
   }
 
+  if (eventSubNameId !== null) {
+    const eventSubName = await MetaEventSubName.findByPk(eventSubNameId, {
+      attributes: ["id"]
+    });
+    if (!eventSubName) {
+      return sendValidationError(res, "Validation failed", [
+        { field: "eventSubNameId", message: "Invalid eventSubNameId" }
+      ]);
+    }
+  }
+
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : [];
 
   const created = await sequelize.transaction(async (transaction) => {
@@ -209,6 +283,11 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
         title: title as string,
         description,
         eventType,
+        eventSubNameId,
+        eventAddress,
+        eventReferralPersonName,
+        referralContactNumber,
+        contactPersonRelationship,
         priority,
         start: start as Date,
         end: end as Date,
@@ -259,6 +338,11 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
 
   let title: string | null = null;
   let eventType: string | null = null;
+  let eventSubNameId: number | undefined;
+  let eventAddress: string | null = null;
+  let eventReferralPersonName: string | null = null;
+  let referralContactNumber: string | null = null;
+  let contactPersonRelationship: string | null = null;
   let priority: string | null = null;
   let locationText: string | null = null;
   let searchTerm: string | null = null;
@@ -282,6 +366,45 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     eventType = parseOptionalString(req.query.eventType, "eventType");
   } catch (error) {
     validationErrors.push({ field: "eventType", message: (error as Error).message });
+  }
+
+  try {
+    eventSubNameId = parseOptionalPositiveInteger(req.query.eventSubNameId, "eventSubNameId");
+  } catch (error) {
+    validationErrors.push({ field: "eventSubNameId", message: (error as Error).message });
+  }
+
+  try {
+    eventAddress = parseOptionalString(req.query.eventAddress, "eventAddress");
+  } catch (error) {
+    validationErrors.push({ field: "eventAddress", message: (error as Error).message });
+  }
+
+  try {
+    eventReferralPersonName = parseOptionalString(
+      req.query.eventReferralPersonName,
+      "eventReferralPersonName"
+    );
+  } catch (error) {
+    validationErrors.push({ field: "eventReferralPersonName", message: (error as Error).message });
+  }
+
+  try {
+    referralContactNumber = parseOptionalString(
+      req.query.referralContactNumber,
+      "referralContactNumber"
+    );
+  } catch (error) {
+    validationErrors.push({ field: "referralContactNumber", message: (error as Error).message });
+  }
+
+  try {
+    contactPersonRelationship = parseOptionalString(
+      req.query.contactPersonRelationship,
+      "contactPersonRelationship"
+    );
+  } catch (error) {
+    validationErrors.push({ field: "contactPersonRelationship", message: (error as Error).message });
   }
 
   try {
@@ -372,6 +495,26 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     filters.push({ priority: { [Op.like]: `%${priority}%` } });
   }
 
+  if (eventSubNameId !== undefined) {
+    filters.push({ eventSubNameId });
+  }
+
+  if (eventAddress) {
+    filters.push({ eventAddress: { [Op.like]: `%${eventAddress}%` } });
+  }
+
+  if (eventReferralPersonName) {
+    filters.push({ eventReferralPersonName: { [Op.like]: `%${eventReferralPersonName}%` } });
+  }
+
+  if (referralContactNumber) {
+    filters.push({ referralContactNumber: { [Op.like]: `%${referralContactNumber}%` } });
+  }
+
+  if (contactPersonRelationship) {
+    filters.push({ contactPersonRelationship: { [Op.like]: `%${contactPersonRelationship}%` } });
+  }
+
   if (locationText) {
     filters.push({ locationText: { [Op.like]: `%${locationText}%` } });
   }
@@ -421,7 +564,11 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
         { description: { [Op.like]: `%${searchTerm}%` } },
         { locationText: { [Op.like]: `%${searchTerm}%` } },
         { eventType: { [Op.like]: `%${searchTerm}%` } },
-        { priority: { [Op.like]: `%${searchTerm}%` } }
+        { priority: { [Op.like]: `%${searchTerm}%` } },
+        { eventAddress: { [Op.like]: `%${searchTerm}%` } },
+        { eventReferralPersonName: { [Op.like]: `%${searchTerm}%` } },
+        { referralContactNumber: { [Op.like]: `%${searchTerm}%` } },
+        { contactPersonRelationship: { [Op.like]: `%${searchTerm}%` } }
       ]
     });
   }
@@ -510,6 +657,59 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
       updates.eventType = parseOptionalString(req.body.eventType, "eventType");
     } catch (error) {
       validationErrors.push({ field: "eventType", message: (error as Error).message });
+    }
+  }
+
+  if (req.body?.eventSubNameId !== undefined || req.body?.event_sub_name_id !== undefined) {
+    try {
+      const parsedEventSubNameId = parseOptionalPositiveInteger(
+        req.body?.eventSubNameId ?? req.body?.event_sub_name_id,
+        "eventSubNameId"
+      );
+      updates.eventSubNameId = parsedEventSubNameId ?? null;
+    } catch (error) {
+      validationErrors.push({ field: "eventSubNameId", message: (error as Error).message });
+    }
+  }
+
+  if (req.body?.eventAddress !== undefined) {
+    try {
+      updates.eventAddress = parseOptionalString(req.body.eventAddress, "eventAddress");
+    } catch (error) {
+      validationErrors.push({ field: "eventAddress", message: (error as Error).message });
+    }
+  }
+
+  if (req.body?.eventReferralPersonName !== undefined) {
+    try {
+      updates.eventReferralPersonName = parseOptionalString(
+        req.body.eventReferralPersonName,
+        "eventReferralPersonName"
+      );
+    } catch (error) {
+      validationErrors.push({ field: "eventReferralPersonName", message: (error as Error).message });
+    }
+  }
+
+  if (req.body?.referralContactNumber !== undefined) {
+    try {
+      updates.referralContactNumber = parseOptionalString(
+        req.body.referralContactNumber,
+        "referralContactNumber"
+      );
+    } catch (error) {
+      validationErrors.push({ field: "referralContactNumber", message: (error as Error).message });
+    }
+  }
+
+  if (req.body?.contactPersonRelationship !== undefined) {
+    try {
+      updates.contactPersonRelationship = parseOptionalString(
+        req.body.contactPersonRelationship,
+        "contactPersonRelationship"
+      );
+    } catch (error) {
+      validationErrors.push({ field: "contactPersonRelationship", message: (error as Error).message });
     }
   }
 
@@ -628,6 +828,20 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
 
   if (validationErrors.length > 0) {
     return sendValidationError(res, "Validation failed", validationErrors);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, "eventSubNameId")) {
+    const requestedEventSubNameId = updates.eventSubNameId as number | null;
+    if (requestedEventSubNameId !== null && requestedEventSubNameId !== undefined) {
+      const eventSubName = await MetaEventSubName.findByPk(requestedEventSubNameId, {
+        attributes: ["id"]
+      });
+      if (!eventSubName) {
+        return sendValidationError(res, "Validation failed", [
+          { field: "eventSubNameId", message: "Invalid eventSubNameId" }
+        ]);
+      }
+    }
   }
 
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : [];
