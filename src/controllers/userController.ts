@@ -1059,6 +1059,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
         as: "accessProfiles",
         where: { status: 1 },
         required: false,
+        separate: true,
         include: [
           { association: "accessRole" },
           { association: "wardNumber" },
@@ -1135,6 +1136,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
         as: "accessProfiles",
         where: { status: 1 },
         required: false,
+        separate: true,
         include: [
           { association: "accessRole" },
           { association: "wardNumber" },
@@ -1146,6 +1148,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       {
         association: "familyMembers",
         required: false,
+        separate: true,
         include: [
           {
             association: "relationType",
@@ -1165,6 +1168,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
         association: "eventRegistrations",
         where: { status: 1 },
         required: false,
+        separate: true,
         include: [
           {
             association: "event",
@@ -1187,6 +1191,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       {
         association: "schemeApplications",
         required: false,
+        separate: true,
         attributes: { exclude: ["createdBy", "updatedBy"] },
         include: [
           {
@@ -1209,6 +1214,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       {
         association: "jobApplications",
         required: false,
+        separate: true,
         attributes: [
           "id",
           "submittedFor",
@@ -1228,6 +1234,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       {
         association: "posts",
         required: false,
+        separate: true,
         attributes: ["id", "description", "tags", "status", "createdAt"],
         include: [
           {
@@ -1251,6 +1258,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       {
         association: "formSubmissions",
         required: false,
+        separate: true,
         include: [
           {
             association: "formEvent",
