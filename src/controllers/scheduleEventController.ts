@@ -17,7 +17,7 @@ import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import ScheduleEvent from "../models/ScheduleEvent";
 import ScheduleEventMedia from "../models/ScheduleEventMedia";
-import MetaEventSubName from "../models/MetaEventSubName";
+import MetaEventType from "../models/MetaEventType";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import { MediaType } from "../types/enums";
 import sequelize from "../config/database";
@@ -27,8 +27,8 @@ const excludeMediaFields = ["createdBy", "updatedBy", "status", "createdAt", "up
 
 const baseScheduleEventInclude = [
   {
-    model: MetaEventSubName,
-    as: "eventSubName",
+    model: MetaEventType,
+    as: "eventType",
     attributes: ["id", "dispName"],
     required: false
   },
@@ -162,8 +162,8 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
   }
 
   let description: string | null = null;
-  let eventType: string | null = null;
-  let eventSubNameId: number | null = null;
+  let eventTypeId: number | null = null;
+  let eventSubName: string | null = null;
   let eventAddress: string | null = null;
   let eventReferralPersonName: string | null = null;
   let referralContactNumber: string | null = null;
@@ -179,19 +179,22 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
   }
 
   try {
-    eventType = parseOptionalString(req.body?.eventType, "eventType");
+    const parsedEventTypeId = parseOptionalPositiveInteger(
+      req.body?.eventTypeId ?? req.body?.event_type_id ?? req.body?.eventType,
+      "eventTypeId"
+    );
+    eventTypeId = parsedEventTypeId ?? null;
   } catch (error) {
-    validationErrors.push({ field: "eventType", message: (error as Error).message });
+    validationErrors.push({ field: "eventTypeId", message: (error as Error).message });
   }
 
   try {
-    const parsedEventSubNameId = parseOptionalPositiveInteger(
-      req.body?.eventSubNameId ?? req.body?.event_sub_name_id,
-      "eventSubNameId"
+    eventSubName = parseOptionalString(
+      req.body?.eventSubName ?? req.body?.event_sub_name,
+      "eventSubName"
     );
-    eventSubNameId = parsedEventSubNameId ?? null;
   } catch (error) {
-    validationErrors.push({ field: "eventSubNameId", message: (error as Error).message });
+    validationErrors.push({ field: "eventSubName", message: (error as Error).message });
   }
 
   try {
@@ -264,13 +267,13 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     return sendValidationError(res, "Validation failed", validationErrors);
   }
 
-  if (eventSubNameId !== null) {
-    const eventSubName = await MetaEventSubName.findByPk(eventSubNameId, {
+  if (eventTypeId !== null) {
+    const eventType = await MetaEventType.findByPk(eventTypeId, {
       attributes: ["id"]
     });
-    if (!eventSubName) {
+    if (!eventType) {
       return sendValidationError(res, "Validation failed", [
-        { field: "eventSubNameId", message: "Invalid eventSubNameId" }
+        { field: "eventTypeId", message: "Invalid eventTypeId" }
       ]);
     }
   }
@@ -282,8 +285,8 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
       {
         title: title as string,
         description,
-        eventType,
-        eventSubNameId,
+        eventTypeId,
+        eventSubName,
         eventAddress,
         eventReferralPersonName,
         referralContactNumber,
@@ -337,8 +340,8 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
   const filters: WhereOptions[] = [{ status: 1 }];
 
   let title: string | null = null;
-  let eventType: string | null = null;
-  let eventSubNameId: number | undefined;
+  let eventTypeId: number | undefined;
+  let eventSubName: string | null = null;
   let eventAddress: string | null = null;
   let eventReferralPersonName: string | null = null;
   let referralContactNumber: string | null = null;
@@ -363,15 +366,21 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
   }
 
   try {
-    eventType = parseOptionalString(req.query.eventType, "eventType");
+    eventTypeId = parseOptionalPositiveInteger(
+      req.query.eventTypeId ?? req.query.event_type_id ?? req.query.eventType,
+      "eventTypeId"
+    );
   } catch (error) {
-    validationErrors.push({ field: "eventType", message: (error as Error).message });
+    validationErrors.push({ field: "eventTypeId", message: (error as Error).message });
   }
 
   try {
-    eventSubNameId = parseOptionalPositiveInteger(req.query.eventSubNameId, "eventSubNameId");
+    eventSubName = parseOptionalString(
+      req.query.eventSubName ?? req.query.event_sub_name,
+      "eventSubName"
+    );
   } catch (error) {
-    validationErrors.push({ field: "eventSubNameId", message: (error as Error).message });
+    validationErrors.push({ field: "eventSubName", message: (error as Error).message });
   }
 
   try {
@@ -487,16 +496,16 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     filters.push({ title: { [Op.like]: `%${title}%` } });
   }
 
-  if (eventType) {
-    filters.push({ eventType: { [Op.like]: `%${eventType}%` } });
+  if (eventTypeId !== undefined) {
+    filters.push({ eventTypeId });
   }
 
   if (priority) {
     filters.push({ priority: { [Op.like]: `%${priority}%` } });
   }
 
-  if (eventSubNameId !== undefined) {
-    filters.push({ eventSubNameId });
+  if (eventSubName) {
+    filters.push({ eventSubName: { [Op.like]: `%${eventSubName}%` } });
   }
 
   if (eventAddress) {
@@ -562,8 +571,8 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
       [Op.or]: [
         { title: { [Op.like]: `%${searchTerm}%` } },
         { description: { [Op.like]: `%${searchTerm}%` } },
+        { eventSubName: { [Op.like]: `%${searchTerm}%` } },
         { locationText: { [Op.like]: `%${searchTerm}%` } },
-        { eventType: { [Op.like]: `%${searchTerm}%` } },
         { priority: { [Op.like]: `%${searchTerm}%` } },
         { eventAddress: { [Op.like]: `%${searchTerm}%` } },
         { eventReferralPersonName: { [Op.like]: `%${searchTerm}%` } },
@@ -575,7 +584,7 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
 
   const sortColumn = validateSortColumn(
     req.query.sortColumn ?? req.query.sortBy,
-    ["start", "end", "title", "createdAt", "updatedAt", "priority", "eventType"],
+    ["start", "end", "title", "createdAt", "updatedAt", "priority", "eventTypeId"],
     "start"
   );
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
@@ -652,23 +661,30 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     }
   }
 
-  if (req.body?.eventType !== undefined) {
+  if (
+    req.body?.eventTypeId !== undefined ||
+    req.body?.event_type_id !== undefined ||
+    req.body?.eventType !== undefined
+  ) {
     try {
-      updates.eventType = parseOptionalString(req.body.eventType, "eventType");
+      const parsedEventTypeId = parseOptionalPositiveInteger(
+        req.body?.eventTypeId ?? req.body?.event_type_id ?? req.body?.eventType,
+        "eventTypeId"
+      );
+      updates.eventTypeId = parsedEventTypeId ?? null;
     } catch (error) {
-      validationErrors.push({ field: "eventType", message: (error as Error).message });
+      validationErrors.push({ field: "eventTypeId", message: (error as Error).message });
     }
   }
 
-  if (req.body?.eventSubNameId !== undefined || req.body?.event_sub_name_id !== undefined) {
+  if (req.body?.eventSubName !== undefined || req.body?.event_sub_name !== undefined) {
     try {
-      const parsedEventSubNameId = parseOptionalPositiveInteger(
-        req.body?.eventSubNameId ?? req.body?.event_sub_name_id,
-        "eventSubNameId"
+      updates.eventSubName = parseOptionalString(
+        req.body?.eventSubName ?? req.body?.event_sub_name,
+        "eventSubName"
       );
-      updates.eventSubNameId = parsedEventSubNameId ?? null;
     } catch (error) {
-      validationErrors.push({ field: "eventSubNameId", message: (error as Error).message });
+      validationErrors.push({ field: "eventSubName", message: (error as Error).message });
     }
   }
 
@@ -830,15 +846,15 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     return sendValidationError(res, "Validation failed", validationErrors);
   }
 
-  if (Object.prototype.hasOwnProperty.call(updates, "eventSubNameId")) {
-    const requestedEventSubNameId = updates.eventSubNameId as number | null;
-    if (requestedEventSubNameId !== null && requestedEventSubNameId !== undefined) {
-      const eventSubName = await MetaEventSubName.findByPk(requestedEventSubNameId, {
+  if (Object.prototype.hasOwnProperty.call(updates, "eventTypeId")) {
+    const requestedEventTypeId = updates.eventTypeId as number | null;
+    if (requestedEventTypeId !== null && requestedEventTypeId !== undefined) {
+      const eventType = await MetaEventType.findByPk(requestedEventTypeId, {
         attributes: ["id"]
       });
-      if (!eventSubName) {
+      if (!eventType) {
         return sendValidationError(res, "Validation failed", [
-          { field: "eventSubNameId", message: "Invalid eventSubNameId" }
+          { field: "eventTypeId", message: "Invalid eventTypeId" }
         ]);
       }
     }

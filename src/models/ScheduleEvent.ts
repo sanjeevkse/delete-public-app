@@ -8,14 +8,14 @@ import {
 } from "sequelize";
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
-import type MetaEventSubName from "./MetaEventSubName";
+import type MetaEventType from "./MetaEventType";
 
 class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationAttributes<ScheduleEvent>> {
   declare id: CreationOptional<number>;
   declare title: string;
   declare description: string | null;
-  declare eventType: string | null;
-  declare eventSubNameId: number | null;
+  declare eventTypeId: number | null;
+  declare eventSubName: string | null;
   declare eventAddress: string | null;
   declare eventReferralPersonName: string | null;
   declare referralContactNumber: string | null;
@@ -34,7 +34,7 @@ class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationA
   declare updatedBy: number | null;
   declare updatedAt: CreationOptional<Date>;
   declare status: CreationOptional<number>;
-  declare eventSubName?: NonAttribute<MetaEventSubName | null>;
+  declare eventType?: NonAttribute<MetaEventType | null>;
 }
 
 ScheduleEvent.init(
@@ -52,15 +52,15 @@ ScheduleEvent.init(
       type: DataTypes.TEXT,
       allowNull: true
     },
-    eventType: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      field: "event_type"
-    },
-    eventSubNameId: {
+    eventTypeId: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true,
-      field: "event_sub_name_id"
+      field: "event_type_id"
+    },
+    eventSubName: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "event_sub_name"
     },
     eventAddress: {
       type: DataTypes.STRING(255),

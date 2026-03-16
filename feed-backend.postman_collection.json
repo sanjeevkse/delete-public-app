@@ -6744,13 +6744,13 @@
                   "type": "text"
                 },
                 {
-                  "key": "eventType",
-                  "value": "Appointment",
+                  "key": "eventTypeId",
+                  "value": "1",
                   "type": "text"
                 },
                 {
-                  "key": "eventSubNameId",
-                  "value": "1",
+                  "key": "eventSubName",
+                  "value": "Pet Care",
                   "type": "text"
                 },
                 {
@@ -6841,7 +6841,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventType=&eventSubNameId=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
+              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventTypeId=&eventSubName=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -6853,7 +6853,7 @@
                 {
                   "key": "search",
                   "value": "",
-                  "description": "Search across title, description, locationText, eventType, priority, eventAddress, eventReferralPersonName, referralContactNumber, contactPersonRelationship"
+                  "description": "Search across title, description, eventSubName, locationText, priority, eventAddress, eventReferralPersonName, referralContactNumber, contactPersonRelationship"
                 },
                 {
                   "key": "title",
@@ -6861,14 +6861,14 @@
                   "description": "Filter by title (partial match)"
                 },
                 {
-                  "key": "eventType",
+                  "key": "eventTypeId",
                   "value": "",
-                  "description": "Filter by event type (partial match)"
+                  "description": "Filter by event type id"
                 },
                 {
-                  "key": "eventSubNameId",
+                  "key": "eventSubName",
                   "value": "",
-                  "description": "Filter by event sub name id"
+                  "description": "Filter by event sub name (partial match)"
                 },
                 {
                   "key": "eventAddress",
@@ -6953,7 +6953,7 @@
                 {
                   "key": "sortColumn",
                   "value": "start",
-                  "description": "Sort by: start, end, title, createdAt, updatedAt, priority, eventType"
+                  "description": "Sort by: start, end, title, createdAt, updatedAt, priority, eventTypeId"
                 }
               ]
             }
@@ -7016,8 +7016,13 @@
                   "type": "text"
                 },
                 {
-                  "key": "eventSubNameId",
+                  "key": "eventTypeId",
                   "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "eventSubName",
+                  "value": "Follow-up",
                   "type": "text"
                 },
                 {

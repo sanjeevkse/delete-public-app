@@ -203,14 +203,8 @@ const establishAssociations = (): void => {
     foreignKey: "scheduleEventId",
     as: "scheduleEvent"
   });
-  ScheduleEvent.belongsTo(MetaEventSubName, {
-    foreignKey: "eventSubNameId",
-    as: "eventSubName"
-  });
-  MetaEventSubName.hasMany(ScheduleEvent, {
-    foreignKey: "eventSubNameId",
-    as: "scheduleEvents"
-  });
+  ScheduleEvent.belongsTo(MetaEventType, { foreignKey: "eventTypeId", as: "eventType" });
+  MetaEventType.hasMany(ScheduleEvent, { foreignKey: "eventTypeId", as: "scheduleEvents" });
 
   Event.hasMany(EventRegistration, { foreignKey: "eventId", as: "registrations" });
   EventRegistration.belongsTo(Event, { foreignKey: "eventId", as: "event" });

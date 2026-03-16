@@ -240,6 +240,8 @@ export const requestOtp = asyncHandler(async (req: Request, res: Response) => {
     attemptsLeft: attemptsAllowance
   });
 
+  console.log("OTP", otp)
+
   try {
     await sendLoginOtp({ contactNumber, otp });
   } catch (error) {
