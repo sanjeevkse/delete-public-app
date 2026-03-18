@@ -861,26 +861,6 @@ export const listUsersPendingApproval = asyncHandler(
       ];
     }
 
-    // Apply role hierarchy filter
-    let roleHierarchyFilter: { [Op.in]: number[] } | undefined;
-    if (loggedInUser?.id) {
-      const roleIds =
-        loggedInUser.roleIds && loggedInUser.roleIds.length > 0
-          ? loggedInUser.roleIds
-          : await getRoleIdsByNames(loggedInUser.roles ?? []);
-
-      if (roleIds.length > 0) {
-        const allDescendantRoleIds: Set<number> = new Set();
-        for (const roleId of roleIds) {
-          const descendantRoles = await getDescendantRoleIds(roleId);
-          descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
-        }
-        if (allDescendantRoleIds.size > 0) {
-          roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
-        }
-      }
-    }
-
     // Apply accessibility filter: only show pending users in accessible zones
     const accessibilityFilter = loggedInUser?.id
       ? await buildUserListingAccessibilityFilter(loggedInUser.id)
@@ -910,11 +890,7 @@ export const listUsersPendingApproval = asyncHandler(
         },
         {
           association: "roles",
-          include: [{ association: "permissions" }],
-          ...(roleHierarchyFilter && {
-            where: { id: roleHierarchyFilter },
-            required: true
-          })
+          include: [{ association: "permissions" }]
         }
       ],
       limit,
@@ -1092,12 +1068,37 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     });
     const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
     const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
-    const canAccess = await canManageUser(
-      loggedInUser.id,
-      loggedInUserRoleIds,
-      targetUserId,
-      targetUserRoles
-    );
+
+    let canAccess = false;
+    if (user.status === 2) {
+      const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
+      if (!accessibilityFilter) {
+        canAccess = true;
+      } else {
+        const conditions = (accessibilityFilter[Op.or] as Array<Record<string, number>>) ?? [];
+        const profile = user.profile as
+          | { wardNumberId?: number | null; boothNumberId?: number | null }
+          | null;
+
+        canAccess =
+          !!profile &&
+          conditions.some((condition) => {
+            const wardMatches =
+              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+            const boothMatches =
+              condition.boothNumberId === undefined ||
+              condition.boothNumberId === profile.boothNumberId;
+            return wardMatches && boothMatches;
+          });
+      }
+    } else {
+      canAccess = await canManageUser(
+        loggedInUser.id,
+        loggedInUserRoleIds,
+        targetUserId,
+        targetUserRoles
+      );
+    }
 
     if (!canAccess) {
       return sendNotFound(res, "User not found or access denied", "user");
@@ -1308,12 +1309,37 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
     });
     const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
     const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
-    const canAccess = await canManageUser(
-      loggedInUser.id,
-      loggedInUserRoleIds,
-      targetUserId,
-      targetUserRoles
-    );
+    let canAccess = false;
+
+    if (user.status === 2) {
+      const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
+      if (!accessibilityFilter) {
+        canAccess = true;
+      } else {
+        const conditions = (accessibilityFilter[Op.or] as Array<Record<string, number>>) ?? [];
+        const profile = user.profile as
+          | { wardNumberId?: number | null; boothNumberId?: number | null }
+          | null;
+
+        canAccess =
+          !!profile &&
+          conditions.some((condition) => {
+            const wardMatches =
+              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+            const boothMatches =
+              condition.boothNumberId === undefined ||
+              condition.boothNumberId === profile.boothNumberId;
+            return wardMatches && boothMatches;
+          });
+      }
+    } else {
+      canAccess = await canManageUser(
+        loggedInUser.id,
+        loggedInUserRoleIds,
+        targetUserId,
+        targetUserRoles
+      );
+    }
 
     if (!canAccess) {
       return sendNotFound(res, "User not found or access denied", "user");
