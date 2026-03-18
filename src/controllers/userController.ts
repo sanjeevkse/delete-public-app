@@ -627,6 +627,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
   }
 
+  const isPendingOnlyFilter =
+    Array.isArray(userStatusFilters) && userStatusFilters.length === 1 && userStatusFilters[0] === 2;
+
   const profileFilters: Record<string, unknown> = {};
   applyRangeFilter(profileFilters, "dateOfBirth", dateOfBirthStart, dateOfBirthEnd);
   applyRangeFilter(profileFilters, "citizenAge", citizenAgeStart, citizenAgeEnd);
@@ -801,7 +804,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       {
         association: "roles",
         include: [{ association: "permissions" }],
-        ...(roleHierarchyFilter && {
+        ...(!isPendingOnlyFilter && roleHierarchyFilter && {
           where: { id: roleHierarchyFilter },
           required: true
         }),
