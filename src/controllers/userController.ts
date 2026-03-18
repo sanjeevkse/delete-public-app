@@ -1075,7 +1075,9 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
       if (!accessibilityFilter) {
         canAccess = true;
       } else {
-        const conditions = (accessibilityFilter[Op.or] as Array<Record<string, number>>) ?? [];
+        const conditions =
+          (Reflect.get(accessibilityFilter, Op.or) as Array<Record<string, number>> | undefined) ??
+          [];
         const profile = user.profile as
           | { wardNumberId?: number | null; boothNumberId?: number | null }
           | null;
@@ -1316,7 +1318,9 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
       if (!accessibilityFilter) {
         canAccess = true;
       } else {
-        const conditions = (accessibilityFilter[Op.or] as Array<Record<string, number>>) ?? [];
+        const conditions =
+          (Reflect.get(accessibilityFilter, Op.or) as Array<Record<string, number>> | undefined) ??
+          [];
         const profile = user.profile as
           | { wardNumberId?: number | null; boothNumberId?: number | null }
           | null;
