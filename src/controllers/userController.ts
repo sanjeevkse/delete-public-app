@@ -48,6 +48,7 @@ import { normalizePhoneNumber } from "../utils/phoneNumber";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 type QueryRecord = Record<string, unknown>;
+type WardBoothCondition = { wardNumberId?: number; boothNumberId?: number };
 
 const isAdminRequester = (user?: AuthenticatedRequest["user"]): boolean => {
   if (!user || !Array.isArray(user.roles)) {
@@ -63,6 +64,13 @@ const firstQueryValue = (value: unknown): unknown => {
     return value.length > 0 ? value[0] : undefined;
   }
   return value;
+};
+
+const getWardBoothConditions = (
+  accessibilityFilter: Record<string, unknown>
+): WardBoothCondition[] => {
+  const conditions = Reflect.get(accessibilityFilter, Op.or) as unknown;
+  return Array.isArray(conditions) ? (conditions as WardBoothCondition[]) : [];
 };
 
 const resolveNestedValue = (source: unknown, segments: string[]): unknown => {
@@ -1393,12 +1401,37 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     });
     const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
     const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
-    const canAccess = await canManageUser(
-      loggedInUser.id,
-      loggedInUserRoleIds,
-      targetUserId,
-      targetUserRoles
-    );
+    let canAccess = false;
+
+    if (user.status === 2) {
+      const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
+      if (!accessibilityFilter) {
+        canAccess = true;
+      } else {
+        const conditions = getWardBoothConditions(accessibilityFilter);
+        const profile = user.profile as
+          | { wardNumberId?: number | null; boothNumberId?: number | null }
+          | null;
+
+        canAccess =
+          !!profile &&
+          conditions.some((condition) => {
+            const wardMatches =
+              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+            const boothMatches =
+              condition.boothNumberId === undefined ||
+              condition.boothNumberId === profile.boothNumberId;
+            return wardMatches && boothMatches;
+          });
+      }
+    } else {
+      canAccess = await canManageUser(
+        loggedInUser.id,
+        loggedInUserRoleIds,
+        targetUserId,
+        targetUserRoles
+      );
+    }
 
     if (!canAccess) {
       throw new ApiError("Access denied: Cannot update this user", 403);
@@ -1522,10 +1555,64 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const updateUserStatus = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.findByPk(req.params.id);
+  const loggedInUser = (req as AuthenticatedRequest).user;
+  const targetUserId = Number(req.params.id);
+  const user = await User.findByPk(req.params.id, {
+    include: [{ model: UserProfile, as: "profile" }, { association: "roles" }]
+  });
 
   if (!user) {
     throw new ApiError("User not found", 404);
+  }
+
+  if (
+    loggedInUser?.id &&
+    loggedInUser.id !== targetUserId &&
+    loggedInUser.roles &&
+    !isAdminRequester(loggedInUser)
+  ) {
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
+    const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
+    let canAccess = false;
+
+    if (user.status === 2) {
+      const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
+      if (!accessibilityFilter) {
+        canAccess = true;
+      } else {
+        const conditions = getWardBoothConditions(accessibilityFilter);
+        const profile = user.profile as
+          | { wardNumberId?: number | null; boothNumberId?: number | null }
+          | null;
+
+        canAccess =
+          !!profile &&
+          conditions.some((condition) => {
+            const wardMatches =
+              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+            const boothMatches =
+              condition.boothNumberId === undefined ||
+              condition.boothNumberId === profile.boothNumberId;
+            return wardMatches && boothMatches;
+          });
+      }
+    } else {
+      canAccess = await canManageUser(
+        loggedInUser.id,
+        loggedInUserRoleIds,
+        targetUserId,
+        targetUserRoles
+      );
+    }
+
+    if (!canAccess) {
+      throw new ApiError("Access denied: Cannot update this user status", 403);
+    }
   }
 
   const action = typeof req.body?.action === "string" ? req.body.action.toLowerCase() : "";
@@ -1620,12 +1707,64 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
 });
 
 export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res: Response) => {
+  const loggedInUser = (req as AuthenticatedRequest).user;
+  const targetUserId = Number(req.params.id);
   const user = await User.findByPk(req.params.id, {
-    include: [{ model: UserProfile, as: "profile" }]
+    include: [{ model: UserProfile, as: "profile" }, { association: "roles" }]
   });
 
   if (!user) {
     throw new ApiError("User not found", 404);
+  }
+
+  if (
+    loggedInUser?.id &&
+    loggedInUser.id !== targetUserId &&
+    loggedInUser.roles &&
+    !isAdminRequester(loggedInUser)
+  ) {
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
+    const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
+    let canAccess = false;
+
+    if (user.status === 2) {
+      const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
+      if (!accessibilityFilter) {
+        canAccess = true;
+      } else {
+        const conditions = getWardBoothConditions(accessibilityFilter);
+        const profile = user.profile as
+          | { wardNumberId?: number | null; boothNumberId?: number | null }
+          | null;
+
+        canAccess =
+          !!profile &&
+          conditions.some((condition) => {
+            const wardMatches =
+              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+            const boothMatches =
+              condition.boothNumberId === undefined ||
+              condition.boothNumberId === profile.boothNumberId;
+            return wardMatches && boothMatches;
+          });
+      }
+    } else {
+      canAccess = await canManageUser(
+        loggedInUser.id,
+        loggedInUserRoleIds,
+        targetUserId,
+        targetUserRoles
+      );
+    }
+
+    if (!canAccess) {
+      throw new ApiError("Access denied: Cannot update posts block status for this user", 403);
+    }
   }
 
   const action = typeof req.body?.action === "string" ? req.body.action.toLowerCase() : "";
@@ -1715,10 +1854,64 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.findByPk(req.params.id);
+  const loggedInUser = (req as AuthenticatedRequest).user;
+  const targetUserId = Number(req.params.id);
+  const user = await User.findByPk(req.params.id, {
+    include: [{ model: UserProfile, as: "profile" }, { association: "roles" }]
+  });
 
   if (!user) {
     return sendNotFound(res, "User not found", "user");
+  }
+
+  if (
+    loggedInUser?.id &&
+    loggedInUser.id !== targetUserId &&
+    loggedInUser.roles &&
+    !isAdminRequester(loggedInUser)
+  ) {
+    const userRoles = await UserRole.findAll({
+      where: { userId: loggedInUser.id },
+      attributes: ["roleId"],
+      raw: true
+    });
+    const loggedInUserRoleIds = userRoles.map((r: any) => r.roleId);
+    const targetUserRoles = user.roles?.map((r: any) => r.id) || [];
+
+    let canAccess = false;
+    if (user.status === 2) {
+      const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
+      if (!accessibilityFilter) {
+        canAccess = true;
+      } else {
+        const conditions = getWardBoothConditions(accessibilityFilter);
+        const profile = user.profile as
+          | { wardNumberId?: number | null; boothNumberId?: number | null }
+          | null;
+
+        canAccess =
+          !!profile &&
+          conditions.some((condition) => {
+            const wardMatches =
+              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+            const boothMatches =
+              condition.boothNumberId === undefined ||
+              condition.boothNumberId === profile.boothNumberId;
+            return wardMatches && boothMatches;
+          });
+      }
+    } else {
+      canAccess = await canManageUser(
+        loggedInUser.id,
+        loggedInUserRoleIds,
+        targetUserId,
+        targetUserRoles
+      );
+    }
+
+    if (!canAccess) {
+      throw new ApiError("Access denied: Cannot delete this user", 403);
+    }
   }
 
   await user.update({ status: 0 });
