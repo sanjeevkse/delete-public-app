@@ -20,6 +20,7 @@ import type MetaFloor from "./MetaFloor";
 import type MetaGenderOption from "./MetaGenderOption";
 import type MetaMainCaste from "./MetaMainCaste";
 import type MetaMaritalStatus from "./MetaMaritalStatus";
+import type MetaMotherTongue from "./MetaMotherTongue";
 import type MetaComplaintDepartment from "./MetaComplaintDepartment";
 import type MetaResidenceType from "./MetaResidenceType";
 import type MetaFamilyGod from "./MetaFamilyGod";
@@ -50,6 +51,7 @@ class UserProfile extends Model<
   declare maritalStatusId: CreationOptional<number | null>;
   declare employmentId: CreationOptional<number | null>;
   declare disabilityStatusId: CreationOptional<number | null>;
+  declare motherTongueId: CreationOptional<number | null>;
   declare religionId: CreationOptional<number | null>;
   declare mainCasteId: CreationOptional<number | null>;
   declare subCasteId: CreationOptional<number | null>;
@@ -111,6 +113,7 @@ class UserProfile extends Model<
   declare educationalDetail?: NonAttribute<MetaEducationalDetail | null>;
   declare educationalDetailGroup?: NonAttribute<MetaEducationalDetailGroup | null>;
   declare disabilityStatus?: NonAttribute<MetaDisabilityStatus | null>;
+  declare motherTongue?: NonAttribute<MetaMotherTongue | null>;
   declare religion?: NonAttribute<MetaReligion | null>;
   declare mainCaste?: NonAttribute<MetaMainCaste | null>;
   declare subCaste?: NonAttribute<MetaSubCaste | null>;
@@ -219,6 +222,11 @@ UserProfile.init(
     },
     disabilityStatusId: {
       field: "disability_status_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    motherTongueId: {
+      field: "mother_tongue_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },

@@ -20,6 +20,7 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "dateOfJoining",
   "maritalStatusId",
   "disabilityStatusId",
+  "motherTongueId",
   "religionId",
   "mainCasteId",
   "subCasteId",

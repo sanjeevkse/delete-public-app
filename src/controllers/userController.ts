@@ -12,6 +12,7 @@ import UserProfile from "../models/UserProfile";
 import UserAccess from "../models/UserAccess";
 import MetaEmployment from "../models/MetaEmployment";
 import MetaEmploymentStatus from "../models/MetaEmploymentStatus";
+import MetaMotherTongue from "../models/MetaMotherTongue";
 import MetaResidenceType from "../models/MetaResidenceType";
 import MetaFamilyGod from "../models/MetaFamilyGod";
 import {
@@ -230,6 +231,7 @@ const USER_PROFILE_INCLUDE = [
   { association: "floor", attributes: ["id", "dispName"], required: false },
   { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
   { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+  { association: "motherTongue", attributes: ["id", "dispName"], required: false },
   { association: "religion", attributes: ["id", "dispName"], required: false },
   { association: "mainCaste", attributes: ["id", "dispName"], required: false },
   { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },
@@ -330,6 +332,21 @@ const validateProfileForeignKeys = async (
       });
       if (!familyGod) {
         throw new ApiError(`Invalid profile.familyGodId: ${familyGodId}`, 400);
+      }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(profileAttributes, "motherTongueId")) {
+    const motherTongueId = parseOptionalPositiveInteger(
+      profileAttributes.motherTongueId,
+      "profile.motherTongueId"
+    );
+    if (motherTongueId !== null) {
+      const motherTongue = await MetaMotherTongue.findByPk(motherTongueId, {
+        attributes: ["id"]
+      });
+      if (!motherTongue) {
+        throw new ApiError(`Invalid profile.motherTongueId: ${motherTongueId}`, 400);
       }
     }
   }
@@ -555,6 +572,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const disabilityStatusFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["disabilityStatusId", "disability_status_id"])
   );
+  const motherTongueFilter = parseNumberFilter(
+    pickQueryValue(queryParams, ["motherTongueId", "mother_tongue_id"])
+  );
   const religionFilter = parseNumberFilter(
     pickQueryValue(queryParams, ["religionId", "religion_id"])
   );
@@ -699,6 +719,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
   if (disabilityStatusFilter !== undefined) {
     profileFilters.disabilityStatusId = disabilityStatusFilter;
+  }
+  if (motherTongueFilter !== undefined) {
+    profileFilters.motherTongueId = motherTongueFilter;
   }
   if (religionFilter !== undefined) {
     profileFilters.religionId = religionFilter;

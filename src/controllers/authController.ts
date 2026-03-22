@@ -80,6 +80,7 @@ const USER_PROFILE_ASSOCIATION_INCLUDE = [
   { association: "floor", attributes: ["id", "dispName"], required: false },
   { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
   { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+  { association: "motherTongue", attributes: ["id", "dispName"], required: false },
   { association: "religion", attributes: ["id", "dispName"], required: false },
   { association: "mainCaste", attributes: ["id", "dispName"], required: false },
   { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },

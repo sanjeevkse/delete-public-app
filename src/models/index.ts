@@ -28,6 +28,7 @@ import MetaOwnershipType from "./MetaOwnershipType";
 import MetaGenderOption from "./MetaGenderOption";
 import MetaDesignation from "./MetaDesignation";
 import MetaMaritalStatus from "./MetaMaritalStatus";
+import MetaMotherTongue from "./MetaMotherTongue";
 import MetaResidenceType from "./MetaResidenceType";
 import MetaFamilyGod from "./MetaFamilyGod";
 import MetaWidowStatus from "./MetaWidowStatus";
@@ -476,6 +477,15 @@ const establishAssociations = (): void => {
   });
   MetaDisabilityStatus.hasMany(UserProfile, {
     foreignKey: "disabilityStatusId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaMotherTongue, {
+    foreignKey: "motherTongueId",
+    as: "motherTongue"
+  });
+  MetaMotherTongue.hasMany(UserProfile, {
+    foreignKey: "motherTongueId",
     as: "userProfiles"
   });
 
@@ -938,6 +948,7 @@ export {
   MetaGenderOption,
   MetaDesignation,
   MetaMaritalStatus,
+  MetaMotherTongue,
   MetaWidowStatus,
   MetaDisabilityStatus,
   MetaReligion,
