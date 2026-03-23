@@ -15,6 +15,7 @@ import MetaEmploymentStatus from "../models/MetaEmploymentStatus";
 import MetaMotherTongue from "../models/MetaMotherTongue";
 import MetaResidenceType from "../models/MetaResidenceType";
 import MetaFamilyGod from "../models/MetaFamilyGod";
+import MetaRationCardType from "../models/MetaRationCardType";
 import {
   getRoleByName,
   parseRoleIdsInput,
@@ -221,6 +222,7 @@ const USER_PROFILE_INCLUDE = [
   { association: "gender", attributes: ["id", "dispName"], required: false },
   { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
   { association: "residenceType", attributes: ["id", "dispName"], required: false },
+  { association: "rationCardType", attributes: ["id", "dispName"], required: false },
   { association: "familyGod", attributes: ["id", "dispName"], required: false },
   { association: "wardNumber", attributes: ["id", "dispName"], required: false },
   { association: "boothNumber", attributes: ["id", "dispName"], required: false },
@@ -347,6 +349,21 @@ const validateProfileForeignKeys = async (
       });
       if (!motherTongue) {
         throw new ApiError(`Invalid profile.motherTongueId: ${motherTongueId}`, 400);
+      }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(profileAttributes, "rationCardTypeId")) {
+    const rationCardTypeId = parseOptionalPositiveInteger(
+      profileAttributes.rationCardTypeId,
+      "profile.rationCardTypeId"
+    );
+    if (rationCardTypeId !== null) {
+      const rationCardType = await MetaRationCardType.findByPk(rationCardTypeId, {
+        attributes: ["id"]
+      });
+      if (!rationCardType) {
+        throw new ApiError(`Invalid profile.rationCardTypeId: ${rationCardTypeId}`, 400);
       }
     }
   }
@@ -636,23 +653,30 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const includeAuditFields = shouldIncludeAuditFields(req.query);
+  const isReferredByOnlyMode = Boolean(referredByFilter);
 
   const userFilters: Record<string, unknown> = {};
-  if (userIdFilter !== undefined) {
-    userFilters.id = userIdFilter;
-  }
-  if (contactNumberFilter) {
-    userFilters.contactNumber = contactNumberFilter;
-  }
-  if (userEmailFilter) {
-    userFilters.email = { [Op.like]: `%${userEmailFilter}%` };
-  }
-  if (userFullNameFilter) {
-    userFilters.fullName = { [Op.like]: `%${userFullNameFilter}%` };
-  }
-  if (userStatusFilters && userStatusFilters.length > 0) {
-    userFilters.status =
-      userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
+  if (!isReferredByOnlyMode) {
+    if (userIdFilter !== undefined) {
+      userFilters.id = userIdFilter;
+    }
+    if (contactNumberFilter) {
+      userFilters.contactNumber = contactNumberFilter;
+    }
+    if (userEmailFilter) {
+      userFilters.email = { [Op.like]: `%${userEmailFilter}%` };
+    }
+    if (userFullNameFilter) {
+      userFilters.fullName = { [Op.like]: `%${userFullNameFilter}%` };
+    }
+    if (userStatusFilters && userStatusFilters.length > 0) {
+      userFilters.status =
+        userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
+    } else {
+      // Default admin user listing to active+inactive users when status is not explicitly requested.
+      // Pending users (status=2) are excluded by default.
+      userFilters.status = { [Op.in]: [0, 1] };
+    }
   }
 
   const isPendingOnlyFilter =
@@ -762,6 +786,14 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   if (landmarkFilter) {
     profileFilters.landmark = { [Op.like]: `%${landmarkFilter}%` };
   }
+  if (isReferredByOnlyMode) {
+    profileFilters.referredBy = { [Op.like]: `%${referredByFilter}%` };
+    for (const key of Object.keys(profileFilters)) {
+      if (key !== "referredBy") {
+        delete profileFilters[key];
+      }
+    }
+  }
 
   const profileFiltersApplied = Object.keys(profileFilters).length > 0;
 
@@ -781,7 +813,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   // Apply both role hierarchy and accessibility filters
   let roleHierarchyFilter: { [Op.in]: number[] } | undefined;
-  if (loggedInUser?.id) {
+  if (loggedInUser?.id && !isReferredByOnlyMode) {
     const roleIds =
       loggedInUser.roleIds && loggedInUser.roleIds.length > 0
         ? loggedInUser.roleIds
@@ -794,15 +826,21 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
         const descendantRoles = await getDescendantRoleIds(roleId);
         descendantRoles.forEach((id) => allDescendantRoleIds.add(id));
       }
+      // Always include PUBLIC role in listing visibility so public-only users are not excluded.
+      const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
+      if (publicRole?.id) {
+        allDescendantRoleIds.add(publicRole.id);
+      }
       if (allDescendantRoleIds.size > 0) {
         roleHierarchyFilter = { [Op.in]: Array.from(allDescendantRoleIds) };
       }
     }
   }
 
-  const accessibilityFilter = loggedInUser?.id
-    ? await buildUserListingAccessibilityFilter(loggedInUser.id)
-    : null;
+  const accessibilityFilter =
+    loggedInUser?.id && !isReferredByOnlyMode
+      ? await buildUserListingAccessibilityFilter(loggedInUser.id)
+      : null;
 
   console.log("listUsers access filter", loggedInUser?.id, accessibilityFilter);
 
@@ -835,11 +873,14 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       {
         association: "roles",
         include: [{ association: "permissions" }],
-        ...(!isPendingOnlyFilter && roleHierarchyFilter && {
+        ...(!isReferredByOnlyMode &&
+          !isPendingOnlyFilter &&
+          roleHierarchyFilter && {
           where: { id: roleHierarchyFilter },
           required: true
         }),
-        ...(roleIds &&
+        ...(!isReferredByOnlyMode &&
+          roleIds &&
           roleIds.length > 0 && { where: { id: { [Op.in]: roleIds } }, required: true })
       }
     ],
@@ -1181,146 +1222,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
           { association: "mlaConstituency" }
         ]
       },
-      { association: "roles", include: [{ association: "permissions" }] },
-      {
-        association: "familyMembers",
-        required: false,
-        separate: true,
-        include: [
-          {
-            association: "relationType",
-            attributes: ["id", "dispName", "description"],
-            required: false
-          },
-          { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
-          { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetailGroup", attributes: ["id", "dispName"], required: false },
-          { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
-          { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
-          { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
-          { association: "employment", attributes: ["id", "dispName"], required: false }
-        ]
-      },
-      {
-        association: "eventRegistrations",
-        where: { status: 1 },
-        required: false,
-        separate: true,
-        include: [
-          {
-            association: "event",
-            attributes: [
-              "id",
-              "title",
-              "description",
-              "place",
-              "startDate",
-              "startTime",
-              "endDate",
-              "endTime"
-            ],
-            required: false
-          },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false }
-        ]
-      },
-      {
-        association: "schemeApplications",
-        required: false,
-        separate: true,
-        attributes: { exclude: ["createdBy", "updatedBy"] },
-        include: [
-          {
-            association: "scheme",
-            attributes: ["id", "dispName", "description"],
-            required: false
-          },
-          { association: "wardNumber", attributes: ["id", "dispName"], required: false },
-          { association: "boothNumber", attributes: ["id", "dispName"], required: false },
-          { association: "governmentLevel", attributes: ["id", "dispName"], required: false },
-          { association: "sector", attributes: ["id", "dispName"], required: false },
-          { association: "schemeType", attributes: ["id", "dispName"], required: false },
-          { association: "ownershipType", attributes: ["id", "dispName"], required: false },
-          { association: "genderOption", attributes: ["id", "dispName"], required: false },
-          { association: "widowStatus", attributes: ["id", "dispName"], required: false },
-          { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
-          { association: "employmentStatus", attributes: ["id", "dispName"], required: false }
-        ]
-      },
-      {
-        association: "jobApplications",
-        required: false,
-        separate: true,
-        attributes: [
-          "id",
-          "submittedFor",
-          "fullName",
-          "contactNumber",
-          "email",
-          "alternativeContactNumber",
-          "fullAddress",
-          "education",
-          "workExperience",
-          "description",
-          "resumeUrl",
-          "status",
-          "createdAt"
-        ]
-      },
-      {
-        association: "posts",
-        required: false,
-        separate: true,
-        attributes: ["id", "description", "tags", "status", "createdAt"],
-        include: [
-          {
-            association: "media",
-            attributes: [
-              "id",
-              "mediaType",
-              "mediaUrl",
-              "thumbnailUrl",
-              "mimeType",
-              "durationSecond",
-              "positionNumber",
-              "caption",
-              "createdAt"
-            ],
-            where: { status: 1 },
-            required: false
-          }
-        ]
-      },
-      {
-        association: "formSubmissions",
-        required: false,
-        separate: true,
-        include: [
-          {
-            association: "formEvent",
-            required: false,
-            include: [
-              {
-                association: "form",
-                attributes: ["id", "title", "description", "status"],
-                required: false
-              }
-            ]
-          },
-          {
-            association: "fieldValues",
-            required: false,
-            include: [
-              {
-                association: "formField",
-                attributes: ["id", "label", "fieldTypeId", "inputFormatId"],
-                required: false
-              }
-            ]
-          }
-        ]
-      }
+      { association: "roles" }
     ]
   });
 
@@ -1383,13 +1285,8 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
 
   const userPayload = await enrichGeoObjectFields(user.toJSON() as UserPayloadRecord);
 
-  if (user.roles && user.roles.length > 0) {
-    const enrichedRoles = await enrichAdminRolePermissions(user.roles);
-    const enrichedUser = {
-      ...userPayload,
-      roles: enrichedRoles.reverse()
-    };
-    return sendSuccess(res, enrichedUser, "User retrieved successfully");
+  if (Array.isArray(userPayload.roles)) {
+    userPayload.roles = [...userPayload.roles].reverse();
   }
 
   return sendSuccess(res, userPayload, "User retrieved successfully");

@@ -18,6 +18,7 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import ScheduleEvent from "../models/ScheduleEvent";
 import ScheduleEventMedia from "../models/ScheduleEventMedia";
 import MetaEventType from "../models/MetaEventType";
+import MetaColor from "../models/MetaColor";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import { MediaType } from "../types/enums";
 import sequelize from "../config/database";
@@ -29,6 +30,12 @@ const baseScheduleEventInclude = [
   {
     model: MetaEventType,
     as: "eventType",
+    attributes: ["id", "dispName"],
+    required: false
+  },
+  {
+    model: MetaColor,
+    as: "color",
     attributes: ["id", "dispName"],
     required: false
   },
@@ -164,6 +171,7 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
   let description: string | null = null;
   let eventTypeId: number | null = null;
   let eventSubName: string | null = null;
+  let colorId: number | null = null;
   let eventAddress: string | null = null;
   let eventReferralPersonName: string | null = null;
   let referralContactNumber: string | null = null;
@@ -195,6 +203,16 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     );
   } catch (error) {
     validationErrors.push({ field: "eventSubName", message: (error as Error).message });
+  }
+
+  try {
+    const parsedColorId = parseOptionalPositiveInteger(
+      req.body?.colorId ?? req.body?.color_id ?? req.body?.color,
+      "colorId"
+    );
+    colorId = parsedColorId ?? null;
+  } catch (error) {
+    validationErrors.push({ field: "colorId", message: (error as Error).message });
   }
 
   try {
@@ -278,6 +296,17 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     }
   }
 
+  if (colorId !== null) {
+    const color = await MetaColor.findByPk(colorId, {
+      attributes: ["id"]
+    });
+    if (!color) {
+      return sendValidationError(res, "Validation failed", [
+        { field: "colorId", message: "Invalid colorId" }
+      ]);
+    }
+  }
+
   const uploadedFiles = Array.isArray(req.files) ? (req.files as Express.Multer.File[]) : [];
 
   const created = await sequelize.transaction(async (transaction) => {
@@ -286,6 +315,7 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
         title: title as string,
         description,
         eventTypeId,
+        colorId,
         eventSubName,
         eventAddress,
         eventReferralPersonName,
@@ -342,6 +372,7 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
   let title: string | null = null;
   let eventTypeId: number | undefined;
   let eventSubName: string | null = null;
+  let colorId: number | undefined;
   let eventAddress: string | null = null;
   let eventReferralPersonName: string | null = null;
   let referralContactNumber: string | null = null;
@@ -381,6 +412,15 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     );
   } catch (error) {
     validationErrors.push({ field: "eventSubName", message: (error as Error).message });
+  }
+
+  try {
+    colorId = parseOptionalPositiveInteger(
+      req.query.colorId ?? req.query.color_id ?? req.query.color,
+      "colorId"
+    );
+  } catch (error) {
+    validationErrors.push({ field: "colorId", message: (error as Error).message });
   }
 
   try {
@@ -500,6 +540,10 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     filters.push({ eventTypeId });
   }
 
+  if (colorId !== undefined) {
+    filters.push({ colorId });
+  }
+
   if (priority) {
     filters.push({ priority: { [Op.like]: `%${priority}%` } });
   }
@@ -584,7 +628,7 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
 
   const sortColumn = validateSortColumn(
     req.query.sortColumn ?? req.query.sortBy,
-    ["start", "end", "title", "createdAt", "updatedAt", "priority", "eventTypeId"],
+    ["start", "end", "title", "createdAt", "updatedAt", "priority", "eventTypeId", "colorId"],
     "start"
   );
   const sortDirection = parseSortDirection(req.query.sort, "ASC");
@@ -606,6 +650,7 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
   const payload = rows.map((row) => ({
     id: String(row.id),
     title: row.title,
+    color: row.color?.dispName ?? null,
     start: row.start instanceof Date ? row.start.toISOString() : new Date(row.start).toISOString(),
     end: row.end instanceof Date ? row.end.toISOString() : new Date(row.end).toISOString()
   }));
@@ -685,6 +730,18 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
       );
     } catch (error) {
       validationErrors.push({ field: "eventSubName", message: (error as Error).message });
+    }
+  }
+
+  if (req.body?.colorId !== undefined || req.body?.color_id !== undefined || req.body?.color !== undefined) {
+    try {
+      const parsedColorId = parseOptionalPositiveInteger(
+        req.body?.colorId ?? req.body?.color_id ?? req.body?.color,
+        "colorId"
+      );
+      updates.colorId = parsedColorId ?? null;
+    } catch (error) {
+      validationErrors.push({ field: "colorId", message: (error as Error).message });
     }
   }
 
@@ -855,6 +912,20 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
       if (!eventType) {
         return sendValidationError(res, "Validation failed", [
           { field: "eventTypeId", message: "Invalid eventTypeId" }
+        ]);
+      }
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, "colorId")) {
+    const requestedColorId = updates.colorId as number | null;
+    if (requestedColorId !== null && requestedColorId !== undefined) {
+      const color = await MetaColor.findByPk(requestedColorId, {
+        attributes: ["id"]
+      });
+      if (!color) {
+        return sendValidationError(res, "Validation failed", [
+          { field: "colorId", message: "Invalid colorId" }
         ]);
       }
     }

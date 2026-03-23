@@ -744,6 +744,26 @@
                   "type": "text"
                 },
                 {
+                  "key": "ration_card_type_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "is_voter",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "native_lat",
+                  "value": "12.97160000",
+                  "type": "text"
+                },
+                {
+                  "key": "native_long",
+                  "value": "77.59460000",
+                  "type": "text"
+                },
+                {
                   "key": "familyGodId",
                   "value": "1",
                   "type": "text"
@@ -915,7 +935,7 @@
                 {
                   "key": "status",
                   "value": "1",
-                  "description": "Filter by status (comma-separated to match multiple statuses; e.g., 1,2)",
+                  "description": "Filter by status (comma-separated to match multiple statuses; e.g., 1,2). If omitted, defaults to 0,1 (pending status 2 excluded).",
                   "disabled": true
                 },
                 {
@@ -1029,7 +1049,7 @@
                 {
                   "key": "referredBy",
                   "value": "Captain",
-                  "description": "Filter profiles whose referredBy contains the supplied value",
+                  "description": "Filter profiles whose referredBy contains the supplied value. Special mode: when present, referredBy remains the only profile/user filter; search and standard pagination/sorting still apply.",
                   "disabled": true
                 },
                 {
@@ -1106,7 +1126,7 @@
                 }
               ]
             },
-            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, motherTongueId, residenceTypeId, familyGodId, nativePlace, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark)."
+            "description": "Returns a paginated list of users with their profiles, roles, permissions, and access profiles. Supports fuzzy search plus granular filters for user fields (contactNumber, id, email, fullName, status) and profile fields including dateOfBirth/dateOfJoining ranges, citizenAge range, genderId, maritalStatusId, motherTongueId, residenceTypeId, familyGodId, nativePlace, relationshipTypeId, floorId, occupation, city/state/postalCode, wardNumberId/boothNumberId/sectorId, postsBlocked, referredBy, educational detail ids, and address fields (doorNumber, serviceConservancyRoad, mainRoad, crossRoad, locationArea, landmark). If status is omitted, only status 0 and 1 users are returned (status 2 pending users excluded). Role-based visibility includes descendant roles and public-role users; geo accessibility constraints still apply. Special case: when referredBy is provided, only referredBy (plus optional search) is applied from filters, with standard pagination/sorting."
           },
           "response": []
         },
@@ -3704,7 +3724,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Mysuru\",\n    \"familyGodId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Mysuru\",\n    \"ration_card_type_id\": 1,\n    \"is_voter\": true,\n    \"native_lat\": 12.97160000,\n    \"native_long\": 77.59460000,\n    \"familyGodId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users"
           },
@@ -4021,7 +4041,7 @@
                 }
               ]
             },
-            "description": "Get a user by mobile number including profile, access profiles, roles, family members, and event registrations. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
+            "description": "Get a user by mobile number including profile, access profiles, and roles. Role permissions and user-linked collections (`posts`, `familyMembers`, `formSubmissions`, `jobApplications`, `eventRegistrations`, `schemeApplications`) are excluded. Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
           },
           "response": []
         },
@@ -4096,7 +4116,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Tumakuru\",\n    \"familyGodId\": 1,\n    \"employmentStatusId\": 1,\n    \"disabilityStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Tumakuru\",\n    \"ration_card_type_id\": 1,\n    \"is_voter\": true,\n    \"native_lat\": 12.97160000,\n    \"native_long\": 77.59460000,\n    \"familyGodId\": 1,\n    \"employmentStatusId\": 1,\n    \"disabilityStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
             "description": "Updates user information including profile, roles, accessibility profiles, and approval status (0=inactive, 1=approved/active, 2=pending approval). All fields are optional - only provided fields will be updated."
@@ -5345,6 +5365,16 @@
                   "key": "employmentId",
                   "value": "1",
                   "type": "text"
+                },
+                {
+                  "key": "is_voter",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "profilePhoto",
+                  "type": "file",
+                  "src": ""
                 }
               ]
             },
@@ -5534,6 +5564,16 @@
                 },
                 {
                   "key": "voterIdProof",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "is_voter",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "profilePhoto",
                   "type": "file",
                   "src": ""
                 }
@@ -6766,6 +6806,11 @@
                   "type": "text"
                 },
                 {
+                  "key": "colorId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
                   "key": "eventSubName",
                   "value": "Pet Care",
                   "type": "text"
@@ -6858,7 +6903,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventTypeId=&eventSubName=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
+              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventTypeId=&colorId=&eventSubName=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -6881,6 +6926,11 @@
                   "key": "eventTypeId",
                   "value": "",
                   "description": "Filter by event type id"
+                },
+                {
+                  "key": "colorId",
+                  "value": "",
+                  "description": "Filter by color id"
                 },
                 {
                   "key": "eventSubName",
@@ -6970,12 +7020,12 @@
                 {
                   "key": "sortColumn",
                   "value": "start",
-                  "description": "Sort by: start, end, title, createdAt, updatedAt, priority, eventTypeId"
+                  "description": "Sort by: start, end, title, createdAt, updatedAt, priority, eventTypeId, colorId"
                 }
               ]
             }
           },
-          "description": "List schedule events. Response data is an array of { id, title, start, end } where start/end are ISO strings.",
+          "description": "List schedule events. Response data is an array of { id, title, color, start, end } where start/end are ISO strings and color is the color dispName or null.",
           "response": []
         },
         {
@@ -7035,6 +7085,11 @@
                 {
                   "key": "eventTypeId",
                   "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "colorId",
+                  "value": "1",
                   "type": "text"
                 },
                 {

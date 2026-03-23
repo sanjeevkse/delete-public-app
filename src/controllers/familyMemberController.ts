@@ -114,9 +114,33 @@ const parseOptionalString = (
   return null;
 };
 
+const parseOptionalBoolean = (
+  value: unknown,
+  field: string,
+  fieldErrors: Array<{ field: string; message: string }>
+): boolean | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes"].includes(normalized)) return true;
+    if (["false", "0", "no"].includes(normalized)) return false;
+  }
+  fieldErrors.push({ field, message: `${field} must be a boolean` });
+  return null;
+};
+
 const getUploadedFamilyMemberDocumentUrls = (
   req: Request
-): Partial<Record<"aadhaarPhoto" | "voterIdProof", string>> => {
+): Partial<Record<"aadhaarPhoto" | "voterIdProof" | "profilePhoto", string>> => {
   const uploadedFiles = Array.isArray((req as any).files)
     ? ((req as any).files as Express.Multer.File[])
     : [];
@@ -124,9 +148,13 @@ const getUploadedFamilyMemberDocumentUrls = (
     return {};
   }
 
-  const uploadedDocumentUrls: Partial<Record<"aadhaarPhoto" | "voterIdProof", string>> = {};
+  const uploadedDocumentUrls: Partial<Record<"aadhaarPhoto" | "voterIdProof" | "profilePhoto", string>> = {};
   uploadedFiles.forEach((file) => {
-    if (file.fieldname === "aadhaarPhoto" || file.fieldname === "voterIdProof") {
+    if (
+      file.fieldname === "aadhaarPhoto" ||
+      file.fieldname === "voterIdProof" ||
+      file.fieldname === "profilePhoto"
+    ) {
       uploadedDocumentUrls[file.fieldname] = buildPublicUploadPath(file.path);
     }
   });
@@ -251,6 +279,8 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     aadhaarPhoto,
     voterIdNumber,
     voterIdProof,
+    profilePhoto,
+    isVoter,
     relationTypeId,
     relationshipTypeId,
     relationshipName,
@@ -313,6 +343,12 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     "voterIdProof",
     fieldErrors
   );
+  const normalizedProfilePhoto = parseOptionalString(
+    uploadedDocumentUrls.profilePhoto ?? profilePhoto,
+    "profilePhoto",
+    fieldErrors
+  );
+  const normalizedIsVoter = parseOptionalBoolean(isVoter, "isVoter", fieldErrors);
   const normalizedRelationshipName = parseOptionalString(
     relationshipName,
     "relationshipName",
@@ -450,6 +486,8 @@ export const createFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     aadhaarPhoto: normalizedAadhaarPhoto,
     voterIdNumber: normalizedVoterIdNumber,
     voterIdProof: normalizedVoterIdProof,
+    profilePhoto: normalizedProfilePhoto,
+    isVoter: normalizedIsVoter,
     relationTypeId: normalizedRelationTypeId!,
     relationshipName: normalizedRelationshipName,
     disabilityStatusId: normalizedDisabilityStatusId,
@@ -494,6 +532,8 @@ export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
     aadhaarPhoto,
     voterIdNumber,
     voterIdProof,
+    profilePhoto,
+    isVoter,
     relationTypeId,
     relationshipTypeId,
     relationshipName,
@@ -714,6 +754,16 @@ export const updateFamilyMember = asyncHandler(async (req: AuthenticatedRequest,
       "voterIdProof",
       fieldErrors
     );
+  }
+  if (profilePhoto !== undefined || uploadedDocumentUrls.profilePhoto !== undefined) {
+    familyMember.profilePhoto = parseOptionalString(
+      uploadedDocumentUrls.profilePhoto ?? profilePhoto,
+      "profilePhoto",
+      fieldErrors
+    );
+  }
+  if (isVoter !== undefined) {
+    familyMember.isVoter = parseOptionalBoolean(isVoter, "isVoter", fieldErrors);
   }
   if (normalizedRelationTypeId !== undefined) familyMember.relationTypeId = normalizedRelationTypeId;
   if (relationshipName !== undefined) {

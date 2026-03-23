@@ -9,12 +9,14 @@ import {
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import type MetaEventType from "./MetaEventType";
+import type MetaColor from "./MetaColor";
 
 class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationAttributes<ScheduleEvent>> {
   declare id: CreationOptional<number>;
   declare title: string;
   declare description: string | null;
   declare eventTypeId: number | null;
+  declare colorId: number | null;
   declare eventSubName: string | null;
   declare eventAddress: string | null;
   declare eventReferralPersonName: string | null;
@@ -35,6 +37,7 @@ class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationA
   declare updatedAt: CreationOptional<Date>;
   declare status: CreationOptional<number>;
   declare eventType?: NonAttribute<MetaEventType | null>;
+  declare color?: NonAttribute<MetaColor | null>;
 }
 
 ScheduleEvent.init(
@@ -56,6 +59,11 @@ ScheduleEvent.init(
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true,
       field: "event_type_id"
+    },
+    colorId: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: "color_id"
     },
     eventSubName: {
       type: DataTypes.TEXT,

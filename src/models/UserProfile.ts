@@ -26,6 +26,7 @@ import type MetaResidenceType from "./MetaResidenceType";
 import type MetaFamilyGod from "./MetaFamilyGod";
 import type MetaRelationType from "./MetaRelationType";
 import type MetaReligion from "./MetaReligion";
+import type MetaRationCardType from "./MetaRationCardType";
 import type MetaSubCaste from "./MetaSubCaste";
 import type MetaWardNumber from "./MetaWardNumber";
 import type User from "./User";
@@ -60,12 +61,16 @@ class UserProfile extends Model<
   declare aadhaarPhoto: CreationOptional<string | null>;
   declare rationCardNo: CreationOptional<string | null>;
   declare rationCardPhoto: CreationOptional<string | null>;
+  declare rationCardTypeId: CreationOptional<number | null>;
   declare employmentGroupId: CreationOptional<number | null>;
   declare employmentTypeId: CreationOptional<number | null>;
   declare relationshipTypeId: CreationOptional<number | null>;
   declare relationshipName: CreationOptional<string | null>;
   declare residenceTypeId: CreationOptional<number | null>;
   declare nativePlace: CreationOptional<string | null>;
+  declare nativeLat: CreationOptional<number | null>;
+  declare nativeLong: CreationOptional<number | null>;
+  declare isVoter: CreationOptional<boolean | null>;
   declare familyGodId: CreationOptional<number | null>;
   declare doorNumber: CreationOptional<string | null>;
   declare floorId: CreationOptional<number | null>;
@@ -115,6 +120,7 @@ class UserProfile extends Model<
   declare disabilityStatus?: NonAttribute<MetaDisabilityStatus | null>;
   declare motherTongue?: NonAttribute<MetaMotherTongue | null>;
   declare religion?: NonAttribute<MetaReligion | null>;
+  declare rationCardType?: NonAttribute<MetaRationCardType | null>;
   declare mainCaste?: NonAttribute<MetaMainCaste | null>;
   declare subCaste?: NonAttribute<MetaSubCaste | null>;
   declare employmentStatus?: NonAttribute<MetaEmploymentStatus | null>;
@@ -270,6 +276,11 @@ UserProfile.init(
       type: DataTypes.STRING(500),
       allowNull: true
     },
+    rationCardTypeId: {
+      field: "ration_card_type_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
     employmentGroupId: {
       field: "employment_group_id",
       type: DataTypes.INTEGER.UNSIGNED,
@@ -298,6 +309,21 @@ UserProfile.init(
     nativePlace: {
       field: "native_place",
       type: DataTypes.STRING(191),
+      allowNull: true
+    },
+    nativeLat: {
+      field: "native_lat",
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true
+    },
+    nativeLong: {
+      field: "native_long",
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true
+    },
+    isVoter: {
+      field: "is_voter",
+      type: DataTypes.BOOLEAN,
       allowNull: true
     },
     familyGodId: {

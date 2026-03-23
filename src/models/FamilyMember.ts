@@ -37,6 +37,8 @@ class FamilyMember extends Model<
   declare aadhaarPhoto: string | null;
   declare voterIdNumber: string | null;
   declare voterIdProof: string | null;
+  declare profilePhoto: string | null;
+  declare isVoter: boolean | null;
   declare relationTypeId: number;
   declare relationshipName: string | null;
   declare disabilityStatusId: number | null;
@@ -138,6 +140,16 @@ FamilyMember.init(
     voterIdProof: {
       field: "voter_id_proof",
       type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    profilePhoto: {
+      field: "profile_photo",
+      type: DataTypes.STRING(500),
+      allowNull: true
+    },
+    isVoter: {
+      field: "is_voter",
+      type: DataTypes.BOOLEAN,
       allowNull: true
     },
     relationTypeId: {

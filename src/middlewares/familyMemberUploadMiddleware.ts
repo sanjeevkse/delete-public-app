@@ -3,11 +3,11 @@ import { ApiError } from "./errorHandler";
 import { createFileUploadMiddleware } from "./uploadMiddleware";
 
 const ALLOWED_FAMILY_MEMBER_DOCUMENT_MIME_TYPES = ALLOWED_MIME_TYPES.IMAGES as unknown as string[];
-const FAMILY_MEMBER_DOCUMENT_UPLOAD_FIELDS = new Set(["aadhaarPhoto", "voterIdProof"]);
+const FAMILY_MEMBER_DOCUMENT_UPLOAD_FIELDS = new Set(["aadhaarPhoto", "voterIdProof", "profilePhoto"]);
 
 export const familyMemberDocumentUpload = createFileUploadMiddleware({
   fieldName: "documents",
-  maxCount: 2,
+  maxCount: 3,
   moduleName: UPLOAD_MODULES.PROFILE,
   assetType: "documents",
   allowedMimeTypes: ALLOWED_FAMILY_MEMBER_DOCUMENT_MIME_TYPES,
@@ -22,7 +22,7 @@ export const familyMemberDocumentUpload = createFileUploadMiddleware({
     for (const file of files) {
       if (!FAMILY_MEMBER_DOCUMENT_UPLOAD_FIELDS.has(file.fieldname)) {
         throw new ApiError(
-          "Unsupported file field. Allowed fields: aadhaarPhoto, voterIdProof",
+          "Unsupported file field. Allowed fields: aadhaarPhoto, voterIdProof, profilePhoto",
           400
         );
       }

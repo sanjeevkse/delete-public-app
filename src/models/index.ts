@@ -30,10 +30,12 @@ import MetaDesignation from "./MetaDesignation";
 import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaMotherTongue from "./MetaMotherTongue";
 import MetaResidenceType from "./MetaResidenceType";
+import MetaRationCardType from "./MetaRationCardType";
 import MetaFamilyGod from "./MetaFamilyGod";
 import MetaWidowStatus from "./MetaWidowStatus";
 import MetaDisabilityStatus from "./MetaDisabilityStatus";
 import MetaEventType from "./MetaEventType";
+import MetaColor from "./MetaColor";
 import MetaEmployment from "./MetaEmployment";
 import MetaEmploymentGroup from "./MetaEmploymentGroup";
 import MetaEmploymentStatus from "./MetaEmploymentStatus";
@@ -206,6 +208,8 @@ const establishAssociations = (): void => {
   });
   ScheduleEvent.belongsTo(MetaEventType, { foreignKey: "eventTypeId", as: "eventType" });
   MetaEventType.hasMany(ScheduleEvent, { foreignKey: "eventTypeId", as: "scheduleEvents" });
+  ScheduleEvent.belongsTo(MetaColor, { foreignKey: "colorId", as: "color" });
+  MetaColor.hasMany(ScheduleEvent, { foreignKey: "colorId", as: "scheduleEvents" });
 
   Event.hasMany(EventRegistration, { foreignKey: "eventId", as: "registrations" });
   EventRegistration.belongsTo(Event, { foreignKey: "eventId", as: "event" });
@@ -450,6 +454,15 @@ const establishAssociations = (): void => {
   });
   MetaResidenceType.hasMany(UserProfile, {
     foreignKey: "residenceTypeId",
+    as: "userProfiles"
+  });
+
+  UserProfile.belongsTo(MetaRationCardType, {
+    foreignKey: "rationCardTypeId",
+    as: "rationCardType"
+  });
+  MetaRationCardType.hasMany(UserProfile, {
+    foreignKey: "rationCardTypeId",
     as: "userProfiles"
   });
 

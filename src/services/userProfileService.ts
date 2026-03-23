@@ -29,11 +29,15 @@ const DIRECT_PROFILE_FIELDS: Array<keyof CreationAttributes<UserProfile>> = [
   "aadhaarPhoto",
   "rationCardNo",
   "rationCardPhoto",
+  "rationCardTypeId",
   "employmentGroupId",
   "relationshipTypeId",
   "relationshipName",
   "residenceTypeId",
   "nativePlace",
+  "nativeLat",
+  "nativeLong",
+  "isVoter",
   "familyGodId",
   "doorNumber",
   "floorId",
@@ -144,6 +148,38 @@ export const buildProfileAttributes = (
   ]);
   if (resolvedEmploymentId !== undefined) {
     payload.employmentTypeId = resolvedEmploymentId as never;
+  }
+
+  const resolvedNativeLat = resolveAliasValue("nativeLat", [
+    { key: "nativeLat", value: asRecord["nativeLat"] },
+    { key: "native_lat", value: asRecord["native_lat"] }
+  ]);
+  if (resolvedNativeLat !== undefined) {
+    payload.nativeLat = resolvedNativeLat as never;
+  }
+
+  const resolvedNativeLong = resolveAliasValue("nativeLong", [
+    { key: "nativeLong", value: asRecord["nativeLong"] },
+    { key: "native_long", value: asRecord["native_long"] }
+  ]);
+  if (resolvedNativeLong !== undefined) {
+    payload.nativeLong = resolvedNativeLong as never;
+  }
+
+  const resolvedRationCardTypeId = resolveAliasValue("rationCardTypeId", [
+    { key: "rationCardTypeId", value: asRecord["rationCardTypeId"] },
+    { key: "ration_card_type_id", value: asRecord["ration_card_type_id"] }
+  ]);
+  if (resolvedRationCardTypeId !== undefined) {
+    payload.rationCardTypeId = resolvedRationCardTypeId as never;
+  }
+
+  const resolvedIsVoter = resolveAliasValue("isVoter", [
+    { key: "isVoter", value: asRecord["isVoter"] },
+    { key: "is_voter", value: asRecord["is_voter"] }
+  ]);
+  if (resolvedIsVoter !== undefined) {
+    payload.isVoter = resolvedIsVoter as never;
   }
 
   const socialLinks: Record<string, unknown> = existingProfile?.socialLinksJson

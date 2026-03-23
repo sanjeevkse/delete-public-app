@@ -70,6 +70,7 @@ const USER_PROFILE_ASSOCIATION_INCLUDE = [
   { association: "gender", attributes: ["id", "dispName"], required: false },
   { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
   { association: "residenceType", attributes: ["id", "dispName"], required: false },
+  { association: "rationCardType", attributes: ["id", "dispName"], required: false },
   { association: "familyGod", attributes: ["id", "dispName"], required: false },
   { association: "wardNumber", attributes: ["id", "dispName"], required: false },
   { association: "boothNumber", attributes: ["id", "dispName"], required: false },
