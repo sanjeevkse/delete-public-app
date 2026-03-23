@@ -4,7 +4,12 @@ import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 import { ApiError } from "../middlewares/errorHandler";
 import asyncHandler from "../utils/asyncHandler";
-import { sendSuccess } from "../utils/apiResponse";
+import {
+  calculatePagination,
+  parsePaginationParams,
+  sendSuccess,
+  sendSuccessWithPagination
+} from "../utils/apiResponse";
 import FormEvent from "../models/FormEvent";
 import FormSubmission from "../models/FormSubmission";
 import FormFieldValue from "../models/FormFieldValue";
@@ -14,13 +19,18 @@ import FormFieldOption from "../models/FormFieldOption";
 import UserRole from "../models/UserRole";
 import User from "../models/User";
 import UserProfile from "../models/UserProfile";
+import UserAccess from "../models/UserAccess";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
 import {
   resolveSubmittedUserValue,
   SUBMITTED_USER_REPORT_FIELDS
 } from "../utils/submittedUserFields";
 import { getDescendantRoleIds } from "../services/userHierarchyService";
-import { getRoleIdsByNames } from "../services/rbacService";
+import {
+  enrichAdminRolePermissions,
+  getRoleIdsByNames,
+  parseRoleIdsInput
+} from "../services/rbacService";
 
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
@@ -212,6 +222,181 @@ const buildDayRange = (date: Date): { from: Date; to: Date } => {
   to.setHours(23, 59, 59, 999);
   return { from, to };
 };
+
+type QueryRecord = Record<string, unknown>;
+
+const firstQueryValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value[0] : undefined;
+  }
+  return value;
+};
+
+const resolveNestedValue = (source: unknown, segments: string[]): unknown => {
+  let current: unknown = source;
+
+  for (const segment of segments) {
+    if (current === undefined || current === null) {
+      return undefined;
+    }
+
+    if (Array.isArray(current)) {
+      current = current[0];
+    }
+
+    if (typeof current !== "object") {
+      return undefined;
+    }
+
+    current = (current as QueryRecord)[segment];
+  }
+
+  return current;
+};
+
+const pickUserQueryValue = (query: QueryRecord, candidates: string[]): unknown => {
+  for (const candidate of candidates) {
+    if (Object.prototype.hasOwnProperty.call(query, candidate)) {
+      const direct = firstQueryValue(query[candidate]);
+      if (direct !== undefined) {
+        return direct;
+      }
+    }
+
+    const nested = resolveNestedValue(query, candidate.split("."));
+    const normalized = firstQueryValue(nested);
+    if (normalized !== undefined) {
+      return normalized;
+    }
+  }
+
+  return undefined;
+};
+
+const parseStringFilter = (value: unknown): string | undefined => {
+  const normalized = firstQueryValue(value);
+  if (normalized === undefined || normalized === null) {
+    return undefined;
+  }
+
+  const result = String(normalized).trim();
+  return result ? result : undefined;
+};
+
+const parseNumberFilter = (value: unknown): number | undefined => {
+  const normalized = firstQueryValue(value);
+  if (normalized === undefined || normalized === null || normalized === "") {
+    return undefined;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const parseBooleanFilter = (value: unknown): boolean | undefined => {
+  const normalized = firstQueryValue(value);
+  if (normalized === undefined || normalized === null || normalized === "") {
+    return undefined;
+  }
+
+  if (typeof normalized === "boolean") {
+    return normalized;
+  }
+
+  if (typeof normalized === "number") {
+    if (normalized === 1) {
+      return true;
+    }
+    if (normalized === 0) {
+      return false;
+    }
+  }
+
+  const normalizedStr = String(normalized).trim().toLowerCase();
+  if (["true", "1", "yes", "y", "on"].includes(normalizedStr)) {
+    return true;
+  }
+  if (["false", "0", "no", "n", "off"].includes(normalizedStr)) {
+    return false;
+  }
+  return undefined;
+};
+
+const parseDateFilter = (value: unknown): string | undefined => {
+  const normalized = parseStringFilter(value);
+  if (!normalized) {
+    return undefined;
+  }
+
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return undefined;
+  }
+
+  return normalized;
+};
+
+const parseNumberListFilter = (value: unknown): number[] | undefined => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  const rawValues = Array.isArray(value)
+    ? value
+    : String(value)
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+
+  const numbers = rawValues
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry)) as number[];
+
+  if (numbers.length === 0) {
+    return undefined;
+  }
+
+  return Array.from(new Set(numbers));
+};
+
+const applyRangeFilter = (
+  target: Record<string, unknown>,
+  field: string,
+  start?: string | number,
+  end?: string | number
+): void => {
+  if (start === undefined && end === undefined) {
+    return;
+  }
+
+  target[field] = {
+    ...(start !== undefined ? { [Op.gte]: start } : {}),
+    ...(end !== undefined ? { [Op.lte]: end } : {})
+  };
+};
+
+const USER_REPORT_PROFILE_INCLUDE = [
+  { association: "gender", attributes: ["id", "dispName"], required: false },
+  { association: "maritalStatus", attributes: ["id", "dispName"], required: false },
+  { association: "residenceType", attributes: ["id", "dispName"], required: false },
+  { association: "rationCardType", attributes: ["id", "dispName"], required: false },
+  { association: "familyGod", attributes: ["id", "dispName"], required: false },
+  { association: "wardNumber", attributes: ["id", "dispName"], required: false },
+  { association: "boothNumber", attributes: ["id", "dispName"], required: false },
+  { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
+  { association: "educationalDetailGroup", attributes: ["id", "dispName"], required: false },
+  { association: "sector", attributes: ["id", "dispName"], required: false },
+  { association: "relationshipType", attributes: ["id", "dispName"], required: false },
+  { association: "floor", attributes: ["id", "dispName"], required: false },
+  { association: "employmentStatus", attributes: ["id", "dispName"], required: false },
+  { association: "disabilityStatus", attributes: ["id", "dispName"], required: false },
+  { association: "motherTongue", attributes: ["id", "dispName"], required: false },
+  { association: "religion", attributes: ["id", "dispName"], required: false },
+  { association: "mainCaste", attributes: ["id", "dispName"], required: false },
+  { association: "subCaste", attributes: ["id", "dispName", "categoryId"], required: false },
+  { association: "employmentGroup", attributes: ["id", "dispName"], required: false },
+  { association: "employment", attributes: ["id", "dispName"], required: false }
+];
 
 const resolveHierarchyUserIds = async (
   user: AuthenticatedRequest["user"]
@@ -772,6 +957,302 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
 });
 
 /**
+ * Get users report with filters (without access-control based filtering)
+ * GET /reports/users
+ */
+export const getUsersReport = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  requireAuthenticatedUser(req);
+
+  const { page, limit, offset } = parsePaginationParams(
+    req.query.page as string,
+    req.query.limit as string,
+    25,
+    100
+  );
+
+  const queryParams = req.query as QueryRecord;
+  const search = parseStringFilter(pickUserQueryValue(queryParams, ["search"])) ?? "";
+
+  const contactNumberFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["contactNumber", "contact_number"])
+  );
+  const userIdFilter = parseNumberFilter(pickUserQueryValue(queryParams, ["id", "userId", "user_id"]));
+  const userEmailFilter = parseStringFilter(pickUserQueryValue(queryParams, ["email"]));
+  const userFullNameFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["fullName", "full_name"])
+  );
+  const userStatusFilters = parseNumberListFilter(queryParams.status);
+
+  const dateOfBirthStart = parseDateFilter(
+    pickUserQueryValue(queryParams, ["dateOfBirthStart", "date_of_birth_start"])
+  );
+  const dateOfBirthEnd = parseDateFilter(
+    pickUserQueryValue(queryParams, ["dateOfBirthEnd", "date_of_birth_end"])
+  );
+  const citizenAgeStart = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["citizenAgeStart", "citizen_age_start"])
+  );
+  const citizenAgeEnd = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["citizenAgeEnd", "citizen_age_end"])
+  );
+  const genderFilter = parseNumberFilter(pickUserQueryValue(queryParams, ["genderId", "gender_id"]));
+  const maritalStatusFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["maritalStatusId", "marital_status_id"])
+  );
+  const residenceTypeFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["residenceTypeId", "residence_type_id"])
+  );
+  const familyGodFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["familyGodId", "family_god_id"])
+  );
+  const nativePlaceFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["nativePlace", "native_place"])
+  );
+  const relationshipTypeFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["relationshipTypeId", "relationship_type_id"])
+  );
+  const floorFilter = parseNumberFilter(pickUserQueryValue(queryParams, ["floorId", "floor_id"]));
+  const occupationFilter = parseStringFilter(pickUserQueryValue(queryParams, ["occupation"]));
+  const cityFilter = parseStringFilter(pickUserQueryValue(queryParams, ["city"]));
+  const stateIdFilter = parseNumberFilter(pickUserQueryValue(queryParams, ["stateId", "state_id"]));
+  const mpConstituencyFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["mpConstituencyId", "mp_constituency_id", "mpcontituencyId"])
+  );
+  const mlaConstituencyFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["mlaConstituencyId", "mla_constituency_id", "mlacontituencyId"])
+  );
+  const governingBodyFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["governingBody", "governing_body"])
+  );
+  const gramPanchayatFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["gramPanchayatId", "gram_panchayat_id", "grampanchayatId"])
+  );
+  const mainVillageFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["mainVillageId", "main_village_id"])
+  );
+  const postalCodeFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["postalCode", "postal_code"])
+  );
+  const wardNumberFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["wardNumberId", "ward_number_id"])
+  );
+  const boothNumberFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["boothNumberId", "booth_number_id"])
+  );
+  const sectorFilter = parseNumberFilter(pickUserQueryValue(queryParams, ["sectorId", "sector_id"]));
+  const postsBlockedFilter = parseBooleanFilter(
+    pickUserQueryValue(queryParams, ["postsBlocked", "posts_blocked"])
+  );
+  const referredByFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["referredBy", "referred_by"])
+  );
+  const educationalDetailFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["educationalDetailId", "educational_detail_id"])
+  );
+  const educationalDetailGroupFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["educationalDetailGroupId", "educational_detail_group_id"])
+  );
+  const disabilityStatusFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["disabilityStatusId", "disability_status_id"])
+  );
+  const motherTongueFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["motherTongueId", "mother_tongue_id"])
+  );
+  const religionFilter = parseNumberFilter(pickUserQueryValue(queryParams, ["religionId", "religion_id"]));
+  const mainCasteFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["mainCasteId", "main_caste_id"])
+  );
+  const subCasteFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["subCasteId", "sub_caste_id"])
+  );
+  const employmentGroupFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["employmentGroupId", "employment_group_id"])
+  );
+  const employmentFilter = parseNumberFilter(
+    pickUserQueryValue(queryParams, ["employmentId", "employmentTypeId", "employment_type_id"])
+  );
+  const voterIdNumberFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["voterIdNumber", "voter_id_number"])
+  );
+  const rationCardNoFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["rationCardNo", "ration_card_no"])
+  );
+  const dateOfJoiningStart = parseDateFilter(
+    pickUserQueryValue(queryParams, ["dateOfJoiningStart", "date_of_joining_start"])
+  );
+  const dateOfJoiningEnd = parseDateFilter(
+    pickUserQueryValue(queryParams, ["dateOfJoiningEnd", "date_of_joining_end"])
+  );
+  const doorNumberFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["doorNumber", "door_number"])
+  );
+  const serviceConservancyRoadFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["serviceConservancyRoad", "service_conservancy_road"])
+  );
+  const mainRoadFilter = parseStringFilter(pickUserQueryValue(queryParams, ["mainRoad", "main_road"]));
+  const crossRoadFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["crossRoad", "cross_road"])
+  );
+  const locationAreaFilter = parseStringFilter(
+    pickUserQueryValue(queryParams, ["locationArea", "location_area"])
+  );
+  const landmarkFilter = parseStringFilter(pickUserQueryValue(queryParams, ["landmark"]));
+
+  let roleIds: number[] | undefined;
+  const roleIdInput = req.query.roleId;
+  if (roleIdInput) {
+    try {
+      const parsedIds = parseRoleIdsInput(roleIdInput);
+      roleIds = parsedIds ?? undefined;
+    } catch (error) {
+      const singleId = Number(roleIdInput);
+      if (!Number.isNaN(singleId) && singleId > 0) {
+        roleIds = [singleId];
+      }
+    }
+  }
+
+  const userFilters: Record<string, unknown> = {};
+  if (userIdFilter !== undefined) {
+    userFilters.id = userIdFilter;
+  }
+  if (contactNumberFilter) {
+    userFilters.contactNumber = contactNumberFilter;
+  }
+  if (userEmailFilter) {
+    userFilters.email = { [Op.like]: `%${userEmailFilter}%` };
+  }
+  if (userFullNameFilter) {
+    userFilters.fullName = { [Op.like]: `%${userFullNameFilter}%` };
+  }
+  if (userStatusFilters && userStatusFilters.length > 0) {
+    userFilters.status =
+      userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
+  }
+
+  const profileFilters: Record<string, unknown> = {};
+  applyRangeFilter(profileFilters, "dateOfBirth", dateOfBirthStart, dateOfBirthEnd);
+  applyRangeFilter(profileFilters, "citizenAge", citizenAgeStart, citizenAgeEnd);
+  applyRangeFilter(profileFilters, "dateOfJoining", dateOfJoiningStart, dateOfJoiningEnd);
+
+  if (genderFilter !== undefined) profileFilters.genderId = genderFilter;
+  if (maritalStatusFilter !== undefined) profileFilters.maritalStatusId = maritalStatusFilter;
+  if (residenceTypeFilter !== undefined) profileFilters.residenceTypeId = residenceTypeFilter;
+  if (familyGodFilter !== undefined) profileFilters.familyGodId = familyGodFilter;
+  if (nativePlaceFilter) profileFilters.nativePlace = { [Op.like]: `%${nativePlaceFilter}%` };
+  if (relationshipTypeFilter !== undefined) profileFilters.relationshipTypeId = relationshipTypeFilter;
+  if (floorFilter !== undefined) profileFilters.floorId = floorFilter;
+  if (occupationFilter) profileFilters.occupation = { [Op.like]: `%${occupationFilter}%` };
+  if (cityFilter) profileFilters.city = { [Op.like]: `%${cityFilter}%` };
+  if (stateIdFilter !== undefined) profileFilters.stateId = stateIdFilter;
+  if (mpConstituencyFilter !== undefined) profileFilters.mpConstituencyId = mpConstituencyFilter;
+  if (mlaConstituencyFilter !== undefined) profileFilters.mlaConstituencyId = mlaConstituencyFilter;
+  if (governingBodyFilter) profileFilters.governingBody = governingBodyFilter.toUpperCase();
+  if (gramPanchayatFilter !== undefined) profileFilters.gramPanchayatId = gramPanchayatFilter;
+  if (mainVillageFilter !== undefined) profileFilters.mainVillageId = mainVillageFilter;
+  if (postalCodeFilter) profileFilters.postalCode = { [Op.like]: `%${postalCodeFilter}%` };
+  if (wardNumberFilter !== undefined) profileFilters.wardNumberId = wardNumberFilter;
+  if (boothNumberFilter !== undefined) profileFilters.boothNumberId = boothNumberFilter;
+  if (sectorFilter !== undefined) profileFilters.sectorId = sectorFilter;
+  if (postsBlockedFilter !== undefined) profileFilters.postsBlocked = postsBlockedFilter;
+  if (referredByFilter) profileFilters.referredBy = { [Op.like]: `%${referredByFilter}%` };
+  if (educationalDetailFilter !== undefined) profileFilters.educationalDetailId = educationalDetailFilter;
+  if (educationalDetailGroupFilter !== undefined) {
+    profileFilters.educationalDetailGroupId = educationalDetailGroupFilter;
+  }
+  if (disabilityStatusFilter !== undefined) profileFilters.disabilityStatusId = disabilityStatusFilter;
+  if (motherTongueFilter !== undefined) profileFilters.motherTongueId = motherTongueFilter;
+  if (religionFilter !== undefined) profileFilters.religionId = religionFilter;
+  if (mainCasteFilter !== undefined) profileFilters.mainCasteId = mainCasteFilter;
+  if (subCasteFilter !== undefined) profileFilters.subCasteId = subCasteFilter;
+  if (employmentGroupFilter !== undefined) profileFilters.employmentGroupId = employmentGroupFilter;
+  if (employmentFilter !== undefined) profileFilters.employmentTypeId = employmentFilter;
+  if (voterIdNumberFilter) profileFilters.voterIdNumber = { [Op.like]: `%${voterIdNumberFilter}%` };
+  if (rationCardNoFilter) profileFilters.rationCardNo = { [Op.like]: `%${rationCardNoFilter}%` };
+  if (doorNumberFilter) profileFilters.doorNumber = { [Op.like]: `%${doorNumberFilter}%` };
+  if (serviceConservancyRoadFilter) {
+    profileFilters.serviceConservancyRoad = { [Op.like]: `%${serviceConservancyRoadFilter}%` };
+  }
+  if (mainRoadFilter) profileFilters.mainRoad = { [Op.like]: `%${mainRoadFilter}%` };
+  if (crossRoadFilter) profileFilters.crossRoad = { [Op.like]: `%${crossRoadFilter}%` };
+  if (locationAreaFilter) profileFilters.locationArea = { [Op.like]: `%${locationAreaFilter}%` };
+  if (landmarkFilter) profileFilters.landmark = { [Op.like]: `%${landmarkFilter}%` };
+
+  const profileFiltersApplied = Object.keys(profileFilters).length > 0;
+
+  const whereClauses: Record<string, unknown>[] = [{ status: { [Op.gt]: -1 } }];
+  if (Object.keys(userFilters).length > 0) {
+    whereClauses.push(userFilters);
+  }
+  if (search) {
+    whereClauses.push({
+      [Op.or]: [
+        { contactNumber: { [Op.like]: `%${search}%` } },
+        { fullName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ]
+    });
+  }
+
+  const userWhere =
+    whereClauses.length > 1 ? { [Op.and]: whereClauses } : (whereClauses[0] ?? undefined);
+
+  const { rows, count } = await User.findAndCountAll({
+    where: userWhere,
+    include: [
+      {
+        model: UserProfile,
+        as: "profile",
+        ...(profileFiltersApplied && { where: profileFilters, required: true }),
+        include: USER_REPORT_PROFILE_INCLUDE
+      },
+      {
+        model: UserAccess,
+        as: "accessProfiles",
+        where: { status: 1 },
+        required: false,
+        include: [
+          { association: "accessRole" },
+          { association: "wardNumber" },
+          { association: "boothNumber" },
+          { association: "mlaConstituency" }
+        ]
+      },
+      {
+        association: "roles",
+        include: [{ association: "permissions" }],
+        ...(roleIds && roleIds.length > 0 && { where: { id: { [Op.in]: roleIds } }, required: true })
+      }
+    ],
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]],
+    distinct: true
+  });
+
+  const enrichedRows = await Promise.all(
+    rows.map(async (user) => {
+      if (user.roles && user.roles.length > 0) {
+        const enrichedRoles = await enrichAdminRolePermissions(user.roles);
+        return {
+          ...user.toJSON(),
+          roles: enrichedRoles.reverse()
+        };
+      }
+      return user;
+    })
+  );
+
+  const pagination = calculatePagination(count, page, limit);
+  return sendSuccessWithPagination(
+    res,
+    enrichedRows,
+    pagination,
+    "Users report retrieved successfully"
+  );
+});
+
+/**
  * Get global form event metrics (no formEventId required)
  * GET /reports/form-events/metrics
  */
@@ -810,4 +1291,4 @@ export const getFormEventMetrics = asyncHandler(async (req: AuthenticatedRequest
   sendSuccess(res, { metrics }, "Form event metrics retrieved successfully");
 });
 
-export default { getFormEventReport, getFormEventMetrics };
+export default { getFormEventReport, getFormEventMetrics, getUsersReport };

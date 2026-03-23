@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getFormEventMetrics, getFormEventReport } from "../controllers/reportController";
+import { getFormEventMetrics, getFormEventReport, getUsersReport } from "../controllers/reportController";
 import { getBusinessReport } from "../controllers/businessReportController";
 import { getPostsReport } from "../controllers/postReportController";
 import {
@@ -17,6 +17,7 @@ const router = Router();
  */
 router.get("/form-events/metrics", authenticate(), getFormEventMetrics);
 router.get("/form-events/:formEventId", authenticate(), getFormEventReport);
+router.get("/users", authenticate(), getUsersReport);
 router.get("/posts", authenticate(), getPostsReport);
 router.get("/business", authenticate(), getBusinessReport);
 router.get("/public-events/metrics", authenticate(), getPublicEventsMetrics);

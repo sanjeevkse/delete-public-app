@@ -24,6 +24,7 @@ import {
   filterUserRolePermissions
 } from "../services/rbacService";
 import { sendLoginOtp } from "../services/otpDeliveryService";
+import { createUserWithGeneratedCrfId } from "../services/userCrfIdService";
 import { buildProfileAttributes } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessToken, generateNumericOtp } from "../utils/auth";
@@ -303,7 +304,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const userExists = Boolean(user);
 
   if (!user) {
-    user = await User.create({
+    user = await createUserWithGeneratedCrfId({
       contactNumber,
       status: 2
     });
@@ -427,6 +428,9 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
   const payload = req.body as Record<string, unknown>;
   if (!payload || typeof payload !== "object") {
     throw new ApiError("Request body must be an object", 400);
+  }
+  if ("crfId" in payload || "crf_id" in payload) {
+    throw new ApiError("crf_id cannot be set manually", 400);
   }
 
   const user = await User.findByPk(userId, {

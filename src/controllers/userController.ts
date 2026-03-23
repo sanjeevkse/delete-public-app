@@ -35,6 +35,7 @@ import {
   updateUserAccessProfiles,
   validateAccessibles
 } from "../services/userAccessService";
+import { createUserWithGeneratedCrfId } from "../services/userCrfIdService";
 import asyncHandler from "../utils/asyncHandler";
 import {
   sendSuccess,
@@ -672,10 +673,6 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     if (userStatusFilters && userStatusFilters.length > 0) {
       userFilters.status =
         userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
-    } else {
-      // Default admin user listing to active+inactive users when status is not explicitly requested.
-      // Pending users (status=2) are excluded by default.
-      userFilters.status = { [Op.in]: [0, 1] };
     }
   }
 
@@ -797,7 +794,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const profileFiltersApplied = Object.keys(profileFilters).length > 0;
 
-  const whereClauses: Record<string, unknown>[] = [];
+  const whereClauses: Record<string, unknown>[] = [{ status: { [Op.gt]: -1 } }];
   if (Object.keys(userFilters).length > 0) {
     whereClauses.push(userFilters);
   }
@@ -1018,7 +1015,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   // Role hierarchy validation removed - roles can be assigned freely
   // Only accessibility boundary is checked in canManageUser
 
-  const user = await User.create({
+  const user = await createUserWithGeneratedCrfId({
     contactNumber,
     email,
     fullName,
@@ -1834,7 +1831,8 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  await user.update({ status: 0 });
+  const actorId = (req as AuthenticatedRequest).user?.id ?? null;
+  await user.update({ status: -1, updatedBy: actorId });
 
   return sendNoContent(res);
 });

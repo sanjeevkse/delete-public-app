@@ -12,6 +12,7 @@ const DEFAULT_RESTRICTED_FIELDS = new Map<string, string>([
   ["updatedat", "updated_at"],
   ["createdby", "created_by"],
   ["updatedby", "updated_by"],
+  ["crfid", "crf_id"],
   ["deletedat", "deleted_at"],
   ["deletedby", "deleted_by"]
 ]);
