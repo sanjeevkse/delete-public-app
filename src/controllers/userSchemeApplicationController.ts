@@ -34,6 +34,13 @@ import {
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
+import {
+  assertUserCanAccessGeoUnit,
+  buildGeoUnitAccessWhere,
+  buildGeoUnitIncludeFilterFromSource,
+  resolveGeoUnitRecordFromSource,
+  serializeGeoUnit
+} from "../services/geoUnitService";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PIN_CODE_REGEX = /^\d{6}$/;
@@ -55,6 +62,7 @@ type NormalizedApplicationPayload = {
   mobileAlternate: string | null;
   email: string | null;
   addressLine: string;
+  geoUnitId: number | null;
   wardNumberId: number | null;
   boothNumberId: number | null;
   doorNumber: string | null;
@@ -102,7 +110,29 @@ const parseOptionalQueryPositiveInt = (value: unknown, field: string): number | 
 };
 
 const baseInclude = [
-  { association: "scheme", attributes: ["id", "schemeName"], required: false },
+  {
+    association: "geoUnit",
+    attributes: [
+      "id",
+      "stateId",
+      "districtId",
+      "talukId",
+      "mpConstituencyId",
+      "mlaConstituencyId",
+      "settlementType",
+      "governingBody",
+      "localBodyId",
+      "hobaliId",
+      "gramPanchayatId",
+      "mainVillageId",
+      "subVillageId",
+      "wardNumberId",
+      "pollingStationId",
+      "boothNumberId"
+    ],
+    required: false
+  },
+  { association: "scheme", attributes: ["id", "dispName"], required: false },
   {
     association: "applicant",
     attributes: ["id", "fullName", "contactNumber", "email"],
@@ -387,6 +417,8 @@ const normalizeApplicationPayload = async (
   const boothNumberId = await ensureBoothExists(
     parseNullableInt(body.boothNumberId ?? body.booth_number_id, "boothNumberId")
   );
+  const resolvedGeoUnit = await resolveGeoUnitRecordFromSource(body);
+  await assertUserCanAccessGeoUnit(options.currentUserId, resolvedGeoUnit?.id);
 
   const doorNumber = parseOptionalString(body.doorNumber ?? body.door_number, 30);
   const floorNumber = parseOptionalString(body.floorNumber ?? body.floor_number, 30);
@@ -469,8 +501,9 @@ const normalizeApplicationPayload = async (
     mobileAlternate,
     email,
     addressLine,
-    wardNumberId,
-    boothNumberId,
+    geoUnitId: resolvedGeoUnit?.id ?? null,
+    wardNumberId: resolvedGeoUnit?.wardNumberId ?? wardNumberId,
+    boothNumberId: resolvedGeoUnit?.boothNumberId ?? boothNumberId,
     doorNumber,
     floorNumber,
     ownershipTypeId,
@@ -504,7 +537,7 @@ const extractDocumentUrl = (req: AuthenticatedRequest): string | undefined => {
 
 const serializeApplication = (application: UserSchemeApplication) => {
   const plain = application.get({ plain: true }) as UserSchemeApplication & {
-    scheme?: { id: number; schemeName: string } | null;
+    scheme?: { id: number; dispName: string } | null;
     applicant?: {
       id: number;
       fullName: string | null;
@@ -519,6 +552,7 @@ const serializeApplication = (application: UserSchemeApplication) => {
     } | null;
     wardNumber?: { id: number; dispName: string } | null;
     boothNumber?: { id: number; dispName: string } | null;
+    geoUnit?: Record<string, unknown> | null;
     governmentLevel?: { id: number; dispName: string } | null;
     sector?: { id: number; dispName: string } | null;
     schemeType?: { id: number; dispName: string } | null;
@@ -532,7 +566,7 @@ const serializeApplication = (application: UserSchemeApplication) => {
   return {
     id: plain.id,
     schemeId: plain.schemeId,
-    scheme: plain.scheme ? { id: plain.scheme.id, schemeName: plain.scheme.schemeName } : null,
+    scheme: plain.scheme ? { id: plain.scheme.id, schemeName: plain.scheme.dispName } : null,
     applicantType: plain.applicantType,
     applicantUserId: plain.applicantUserId ?? null,
     applicant: plain.applicant
@@ -548,6 +582,8 @@ const serializeApplication = (application: UserSchemeApplication) => {
     mobileAlternate: plain.mobileAlternate ?? null,
     email: plain.email ?? null,
     addressLine: plain.addressLine,
+    geoUnitId: plain.geoUnitId ?? null,
+    geo: serializeGeoUnit(plain.geoUnit as any, plain.geoUnitId ?? null),
     wardNumberId: plain.wardNumberId ?? null,
     wardNumber: plain.wardNumber
       ? { id: plain.wardNumber.id, name: plain.wardNumber.dispName }
@@ -665,6 +701,10 @@ export const listUserSchemeApplications = asyncHandler(
     const attributes = buildQueryAttributes({ includeAuditFields, keepFields: [sortBy] });
 
     const where: WhereOptions = {};
+    const geoAccessWhere = await buildGeoUnitAccessWhere(req.user!.id);
+    const geoUnitIncludeWhere = buildGeoUnitIncludeFilterFromSource(
+      (req.query ?? {}) as Record<string, unknown>
+    );
 
     if (statusFilter === undefined) {
       where.status = 1;
@@ -700,10 +740,22 @@ export const listUserSchemeApplications = asyncHandler(
       });
     }
 
+    if (geoAccessWhere) {
+      Object.assign(where, geoAccessWhere);
+    }
+
     const { rows, count } = await UserSchemeApplication.findAndCountAll({
       where,
       attributes,
-      include: baseInclude,
+      include: baseInclude.map((include) =>
+        (include as Record<string, unknown>).association === "geoUnit"
+          ? {
+              ...(include as Record<string, unknown>),
+              required: Boolean(geoUnitIncludeWhere),
+              ...(geoUnitIncludeWhere ? { where: geoUnitIncludeWhere } : {})
+            }
+          : include
+      ),
       order: [[sortBy, direction]],
       limit,
       offset,
@@ -729,7 +781,7 @@ export const getUserSchemeApplication = asyncHandler(
     const attributes = buildQueryAttributes({ includeAuditFields });
 
     const application = await UserSchemeApplication.findOne({
-      where: { id, status: 1 },
+      where: { id, status: 1, ...((await buildGeoUnitAccessWhere(req.user!.id)) ?? {}) },
       attributes,
       include: baseInclude
     });

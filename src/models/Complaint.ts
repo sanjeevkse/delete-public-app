@@ -6,11 +6,13 @@ import {
   InferCreationAttributes
 } from "sequelize";
 import sequelize from "../config/database";
+import type GeoPolitical from "./GeoPolitical";
 
 class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttributes<Complaint>> {
   declare id: CreationOptional<number>;
   declare selfOther: "SELF" | "OTHER";
   declare complaintTypeId: number;
+  declare geoUnitId: number | null;
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
   declare currentStatusId: CreationOptional<number>;
@@ -30,6 +32,7 @@ class Complaint extends Model<InferAttributes<Complaint>, InferCreationAttribute
   declare createdAt: CreationOptional<Date>;
   declare updatedBy: number | null;
   declare updatedAt: CreationOptional<Date>;
+  declare geoUnit?: GeoPolitical | null;
 }
 
 Complaint.init(
@@ -48,6 +51,11 @@ Complaint.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       field: "complaint_type_id"
+    },
+    geoUnitId: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: "geo_unit_id"
     },
     wardNumberId: {
       type: DataTypes.INTEGER.UNSIGNED,

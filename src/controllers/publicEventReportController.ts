@@ -8,6 +8,8 @@ import { sendSuccess } from "../utils/apiResponse";
 import Event from "../models/Event";
 import EventRegistration from "../models/EventRegistration";
 import User from "../models/User";
+import { buildGeoUnitAccessWhere, buildGeoUnitIncludeFilterFromSource, serializeGeoUnit } from "../services/geoUnitService";
+import { requireAuthenticatedUser } from "../middlewares/authMiddleware";
 
 const IST_TIMEZONE = "Asia/Kolkata";
 
@@ -116,11 +118,11 @@ const buildPublicEventMetrics = async () => {
  * GET /reports/public-events
  * Query params:
  *   - eventId (required)
- *   - wardNumberId (optional, -1 for all)
- *   - boothNumberId (optional, -1 for all)
+ *   - geo leaf or partial geo fields (optional)
  */
 export const getPublicEventsReport = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
+    const { id: userId } = requireAuthenticatedUser(req);
     const eventIdRaw = typeof req.query.eventId === "string" ? req.query.eventId : undefined;
     const wardNumberRaw = typeof req.query.wardNumberId === "string" ? req.query.wardNumberId : undefined;
     const boothNumberRaw =
@@ -139,6 +141,10 @@ export const getPublicEventsReport = asyncHandler(
       eventId,
       status: 1
     };
+    const geoAccessWhere = await buildGeoUnitAccessWhere(userId);
+    if (geoAccessWhere) {
+      Object.assign(registrationWhere, geoAccessWhere);
+    }
 
     if (wardNumberId !== undefined && wardNumberId !== -1) {
       registrationWhere.wardNumberId = wardNumberId;
@@ -148,6 +154,10 @@ export const getPublicEventsReport = asyncHandler(
       registrationWhere.boothNumberId = boothNumberId;
     }
 
+    const geoUnitIncludeWhere = buildGeoUnitIncludeFilterFromSource(
+      (req.query ?? {}) as Record<string, unknown>
+    );
+
     const registrations = await EventRegistration.findAll({
       where: registrationWhere,
       include: [
@@ -155,6 +165,29 @@ export const getPublicEventsReport = asyncHandler(
           association: "user",
           attributes: ["id", "fullName", "email", "contactNumber"],
           required: false
+        },
+        {
+          association: "geoUnit",
+          attributes: [
+            "id",
+            "stateId",
+            "districtId",
+            "talukId",
+            "mpConstituencyId",
+            "mlaConstituencyId",
+            "settlementType",
+            "governingBody",
+            "localBodyId",
+            "hobaliId",
+            "gramPanchayatId",
+            "mainVillageId",
+            "subVillageId",
+            "wardNumberId",
+            "pollingStationId",
+            "boothNumberId"
+          ],
+          required: Boolean(geoUnitIncludeWhere),
+          ...(geoUnitIncludeWhere ? { where: geoUnitIncludeWhere } : {})
         },
         { association: "wardNumber", attributes: ["id", "dispName"], required: false },
         { association: "boothNumber", attributes: ["id", "dispName"], required: false },
@@ -224,11 +257,35 @@ export const getPublicEventsReport = asyncHandler(
       ];
     });
 
+    const registrationRows = registrations.map((registration) => ({
+      id: registration.id,
+      userId: registration.userId,
+      fullName: registration.user?.fullName ?? registration.fullName ?? null,
+      contactNumber: registration.user?.contactNumber ?? registration.contactNumber ?? null,
+      email: registration.user?.email ?? registration.email ?? null,
+      registeredBy: registration.registeredBy ?? null,
+      geoUnitId: registration.geoUnitId ?? null,
+      geo: serializeGeoUnit(registration.geoUnit, registration.geoUnitId ?? null),
+      wardNumberId: registration.wardNumberId ?? null,
+      wardNumber: registration.wardNumber
+        ? { id: registration.wardNumber.id, name: registration.wardNumber.dispName }
+        : null,
+      boothNumberId: registration.boothNumberId ?? null,
+      boothNumber: registration.boothNumber
+        ? { id: registration.boothNumber.id, name: registration.boothNumber.dispName }
+        : null,
+      designation: registration.designation
+        ? { id: registration.designation.id, name: registration.designation.dispName }
+        : null,
+      createdAt: registration.createdAt ?? null
+    }));
+
     const metrics = await buildPublicEventMetrics();
 
     const reportData = {
       filters: {
         eventId,
+        geo: geoUnitIncludeWhere,
         wardNumberId: wardNumberId ?? null,
         boothNumberId: boothNumberId ?? null
       },
@@ -243,7 +300,8 @@ export const getPublicEventsReport = asyncHandler(
       tabularData: {
         headers,
         data: tabularRows
-      }
+      },
+      registrations: registrationRows
     };
 
     return sendSuccess(res, reportData, "Public events report retrieved successfully");

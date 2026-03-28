@@ -12,6 +12,7 @@ import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaWardNumber from "./MetaWardNumber";
 import type MetaDesignation from "./MetaDesignation";
 import type User from "./User";
+import type GeoPolitical from "./GeoPolitical";
 
 import sequelize from "../config/database";
 
@@ -27,6 +28,7 @@ class EventRegistration extends Model<
   declare email: CreationOptional<string | null>;
   declare registeredBy: CreationOptional<string | null>;
   declare fullAddress: CreationOptional<string | null>;
+  declare geoUnitId: CreationOptional<number | null>;
   declare wardNumberId: CreationOptional<number | null>;
   declare boothNumberId: CreationOptional<number | null>;
   declare designationId: CreationOptional<number | null>;
@@ -41,6 +43,7 @@ class EventRegistration extends Model<
   declare updatedAt: CreationOptional<Date>;
   declare event?: NonAttribute<Event>;
   declare user?: NonAttribute<User>;
+  declare geoUnit?: NonAttribute<GeoPolitical | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
   declare designation?: NonAttribute<MetaDesignation | null>;
@@ -86,6 +89,11 @@ EventRegistration.init(
     fullAddress: {
       field: "full_address",
       type: DataTypes.TEXT,
+      allowNull: true
+    },
+    geoUnitId: {
+      field: "geo_unit_id",
+      type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },
     wardNumberId: {

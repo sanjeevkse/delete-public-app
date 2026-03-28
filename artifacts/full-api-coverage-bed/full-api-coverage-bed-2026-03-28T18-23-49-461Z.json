@@ -1,0 +1,45 @@
+{
+  "runId": "full-api-coverage-bed-2026-03-28T18-23-49-461Z",
+  "startedAt": "2026-03-28T18:23:49.462Z",
+  "finishedAt": "2026-03-28T18:23:50.843Z",
+  "suites": [
+    {
+      "name": "CRUD API scenarios",
+      "script": "scripts/crudApiTestBed.js",
+      "exitCode": 1,
+      "jsonPath": "artifacts/crud-api-test-bed/crud-api-test-bed-2026-03-28T18-23-49-537Z.json",
+      "mdPath": "artifacts/crud-api-test-bed/crud-api-test-bed-2026-03-28T18-23-49-537Z.md",
+      "summary": {
+        "passed": 6,
+        "failed": 4,
+        "skipped": 0
+      }
+    },
+    {
+      "name": "Geo and accessibility scenarios",
+      "script": "scripts/geoApiTestBed.js",
+      "exitCode": 1,
+      "jsonPath": "artifacts/geo-api-test-bed/geo-api-test-bed-2026-03-28T18-23-50-569Z.json",
+      "mdPath": "artifacts/geo-api-test-bed/geo-api-test-bed-2026-03-28T18-23-50-569Z.md",
+      "summary": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "name": "All route sweep",
+      "script": "scripts/allApiTestBed.js",
+      "exitCode": 1,
+      "jsonPath": "artifacts/all-api-test-bed/all-api-test-bed-2026-03-28T18-23-50-748Z.json",
+      "mdPath": "artifacts/all-api-test-bed/all-api-test-bed-2026-03-28T18-23-50-748Z.md",
+      "summary": {
+        "total": 309,
+        "passed": 0,
+        "reachable4xx": 0,
+        "soft404": 0,
+        "failed": 0
+      }
+    }
+  ]
+}

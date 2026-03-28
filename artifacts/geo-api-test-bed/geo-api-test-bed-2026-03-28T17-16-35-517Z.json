@@ -1,0 +1,215 @@
+{
+  "runId": "geo-api-test-bed-2026-03-28T17-16-35-517Z",
+  "baseUrl": "http://127.0.0.1:8081/api",
+  "startedAt": "2026-03-28T17:16:35.518Z",
+  "finishedAt": "2026-03-28T17:16:38.895Z",
+  "summary": {
+    "passed": 5,
+    "failed": 14,
+    "skipped": 1
+  },
+  "scenarios": [
+    {
+      "name": "Profile patch with legacy ward/booth",
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T17:16:35.866Z",
+      "finishedAt": "2026-03-28T17:16:36.195Z",
+      "details": null
+    },
+    {
+      "name": "Profile patch with full urban geo leaf",
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T17:16:36.195Z",
+      "finishedAt": "2026-03-28T17:16:36.269Z",
+      "details": null
+    },
+    {
+      "name": "Profile patch with full rural geo leaf",
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "status": "failed",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T17:16:36.269Z",
+      "finishedAt": "2026-03-28T17:16:36.286Z",
+      "error": "Expected [200] for PATCH /auth/profile, got 400"
+    },
+    {
+      "name": "Create complaint with legacy ward/booth",
+      "method": "POST",
+      "path": "/complaints",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:36.286Z",
+      "finishedAt": "2026-03-28T17:16:36.518Z",
+      "error": "Expected [201] for POST /complaints, got 500"
+    },
+    {
+      "name": "Create complaint with full urban geo leaf",
+      "method": "POST",
+      "path": "/complaints",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:36.518Z",
+      "finishedAt": "2026-03-28T17:16:36.980Z",
+      "error": "Expected [201] for POST /complaints, got 500"
+    },
+    {
+      "name": "Create event for registration/report tests",
+      "method": "POST",
+      "path": "/events",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T17:16:36.980Z",
+      "finishedAt": "2026-03-28T17:16:37.017Z",
+      "details": {
+        "eventId": 119
+      }
+    },
+    {
+      "name": "Register event with legacy ward/booth",
+      "method": "POST",
+      "path": "/events/119/register",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:37.017Z",
+      "finishedAt": "2026-03-28T17:16:37.264Z",
+      "error": "Expected [200, 201] for POST /events/119/register, got 500"
+    },
+    {
+      "name": "Register guest with full rural geo leaf",
+      "method": "POST",
+      "path": "/events/119/register",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:37.264Z",
+      "finishedAt": "2026-03-28T17:16:37.338Z",
+      "error": "Expected [200, 201] for POST /events/119/register, got 500"
+    },
+    {
+      "name": "List event registrations with partial geo filter",
+      "method": "GET",
+      "path": "/events/119/registrations",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:37.338Z",
+      "finishedAt": "2026-03-28T17:16:37.366Z",
+      "error": "Expected [200] for GET /events/119/registrations?stateId=1&mpConstituencyId=1&mlaConstituencyId=1&settlementType=URBAN&governingBody=GBA&localBodyId=1&wardNumberId=2, got 500"
+    },
+    {
+      "name": "Create schedule event with full urban geo leaf",
+      "method": "POST",
+      "path": "/schedule-events",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:37.366Z",
+      "finishedAt": "2026-03-28T17:16:37.841Z",
+      "error": "Expected [201] for POST /schedule-events, got 500"
+    },
+    {
+      "name": "List schedule events with partial geo filter",
+      "method": "GET",
+      "path": "/schedule-events",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:37.841Z",
+      "finishedAt": "2026-03-28T17:16:37.867Z",
+      "error": "Expected [200] for GET /schedule-events?stateId=1&mpConstituencyId=1&mlaConstituencyId=1&settlementType=URBAN&governingBody=GBA&localBodyId=1&wardNumberId=2&sort=ASC&sortColumn=start, got 500"
+    },
+    {
+      "name": "Create scheme application with full rural geo leaf",
+      "method": "POST",
+      "path": "/scheme-applications",
+      "status": "failed",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T17:16:37.867Z",
+      "finishedAt": "2026-03-28T17:16:37.880Z",
+      "error": "Expected [201] for POST /scheme-applications, got 400"
+    },
+    {
+      "name": "List scheme applications with partial geo filter",
+      "method": "GET",
+      "path": "/scheme-applications",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:37.880Z",
+      "finishedAt": "2026-03-28T17:16:37.907Z",
+      "error": "Expected [200] for GET /scheme-applications?stateId=1&mpConstituencyId=25&mlaConstituencyId=188&settlementType=RURAL&governingBody=GP&gramPanchayatId=22&mainVillageId=5&status=1&applicantType=SELF&page=1&limit=20, got 500"
+    },
+    {
+      "name": "Create form event with full geo accessibility payloads",
+      "method": "POST",
+      "path": "/form-events",
+      "status": "failed",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T17:16:37.907Z",
+      "finishedAt": "2026-03-28T17:16:38.358Z",
+      "error": "Expected [201] for POST /form-events, got 400"
+    },
+    {
+      "name": "Update form event with full geo accessibility payload",
+      "method": "PUT",
+      "path": "/form-events/null",
+      "status": "failed",
+      "httpStatus": 404,
+      "startedAt": "2026-03-28T17:16:38.358Z",
+      "finishedAt": "2026-03-28T17:16:38.364Z",
+      "error": "Expected [200] for PUT /form-events/null, got 404"
+    },
+    {
+      "name": "Users report with partial geo filter",
+      "method": "GET",
+      "path": "/reports/users",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T17:16:38.364Z",
+      "finishedAt": "2026-03-28T17:16:38.410Z",
+      "details": null
+    },
+    {
+      "name": "Public events report with partial geo filter",
+      "method": "GET",
+      "path": "/reports/public-events",
+      "status": "failed",
+      "httpStatus": 500,
+      "startedAt": "2026-03-28T17:16:38.410Z",
+      "finishedAt": "2026-03-28T17:16:38.425Z",
+      "error": "Expected [200] for GET /reports/public-events?eventId=119&stateId=1&mpConstituencyId=1&mlaConstituencyId=1&settlementType=URBAN&governingBody=GBA&localBodyId=1&wardNumberId=2, got 500"
+    },
+    {
+      "name": "Posts report with partial geo filter",
+      "method": "GET",
+      "path": "/reports/posts",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T17:16:38.425Z",
+      "finishedAt": "2026-03-28T17:16:38.446Z",
+      "details": null
+    },
+    {
+      "name": "Form event report with legacy ward/booth filter",
+      "method": "GET",
+      "path": "/reports/form-events/null",
+      "status": "failed",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T17:16:38.446Z",
+      "finishedAt": "2026-03-28T17:16:38.450Z",
+      "error": "Expected [200] for GET /reports/form-events/null?ward_number_id=2&booth_number_id=60, got 400"
+    },
+    {
+      "name": "Targeted notification with partial geo accesses",
+      "method": "POST",
+      "path": "/notifications/send/targeted",
+      "status": "skipped",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T17:16:38.450Z",
+      "finishedAt": "2026-03-28T17:16:38.784Z",
+      "error": "Expected [200] for POST /notifications/send/targeted, got 400"
+    }
+  ]
+}

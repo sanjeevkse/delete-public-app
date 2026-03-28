@@ -7,13 +7,28 @@ import MetaUserRole from "../models/MetaUserRole";
 import UserProfile from "../models/UserProfile";
 import UserRole from "../models/UserRole";
 import { ApiError } from "../middlewares/errorHandler";
-import { isAccessibleToAll } from "./userAccessibilityService";
+import { getEffectiveWardBoothAccess, isAccessibleToAll } from "./userAccessibilityService";
+import { resolveGeoUnitRecordFromSource } from "./geoUnitService";
 
 /**
  * Accessibility payload for FormEvent
  * Defines which geographic area + role combination can access a form event
  */
 export interface AccessibilityPayload {
+  geoUnitId?: number | null;
+  stateId?: number | null;
+  districtId?: number | null;
+  talukId?: number | null;
+  mpConstituencyId?: number | null;
+  mlaConstituencyId?: number | null;
+  settlementType?: "URBAN" | "RURAL" | null;
+  governingBody?: "GBA" | "CC" | "CMC" | "TMC" | "TP" | "GP" | null;
+  localBodyId?: number | null;
+  hobaliId?: number | null;
+  gramPanchayatId?: number | null;
+  mainVillageId?: number | null;
+  subVillageId?: number | null;
+  pollingStationId?: number | null;
   wardNumberId: number;
   boothNumberId: number;
   userRoleId: number;
@@ -83,11 +98,39 @@ export const validateAccessibilityPayload = (payload: unknown): AccessibilityPay
       return num;
     };
 
+    const rawRecord = item as Record<string, unknown>;
+    const hasBroaderGeoInput = [
+      "stateId",
+      "districtId",
+      "talukId",
+      "mpConstituencyId",
+      "mlaConstituencyId",
+      "settlementType",
+      "governingBody",
+      "localBodyId",
+      "hobaliId",
+      "gramPanchayatId",
+      "mainVillageId",
+      "subVillageId",
+      "pollingStationId"
+    ].some((field) => rawRecord[field] !== undefined && rawRecord[field] !== null && rawRecord[field] !== "");
+
+    const parsedWard =
+      wardNumberId === undefined || wardNumberId === null || wardNumberId === ""
+        ? (hasBroaderGeoInput ? null : parseNumber(wardNumberId, "wardNumberId", true))
+        : parseNumber(wardNumberId, "wardNumberId", true);
+
+    const parsedBooth =
+      boothNumberId === undefined || boothNumberId === null || boothNumberId === ""
+        ? (hasBroaderGeoInput ? null : parseNumber(boothNumberId, "boothNumberId", true))
+        : parseNumber(boothNumberId, "boothNumberId", true);
+
     return {
-      wardNumberId: parseNumber(wardNumberId, "wardNumberId", true), // Allow -1 for "all"
-      boothNumberId: parseNumber(boothNumberId, "boothNumberId", true), // Allow -1 for "all"
+      ...rawRecord,
+      wardNumberId: parsedWard as number,
+      boothNumberId: parsedBooth as number,
       userRoleId: parseNumber(userRoleId, "userRoleId", true) // Allow -1 for "all roles"
-    };
+    } as AccessibilityPayload;
   });
 };
 
@@ -98,6 +141,24 @@ export const validateAccessibilityPayload = (payload: unknown): AccessibilityPay
 export const ensureAccessibilityReferencesExist = async (
   records: AccessibilityPayload[]
 ): Promise<void> => {
+  for (const record of records) {
+    const hasWildcard = record.wardNumberId === -1 || record.boothNumberId === -1;
+    const resolvedGeoUnit = hasWildcard
+      ? undefined
+      : await resolveGeoUnitRecordFromSource(record as unknown as Record<string, unknown>);
+
+    if (resolvedGeoUnit) {
+      record.geoUnitId = resolvedGeoUnit.id;
+      record.wardNumberId = resolvedGeoUnit.wardNumberId ?? record.wardNumberId;
+      record.boothNumberId = resolvedGeoUnit.boothNumberId ?? record.boothNumberId;
+    } else if (!hasWildcard && (record.wardNumberId <= 0 || record.boothNumberId <= 0)) {
+      throw new ApiError(
+        "Accessibility entries must provide ward/booth or a fuller exact geo leaf selection",
+        400
+      );
+    }
+  }
+
   // Filter out -1 values (which mean 'all' and don't need to exist in the database)
   const wardIds = Array.from(
     new Set(records.map((item) => item.wardNumberId).filter((id) => id !== -1))
@@ -141,8 +202,10 @@ export const ensureAccessibilityReferencesExist = async (
  * User's access profile - geographic location and role
  */
 export interface UserAccessProfile {
-  wardNumberId: number | null;
-  boothNumberId: number | null;
+  accessCombos: Array<{
+    wardNumberId: number | null;
+    boothNumberId: number | null;
+  }>;
   roleIds: number[];
 }
 
@@ -161,9 +224,18 @@ export const getUserAccessProfile = async (userId: number): Promise<UserAccessPr
     attributes: ["roleId"]
   });
 
+  const effectiveAccess = await getEffectiveWardBoothAccess(userId);
+  const accessCombos = effectiveAccess.unrestricted
+    ? [{ wardNumberId: -1, boothNumberId: -1 }]
+    : effectiveAccess.rows.length > 0
+      ? effectiveAccess.rows.map((row) => ({
+          wardNumberId: row.wardNumberId,
+          boothNumberId: row.boothNumberId
+        }))
+      : [{ wardNumberId: profile?.wardNumberId ?? null, boothNumberId: profile?.boothNumberId ?? null }];
+
   return {
-    wardNumberId: profile?.wardNumberId ?? null,
-    boothNumberId: profile?.boothNumberId ?? null,
+    accessCombos,
     roleIds: roles.map((r) => r.roleId)
   };
 };
@@ -179,8 +251,15 @@ export const canUserAccessFormEvent = async (
 ): Promise<boolean> => {
   const userAccess = await getUserAccessProfile(userId);
 
-  // User must have ward and booth assigned
-  if (!userAccess.wardNumberId || !userAccess.boothNumberId) {
+  const validAccessCombos = userAccess.accessCombos.filter(
+    (combo) =>
+      combo.wardNumberId === -1 ||
+      combo.boothNumberId === -1 ||
+      combo.wardNumberId !== null ||
+      combo.boothNumberId !== null
+  );
+
+  if (validAccessCombos.length === 0) {
     return false;
   }
 
@@ -205,19 +284,20 @@ export const canUserAccessFormEvent = async (
 
   // Check if user's geography and role matches any rule (considering -1 as 'all')
   return accessibilityRules.some((rule: any) => {
-    // Check ward match (-1 means all wards, otherwise exact match)
-    const wardMatches =
-      isAccessibleToAll(rule.wardNumberId) || rule.wardNumberId === userAccess.wardNumberId;
-
-    // Check booth match (-1 means all booths, otherwise exact match)
-    const boothMatches =
-      isAccessibleToAll(rule.boothNumberId) || rule.boothNumberId === userAccess.boothNumberId;
-
     // Check role match (-1 means all roles, otherwise exact match)
     const roleMatches =
       isAccessibleToAll(rule.userRoleId) || userAccess.roleIds.includes(rule.userRoleId);
 
-    return wardMatches && boothMatches && roleMatches;
+    return (
+      roleMatches &&
+      validAccessCombos.some((combo) => {
+        const wardMatches =
+          isAccessibleToAll(rule.wardNumberId) || rule.wardNumberId === combo.wardNumberId;
+        const boothMatches =
+          isAccessibleToAll(rule.boothNumberId) || rule.boothNumberId === combo.boothNumberId;
+        return wardMatches && boothMatches;
+      })
+    );
   });
 };
 

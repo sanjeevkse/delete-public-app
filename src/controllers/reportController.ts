@@ -31,6 +31,10 @@ import {
   getRoleIdsByNames,
   parseRoleIdsInput
 } from "../services/rbacService";
+import {
+  buildGeoUnitAccessWhere,
+  buildGeoUnitIncludeFilterFromSource
+} from "../services/geoUnitService";
 
 const DATE_FIELD_TYPES = new Set(["date"]);
 const TIME_FIELD_TYPES = new Set(["time"]);
@@ -961,7 +965,7 @@ export const getFormEventReport = asyncHandler(async (req: AuthenticatedRequest,
  * GET /reports/users
  */
 export const getUsersReport = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  requireAuthenticatedUser(req);
+  const { id: userId } = requireAuthenticatedUser(req);
 
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
@@ -1178,6 +1182,12 @@ export const getUsersReport = asyncHandler(async (req: AuthenticatedRequest, res
   if (locationAreaFilter) profileFilters.locationArea = { [Op.like]: `%${locationAreaFilter}%` };
   if (landmarkFilter) profileFilters.landmark = { [Op.like]: `%${landmarkFilter}%` };
 
+  const profileGeoAccessWhere = await buildGeoUnitAccessWhere(userId, "geoUnitId");
+  if (profileGeoAccessWhere) {
+    Object.assign(profileFilters, profileGeoAccessWhere);
+  }
+
+  const profileGeoUnitFilter = buildGeoUnitIncludeFilterFromSource(queryParams);
   const profileFiltersApplied = Object.keys(profileFilters).length > 0;
 
   const whereClauses: Record<string, unknown>[] = [{ status: { [Op.gt]: -1 } }];
@@ -1203,8 +1213,37 @@ export const getUsersReport = asyncHandler(async (req: AuthenticatedRequest, res
       {
         model: UserProfile,
         as: "profile",
-        ...(profileFiltersApplied && { where: profileFilters, required: true }),
-        include: USER_REPORT_PROFILE_INCLUDE
+        ...((profileFiltersApplied || profileGeoUnitFilter) && {
+          where: profileFilters,
+          required: true
+        }),
+        include: [
+          ...USER_REPORT_PROFILE_INCLUDE,
+          {
+            association: "geoUnit",
+            attributes: [
+              "id",
+              "stateId",
+              "districtId",
+              "talukId",
+              "mpConstituencyId",
+              "mlaConstituencyId",
+              "settlementType",
+              "governingBody",
+              "localBodyId",
+              "hobaliId",
+              "gramPanchayatId",
+              "mainVillageId",
+              "subVillageId",
+              "wardNumberId",
+              "pollingStationId",
+              "boothNumberId"
+            ],
+            required: Boolean(profileGeoUnitFilter),
+            ...(profileGeoUnitFilter ? { where: profileGeoUnitFilter } : {})
+          },
+          { association: "localBody", attributes: ["id", "dispName", "bodyType"], required: false }
+        ]
       },
       {
         model: UserAccess,

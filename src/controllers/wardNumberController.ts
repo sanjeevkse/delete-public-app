@@ -18,10 +18,9 @@ import {
 import {
   applyAccessibilityFilterToList,
   validateItemAccess,
-  userHasAccessibilityConfigured,
-  getAccessibleIds
+  userHasAccessibilityConfigured
 } from "../utils/accessibilityControllerHelper";
-import { getUserAccessList } from "../services/userAccessibilityService";
+import { getEffectiveWardBoothAccess } from "../services/userAccessibilityService";
 
 export const createWardNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
@@ -80,11 +79,14 @@ export const listWardNumbers = asyncHandler(async (req: AuthenticatedRequest, re
   }
 
   if (req.user?.id) {
-    const userAccessList = await getUserAccessList(req.user.id);
+    const effectiveAccess = await getEffectiveWardBoothAccess(req.user.id);
+    const userAccessList = effectiveAccess.unrestricted ? [] : effectiveAccess.rows;
 
     if (debugMode) {
       debugInfo.userAccessList = userAccessList;
       debugInfo.userAccessListLength = userAccessList.length;
+      debugInfo.accessSource = effectiveAccess.source;
+      debugInfo.unrestricted = effectiveAccess.unrestricted;
     }
 
     const hasAccess = applyAccessibilityFilterToList(whereClause, userAccessList, "wardNumberId");
@@ -162,7 +164,8 @@ export const getWardNumberById = asyncHandler(async (req: AuthenticatedRequest, 
 
   // Check accessibility - user must have access to this ward
   if (req.user?.id) {
-    const userAccessList = await getUserAccessList(req.user.id);
+    const effectiveAccess = await getEffectiveWardBoothAccess(req.user.id);
+    const userAccessList = effectiveAccess.unrestricted ? [] : effectiveAccess.rows;
 
     if (userHasAccessibilityConfigured(userAccessList)) {
       if (!validateItemAccess(userAccessList, Number(id), "wardNumberId")) {

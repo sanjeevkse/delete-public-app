@@ -29,6 +29,7 @@ import MetaGenderOption from "./MetaGenderOption";
 import MetaDesignation from "./MetaDesignation";
 import MetaMaritalStatus from "./MetaMaritalStatus";
 import MetaMotherTongue from "./MetaMotherTongue";
+import MetaLocalBody from "./MetaLocalBody";
 import MetaResidenceType from "./MetaResidenceType";
 import MetaRationCardType from "./MetaRationCardType";
 import MetaFamilyGod from "./MetaFamilyGod";
@@ -55,6 +56,7 @@ import Scheme from "./Scheme";
 import UserSchemeApplication from "./UserSchemeApplication";
 import User from "./User";
 import UserAccess from "./UserAccess";
+import UserAccessScope from "./UserAccessScope";
 import UserOtp from "./UserOtp";
 import UserProfile from "./UserProfile";
 import UserRole from "./UserRole";
@@ -71,6 +73,7 @@ import ComplaintStatusHistory from "./ComplaintStatusHistory";
 import ComplaintStatusHistoryMedia from "./ComplaintStatusHistoryMedia";
 import ScheduleEvent from "./ScheduleEvent";
 import ScheduleEventMedia from "./ScheduleEventMedia";
+import GeoUnitScope from "./GeoUnitScope";
 import MetaEventSubName from "./MetaEventSubName";
 import MetaFieldType from "./MetaFieldType";
 import MetaInputFormat from "./MetaInputFormat";
@@ -120,6 +123,8 @@ const establishAssociations = (): void => {
   MetaBoothNumber.hasMany(GeoPolitical, { foreignKey: "boothNumberId", as: "geoPoliticals" });
   GeoPolitical.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
   MetaWardNumber.hasMany(GeoPolitical, { foreignKey: "wardNumberId", as: "geoPoliticals" });
+  GeoPolitical.belongsTo(MetaLocalBody, { foreignKey: "localBodyId", as: "localBody" });
+  MetaLocalBody.hasMany(GeoPolitical, { foreignKey: "localBodyId", as: "geoPoliticals" });
   GeoPolitical.belongsTo(MetaMlaConstituency, {
     foreignKey: "mlaConstituencyId",
     as: "mlaConstituency"
@@ -128,6 +133,8 @@ const establishAssociations = (): void => {
     foreignKey: "mlaConstituencyId",
     as: "geoPoliticals"
   });
+  GeoUnitScope.belongsTo(GeoPolitical, { foreignKey: "geoUnitId", as: "geoUnit" });
+  GeoPolitical.hasMany(GeoUnitScope, { foreignKey: "geoUnitId", as: "scopeMappings" });
 
   Community.belongsTo(MetaCommunityType, { foreignKey: "communityTypeId", as: "communityType" });
   MetaCommunityType.hasMany(Community, { foreignKey: "communityTypeId", as: "communities" });
@@ -210,11 +217,18 @@ const establishAssociations = (): void => {
   MetaEventType.hasMany(ScheduleEvent, { foreignKey: "eventTypeId", as: "scheduleEvents" });
   ScheduleEvent.belongsTo(MetaColor, { foreignKey: "colorId", as: "color" });
   MetaColor.hasMany(ScheduleEvent, { foreignKey: "colorId", as: "scheduleEvents" });
+  ScheduleEvent.belongsTo(GeoPolitical, { foreignKey: "geoUnitId", as: "geoUnit" });
+  GeoPolitical.hasMany(ScheduleEvent, { foreignKey: "geoUnitId", as: "scheduleEvents" });
 
   Event.hasMany(EventRegistration, { foreignKey: "eventId", as: "registrations" });
   EventRegistration.belongsTo(Event, { foreignKey: "eventId", as: "event" });
   EventRegistration.belongsTo(User, { foreignKey: "userId", as: "user" });
   User.hasMany(EventRegistration, { foreignKey: "userId", as: "eventRegistrations" });
+  EventRegistration.belongsTo(GeoPolitical, { foreignKey: "geoUnitId", as: "geoUnit" });
+  GeoPolitical.hasMany(EventRegistration, {
+    foreignKey: "geoUnitId",
+    as: "eventRegistrations"
+  });
 
   EventRegistration.belongsTo(MetaWardNumber, {
     foreignKey: "wardNumberId",
@@ -341,6 +355,11 @@ const establishAssociations = (): void => {
   User.hasMany(UserSchemeApplication, {
     foreignKey: "reviewerUserId",
     as: "reviewedSchemeApplications"
+  });
+  UserSchemeApplication.belongsTo(GeoPolitical, { foreignKey: "geoUnitId", as: "geoUnit" });
+  GeoPolitical.hasMany(UserSchemeApplication, {
+    foreignKey: "geoUnitId",
+    as: "schemeApplicationsByGeoUnit"
   });
 
   UserSchemeApplication.belongsTo(MetaWardNumber, { foreignKey: "wardNumberId", as: "wardNumber" });
@@ -616,6 +635,22 @@ const establishAssociations = (): void => {
     foreignKey: "boothNumberId",
     as: "userProfiles"
   });
+  UserProfile.belongsTo(GeoPolitical, {
+    foreignKey: "geoUnitId",
+    as: "geoUnit"
+  });
+  GeoPolitical.hasMany(UserProfile, {
+    foreignKey: "geoUnitId",
+    as: "userProfiles"
+  });
+  UserProfile.belongsTo(MetaLocalBody, {
+    foreignKey: "localBodyId",
+    as: "localBody"
+  });
+  MetaLocalBody.hasMany(UserProfile, {
+    foreignKey: "localBodyId",
+    as: "userProfiles"
+  });
 
   UserProfile.belongsTo(MetaEducationalDetail, {
     foreignKey: "educationalDetailId",
@@ -685,6 +720,14 @@ const establishAssociations = (): void => {
   FormEventAccessibility.belongsTo(FormEvent, {
     foreignKey: "formEventId",
     as: "formEvent"
+  });
+  FormEventAccessibility.belongsTo(GeoPolitical, {
+    foreignKey: "geoUnitId",
+    as: "geoUnit"
+  });
+  GeoPolitical.hasMany(FormEventAccessibility, {
+    foreignKey: "geoUnitId",
+    as: "formEventAccessibilityRows"
   });
 
   FormEventAccessibility.belongsTo(MetaWardNumber, {
@@ -801,6 +844,8 @@ const establishAssociations = (): void => {
     foreignKey: "complaintTypeId",
     as: "complaints"
   });
+  Complaint.belongsTo(GeoPolitical, { foreignKey: "geoUnitId", as: "geoUnit" });
+  GeoPolitical.hasMany(Complaint, { foreignKey: "geoUnitId", as: "complaints" });
 
   Complaint.belongsTo(MetaWardNumber, {
     foreignKey: "wardNumberId",
@@ -886,6 +931,17 @@ const establishAssociations = (): void => {
     foreignKey: "mlaConstituencyId",
     as: "userAccesses"
   });
+  UserAccess.belongsTo(MetaLocalBody, { foreignKey: "localBodyId", as: "localBody" });
+  MetaLocalBody.hasMany(UserAccess, { foreignKey: "localBodyId", as: "userAccesses" });
+
+  UserAccessScope.belongsTo(User, { foreignKey: "userId", as: "user" });
+  User.hasMany(UserAccessScope, { foreignKey: "userId", as: "accessScopes" });
+
+  UserAccessScope.belongsTo(MetaUserRole, { foreignKey: "accessRoleId", as: "accessRole" });
+  MetaUserRole.hasMany(UserAccessScope, {
+    foreignKey: "accessRoleId",
+    as: "userAccessScopes"
+  });
 
   // DeviceToken associations
   DeviceToken.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -943,6 +999,7 @@ export {
   Job,
   FamilyMember,
   GeoPolitical,
+  GeoUnitScope,
   Member,
   MetaBoothNumber,
   MetaBusinessType,
@@ -966,6 +1023,7 @@ export {
   MetaDisabilityStatus,
   MetaReligion,
   MetaMainCaste,
+  MetaLocalBody,
   MetaSubCaste,
   MetaSubCasteCategory,
   MetaEmploymentGroup,
@@ -983,6 +1041,7 @@ export {
   PermissionGroupSidebar,
   User,
   UserAccess,
+  UserAccessScope,
   UserOtp,
   UserProfile,
   UserRole,

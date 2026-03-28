@@ -1,0 +1,2796 @@
+{
+  "runId": "all-api-test-bed-2026-03-28T20-17-56-788Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "startedAt": "2026-03-28T20:17:56.821Z",
+  "finishedAt": "2026-03-28T20:20:34.068Z",
+  "summary": {
+    "total": 309,
+    "passed": 137,
+    "reachable4xx": 65,
+    "soft404": 102,
+    "failed": 5
+  },
+  "results": [
+    {
+      "sourceFile": "adminRoutes",
+      "method": "GET",
+      "path": "/admin",
+      "template": "/admin",
+      "httpStatus": 500,
+      "bucket": "reachable4xx",
+      "reason": "Failed to lookup view \"admin/dashboard\" in views directory \"/Users/rish6ix/personal/Feed/views\""
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "GET",
+      "path": "/admin/permission-groups",
+      "template": "/admin/permission-groups",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "POST",
+      "path": "/admin/permission-groups",
+      "template": "/admin/permission-groups",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Label is required"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "DELETE",
+      "path": "/admin/permission-groups/81",
+      "template": "/admin/permission-groups/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "GET",
+      "path": "/admin/permission-groups/81",
+      "template": "/admin/permission-groups/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "PUT",
+      "path": "/admin/permission-groups/81",
+      "template": "/admin/permission-groups/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "PATCH",
+      "path": "/admin/permission-groups/81/activate",
+      "template": "/admin/permission-groups/:id/activate",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "PATCH",
+      "path": "/admin/permission-groups/81/deactivate",
+      "template": "/admin/permission-groups/:id/deactivate",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "GET",
+      "path": "/admin/permission-groups/81/permissions",
+      "template": "/admin/permission-groups/:id/permissions",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionRoutes",
+      "method": "GET",
+      "path": "/admin/permissions",
+      "template": "/admin/permissions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/admin/roles",
+      "template": "/admin/roles",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "POST",
+      "path": "/admin/roles",
+      "template": "/admin/roles",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "dispName is required"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "DELETE",
+      "path": "/admin/roles/81",
+      "template": "/admin/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/admin/roles/81",
+      "template": "/admin/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "PUT",
+      "path": "/admin/roles/81",
+      "template": "/admin/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/admin/roles/81/permissions",
+      "template": "/admin/roles/:id/permissions",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "POST",
+      "path": "/admin/roles/2/permissions",
+      "template": "/admin/roles/:roleId/permissions",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "permissionIds must be a non-empty array"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "DELETE",
+      "path": "/admin/roles/2/permissions/1",
+      "template": "/admin/roles/:roleId/permissions/:permissionId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/admin/roles/permissions",
+      "template": "/admin/roles/permissions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/admin/roles/permissions/grouped/all",
+      "template": "/admin/roles/permissions/grouped/all",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/admin/users",
+      "template": "/admin/users",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "POST",
+      "path": "/admin/users",
+      "template": "/admin/users",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "contactNumber is required"
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "DELETE",
+      "path": "/admin/users/5",
+      "template": "/admin/users/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/admin/users/5",
+      "template": "/admin/users/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "PUT",
+      "path": "/admin/users/5",
+      "template": "/admin/users/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "PATCH",
+      "path": "/admin/users/5/posts-block",
+      "template": "/admin/users/:id/posts-block",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Invalid action. Allowed values are 'block' or 'unblock'."
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "PATCH",
+      "path": "/admin/users/5/update-status",
+      "template": "/admin/users/:id/update-status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Invalid action. Allowed values are 'activate' or 'deactivate'."
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "POST",
+      "path": "/admin/users/5/roles",
+      "template": "/admin/users/:userId/roles",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "DELETE",
+      "path": "/admin/users/5/roles/2",
+      "template": "/admin/users/:userId/roles/:roleId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/admin/users/by-mobile/9035444865",
+      "template": "/admin/users/by-mobile/:contactNumber",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/admin/users/pending-approval",
+      "template": "/admin/users/pending-approval",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "adminRoutes",
+      "method": "GET",
+      "path": "/api/admin",
+      "template": "/api/admin",
+      "httpStatus": 500,
+      "bucket": "reachable4xx",
+      "reason": "Failed to lookup view \"admin/dashboard\" in views directory \"/Users/rish6ix/personal/Feed/views\""
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "GET",
+      "path": "/api/admin/permission-groups",
+      "template": "/api/admin/permission-groups",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "POST",
+      "path": "/api/admin/permission-groups",
+      "template": "/api/admin/permission-groups",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Label is required"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "DELETE",
+      "path": "/api/admin/permission-groups/81",
+      "template": "/api/admin/permission-groups/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "GET",
+      "path": "/api/admin/permission-groups/81",
+      "template": "/api/admin/permission-groups/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "PUT",
+      "path": "/api/admin/permission-groups/81",
+      "template": "/api/admin/permission-groups/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "PATCH",
+      "path": "/api/admin/permission-groups/81/activate",
+      "template": "/api/admin/permission-groups/:id/activate",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "PATCH",
+      "path": "/api/admin/permission-groups/81/deactivate",
+      "template": "/api/admin/permission-groups/:id/deactivate",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionGroupRoutes",
+      "method": "GET",
+      "path": "/api/admin/permission-groups/81/permissions",
+      "template": "/api/admin/permission-groups/:id/permissions",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission group not found"
+    },
+    {
+      "sourceFile": "permissionRoutes",
+      "method": "GET",
+      "path": "/api/admin/permissions",
+      "template": "/api/admin/permissions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/admin/roles",
+      "template": "/api/admin/roles",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "POST",
+      "path": "/api/admin/roles",
+      "template": "/api/admin/roles",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "dispName is required"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "DELETE",
+      "path": "/api/admin/roles/81",
+      "template": "/api/admin/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/admin/roles/81",
+      "template": "/api/admin/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "PUT",
+      "path": "/api/admin/roles/81",
+      "template": "/api/admin/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/admin/roles/81/permissions",
+      "template": "/api/admin/roles/:id/permissions",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "POST",
+      "path": "/api/admin/roles/2/permissions",
+      "template": "/api/admin/roles/:roleId/permissions",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "permissionIds must be a non-empty array"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "DELETE",
+      "path": "/api/admin/roles/2/permissions/1",
+      "template": "/api/admin/roles/:roleId/permissions/:permissionId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/admin/roles/permissions",
+      "template": "/api/admin/roles/permissions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/admin/roles/permissions/grouped/all",
+      "template": "/api/admin/roles/permissions/grouped/all",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/api/admin/users",
+      "template": "/api/admin/users",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "POST",
+      "path": "/api/admin/users",
+      "template": "/api/admin/users",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "contactNumber is required"
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "DELETE",
+      "path": "/api/admin/users/5",
+      "template": "/api/admin/users/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/api/admin/users/5",
+      "template": "/api/admin/users/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "PUT",
+      "path": "/api/admin/users/5",
+      "template": "/api/admin/users/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "PATCH",
+      "path": "/api/admin/users/5/posts-block",
+      "template": "/api/admin/users/:id/posts-block",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Invalid action. Allowed values are 'block' or 'unblock'."
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "PATCH",
+      "path": "/api/admin/users/5/update-status",
+      "template": "/api/admin/users/:id/update-status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Invalid action. Allowed values are 'activate' or 'deactivate'."
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "POST",
+      "path": "/api/admin/users/5/roles",
+      "template": "/api/admin/users/:userId/roles",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "DELETE",
+      "path": "/api/admin/users/5/roles/2",
+      "template": "/api/admin/users/:userId/roles/:roleId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/api/admin/users/by-mobile/9035444865",
+      "template": "/api/admin/users/by-mobile/:contactNumber",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userRoutes",
+      "method": "GET",
+      "path": "/api/admin/users/pending-approval",
+      "template": "/api/admin/users/pending-approval",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "GET",
+      "path": "/api/auth/conditional-list",
+      "template": "/api/auth/conditional-list",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "template": "/api/auth/login",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "template": "/api/auth/logout",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "GET",
+      "path": "/api/auth/profile",
+      "template": "/api/auth/profile",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "PATCH",
+      "path": "/api/auth/profile",
+      "template": "/api/auth/profile",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "PATCH",
+      "path": "/api/auth/profile/image",
+      "template": "/api/auth/profile/image",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "profileImage file is required"
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "POST",
+      "path": "/api/auth/request-otp",
+      "template": "/api/auth/request-otp",
+      "httpStatus": 500,
+      "bucket": "reachable4xx",
+      "reason": "OTP provider is not configured"
+    },
+    {
+      "sourceFile": "authRoutes",
+      "method": "GET",
+      "path": "/api/auth/sidebar",
+      "template": "/api/auth/sidebar",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "POST",
+      "path": "/api/auth/sidebar",
+      "template": "/api/auth/sidebar",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "dispName and screenName are required"
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "DELETE",
+      "path": "/api/auth/sidebar/2",
+      "template": "/api/auth/sidebar/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "GET",
+      "path": "/api/auth/sidebar/2",
+      "template": "/api/auth/sidebar/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "PUT",
+      "path": "/api/auth/sidebar/2",
+      "template": "/api/auth/sidebar/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "DELETE",
+      "path": "/api/auth/sidebar/2/permission-groups/1",
+      "template": "/api/auth/sidebar/:sidebarId/permission-groups/:groupId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Permission-sidebar mapping not found"
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "POST",
+      "path": "/api/auth/sidebar/2/permission-groups/1",
+      "template": "/api/auth/sidebar/:sidebarId/permission-groups/:groupId",
+      "httpStatus": 201,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "DELETE",
+      "path": "/api/auth/sidebar/2/roles/2",
+      "template": "/api/auth/sidebar/:sidebarId/roles/:roleId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role-sidebar mapping not found"
+    },
+    {
+      "sourceFile": "sidebarRoutes",
+      "method": "POST",
+      "path": "/api/auth/sidebar/2/roles/2",
+      "template": "/api/auth/sidebar/:sidebarId/roles/:roleId",
+      "httpStatus": 201,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "boothNumberRoutes",
+      "method": "GET",
+      "path": "/api/booth-numbers",
+      "template": "/api/booth-numbers",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "boothNumberRoutes",
+      "method": "POST",
+      "path": "/api/booth-numbers",
+      "template": "/api/booth-numbers",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "mlaConstituencyId is required"
+    },
+    {
+      "sourceFile": "boothNumberRoutes",
+      "method": "DELETE",
+      "path": "/api/booth-numbers/1",
+      "template": "/api/booth-numbers/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "boothNumberRoutes",
+      "method": "GET",
+      "path": "/api/booth-numbers/1",
+      "template": "/api/booth-numbers/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "boothNumberRoutes",
+      "method": "PUT",
+      "path": "/api/booth-numbers/1",
+      "template": "/api/booth-numbers/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "boothNumberRoutes",
+      "method": "PATCH",
+      "path": "/api/booth-numbers/1/status",
+      "template": "/api/booth-numbers/:id/status",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "businessRoutes",
+      "method": "GET",
+      "path": "/api/businesses",
+      "template": "/api/businesses",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "businessRoutes",
+      "method": "POST",
+      "path": "/api/businesses",
+      "template": "/api/businesses",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Missing required fields: businessName, businessTypeId"
+    },
+    {
+      "sourceFile": "businessRoutes",
+      "method": "DELETE",
+      "path": "/api/businesses/5",
+      "template": "/api/businesses/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "businessRoutes",
+      "method": "GET",
+      "path": "/api/businesses/5",
+      "template": "/api/businesses/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "businessRoutes",
+      "method": "PUT",
+      "path": "/api/businesses/5",
+      "template": "/api/businesses/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "businessRoutes",
+      "method": "PATCH",
+      "path": "/api/businesses/5/status",
+      "template": "/api/businesses/:id/status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Status field is required"
+    },
+    {
+      "sourceFile": "casteRelationRoutes",
+      "method": "GET",
+      "path": "/api/caste-relations",
+      "template": "/api/caste-relations",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "religion_id is required"
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "GET",
+      "path": "/api/communities",
+      "template": "/api/communities",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "POST",
+      "path": "/api/communities",
+      "template": "/api/communities",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Missing required fields: communityTypeId, communityName"
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "DELETE",
+      "path": "/api/communities/10",
+      "template": "/api/communities/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "GET",
+      "path": "/api/communities/10",
+      "template": "/api/communities/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "PUT",
+      "path": "/api/communities/10",
+      "template": "/api/communities/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "PATCH",
+      "path": "/api/communities/10/member-count",
+      "template": "/api/communities/:id/member-count",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "totalMember field is required"
+    },
+    {
+      "sourceFile": "communityRoutes",
+      "method": "PATCH",
+      "path": "/api/communities/10/status",
+      "template": "/api/communities/:id/status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Status field is required"
+    },
+    {
+      "sourceFile": "complaintDepartmentRoutes",
+      "method": "GET",
+      "path": "/api/complaint-departments",
+      "template": "/api/complaint-departments",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintDepartmentRoutes",
+      "method": "POST",
+      "path": "/api/complaint-departments",
+      "template": "/api/complaint-departments",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Display name is required"
+    },
+    {
+      "sourceFile": "complaintDepartmentRoutes",
+      "method": "DELETE",
+      "path": "/api/complaint-departments/1",
+      "template": "/api/complaint-departments/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintDepartmentRoutes",
+      "method": "GET",
+      "path": "/api/complaint-departments/1",
+      "template": "/api/complaint-departments/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Sector/Department not found"
+    },
+    {
+      "sourceFile": "complaintDepartmentRoutes",
+      "method": "PUT",
+      "path": "/api/complaint-departments/1",
+      "template": "/api/complaint-departments/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Sector/Department not found"
+    },
+    {
+      "sourceFile": "complaintSectorRoutes",
+      "method": "GET",
+      "path": "/api/complaint-sectors",
+      "template": "/api/complaint-sectors",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintSectorRoutes",
+      "method": "POST",
+      "path": "/api/complaint-sectors",
+      "template": "/api/complaint-sectors",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Display name is required"
+    },
+    {
+      "sourceFile": "complaintSectorRoutes",
+      "method": "DELETE",
+      "path": "/api/complaint-sectors/1",
+      "template": "/api/complaint-sectors/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintSectorRoutes",
+      "method": "GET",
+      "path": "/api/complaint-sectors/1",
+      "template": "/api/complaint-sectors/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Sector/Department not found"
+    },
+    {
+      "sourceFile": "complaintSectorRoutes",
+      "method": "PUT",
+      "path": "/api/complaint-sectors/1",
+      "template": "/api/complaint-sectors/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Sector/Department not found"
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "GET",
+      "path": "/api/complaint-statuses",
+      "template": "/api/complaint-statuses",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "POST",
+      "path": "/api/complaint-statuses",
+      "template": "/api/complaint-statuses",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Display name is required"
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "DELETE",
+      "path": "/api/complaint-statuses/1",
+      "template": "/api/complaint-statuses/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "GET",
+      "path": "/api/complaint-statuses/1",
+      "template": "/api/complaint-statuses/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint status not found"
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "PUT",
+      "path": "/api/complaint-statuses/1",
+      "template": "/api/complaint-statuses/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint status not found"
+    },
+    {
+      "sourceFile": "complainTypesRoutes",
+      "method": "GET",
+      "path": "/api/complaint-types",
+      "template": "/api/complaint-types",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complainTypesRoutes",
+      "method": "POST",
+      "path": "/api/complaint-types",
+      "template": "/api/complaint-types",
+      "httpStatus": 201,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complainTypesRoutes",
+      "method": "DELETE",
+      "path": "/api/complaint-types/81",
+      "template": "/api/complaint-types/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint Type not found or already deleted"
+    },
+    {
+      "sourceFile": "complainTypesRoutes",
+      "method": "GET",
+      "path": "/api/complaint-types/81",
+      "template": "/api/complaint-types/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint Type not found"
+    },
+    {
+      "sourceFile": "complainTypesRoutes",
+      "method": "PUT",
+      "path": "/api/complaint-types/81",
+      "template": "/api/complaint-types/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint Type not found"
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "GET",
+      "path": "/api/complaints",
+      "template": "/api/complaints",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "POST",
+      "path": "/api/complaints",
+      "template": "/api/complaints",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Full name and contact number are required"
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "GET",
+      "path": "/api/complaints/14/status-history",
+      "template": "/api/complaints/:complaintId/status-history",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintStatusRoutes",
+      "method": "POST",
+      "path": "/api/complaints/14/status",
+      "template": "/api/complaints/:complaintId/status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Complaint status ID is required"
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "DELETE",
+      "path": "/api/complaints/14",
+      "template": "/api/complaints/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "GET",
+      "path": "/api/complaints/14",
+      "template": "/api/complaints/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "PUT",
+      "path": "/api/complaints/14",
+      "template": "/api/complaints/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "DELETE",
+      "path": "/api/complaints/14/media",
+      "template": "/api/complaints/:id/media",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint not found"
+    },
+    {
+      "sourceFile": "complaintRoutes",
+      "method": "POST",
+      "path": "/api/complaints/14/media",
+      "template": "/api/complaints/:id/media",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Complaint not found"
+    },
+    {
+      "sourceFile": "conditionalListRoutes",
+      "method": "GET",
+      "path": "/api/conditional-list",
+      "template": "/api/conditional-list",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "conditionalListRoutes",
+      "method": "POST",
+      "path": "/api/conditional-list",
+      "template": "/api/conditional-list",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "type, name, and label are required"
+    },
+    {
+      "sourceFile": "conditionalListRoutes",
+      "method": "DELETE",
+      "path": "/api/conditional-list/81",
+      "template": "/api/conditional-list/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Conditional list item not found"
+    },
+    {
+      "sourceFile": "conditionalListRoutes",
+      "method": "GET",
+      "path": "/api/conditional-list/81",
+      "template": "/api/conditional-list/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Conditional list item not found"
+    },
+    {
+      "sourceFile": "conditionalListRoutes",
+      "method": "PUT",
+      "path": "/api/conditional-list/81",
+      "template": "/api/conditional-list/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Conditional list item not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "GET",
+      "path": "/api/events",
+      "template": "/api/events",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "POST",
+      "path": "/api/events",
+      "template": "/api/events",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "title is required"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "DELETE",
+      "path": "/api/events/81",
+      "template": "/api/events/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "GET",
+      "path": "/api/events/81",
+      "template": "/api/events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "PUT",
+      "path": "/api/events/81",
+      "template": "/api/events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "DELETE",
+      "path": "/api/events/81/media",
+      "template": "/api/events/:id/media",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "POST",
+      "path": "/api/events/81/media",
+      "template": "/api/events/:id/media",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "POST",
+      "path": "/api/events/81/register",
+      "template": "/api/events/:id/register",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "GET",
+      "path": "/api/events/81/registrations",
+      "template": "/api/events/:id/registrations",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "POST",
+      "path": "/api/events/81/registrations/upload",
+      "template": "/api/events/:id/registrations/upload",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "POST",
+      "path": "/api/events/81/unregister",
+      "template": "/api/events/:id/unregister",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found"
+    },
+    {
+      "sourceFile": "familyMemberRoutes",
+      "method": "GET",
+      "path": "/api/family-members",
+      "template": "/api/family-members",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "familyMemberRoutes",
+      "method": "POST",
+      "path": "/api/family-members",
+      "template": "/api/family-members",
+      "httpStatus": 422,
+      "bucket": "reachable4xx",
+      "reason": "Validation failed"
+    },
+    {
+      "sourceFile": "familyMemberRoutes",
+      "method": "DELETE",
+      "path": "/api/family-members/5",
+      "template": "/api/family-members/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "familyMemberRoutes",
+      "method": "GET",
+      "path": "/api/family-members/5",
+      "template": "/api/family-members/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Family member not found"
+    },
+    {
+      "sourceFile": "familyMemberRoutes",
+      "method": "PUT",
+      "path": "/api/family-members/5",
+      "template": "/api/family-members/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "familyMemberRoutes",
+      "method": "PATCH",
+      "path": "/api/family-members/5/status",
+      "template": "/api/family-members/:id/status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Status field is required"
+    },
+    {
+      "sourceFile": "formEventRoutes",
+      "method": "GET",
+      "path": "/api/form-events",
+      "template": "/api/form-events",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formEventRoutes",
+      "method": "POST",
+      "path": "/api/form-events",
+      "template": "/api/form-events",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "formId is required"
+    },
+    {
+      "sourceFile": "formEventRoutes",
+      "method": "DELETE",
+      "path": "/api/form-events/33",
+      "template": "/api/form-events/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formEventRoutes",
+      "method": "GET",
+      "path": "/api/form-events/33",
+      "template": "/api/form-events/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formEventRoutes",
+      "method": "PUT",
+      "path": "/api/form-events/33",
+      "template": "/api/form-events/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/form-field-types",
+      "template": "/api/form-field-types",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "POST",
+      "path": "/api/form-field-types",
+      "template": "/api/form-field-types",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "fieldType and dispName are required"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "DELETE",
+      "path": "/api/form-field-types/81",
+      "template": "/api/form-field-types/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Field type not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/form-field-types/81",
+      "template": "/api/form-field-types/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Field type not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "PUT",
+      "path": "/api/form-field-types/81",
+      "template": "/api/form-field-types/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Field type not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/form-input-formats",
+      "template": "/api/form-input-formats",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "POST",
+      "path": "/api/form-input-formats",
+      "template": "/api/form-input-formats",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "fieldType, dispName and targetValue are required"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "DELETE",
+      "path": "/api/form-input-formats/81",
+      "template": "/api/form-input-formats/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Input format not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/form-input-formats/81",
+      "template": "/api/form-input-formats/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Input format not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "PUT",
+      "path": "/api/form-input-formats/81",
+      "template": "/api/form-input-formats/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Input format not found"
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "DELETE",
+      "path": "/api/form-submissions/1",
+      "template": "/api/form-submissions/:submissionId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form submission not found"
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "GET",
+      "path": "/api/form-submissions/1",
+      "template": "/api/form-submissions/:submissionId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form submission not found"
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "PUT",
+      "path": "/api/form-submissions/1",
+      "template": "/api/form-submissions/:submissionId",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Form data must include at least one field value"
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "PUT",
+      "path": "/api/form-submissions/1/status",
+      "template": "/api/form-submissions/:submissionId/status",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "status is required"
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "GET",
+      "path": "/api/form-submissions/events/33/list",
+      "template": "/api/form-submissions/events/:formEventId/list",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "GET",
+      "path": "/api/form-submissions/events/33/stats",
+      "template": "/api/form-submissions/events/:formEventId/stats",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "POST",
+      "path": "/api/form-submissions/events/33/submit",
+      "template": "/api/form-submissions/events/:formEventId/submit",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Form data must include at least one field value"
+    },
+    {
+      "sourceFile": "formSubmissionRoutes",
+      "method": "GET",
+      "path": "/api/form-submissions/my-submissions/list",
+      "template": "/api/form-submissions/my-submissions/list",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/forms",
+      "template": "/api/forms",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "POST",
+      "path": "/api/forms",
+      "template": "/api/forms",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "title is required"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/forms/38/fields",
+      "template": "/api/forms/:formId/fields",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "POST",
+      "path": "/api/forms/38/fields",
+      "template": "/api/forms/:formId/fields",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "fieldKey, label and fieldTypeId are required"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "DELETE",
+      "path": "/api/forms/38/fields/275",
+      "template": "/api/forms/:formId/fields/:fieldId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/forms/38/fields/275",
+      "template": "/api/forms/:formId/fields/:fieldId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form field not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "PUT",
+      "path": "/api/forms/38/fields/275",
+      "template": "/api/forms/:formId/fields/:fieldId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form field not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/forms/38/fields/275/options",
+      "template": "/api/forms/:formId/fields/:fieldId/options",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form field not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "POST",
+      "path": "/api/forms/38/fields/275/options",
+      "template": "/api/forms/:formId/fields/:fieldId/options",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form field not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "DELETE",
+      "path": "/api/forms/38/fields/275/options/59",
+      "template": "/api/forms/:formId/fields/:fieldId/options/:optionId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form field not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/forms/38/fields/275/options/59",
+      "template": "/api/forms/:formId/fields/:fieldId/options/:optionId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Field option not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "PUT",
+      "path": "/api/forms/38/fields/275/options/59",
+      "template": "/api/forms/:formId/fields/:fieldId/options/:optionId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form field not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "DELETE",
+      "path": "/api/forms/81",
+      "template": "/api/forms/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "GET",
+      "path": "/api/forms/81",
+      "template": "/api/forms/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form not found"
+    },
+    {
+      "sourceFile": "formBuilderRoutes",
+      "method": "PUT",
+      "path": "/api/forms/81",
+      "template": "/api/forms/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Form not found"
+    },
+    {
+      "sourceFile": "geoLookupRoutes",
+      "method": "GET",
+      "path": "/api/geo-lookup",
+      "template": "/api/geo-lookup",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "request_entity is required"
+    },
+    {
+      "sourceFile": "jobRoutes",
+      "method": "GET",
+      "path": "/api/jobs",
+      "template": "/api/jobs",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "jobRoutes",
+      "method": "POST",
+      "path": "/api/jobs",
+      "template": "/api/jobs",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "submitted_for is required"
+    },
+    {
+      "sourceFile": "jobRoutes",
+      "method": "DELETE",
+      "path": "/api/jobs/3",
+      "template": "/api/jobs/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "jobRoutes",
+      "method": "GET",
+      "path": "/api/jobs/3",
+      "template": "/api/jobs/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Job not found"
+    },
+    {
+      "sourceFile": "jobRoutes",
+      "method": "PUT",
+      "path": "/api/jobs/3",
+      "template": "/api/jobs/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "memberRoutes",
+      "method": "GET",
+      "path": "/api/members",
+      "template": "/api/members",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "memberRoutes",
+      "method": "POST",
+      "path": "/api/members",
+      "template": "/api/members",
+      "httpStatus": 422,
+      "bucket": "reachable4xx",
+      "reason": "Validation failed"
+    },
+    {
+      "sourceFile": "memberRoutes",
+      "method": "DELETE",
+      "path": "/api/members/7",
+      "template": "/api/members/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "memberRoutes",
+      "method": "GET",
+      "path": "/api/members/7",
+      "template": "/api/members/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "memberRoutes",
+      "method": "PUT",
+      "path": "/api/members/7",
+      "template": "/api/members/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "memberRoutes",
+      "method": "GET",
+      "path": "/api/members/me/check",
+      "template": "/api/members/me/check",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "GET",
+      "path": "/api/meta-tables",
+      "template": "/api/meta-tables",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "PATCH",
+      "path": "/api/meta-tables/tbl_meta_business_type/bulk-status",
+      "template": "/api/meta-tables/:tableName/bulk-status",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "GET",
+      "path": "/api/meta-tables/tbl_meta_business_type/data",
+      "template": "/api/meta-tables/:tableName/data",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "POST",
+      "path": "/api/meta-tables/tbl_meta_business_type/data",
+      "template": "/api/meta-tables/:tableName/data",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "DELETE",
+      "path": "/api/meta-tables/tbl_meta_business_type/data/81",
+      "template": "/api/meta-tables/:tableName/data/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "GET",
+      "path": "/api/meta-tables/tbl_meta_business_type/data/81",
+      "template": "/api/meta-tables/:tableName/data/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "PUT",
+      "path": "/api/meta-tables/tbl_meta_business_type/data/81",
+      "template": "/api/meta-tables/:tableName/data/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "GET",
+      "path": "/api/meta-tables/tbl_meta_business_type/schema",
+      "template": "/api/meta-tables/:tableName/schema",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "metaTablesRoutes",
+      "method": "GET",
+      "path": "/api/meta-tables/tbl_meta_business_type/stats",
+      "template": "/api/meta-tables/:tableName/stats",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Meta table 'tbl_meta_business_type' not found"
+    },
+    {
+      "sourceFile": "mlaConstituencyRoutes",
+      "method": "GET",
+      "path": "/api/mla-constituencies",
+      "template": "/api/mla-constituencies",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "mlaConstituencyRoutes",
+      "method": "POST",
+      "path": "/api/mla-constituencies",
+      "template": "/api/mla-constituencies",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "dispName is required"
+    },
+    {
+      "sourceFile": "mlaConstituencyRoutes",
+      "method": "DELETE",
+      "path": "/api/mla-constituencies/1",
+      "template": "/api/mla-constituencies/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "mlaConstituencyRoutes",
+      "method": "GET",
+      "path": "/api/mla-constituencies/1",
+      "template": "/api/mla-constituencies/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "mlaConstituencyRoutes",
+      "method": "PUT",
+      "path": "/api/mla-constituencies/1",
+      "template": "/api/mla-constituencies/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "mlaConstituencyRoutes",
+      "method": "PATCH",
+      "path": "/api/mla-constituencies/1/status",
+      "template": "/api/mla-constituencies/:id/status",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "GET",
+      "path": "/api/my-posts",
+      "template": "/api/my-posts",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "notificationRecipientRoutes",
+      "method": "GET",
+      "path": "/api/notifications/91/delivery-status",
+      "template": "/api/notifications/:notificationLogId/delivery-status",
+      "httpStatus": null,
+      "bucket": "failed",
+      "reason": "This operation was aborted"
+    },
+    {
+      "sourceFile": "notificationRecipientRoutes",
+      "method": "GET",
+      "path": "/api/notifications/91/user-status?userId=457",
+      "template": "/api/notifications/:notificationLogId/user-status",
+      "httpStatus": null,
+      "bucket": "failed",
+      "reason": "This operation was aborted"
+    },
+    {
+      "sourceFile": "notificationRecipientRoutes",
+      "method": "GET",
+      "path": "/api/notifications/delivery/summary?status=failed",
+      "template": "/api/notifications/delivery/summary",
+      "httpStatus": null,
+      "bucket": "failed",
+      "reason": "This operation was aborted"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/send/broadcast",
+      "template": "/api/notifications/send/broadcast",
+      "httpStatus": 503,
+      "bucket": "reachable4xx",
+      "reason": "Firebase has not been initialized. Call initializeFirebase() first."
+    },
+    {
+      "sourceFile": "targetedNotificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/send/targeted",
+      "template": "/api/notifications/send/targeted",
+      "httpStatus": 404,
+      "bucket": "reachable4xx",
+      "reason": "No users found matching the specified access and role criteria"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/send/topic",
+      "template": "/api/notifications/send/topic",
+      "httpStatus": 503,
+      "bucket": "reachable4xx",
+      "reason": "Firebase has not been initialized. Call initializeFirebase() first."
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/send/user",
+      "template": "/api/notifications/send/user",
+      "httpStatus": 404,
+      "bucket": "reachable4xx",
+      "reason": "No active device tokens found for this user"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/send/users",
+      "template": "/api/notifications/send/users",
+      "httpStatus": 404,
+      "bucket": "reachable4xx",
+      "reason": "No active device tokens found for these users"
+    },
+    {
+      "sourceFile": "targetedNotificationRoutes",
+      "method": "GET",
+      "path": "/api/notifications/targeted/4",
+      "template": "/api/notifications/targeted/:targetedLogId",
+      "httpStatus": null,
+      "bucket": "failed",
+      "reason": "This operation was aborted"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "GET",
+      "path": "/api/notifications/tokens",
+      "template": "/api/notifications/tokens",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "userId is required"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/tokens/register",
+      "template": "/api/notifications/tokens/register",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/tokens/unregister",
+      "template": "/api/notifications/tokens/unregister",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/topics/subscribe",
+      "template": "/api/notifications/topics/subscribe",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "userId is required"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "POST",
+      "path": "/api/notifications/topics/unsubscribe",
+      "template": "/api/notifications/topics/unsubscribe",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "userId is required"
+    },
+    {
+      "sourceFile": "notificationRoutes",
+      "method": "GET",
+      "path": "/api/notifications/user",
+      "template": "/api/notifications/user",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "notificationRecipientRoutes",
+      "method": "GET",
+      "path": "/api/notifications/users/5/failed?limit=10&offset=0",
+      "template": "/api/notifications/users/:userId/failed",
+      "httpStatus": null,
+      "bucket": "failed",
+      "reason": "This operation was aborted"
+    },
+    {
+      "sourceFile": "PaEventRoutes",
+      "method": "GET",
+      "path": "/api/pa-events",
+      "template": "/api/pa-events",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "PaEventRoutes",
+      "method": "POST",
+      "path": "/api/pa-events",
+      "template": "/api/pa-events",
+      "httpStatus": 422,
+      "bucket": "reachable4xx",
+      "reason": "Validation failed"
+    },
+    {
+      "sourceFile": "PaEventRoutes",
+      "method": "DELETE",
+      "path": "/api/pa-events/81",
+      "template": "/api/pa-events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found or already deleted"
+    },
+    {
+      "sourceFile": "PaEventRoutes",
+      "method": "GET",
+      "path": "/api/pa-events/81",
+      "template": "/api/pa-events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found or inactive"
+    },
+    {
+      "sourceFile": "PaEventRoutes",
+      "method": "PUT",
+      "path": "/api/pa-events/81",
+      "template": "/api/pa-events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found or inactive"
+    },
+    {
+      "sourceFile": "permissionRoutes",
+      "method": "GET",
+      "path": "/api/permissions",
+      "template": "/api/permissions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "GET",
+      "path": "/api/posts",
+      "template": "/api/posts",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "POST",
+      "path": "/api/posts",
+      "template": "/api/posts",
+      "httpStatus": 403,
+      "bucket": "reachable4xx",
+      "reason": "User is blocked from creating posts"
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "DELETE",
+      "path": "/api/posts/43",
+      "template": "/api/posts/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "GET",
+      "path": "/api/posts/43",
+      "template": "/api/posts/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Post not found"
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "PUT",
+      "path": "/api/posts/43",
+      "template": "/api/posts/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Post not found"
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "GET",
+      "path": "/api/posts/43/likes",
+      "template": "/api/posts/:id/likes",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Post not found"
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "DELETE",
+      "path": "/api/posts/43/media",
+      "template": "/api/posts/:id/media",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Post not found"
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "POST",
+      "path": "/api/posts/43/media",
+      "template": "/api/posts/:id/media",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Post not found"
+    },
+    {
+      "sourceFile": "postRoutes",
+      "method": "POST",
+      "path": "/api/posts/43/reactions",
+      "template": "/api/posts/:id/reactions",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "reaction is required"
+    },
+    {
+      "sourceFile": "eventRoutes",
+      "method": "DELETE",
+      "path": "/api/registrations/1",
+      "template": "/api/registrations/:registrationId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Active registration not found"
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/business",
+      "template": "/api/reports/business",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/form-events/33",
+      "template": "/api/reports/form-events/:formEventId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/form-events/metrics",
+      "template": "/api/reports/form-events/metrics",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/posts",
+      "template": "/api/reports/posts",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/public-events",
+      "template": "/api/reports/public-events",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "eventId is required"
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/public-events/metrics",
+      "template": "/api/reports/public-events/metrics",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "reportRoutes",
+      "method": "GET",
+      "path": "/api/reports/users",
+      "template": "/api/reports/users",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/roles",
+      "template": "/api/roles",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "POST",
+      "path": "/api/roles",
+      "template": "/api/roles",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "dispName is required"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "DELETE",
+      "path": "/api/roles/81",
+      "template": "/api/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/roles/81",
+      "template": "/api/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "PUT",
+      "path": "/api/roles/81",
+      "template": "/api/roles/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/roles/81/permissions",
+      "template": "/api/roles/:id/permissions",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Role not found"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "POST",
+      "path": "/api/roles/2/permissions",
+      "template": "/api/roles/:roleId/permissions",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "permissionIds must be a non-empty array"
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "DELETE",
+      "path": "/api/roles/2/permissions/1",
+      "template": "/api/roles/:roleId/permissions/:permissionId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/roles/permissions",
+      "template": "/api/roles/permissions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "roleRoutes",
+      "method": "GET",
+      "path": "/api/roles/permissions/grouped/all",
+      "template": "/api/roles/permissions/grouped/all",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "scheduleEventRoutes",
+      "method": "GET",
+      "path": "/api/schedule-events",
+      "template": "/api/schedule-events",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "scheduleEventRoutes",
+      "method": "POST",
+      "path": "/api/schedule-events",
+      "template": "/api/schedule-events",
+      "httpStatus": 422,
+      "bucket": "reachable4xx",
+      "reason": "Validation failed"
+    },
+    {
+      "sourceFile": "scheduleEventRoutes",
+      "method": "DELETE",
+      "path": "/api/schedule-events/1",
+      "template": "/api/schedule-events/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "scheduleEventRoutes",
+      "method": "GET",
+      "path": "/api/schedule-events/1",
+      "template": "/api/schedule-events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found or inactive"
+    },
+    {
+      "sourceFile": "scheduleEventRoutes",
+      "method": "PUT",
+      "path": "/api/schedule-events/1",
+      "template": "/api/schedule-events/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Event not found or inactive"
+    },
+    {
+      "sourceFile": "userSchemeApplicationRoutes",
+      "method": "GET",
+      "path": "/api/scheme-applications",
+      "template": "/api/scheme-applications",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "userSchemeApplicationRoutes",
+      "method": "POST",
+      "path": "/api/scheme-applications",
+      "template": "/api/scheme-applications",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Invalid sectorId"
+    },
+    {
+      "sourceFile": "userSchemeApplicationRoutes",
+      "method": "DELETE",
+      "path": "/api/scheme-applications/81",
+      "template": "/api/scheme-applications/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Application not found"
+    },
+    {
+      "sourceFile": "userSchemeApplicationRoutes",
+      "method": "GET",
+      "path": "/api/scheme-applications/81",
+      "template": "/api/scheme-applications/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Application not found"
+    },
+    {
+      "sourceFile": "userSchemeApplicationRoutes",
+      "method": "PUT",
+      "path": "/api/scheme-applications/81",
+      "template": "/api/scheme-applications/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Application not found"
+    },
+    {
+      "sourceFile": "schemeCategoryRoutes",
+      "method": "GET",
+      "path": "/api/scheme-categories",
+      "template": "/api/scheme-categories",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "schemeCategoryRoutes",
+      "method": "POST",
+      "path": "/api/scheme-categories",
+      "template": "/api/scheme-categories",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Missing required field: dispName"
+    },
+    {
+      "sourceFile": "schemeCategoryRoutes",
+      "method": "DELETE",
+      "path": "/api/scheme-categories/81",
+      "template": "/api/scheme-categories/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme category not found"
+    },
+    {
+      "sourceFile": "schemeCategoryRoutes",
+      "method": "GET",
+      "path": "/api/scheme-categories/81",
+      "template": "/api/scheme-categories/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme category not found"
+    },
+    {
+      "sourceFile": "schemeCategoryRoutes",
+      "method": "PUT",
+      "path": "/api/scheme-categories/81",
+      "template": "/api/scheme-categories/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme category not found"
+    },
+    {
+      "sourceFile": "schemeCategoryRoutes",
+      "method": "PATCH",
+      "path": "/api/scheme-categories/81/status",
+      "template": "/api/scheme-categories/:id/status",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme category not found"
+    },
+    {
+      "sourceFile": "schemeSectorRoutes",
+      "method": "GET",
+      "path": "/api/scheme-sectors",
+      "template": "/api/scheme-sectors",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "schemeSectorRoutes",
+      "method": "POST",
+      "path": "/api/scheme-sectors",
+      "template": "/api/scheme-sectors",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "Missing required field: dispName"
+    },
+    {
+      "sourceFile": "schemeSectorRoutes",
+      "method": "DELETE",
+      "path": "/api/scheme-sectors/81",
+      "template": "/api/scheme-sectors/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme sector not found"
+    },
+    {
+      "sourceFile": "schemeSectorRoutes",
+      "method": "GET",
+      "path": "/api/scheme-sectors/81",
+      "template": "/api/scheme-sectors/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme sector not found"
+    },
+    {
+      "sourceFile": "schemeSectorRoutes",
+      "method": "PUT",
+      "path": "/api/scheme-sectors/81",
+      "template": "/api/scheme-sectors/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme sector not found"
+    },
+    {
+      "sourceFile": "schemeSectorRoutes",
+      "method": "PATCH",
+      "path": "/api/scheme-sectors/81/status",
+      "template": "/api/scheme-sectors/:id/status",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme sector not found"
+    },
+    {
+      "sourceFile": "schemeRoutes",
+      "method": "GET",
+      "path": "/api/schemes",
+      "template": "/api/schemes",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "schemeRoutes",
+      "method": "POST",
+      "path": "/api/schemes",
+      "template": "/api/schemes",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "disp_name is required"
+    },
+    {
+      "sourceFile": "schemeRoutes",
+      "method": "DELETE",
+      "path": "/api/schemes/1",
+      "template": "/api/schemes/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "schemeRoutes",
+      "method": "GET",
+      "path": "/api/schemes/1",
+      "template": "/api/schemes/:id",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme not found"
+    },
+    {
+      "sourceFile": "schemeRoutes",
+      "method": "PUT",
+      "path": "/api/schemes/1",
+      "template": "/api/schemes/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "schemeRoutes",
+      "method": "PUT",
+      "path": "/api/schemes/1/steps/1",
+      "template": "/api/schemes/:schemeId/steps/:stepId",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Scheme step not found"
+    },
+    {
+      "sourceFile": "wardNumberRoutes",
+      "method": "GET",
+      "path": "/api/ward-numbers",
+      "template": "/api/ward-numbers",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "wardNumberRoutes",
+      "method": "POST",
+      "path": "/api/ward-numbers",
+      "template": "/api/ward-numbers",
+      "httpStatus": 400,
+      "bucket": "reachable4xx",
+      "reason": "dispName is required"
+    },
+    {
+      "sourceFile": "wardNumberRoutes",
+      "method": "DELETE",
+      "path": "/api/ward-numbers/1",
+      "template": "/api/ward-numbers/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "wardNumberRoutes",
+      "method": "GET",
+      "path": "/api/ward-numbers/1",
+      "template": "/api/ward-numbers/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "wardNumberRoutes",
+      "method": "PUT",
+      "path": "/api/ward-numbers/1",
+      "template": "/api/ward-numbers/:id",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "wardNumberRoutes",
+      "method": "PATCH",
+      "path": "/api/ward-numbers/1/status",
+      "template": "/api/ward-numbers/:id/status",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope",
+      "template": "/telescope",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "DELETE",
+      "path": "/telescope/api/exceptions",
+      "template": "/telescope/api/exceptions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/exceptions",
+      "template": "/telescope/api/exceptions",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/exceptions/1",
+      "template": "/telescope/api/exceptions/:uuid",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Exception not found"
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "DELETE",
+      "path": "/telescope/api/queries",
+      "template": "/telescope/api/queries",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/queries",
+      "template": "/telescope/api/queries",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/queries/request/1",
+      "template": "/telescope/api/queries/request/:requestId",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/queries/slow",
+      "template": "/telescope/api/queries/slow",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "DELETE",
+      "path": "/telescope/api/requests",
+      "template": "/telescope/api/requests",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/requests",
+      "template": "/telescope/api/requests",
+      "httpStatus": 200,
+      "bucket": "passed",
+      "reason": null
+    },
+    {
+      "sourceFile": "telescopeRoutes",
+      "method": "GET",
+      "path": "/telescope/api/requests/1",
+      "template": "/telescope/api/requests/:uuid",
+      "httpStatus": 404,
+      "bucket": "soft404",
+      "reason": "Request not found"
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "runId": "accessibility-matrix-test-bed-2026-03-28T20-58-29-756Z",
+  "startedAt": "2026-03-28T20:58:29.759Z",
+  "finishedAt": "2026-03-28T20:58:32.724Z",
+  "summary": {
+    "passed": 20,
+    "failed": 0
+  },
+  "scenarios": [
+    {
+      "name": "Urban wildcard compiles to LOCAL_BODY and covers sample leaf",
+      "status": "passed",
+      "details": {
+        "scopeType": "LOCAL_BODY",
+        "scopeId": 1,
+        "settlementType": "URBAN",
+        "localBodyType": "GBA"
+      }
+    },
+    {
+      "name": "Rural wildcard compiles to GRAM_PANCHAYAT and covers sample leaf",
+      "status": "passed",
+      "details": {
+        "scopeType": "GRAM_PANCHAYAT",
+        "scopeId": 82,
+        "settlementType": "RURAL",
+        "localBodyType": "GP"
+      }
+    },
+    {
+      "name": "Top-level wildcard compiles to GLOBAL unrestricted access",
+      "status": "passed",
+      "details": {
+        "scopeType": "GLOBAL",
+        "scopeId": 1,
+        "settlementType": null,
+        "localBodyType": null
+      }
+    },
+    {
+      "name": "Exact urban booth access resolves and includes sample leaf",
+      "status": "passed",
+      "details": {
+        "scopeType": "BOOTH",
+        "scopeId": 15479,
+        "settlementType": "URBAN",
+        "localBodyType": "GBA"
+      }
+    },
+    {
+      "name": "Exact rural booth access resolves and includes sample leaf",
+      "status": "passed",
+      "details": {
+        "scopeType": "BOOTH",
+        "scopeId": 4422,
+        "settlementType": "RURAL",
+        "localBodyType": "GP"
+      }
+    },
+    {
+      "name": "MLA wildcard compiles to MLA_CONSTITUENCY and covers urban sample leaf",
+      "status": "passed",
+      "details": {
+        "scopeType": "MLA_CONSTITUENCY",
+        "scopeId": 193,
+        "settlementType": "URBAN",
+        "localBodyType": null
+      }
+    },
+    {
+      "name": "Main-village wildcard compiles to MAIN_VILLAGE and covers rural sample leaf",
+      "status": "passed",
+      "details": {
+        "scopeType": "MAIN_VILLAGE",
+        "scopeId": 824,
+        "settlementType": "RURAL",
+        "localBodyType": "GP"
+      }
+    },
+    {
+      "name": "Explicit child after wildcard is rejected",
+      "status": "passed",
+      "details": null
+    },
+    {
+      "name": "Duplicate access rows dedupe to one compiled scope",
+      "status": "passed",
+      "details": {
+        "scopeType": "LOCAL_BODY",
+        "scopeId": 1,
+        "settlementType": "URBAN",
+        "localBodyType": "GBA"
+      }
+    },
+    {
+      "name": "Multiple access rows union includes both sampled urban leaves",
+      "status": "passed",
+      "details": {
+        "geoUnitCount": 50
+      }
+    },
+    {
+      "name": "Urban scoped access excludes sampled rural leaf",
+      "status": "passed",
+      "details": {
+        "checkedExcludedGeoUnitId": 301936
+      }
+    },
+    {
+      "name": "Rural scoped access excludes sampled urban leaf",
+      "status": "passed",
+      "details": {
+        "checkedExcludedGeoUnitId": 146821
+      }
+    },
+    {
+      "name": "Invalid rural non-GP branch is rejected",
+      "status": "passed",
+      "details": null
+    },
+    {
+      "name": "Urban exact leaf still resolves when pollingStationId is omitted",
+      "status": "passed",
+      "details": {
+        "geoUnitId": 146821
+      }
+    },
+    {
+      "name": "GP with localBodyId is rejected",
+      "status": "passed",
+      "details": null
+    },
+    {
+      "name": "Ambiguous urban ancestor-only geo input is rejected",
+      "status": "passed",
+      "details": null
+    },
+    {
+      "name": "Optional rural hobaliId and pollingStationId can be omitted when leaf is unique",
+      "status": "passed",
+      "details": {
+        "geoUnitId": 301936
+      }
+    },
+    {
+      "name": "Exact rural leaf resolves when optional hobaliId is present",
+      "status": "passed",
+      "details": {
+        "geoUnitId": 301936
+      }
+    },
+    {
+      "name": "Multiple access rows across branches union includes one urban and one rural leaf",
+      "status": "passed",
+      "details": {
+        "geoUnitCount": 29
+      }
+    },
+    {
+      "name": "Branch-mixed urban settlement with rural IDs does not resolve",
+      "status": "passed",
+      "details": null
+    }
+  ]
+}

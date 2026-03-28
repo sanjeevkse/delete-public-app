@@ -23,6 +23,12 @@ import { MediaType } from "../types/enums";
 import { Sequelize, Op } from "sequelize";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import { PUBLIC_ROLE_NAME } from "../config/rbac";
+import {
+  assertUserCanAccessGeoUnit,
+  buildGeoUnitAccessWhere,
+  resolveGeoUnitRecordFromSource,
+  serializeGeoUnit
+} from "../services/geoUnitService";
 
 // ✅ Common attributes to exclude
 const excludeFields = ["updatedBy", "status", "updatedAt"];
@@ -55,14 +61,17 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
   const mediaFiles = req.files as Express.Multer.File[] | undefined;
   const complaintType = await ComplaintType.findOne({ where: { id: complaintTypeId, status: 1 } });
   if (!complaintType) throw new ApiError("Invalid complaint type", 400);
+  const resolvedGeoUnit = await resolveGeoUnitRecordFromSource(req.body ?? {});
+  await assertUserCanAccessGeoUnit(userId, resolvedGeoUnit?.id);
 
   const complaint = await sequelize.transaction(async (transaction) => {
     const newComplaint = await Complaint.create(
       {
         selfOther,
         complaintTypeId,
-        wardNumberId: wardNumberId || null,
-        boothNumberId: boothNumberId || null,
+        geoUnitId: resolvedGeoUnit?.id ?? null,
+        wardNumberId: resolvedGeoUnit?.wardNumberId ?? wardNumberId ?? null,
+        boothNumberId: resolvedGeoUnit?.boothNumberId ?? boothNumberId ?? null,
         currentStatusId: 1, // Default status is "Pending"
         title,
         description,
@@ -135,6 +144,28 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
         required: true
+      },
+      {
+        association: "geoUnit",
+        attributes: [
+          "id",
+          "stateId",
+          "districtId",
+          "talukId",
+          "mpConstituencyId",
+          "mlaConstituencyId",
+          "settlementType",
+          "governingBody",
+          "localBodyId",
+          "hobaliId",
+          "gramPanchayatId",
+          "mainVillageId",
+          "subVillageId",
+          "wardNumberId",
+          "pollingStationId",
+          "boothNumberId"
+        ],
+        required: false
       }
     ]
   });
@@ -143,9 +174,14 @@ export const createComplaint = asyncHandler(async (req: AuthenticatedRequest, re
 });
 
 export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { id } = req.params;
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
+  const geoAccessWhere = isAdmin ? null : await buildGeoUnitAccessWhere(userId);
 
-  const complaint = await Complaint.findByPk(id, {
+  const complaint = await Complaint.findOne({
+    where: { id, ...(geoAccessWhere ?? {}) },
     attributes: { exclude: ["updatedBy", "status", "updatedAt"] },
     include: [
       {
@@ -199,6 +235,7 @@ export const getComplaintById = asyncHandler(async (req: AuthenticatedRequest, r
     mediaUrl: makeFullUrl(m.mediaUrl),
     thumbnailUrl: makeFullUrl(m.thumbnailUrl)
   }));
+  complaintJson.geo = serializeGeoUnit(complaintJson.geoUnit, complaintJson.geoUnitId ?? null);
 
   return sendSuccess(res, complaintJson, "Complaint fetched successfully");
 });
@@ -215,8 +252,10 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 
   const where: any = { status: 1 };
   const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
   const isPublicOnly =
     normalizedRoles.length === 1 && normalizedRoles[0] === PUBLIC_ROLE_NAME.toLowerCase();
+  const geoAccessWhere = isAdmin ? null : await buildGeoUnitAccessWhere(userId);
 
   const searchTerm = (req.query.search as string | undefined)?.trim();
   const complaintTypeId = req.query.complaintTypeId ? Number(req.query.complaintTypeId) : undefined;
@@ -244,6 +283,10 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       { title: { [Op.like]: `%${searchTerm}%` } },
       { description: { [Op.like]: `%${searchTerm}%` } }
     ];
+  }
+
+  if (geoAccessWhere) {
+    Object.assign(where, geoAccessWhere);
   }
 
   const { rows, count } = await Complaint.findAndCountAll({
@@ -285,6 +328,28 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
         required: true
+      },
+      {
+        association: "geoUnit",
+        attributes: [
+          "id",
+          "stateId",
+          "districtId",
+          "talukId",
+          "mpConstituencyId",
+          "mlaConstituencyId",
+          "settlementType",
+          "governingBody",
+          "localBodyId",
+          "hobaliId",
+          "gramPanchayatId",
+          "mainVillageId",
+          "subVillageId",
+          "wardNumberId",
+          "pollingStationId",
+          "boothNumberId"
+        ],
+        required: false
       }
     ],
     order: [["id", sortDirection]],
@@ -322,6 +387,8 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
       wardNumber: c.wardNumber || null,
       boothNumberId: c.boothNumberId,
       boothNumber: c.boothNumber || null,
+      geoUnitId: c.geoUnitId ?? null,
+      geo: serializeGeoUnit(c.geoUnit, c.geoUnitId ?? null),
       currentStatusId: c.currentStatusId,
       currentStatus: c.currentStatus, // Now always present, no need for || null
       title: c.title,
@@ -351,11 +418,17 @@ export const listComplaints = asyncHandler(async (req: AuthenticatedRequest, res
 });
 
 export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { id } = req.params;
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
 
   const complaint = await Complaint.findOne({ where: { id } });
   if (!complaint) throw new ApiError("Complaint not found", 404);
+
+  if (!isAdmin) {
+    await assertUserCanAccessGeoUnit(userId, complaint.geoUnitId);
+  }
 
   // Only update complaint fields — ignore media
   const updates: Record<string, any> = {};
@@ -381,6 +454,18 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
     if (Object.prototype.hasOwnProperty.call(req.body, field)) {
       updates[field] = req.body[field];
     }
+  }
+
+  const resolvedGeoUnit = await resolveGeoUnitRecordFromSource(req.body ?? {});
+  if (resolvedGeoUnit !== undefined) {
+    await assertUserCanAccessGeoUnit(userId, resolvedGeoUnit?.id);
+    updates.geoUnitId = resolvedGeoUnit?.id ?? null;
+    updates.wardNumberId =
+      resolvedGeoUnit?.wardNumberId ??
+      (Object.prototype.hasOwnProperty.call(req.body, "wardNumberId") ? req.body.wardNumberId : null);
+    updates.boothNumberId =
+      resolvedGeoUnit?.boothNumberId ??
+      (Object.prototype.hasOwnProperty.call(req.body, "boothNumberId") ? req.body.boothNumberId : null);
   }
 
   updates.updatedBy = userId;
@@ -424,6 +509,28 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
         as: "currentStatus",
         attributes: ["id", "dispName", "description", "colorCode"],
         required: true
+      },
+      {
+        association: "geoUnit",
+        attributes: [
+          "id",
+          "stateId",
+          "districtId",
+          "talukId",
+          "mpConstituencyId",
+          "mlaConstituencyId",
+          "settlementType",
+          "governingBody",
+          "localBodyId",
+          "hobaliId",
+          "gramPanchayatId",
+          "mainVillageId",
+          "subVillageId",
+          "wardNumberId",
+          "pollingStationId",
+          "boothNumberId"
+        ],
+        required: false
       }
     ]
   });
@@ -445,16 +552,24 @@ export const updateComplaint = asyncHandler(async (req: AuthenticatedRequest, re
       };
     });
   }
+  if (complaintJson) {
+    complaintJson.geo = serializeGeoUnit(complaintJson.geoUnit, complaintJson.geoUnitId ?? null);
+  }
 
   return sendSuccess(res, complaintJson, "Complaint updated successfully");
 });
 
 export const deleteComplaint = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { id } = req.params;
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
 
   const complaint = await Complaint.findByPk(id);
   if (!complaint) throw new ApiError("Complaint not found", 404);
+  if (!isAdmin) {
+    await assertUserCanAccessGeoUnit(userId, complaint.geoUnitId);
+  }
 
   // Soft delete: set status to 0
   await complaint.update({ status: 0, updatedBy: userId });

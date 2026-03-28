@@ -9,6 +9,17 @@ import { Op } from "sequelize";
 import { calculatePagination, sendSuccessWithPagination } from "../utils/apiResponse";
 import asyncHandler from "../utils/asyncHandler";
 
+const getNotificationErrorStatus = (error: unknown): number => {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("Firebase has not been initialized")) {
+    return 503;
+  }
+  if (message.includes("No active device tokens found")) {
+    return 404;
+  }
+  return 500;
+};
+
 /**
  * Register FCM token for the authenticated user (Mobile App)
  * This should be called when:
@@ -196,7 +207,7 @@ export const sendNotificationToUser = async (req: Request, res: Response): Promi
   } catch (error: unknown) {
     console.error("Error sending notification:", error);
     const message = error instanceof Error ? error.message : "Failed to send notification";
-    res.status(500).json({ success: false, message });
+    res.status(getNotificationErrorStatus(error)).json({ success: false, message });
   }
 };
 
@@ -260,7 +271,7 @@ export const sendNotificationToMultipleUsers = async (
   } catch (error: unknown) {
     console.error("Error sending notifications:", error);
     const message = error instanceof Error ? error.message : "Failed to send notifications";
-    res.status(500).json({ success: false, message });
+    res.status(getNotificationErrorStatus(error)).json({ success: false, message });
   }
 };
 
@@ -294,7 +305,7 @@ export const sendNotificationToTopic = async (req: Request, res: Response): Prom
   } catch (error: unknown) {
     console.error("Error sending notification to topic:", error);
     const message = error instanceof Error ? error.message : "Failed to send notification to topic";
-    res.status(500).json({ success: false, message });
+    res.status(getNotificationErrorStatus(error)).json({ success: false, message });
   }
 };
 
@@ -429,7 +440,7 @@ export const sendBroadcastNotification = async (req: Request, res: Response): Pr
     console.error("Error sending broadcast notification:", error);
     const message =
       error instanceof Error ? error.message : "Failed to send broadcast notification";
-    res.status(500).json({ success: false, message });
+    res.status(getNotificationErrorStatus(error)).json({ success: false, message });
   }
 };
 

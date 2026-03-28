@@ -12,13 +12,20 @@ import {
   sendSuccessWithPagination,
   validateSortColumn
 } from "../utils/apiResponse";
+import { parseLocalBodyType, parseSettlementType } from "../types/geo";
 
 type RequestEntity =
+  | "district"
   | "mp_constituency"
   | "mla_constituency"
+  | "taluk"
+  | "local_body"
+  | "hobali"
   | "gram_panchayat"
   | "village"
+  | "sub_village"
   | "ward"
+  | "polling_station"
   | "booth";
 
 interface EntityConfig {
@@ -28,6 +35,11 @@ interface EntityConfig {
 }
 
 const ENTITY_CONFIG: Record<RequestEntity, EntityConfig> = {
+  district: {
+    tableName: "tbl_meta_district",
+    idColumn: "district_id",
+    labelColumn: "disp_name"
+  },
   mp_constituency: {
     tableName: "tbl_meta_mp_constituency",
     idColumn: "mp_constituency_id",
@@ -36,6 +48,21 @@ const ENTITY_CONFIG: Record<RequestEntity, EntityConfig> = {
   mla_constituency: {
     tableName: "tbl_meta_mla_constituency",
     idColumn: "mla_constituency_id",
+    labelColumn: "disp_name"
+  },
+  taluk: {
+    tableName: "tbl_meta_taluk",
+    idColumn: "taluk_id",
+    labelColumn: "disp_name"
+  },
+  local_body: {
+    tableName: "tbl_meta_local_body",
+    idColumn: "local_body_id",
+    labelColumn: "disp_name"
+  },
+  hobali: {
+    tableName: "tbl_meta_hobali",
+    idColumn: "hobali_id",
     labelColumn: "disp_name"
   },
   gram_panchayat: {
@@ -48,9 +75,19 @@ const ENTITY_CONFIG: Record<RequestEntity, EntityConfig> = {
     idColumn: "main_village_id",
     labelColumn: "disp_name"
   },
+  sub_village: {
+    tableName: "tbl_meta_sub_village",
+    idColumn: "sub_village_id",
+    labelColumn: "disp_name"
+  },
   ward: {
     tableName: "tbl_meta_ward_number",
     idColumn: "ward_number_id",
+    labelColumn: "disp_name"
+  },
+  polling_station: {
+    tableName: "tbl_meta_polling_station",
+    idColumn: "polling_station_id",
     labelColumn: "disp_name"
   },
   booth: {
@@ -58,6 +95,86 @@ const ENTITY_CONFIG: Record<RequestEntity, EntityConfig> = {
     idColumn: "booth_number_id",
     labelColumn: "disp_name"
   }
+};
+
+type NumericFilterKey =
+  | "stateId"
+  | "districtId"
+  | "mpConstituencyId"
+  | "mlaConstituencyId"
+  | "talukId"
+  | "localBodyId"
+  | "hobaliId"
+  | "gramPanchayatId"
+  | "mainVillageId"
+  | "subVillageId"
+  | "wardNumberId"
+  | "pollingStationId";
+
+const UPSTREAM_FILTERS: Record<RequestEntity, NumericFilterKey[]> = {
+  district: ["stateId"],
+  mp_constituency: ["stateId"],
+  mla_constituency: ["stateId", "mpConstituencyId"],
+  taluk: ["stateId", "districtId", "mpConstituencyId", "mlaConstituencyId"],
+  local_body: ["stateId", "districtId", "mpConstituencyId", "mlaConstituencyId", "talukId"],
+  hobali: ["stateId", "districtId", "mpConstituencyId", "mlaConstituencyId", "talukId"],
+  gram_panchayat: [
+    "stateId",
+    "districtId",
+    "mpConstituencyId",
+    "mlaConstituencyId",
+    "talukId",
+    "hobaliId"
+  ],
+  village: [
+    "stateId",
+    "districtId",
+    "mpConstituencyId",
+    "mlaConstituencyId",
+    "talukId",
+    "localBodyId",
+    "hobaliId",
+    "gramPanchayatId",
+    "wardNumberId"
+  ],
+  sub_village: [
+    "stateId",
+    "districtId",
+    "mpConstituencyId",
+    "mlaConstituencyId",
+    "talukId",
+    "hobaliId",
+    "gramPanchayatId",
+    "mainVillageId"
+  ],
+  ward: ["stateId", "districtId", "mpConstituencyId", "mlaConstituencyId", "talukId", "localBodyId"],
+  polling_station: [
+    "stateId",
+    "districtId",
+    "mpConstituencyId",
+    "mlaConstituencyId",
+    "talukId",
+    "localBodyId",
+    "hobaliId",
+    "gramPanchayatId",
+    "mainVillageId",
+    "subVillageId",
+    "wardNumberId"
+  ],
+  booth: [
+    "stateId",
+    "districtId",
+    "mpConstituencyId",
+    "mlaConstituencyId",
+    "talukId",
+    "localBodyId",
+    "hobaliId",
+    "gramPanchayatId",
+    "mainVillageId",
+    "subVillageId",
+    "wardNumberId",
+    "pollingStationId"
+  ]
 };
 
 const parseOptionalPositiveIntOrAll = (value: unknown, field: string): number | undefined => {
@@ -105,7 +222,7 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   if (!(requestEntityRaw in ENTITY_CONFIG)) {
     throw new ApiError(
-      "request_entity is invalid. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth",
+      "request_entity is invalid. Allowed: district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, sub_village, ward, polling_station, booth",
       400
     );
   }
@@ -124,57 +241,75 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
   const sortColumn = validateSortColumn(req.query.sortColumn, ["id", "dispName"], "dispName");
   const search = parseOptionalString(req.query.search);
 
-  const stateId = parseOptionalPositiveIntOrAll(
-    getQueryValue(req.query, ["stateId", "state_id"]),
-    "stateId"
-  );
-  const mpConstituencyId = parseOptionalPositiveIntOrAll(
-    getQueryValue(req.query, ["mpConstituencyId", "mp_constituency_id", "mpcontituencyId"]),
-    "mpConstituencyId"
-  );
-  const mlaConstituencyId = parseOptionalPositiveIntOrAll(
-    getQueryValue(req.query, ["mlaConstituencyId", "mla_constituency_id", "mlacontituencyId"]),
-    "mlaConstituencyId"
-  );
-  const gramPanchayatId = parseOptionalPositiveIntOrAll(
-    getQueryValue(req.query, ["gramPanchayatId", "gram_panchayat_id", "grampanchayatId"]),
-    "gramPanchayatId"
-  );
-  const wardNumberId = parseOptionalPositiveIntOrAll(
-    getQueryValue(req.query, ["wardNumberId", "ward_number_id", "wardnumberid"]),
-    "wardNumberId"
-  );
+  const filters = {
+    stateId: parseOptionalPositiveIntOrAll(getQueryValue(req.query, ["stateId", "state_id"]), "stateId"),
+    districtId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["districtId", "district_id"]),
+      "districtId"
+    ),
+    mpConstituencyId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["mpConstituencyId", "mp_constituency_id", "mpcontituencyId"]),
+      "mpConstituencyId"
+    ),
+    mlaConstituencyId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["mlaConstituencyId", "mla_constituency_id", "mlacontituencyId"]),
+      "mlaConstituencyId"
+    ),
+    talukId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["talukId", "taluk_id"]),
+      "talukId"
+    ),
+    localBodyId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["localBodyId", "local_body_id"]),
+      "localBodyId"
+    ),
+    hobaliId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["hobaliId", "hobali_id"]),
+      "hobaliId"
+    ),
+    gramPanchayatId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["gramPanchayatId", "gram_panchayat_id", "grampanchayatId"]),
+      "gramPanchayatId"
+    ),
+    mainVillageId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["mainVillageId", "main_village_id", "villageId"]),
+      "mainVillageId"
+    ),
+    subVillageId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["subVillageId", "sub_village_id"]),
+      "subVillageId"
+    ),
+    wardNumberId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["wardNumberId", "ward_number_id", "wardnumberid"]),
+      "wardNumberId"
+    ),
+    pollingStationId: parseOptionalPositiveIntOrAll(
+      getQueryValue(req.query, ["pollingStationId", "polling_station_id"]),
+      "pollingStationId"
+    )
+  };
 
-  const governingBody = parseOptionalString(
-    getQueryValue(req.query, ["governing_body", "governingBody"])
-  );
-  if (governingBody && !["GBA", "TMC", "CMC", "GP"].includes(governingBody)) {
-    throw new ApiError("governing_body must be one of GBA, TMC, CMC, GP", 400);
+  const settlementTypeRaw = getQueryValue(req.query, ["settlementType", "settlement_type"]);
+  const settlementType = parseSettlementType(settlementTypeRaw);
+  if (settlementTypeRaw !== undefined && !settlementType) {
+    throw new ApiError("settlementType must be URBAN or RURAL", 400);
   }
 
-  const shouldReturnOnlyAll =
-    (requestEntity === "mp_constituency" && stateId === -1) ||
-    (requestEntity === "mla_constituency" && (stateId === -1 || mpConstituencyId === -1)) ||
-    (requestEntity === "gram_panchayat" &&
-      (stateId === -1 || mpConstituencyId === -1 || mlaConstituencyId === -1)) ||
-    (requestEntity === "village" &&
-      (stateId === -1 ||
-        mpConstituencyId === -1 ||
-        mlaConstituencyId === -1 ||
-        gramPanchayatId === -1)) ||
-    (requestEntity === "ward" &&
-      (stateId === -1 ||
-        mpConstituencyId === -1 ||
-        mlaConstituencyId === -1 ||
-        gramPanchayatId === -1)) ||
-    (requestEntity === "booth" &&
-      (stateId === -1 ||
-        mpConstituencyId === -1 ||
-        mlaConstituencyId === -1 ||
-        gramPanchayatId === -1 ||
-        wardNumberId === -1));
+  const localBodyTypeRaw = getQueryValue(req.query, [
+    "localBodyType",
+    "local_body_type",
+    "governing_body",
+    "governingBody"
+  ]);
+  const localBodyType = parseLocalBodyType(localBodyTypeRaw);
+  if (localBodyTypeRaw !== undefined && !localBodyType) {
+    throw new ApiError("localBodyType must be one of GBA, CC, CMC, TMC, TP, GP", 400);
+  }
 
-  // If any upstream selector is "-ALL-", child dropdown should only expose "-ALL-".
+  const shouldReturnOnlyAll = UPSTREAM_FILTERS[requestEntity].some(
+    (fieldName) => filters[fieldName] === -1
+  );
+
   if (shouldReturnOnlyAll) {
     const responseData = [{ id: -1, dispName: "-ALL-" }];
     const pagination = calculatePagination(1, page, limit);
@@ -186,33 +321,71 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
     );
   }
 
-  const whereClauses: string[] = ["meta.status = 1"];
+  const whereClauses: string[] = ["meta.status = 1", "gp.status = 1"];
   const replacements: Record<string, number | string> = {
     limit,
     offset
   };
 
-  if (stateId !== undefined) {
+  if (filters.stateId !== undefined) {
     whereClauses.push("gp.state_id = :stateId");
-    replacements.stateId = stateId;
+    replacements.stateId = filters.stateId;
   }
-  if (mpConstituencyId !== undefined) {
+  if (filters.districtId !== undefined) {
+    whereClauses.push("gp.district_id = :districtId");
+    replacements.districtId = filters.districtId;
+  }
+  if (filters.mpConstituencyId !== undefined) {
     whereClauses.push("gp.mp_constituency_id = :mpConstituencyId");
-    replacements.mpConstituencyId = mpConstituencyId;
+    replacements.mpConstituencyId = filters.mpConstituencyId;
   }
-  if (mlaConstituencyId !== undefined) {
+  if (filters.mlaConstituencyId !== undefined) {
     whereClauses.push("gp.mla_constituency_id = :mlaConstituencyId");
-    replacements.mlaConstituencyId = mlaConstituencyId;
+    replacements.mlaConstituencyId = filters.mlaConstituencyId;
   }
-  if (gramPanchayatId !== undefined) {
+  if (filters.talukId !== undefined) {
+    whereClauses.push("gp.taluk_id = :talukId");
+    replacements.talukId = filters.talukId;
+  }
+  if (filters.localBodyId !== undefined) {
+    whereClauses.push("gp.local_body_id = :localBodyId");
+    replacements.localBodyId = filters.localBodyId;
+  }
+  if (filters.hobaliId !== undefined) {
+    whereClauses.push("gp.hobali_id = :hobaliId");
+    replacements.hobaliId = filters.hobaliId;
+  }
+  if (filters.gramPanchayatId !== undefined) {
     whereClauses.push("gp.gram_panchayat_id = :gramPanchayatId");
-    replacements.gramPanchayatId = gramPanchayatId;
+    replacements.gramPanchayatId = filters.gramPanchayatId;
   }
-  if (wardNumberId !== undefined) {
+  if (filters.mainVillageId !== undefined) {
+    whereClauses.push("gp.main_village_id = :mainVillageId");
+    replacements.mainVillageId = filters.mainVillageId;
+  }
+  if (filters.subVillageId !== undefined) {
+    whereClauses.push("gp.sub_village_id = :subVillageId");
+    replacements.subVillageId = filters.subVillageId;
+  }
+  if (filters.wardNumberId !== undefined) {
     whereClauses.push("gp.ward_number_id = :wardNumberId");
-    replacements.wardNumberId = wardNumberId;
+    replacements.wardNumberId = filters.wardNumberId;
   }
-
+  if (filters.pollingStationId !== undefined) {
+    whereClauses.push("gp.polling_station_id = :pollingStationId");
+    replacements.pollingStationId = filters.pollingStationId;
+  }
+  if (settlementType) {
+    whereClauses.push("gp.settlement_type = :settlementType");
+    replacements.settlementType = settlementType;
+  }
+  if (localBodyType) {
+    whereClauses.push("gp.governing_body = :localBodyType");
+    replacements.localBodyType = localBodyType;
+    if (requestEntity === "local_body") {
+      whereClauses.push("meta.body_type = :localBodyType");
+    }
+  }
   if (search) {
     whereClauses.push(`meta.${entityConfig.labelColumn} LIKE :search`);
     replacements.search = `%${search}%`;
@@ -264,5 +437,10 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   const pagination = calculatePagination(responseTotal, page, limit);
 
-  return sendSuccessWithPagination(res, responseData, pagination, "Geo lookup data retrieved successfully");
+  return sendSuccessWithPagination(
+    res,
+    responseData,
+    pagination,
+    "Geo lookup data retrieved successfully"
+  );
 });

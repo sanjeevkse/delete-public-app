@@ -3,6 +3,7 @@ import type { Message, MulticastMessage, BatchResponse } from "firebase-admin/me
 import logger from "../utils/logger";
 import { PUBLIC_ROLE_NAME } from "../config/rbac";
 import { getRoleByName } from "./rbacService";
+import { ApiError } from "../middlewares/errorHandler";
 
 export interface NotificationPayload {
   title: string;
@@ -249,7 +250,7 @@ class NotificationService {
         });
 
         logger.warn("No active device tokens found - cannot send notifications");
-        throw new Error("No active device tokens found");
+        throw new ApiError("No active device tokens found", 404);
       }
 
       const tokens = deviceTokens.map((dt) => dt.token);
@@ -398,14 +399,13 @@ class NotificationService {
   }
 
   /**
-   * Send targeted notification to users by ward/booth combinations and role
-   * accesses: array of {wardNumberId, boothNumberId} combinations
+   * Send targeted notification to users by geo unit coverage and role
    * roleId: specific role to filter by
    */
   async sendToTargetedUsers(
     notification: NotificationPayload,
     options: {
-      accesses: Array<{ wardNumberId?: number | null; boothNumberId?: number | null }>;
+      geoUnitIds: number[] | null;
       roleId: number;
       triggeredBy?: number;
     }
@@ -421,15 +421,9 @@ class NotificationService {
     try {
       console.log("=== NOTIFICATION SERVICE: Starting processing ===");
       logger.info(
-        { accesses: options.accesses, roleId: options.roleId },
+        { geoUnitIdsCount: options.geoUnitIds?.length ?? null, roleId: options.roleId },
         "sendToTargetedUsers called"
       );
-
-      if (!options.accesses || options.accesses.length === 0) {
-        throw new Error(
-          "At least one access combination (wardNumberId, boothNumberId) is required"
-        );
-      }
 
       // Import models
       const { default: DeviceToken } = await import("../models/DeviceToken");
@@ -443,7 +437,7 @@ class NotificationService {
 
       const publicRole = await getRoleByName(PUBLIC_ROLE_NAME);
       if (!publicRole) {
-        throw new Error("Public role is not configured");
+        throw new ApiError("Public role is not configured", 500);
       }
 
       const roleById = await MetaUserRole.findByPk(options.roleId);
@@ -457,62 +451,70 @@ class NotificationService {
         isPublicRole
       });
 
-      // Build OR conditions for each access combination
-      const accessConditions = options.accesses.map((access) => {
-        let condition = "tbl_user.status = 1";
-        const params: any[] = [];
+      const targetAllGeoUnits = options.geoUnitIds === null;
+      const targetGeoUnitIds = Array.isArray(options.geoUnitIds) ? options.geoUnitIds : [];
+      if (!targetAllGeoUnits && targetGeoUnitIds.length === 0) {
+        throw new ApiError("At least one target geo unit is required", 400);
+      }
 
-        // Always filter by role for the user
-        condition += " AND tbl_user_role.role_id = ?";
-        params.push(options.roleId);
+      let query = "";
+      const replacements: Record<string, unknown> = {
+        roleId: options.roleId,
+        targetGeoUnitIds
+      };
 
-        const wardField = isPublicRole
-          ? "tbl_user_profile.ward_number_id"
-          : "tbl_user_access.ward_number_id";
-        const boothField = isPublicRole
-          ? "tbl_user_profile.booth_number_id"
-          : "tbl_user_access.booth_number_id";
+      if (isPublicRole) {
+        query = `
+          SELECT DISTINCT tbl_user.id
+          FROM tbl_user
+          INNER JOIN tbl_user_profile
+            ON tbl_user.id = tbl_user_profile.user_id
+          INNER JOIN tbl_xref_user_role AS tbl_user_role
+            ON tbl_user.id = tbl_user_role.user_id
+           AND tbl_user_role.status = 1
+          WHERE tbl_user.status = 1
+            AND tbl_user_role.role_id = :roleId
+            ${targetAllGeoUnits ? "" : "AND tbl_user_profile.geo_unit_id IN (:targetGeoUnitIds)"}
+        `;
+      } else {
+        query = `
+          SELECT DISTINCT tbl_user.id
+          FROM tbl_user
+          INNER JOIN tbl_xref_user_role AS tbl_user_role
+            ON tbl_user.id = tbl_user_role.user_id
+           AND tbl_user_role.status = 1
+          WHERE tbl_user.status = 1
+            AND tbl_user_role.role_id = :roleId
+            AND (
+              EXISTS (
+                SELECT 1
+                FROM tbl_user_access_scope uas
+                LEFT JOIN tbl_geo_unit_scope gus
+                  ON uas.scope_type <> 'GLOBAL'
+                 AND gus.scope_type = uas.scope_type
+                 AND gus.scope_id = uas.scope_id
+                 AND gus.status = 1
+                LEFT JOIN tbl_geo_political gp_scope
+                  ON gp_scope.id = gus.geo_unit_id
+                WHERE uas.user_id = tbl_user.id
+                  AND uas.status = 1
+                  AND (
+                    uas.scope_type = 'GLOBAL'
+                    OR (
+                      ${targetAllGeoUnits ? "1=1" : "gus.geo_unit_id IN (:targetGeoUnitIds)"}
+                      AND (uas.settlement_type IS NULL OR uas.settlement_type = gp_scope.settlement_type)
+                      AND (uas.local_body_type IS NULL OR uas.local_body_type = gp_scope.governing_body)
+                    )
+                  )
+              )
+            )
+        `;
+      }
 
-        // Filter by ward if specified in this access
-        if (access.wardNumberId && access.wardNumberId !== -1) {
-          condition += ` AND ${wardField} = ?`;
-          params.push(access.wardNumberId);
-        }
-
-        // Filter by booth if specified in this access
-        if (access.boothNumberId && access.boothNumberId !== -1) {
-          condition += ` AND ${boothField} = ?`;
-          params.push(access.boothNumberId);
-        }
-
-        return { condition, params };
-      });
-
-      // Build query to find matching users
-      let query = `
-        SELECT DISTINCT tbl_user.id FROM tbl_user
-        INNER JOIN ${
-          isPublicRole ? "tbl_user_profile" : "tbl_user_access"
-        } ON tbl_user.id = ${
-          isPublicRole ? "tbl_user_profile.user_id" : "tbl_user_access.user_id"
-        }
-        INNER JOIN tbl_xref_user_role AS tbl_user_role
-          ON tbl_user.id = tbl_user_role.user_id AND tbl_user_role.status = 1
-        WHERE (`;
-
-      const allParams: any[] = [];
-      accessConditions.forEach((ac, idx) => {
-        if (idx > 0) query += " OR ";
-        query += `(${ac.condition})`;
-        allParams.push(...ac.params);
-      });
-
-      query += ")";
-
-      logger.info({ query, params: allParams }, "Executing user query");
+      logger.info({ query, replacements }, "Executing user query");
 
       const matchedUsers = await sequelize.query(query, {
-        replacements: allParams,
+        replacements,
         type: sequelize.QueryTypes.SELECT
       });
 
@@ -521,7 +523,7 @@ class NotificationService {
 
       if (userIds.length === 0) {
         logger.warn("No users found matching targeting criteria");
-        throw new Error("No users found matching the specified access and role criteria");
+        throw new ApiError("No users found matching the specified access and role criteria", 404);
       }
 
       logger.info({ matchedUserCount: userIds.length }, "Users matched for targeting");
@@ -536,7 +538,7 @@ class NotificationService {
 
       if (deviceTokens.length === 0) {
         logger.warn("No active device tokens found for targeted users");
-        throw new Error("No active device tokens found for the targeted users");
+        throw new ApiError("No active device tokens found for the targeted users", 404);
       }
 
       // Create notification log

@@ -31,7 +31,7 @@ import UserRole from "../models/UserRole";
 import UserProfile from "../models/UserProfile";
 import sequelize from "../config/database";
 import { getMetaTableByTableName } from "../utils/metaTableRegistry";
-import { getUserAccessList } from "../services/userAccessibilityService";
+import { getEffectiveWardBoothAccess } from "../services/userAccessibilityService";
 import { getDescendantRoleIdsForRoles } from "../services/userHierarchyService";
 
 type PaginationQuery = {
@@ -846,10 +846,11 @@ export const listForms = asyncHandler(async (req: AuthenticatedRequest, res: Res
 
   const expandedRoleIds = isAdmin ? userRoleIds : await getDescendantRoleIdsForRoles(userRoleIds);
 
-  const userAccessList = await getUserAccessList(userId);
-  const accessCombos: UserAccessCombo[] =
-    userAccessList.length > 0
-      ? userAccessList.map((access) => ({
+  const effectiveAccess = await getEffectiveWardBoothAccess(userId);
+  const accessCombos: UserAccessCombo[] = effectiveAccess.unrestricted
+    ? [{ wardNumberId: -1, boothNumberId: -1 }]
+    : effectiveAccess.rows.length > 0
+      ? effectiveAccess.rows.map((access) => ({
           wardNumberId: access.wardNumberId ?? null,
           boothNumberId: access.boothNumberId ?? null
         }))

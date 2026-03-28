@@ -10,6 +10,7 @@ import {
 import type MetaUserRole from "./MetaUserRole";
 import type UserProfile from "./UserProfile";
 import type UserAccess from "./UserAccess";
+import type UserAccessScope from "./UserAccessScope";
 
 import sequelize from "../config/database";
 import { normalizePhoneNumber } from "../utils/phoneNumber";
@@ -28,6 +29,7 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare profile?: NonAttribute<UserProfile>;
   declare roles?: NonAttribute<MetaUserRole[]>;
   declare accessProfiles?: NonAttribute<UserAccess[]>;
+  declare accessScopes?: NonAttribute<UserAccessScope[]>;
 }
 
 User.init(

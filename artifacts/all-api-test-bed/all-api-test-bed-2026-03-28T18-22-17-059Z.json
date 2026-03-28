@@ -1,0 +1,14 @@
+{
+  "runId": "all-api-test-bed-2026-03-28T18-22-17-059Z",
+  "baseUrl": "http://127.0.0.1:8081",
+  "startedAt": "2026-03-28T18:22:17.073Z",
+  "finishedAt": "2026-03-28T18:22:17.121Z",
+  "summary": {
+    "total": 309,
+    "passed": 0,
+    "reachable4xx": 0,
+    "soft404": 0,
+    "failed": 0
+  },
+  "results": []
+}

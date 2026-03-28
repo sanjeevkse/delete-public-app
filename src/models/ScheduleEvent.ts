@@ -10,6 +10,7 @@ import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import type MetaEventType from "./MetaEventType";
 import type MetaColor from "./MetaColor";
+import type GeoPolitical from "./GeoPolitical";
 
 class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationAttributes<ScheduleEvent>> {
   declare id: CreationOptional<number>;
@@ -29,6 +30,7 @@ class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationA
   declare locationText: string | null;
   declare latitude: number;
   declare longitude: number;
+  declare geoUnitId: number | null;
   declare wardNumberId: number | null;
   declare boothNumberId: number | null;
   declare createdBy: number | null;
@@ -38,6 +40,7 @@ class ScheduleEvent extends Model<InferAttributes<ScheduleEvent>, InferCreationA
   declare status: CreationOptional<number>;
   declare eventType?: NonAttribute<MetaEventType | null>;
   declare color?: NonAttribute<MetaColor | null>;
+  declare geoUnit?: NonAttribute<GeoPolitical | null>;
 }
 
 ScheduleEvent.init(
@@ -134,6 +137,11 @@ ScheduleEvent.init(
         min: -180,
         max: 180
       }
+    },
+    geoUnitId: {
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true,
+      field: "geo_unit_id"
     },
     wardNumberId: {
       type: DataTypes.INTEGER.UNSIGNED,

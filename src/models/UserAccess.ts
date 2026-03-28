@@ -8,6 +8,7 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import type { LocalBodyType, SettlementType } from "../types/geo";
 import type User from "./User";
 import type MetaUserRole from "./MetaUserRole";
 import type MetaWardNumber from "./MetaWardNumber";
@@ -21,11 +22,13 @@ class UserAccess extends Model<InferAttributes<UserAccess>, InferCreationAttribu
   declare stateId: CreationOptional<number | null>;
   declare districtId: CreationOptional<number | null>;
   declare talukId: CreationOptional<number | null>;
+  declare settlementType: CreationOptional<SettlementType | null>;
   declare mainVillageId: CreationOptional<number | null>;
   declare subVillageId: CreationOptional<number | null>;
   declare mpConstituencyId: CreationOptional<number | null>;
   declare mlaConstituencyId: CreationOptional<number | null>;
-  declare governingBody: CreationOptional<"GBA" | "TMC" | "CMC" | "GP" | null>;
+  declare governingBody: CreationOptional<LocalBodyType | null>;
+  declare localBodyId: CreationOptional<number | null>;
   declare wardNumberId: CreationOptional<number | null>;
   declare pollingStationId: CreationOptional<number | null>;
   declare boothNumberId: CreationOptional<number | null>;
@@ -65,7 +68,7 @@ UserAccess.init(
     },
     accessRoleId: {
       field: "access_role_id",
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
         model: "tbl_meta_user_role",
@@ -86,6 +89,11 @@ UserAccess.init(
     talukId: {
       field: "taluk_id",
       type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    settlementType: {
+      field: "settlement_type",
+      type: DataTypes.ENUM("URBAN", "RURAL"),
       allowNull: true
     },
     mainVillageId: {
@@ -110,7 +118,12 @@ UserAccess.init(
     },
     governingBody: {
       field: "governing_body",
-      type: DataTypes.ENUM("GBA", "TMC", "CMC", "GP"),
+      type: DataTypes.ENUM("GBA", "CC", "CMC", "TMC", "TP", "GP"),
+      allowNull: true
+    },
+    localBodyId: {
+      field: "local_body_id",
+      type: DataTypes.INTEGER,
       allowNull: true
     },
     wardNumberId: {

@@ -22,11 +22,40 @@ import MetaColor from "../models/MetaColor";
 import { buildPublicUploadPath } from "../middlewares/uploadMiddleware";
 import { MediaType } from "../types/enums";
 import sequelize from "../config/database";
+import {
+  assertUserCanAccessGeoUnit,
+  buildGeoUnitAccessWhere,
+  buildGeoUnitIncludeFilterFromSource,
+  resolveGeoUnitRecordFromSource,
+  serializeGeoUnit
+} from "../services/geoUnitService";
 
 const excludeFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
 const excludeMediaFields = ["createdBy", "updatedBy", "status", "createdAt", "updatedAt"];
 
 const baseScheduleEventInclude = [
+  {
+    association: "geoUnit",
+    attributes: [
+      "id",
+      "stateId",
+      "districtId",
+      "talukId",
+      "mpConstituencyId",
+      "mlaConstituencyId",
+      "settlementType",
+      "governingBody",
+      "localBodyId",
+      "hobaliId",
+      "gramPanchayatId",
+      "mainVillageId",
+      "subVillageId",
+      "wardNumberId",
+      "pollingStationId",
+      "boothNumberId"
+    ],
+    required: false
+  },
   {
     model: MetaEventType,
     as: "eventType",
@@ -124,6 +153,10 @@ const parseOptionalPositiveInteger = (value: unknown, field: string): number | u
 
 export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id: userId } = requireAuthenticatedUser(req);
+  const resolvedGeoUnit = await resolveGeoUnitRecordFromSource(
+    (req.body ?? {}) as Record<string, unknown>
+  );
+  await assertUserCanAccessGeoUnit(userId, resolvedGeoUnit?.id);
 
   const validationErrors: Array<{ field: string; message: string }> = [];
 
@@ -328,8 +361,9 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
         locationText,
         latitude: latitude as number,
         longitude: longitude as number,
-        wardNumberId,
-        boothNumberId,
+        geoUnitId: resolvedGeoUnit?.id ?? null,
+        wardNumberId: resolvedGeoUnit?.wardNumberId ?? wardNumberId,
+        boothNumberId: resolvedGeoUnit?.boothNumberId ?? boothNumberId,
         createdBy: userId,
         updatedBy: userId,
         status: 1
@@ -366,8 +400,11 @@ export const createScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
 });
 
 export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const validationErrors: Array<{ field: string; message: string }> = [];
   const filters: WhereOptions[] = [{ status: 1 }];
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
 
   let title: string | null = null;
   let eventTypeId: number | undefined;
@@ -626,6 +663,14 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     });
   }
 
+  const geoAccessWhere = isAdmin ? null : await buildGeoUnitAccessWhere(userId);
+  if (geoAccessWhere) {
+    filters.push(geoAccessWhere as WhereOptions);
+  }
+  const geoUnitIncludeWhere = buildGeoUnitIncludeFilterFromSource(
+    (req.query ?? {}) as Record<string, unknown>
+  );
+
   const sortColumn = validateSortColumn(
     req.query.sortColumn ?? req.query.sortBy,
     ["start", "end", "title", "createdAt", "updatedAt", "priority", "eventTypeId", "colorId"],
@@ -643,7 +688,15 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
   const rows = await ScheduleEvent.findAll({
     where: { [Op.and]: filters },
     attributes: { exclude: excludeFields },
-    include: baseScheduleEventInclude,
+    include: baseScheduleEventInclude.map((include) =>
+      (include as Record<string, unknown>).association === "geoUnit"
+        ? {
+            ...(include as Record<string, unknown>),
+            required: Boolean(geoUnitIncludeWhere),
+            ...(geoUnitIncludeWhere ? { where: geoUnitIncludeWhere } : {})
+          }
+        : include
+    ),
     order
   });
 
@@ -652,7 +705,9 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
     title: row.title,
     color: row.color?.dispName ?? null,
     start: row.start instanceof Date ? row.start.toISOString() : new Date(row.start).toISOString(),
-    end: row.end instanceof Date ? row.end.toISOString() : new Date(row.end).toISOString()
+    end: row.end instanceof Date ? row.end.toISOString() : new Date(row.end).toISOString(),
+    geoUnitId: row.geoUnitId ?? null,
+    geo: serializeGeoUnit(row.geoUnit, row.geoUnitId ?? null)
   }));
 
   return sendSuccess(
@@ -663,10 +718,14 @@ export const listScheduleEvents = asyncHandler(async (req: AuthenticatedRequest,
 });
 
 export const getScheduleEventById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { id } = req.params;
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
+  const geoAccessWhere = isAdmin ? null : await buildGeoUnitAccessWhere(userId);
 
   const event = await ScheduleEvent.findOne({
-    where: { id, status: 1 },
+    where: { id, status: 1, ...(geoAccessWhere ?? {}) },
     attributes: { exclude: excludeFields },
     include: baseScheduleEventInclude
   });
@@ -679,12 +738,17 @@ export const getScheduleEventById = asyncHandler(async (req: AuthenticatedReques
 });
 
 export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { id } = req.params;
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
 
   const event = await ScheduleEvent.findOne({ where: { id, status: 1 } });
   if (!event) {
     throw new ApiError("Event not found or inactive", 404);
+  }
+  if (!isAdmin) {
+    await assertUserCanAccessGeoUnit(userId, event.geoUnitId);
   }
 
   const validationErrors: Array<{ field: string; message: string }> = [];
@@ -903,6 +967,16 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
     return sendValidationError(res, "Validation failed", validationErrors);
   }
 
+  const resolvedGeoUnit = await resolveGeoUnitRecordFromSource(
+    (req.body ?? {}) as Record<string, unknown>
+  );
+  if (resolvedGeoUnit !== undefined) {
+    await assertUserCanAccessGeoUnit(userId, resolvedGeoUnit?.id);
+    updates.geoUnitId = resolvedGeoUnit?.id ?? null;
+    updates.wardNumberId = resolvedGeoUnit?.wardNumberId ?? null;
+    updates.boothNumberId = resolvedGeoUnit?.boothNumberId ?? null;
+  }
+
   if (Object.prototype.hasOwnProperty.call(updates, "eventTypeId")) {
     const requestedEventTypeId = updates.eventTypeId as number | null;
     if (requestedEventTypeId !== null && requestedEventTypeId !== undefined) {
@@ -968,12 +1042,17 @@ export const updateScheduleEvent = asyncHandler(async (req: AuthenticatedRequest
 });
 
 export const deleteScheduleEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { id: userId } = requireAuthenticatedUser(req);
+  const { id: userId, roles } = requireAuthenticatedUser(req);
   const { id } = req.params;
+  const normalizedRoles = roles.map((role) => role.toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
 
   const event = await ScheduleEvent.findOne({ where: { id, status: 1 } });
   if (!event) {
     throw new ApiError("Event not found or already deleted", 404);
+  }
+  if (!isAdmin) {
+    await assertUserCanAccessGeoUnit(userId, event.geoUnitId);
   }
 
   await event.update({ status: 0, updatedBy: userId });

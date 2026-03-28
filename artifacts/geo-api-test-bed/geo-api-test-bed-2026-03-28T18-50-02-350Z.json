@@ -1,0 +1,221 @@
+{
+  "runId": "geo-api-test-bed-2026-03-28T18-50-02-350Z",
+  "baseUrl": "http://127.0.0.1:8081/api",
+  "startedAt": "2026-03-28T18:50:02.351Z",
+  "finishedAt": "2026-03-28T18:50:07.012Z",
+  "summary": {
+    "passed": 18,
+    "failed": 0,
+    "skipped": 2
+  },
+  "scenarios": [
+    {
+      "name": "Profile patch with legacy ward/booth",
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:02.571Z",
+      "finishedAt": "2026-03-28T18:50:02.692Z",
+      "details": null
+    },
+    {
+      "name": "Profile patch with full urban geo leaf",
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:02.692Z",
+      "finishedAt": "2026-03-28T18:50:02.754Z",
+      "details": null
+    },
+    {
+      "name": "Profile patch with full rural geo leaf",
+      "method": "PATCH",
+      "path": "/auth/profile",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:02.754Z",
+      "finishedAt": "2026-03-28T18:50:02.847Z",
+      "details": null
+    },
+    {
+      "name": "Create complaint with legacy ward/booth",
+      "method": "POST",
+      "path": "/complaints",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:02.847Z",
+      "finishedAt": "2026-03-28T18:50:03.104Z",
+      "details": {
+        "complaintId": 46
+      }
+    },
+    {
+      "name": "Create complaint with full urban geo leaf",
+      "method": "POST",
+      "path": "/complaints",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:03.104Z",
+      "finishedAt": "2026-03-28T18:50:03.674Z",
+      "details": null
+    },
+    {
+      "name": "Create event for registration/report tests",
+      "method": "POST",
+      "path": "/events",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:03.674Z",
+      "finishedAt": "2026-03-28T18:50:03.691Z",
+      "details": {
+        "eventId": 128
+      }
+    },
+    {
+      "name": "Register event with legacy ward/booth",
+      "method": "POST",
+      "path": "/events/128/register",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:03.691Z",
+      "finishedAt": "2026-03-28T18:50:03.976Z",
+      "details": null
+    },
+    {
+      "name": "Register guest with full rural geo leaf",
+      "method": "POST",
+      "path": "/events/128/register",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:03.976Z",
+      "finishedAt": "2026-03-28T18:50:04.059Z",
+      "details": null
+    },
+    {
+      "name": "List event registrations with partial geo filter",
+      "method": "GET",
+      "path": "/events/128/registrations",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:04.059Z",
+      "finishedAt": "2026-03-28T18:50:04.080Z",
+      "details": null
+    },
+    {
+      "name": "Create schedule event with full urban geo leaf",
+      "method": "POST",
+      "path": "/schedule-events",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:04.080Z",
+      "finishedAt": "2026-03-28T18:50:04.675Z",
+      "details": {
+        "scheduleEventId": 60
+      }
+    },
+    {
+      "name": "List schedule events with partial geo filter",
+      "method": "GET",
+      "path": "/schedule-events",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:04.675Z",
+      "finishedAt": "2026-03-28T18:50:04.689Z",
+      "details": null
+    },
+    {
+      "name": "Create scheme application with full rural geo leaf",
+      "method": "POST",
+      "path": "/scheme-applications",
+      "status": "skipped",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T18:50:04.689Z",
+      "finishedAt": "2026-03-28T18:50:04.790Z",
+      "error": "Expected [201] for POST /scheme-applications, got 400"
+    },
+    {
+      "name": "List scheme applications with partial geo filter",
+      "method": "GET",
+      "path": "/scheme-applications",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:04.790Z",
+      "finishedAt": "2026-03-28T18:50:04.813Z",
+      "details": null
+    },
+    {
+      "name": "Create form event with full geo accessibility payloads",
+      "method": "POST",
+      "path": "/form-events",
+      "status": "passed",
+      "httpStatus": 201,
+      "startedAt": "2026-03-28T18:50:04.813Z",
+      "finishedAt": "2026-03-28T18:50:05.620Z",
+      "details": {
+        "formEventId": 49
+      }
+    },
+    {
+      "name": "Update form event with full geo accessibility payload",
+      "method": "PUT",
+      "path": "/form-events/49",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:05.620Z",
+      "finishedAt": "2026-03-28T18:50:06.448Z",
+      "details": null
+    },
+    {
+      "name": "Users report with partial geo filter",
+      "method": "GET",
+      "path": "/reports/users",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:06.448Z",
+      "finishedAt": "2026-03-28T18:50:06.523Z",
+      "details": null
+    },
+    {
+      "name": "Public events report with partial geo filter",
+      "method": "GET",
+      "path": "/reports/public-events",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:06.523Z",
+      "finishedAt": "2026-03-28T18:50:06.568Z",
+      "details": null
+    },
+    {
+      "name": "Posts report with partial geo filter",
+      "method": "GET",
+      "path": "/reports/posts",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:06.568Z",
+      "finishedAt": "2026-03-28T18:50:06.595Z",
+      "details": null
+    },
+    {
+      "name": "Form event report with legacy ward/booth filter",
+      "method": "GET",
+      "path": "/reports/form-events/49",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:50:06.595Z",
+      "finishedAt": "2026-03-28T18:50:06.641Z",
+      "details": null
+    },
+    {
+      "name": "Targeted notification with partial geo accesses",
+      "method": "POST",
+      "path": "/notifications/send/targeted",
+      "status": "skipped",
+      "httpStatus": 404,
+      "startedAt": "2026-03-28T18:50:06.641Z",
+      "finishedAt": "2026-03-28T18:50:06.680Z",
+      "error": "Expected [200] for POST /notifications/send/targeted, got 404"
+    }
+  ]
+}

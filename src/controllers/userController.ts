@@ -29,12 +29,16 @@ import {
   buildUserListingAccessibilityFilter,
   getDescendantRoleIds
 } from "../services/userHierarchyService";
-import { buildProfileAttributes } from "../services/userProfileService";
+import { buildProfileAttributes, resolveProfileGeoUnitId } from "../services/userProfileService";
 import {
   createUserAccessProfiles,
   updateUserAccessProfiles,
   validateAccessibles
 } from "../services/userAccessService";
+import {
+  createUserAccessScopes,
+  updateUserAccessScopes
+} from "../services/userAccessScopeService";
 import { createUserWithGeneratedCrfId } from "../services/userCrfIdService";
 import asyncHandler from "../utils/asyncHandler";
 import {
@@ -52,6 +56,11 @@ import { assertNoRestrictedFields } from "../utils/payloadValidation";
 
 type QueryRecord = Record<string, unknown>;
 type WardBoothCondition = { wardNumberId?: number; boothNumberId?: number };
+type ProfileAccessibilityShape = {
+  geoUnitId?: number | null;
+  wardNumberId?: number | null;
+  boothNumberId?: number | null;
+};
 
 const isAdminRequester = (user?: AuthenticatedRequest["user"]): boolean => {
   if (!user || !Array.isArray(user.roles)) {
@@ -74,6 +83,46 @@ const getWardBoothConditions = (
 ): WardBoothCondition[] => {
   const conditions = Reflect.get(accessibilityFilter, Op.or) as unknown;
   return Array.isArray(conditions) ? (conditions as WardBoothCondition[]) : [];
+};
+
+const getGeoUnitConditionIds = (accessibilityFilter: Record<string, unknown>): number[] => {
+  const geoUnitFilter = accessibilityFilter.geoUnitId as Record<symbol, unknown> | undefined;
+  const ids = geoUnitFilter ? Reflect.get(geoUnitFilter, Op.in) : undefined;
+  return Array.isArray(ids)
+    ? ids
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id) && id > 0)
+    : [];
+};
+
+const profileMatchesAccessibilityFilter = (
+  profile: ProfileAccessibilityShape | null | undefined,
+  accessibilityFilter: Record<string, unknown> | null
+): boolean => {
+  if (!accessibilityFilter) {
+    return true;
+  }
+
+  if (!profile) {
+    return false;
+  }
+
+  if ("geoUnitId" in accessibilityFilter) {
+    const geoUnitIds = getGeoUnitConditionIds(accessibilityFilter);
+    return (
+      geoUnitIds.length > 0 &&
+      typeof profile.geoUnitId === "number" &&
+      geoUnitIds.includes(profile.geoUnitId)
+    );
+  }
+
+  return getWardBoothConditions(accessibilityFilter).some((condition) => {
+    const wardMatches =
+      condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
+    const boothMatches =
+      condition.boothNumberId === undefined || condition.boothNumberId === profile.boothNumberId;
+    return wardMatches && boothMatches;
+  });
 };
 
 const resolveNestedValue = (source: unknown, segments: string[]): unknown => {
@@ -225,6 +274,24 @@ const USER_PROFILE_INCLUDE = [
   { association: "residenceType", attributes: ["id", "dispName"], required: false },
   { association: "rationCardType", attributes: ["id", "dispName"], required: false },
   { association: "familyGod", attributes: ["id", "dispName"], required: false },
+  { association: "localBody", attributes: ["id", "dispName", "bodyType"], required: false },
+  {
+    association: "geoUnit",
+    attributes: [
+      "id",
+      "settlementType",
+      "governingBody",
+      "localBodyId",
+      "hobaliId",
+      "gramPanchayatId",
+      "mainVillageId",
+      "subVillageId",
+      "wardNumberId",
+      "pollingStationId",
+      "boothNumberId"
+    ],
+    required: false
+  },
   { association: "wardNumber", attributes: ["id", "dispName"], required: false },
   { association: "boothNumber", attributes: ["id", "dispName"], required: false },
   { association: "educationalDetail", attributes: ["id", "dispName"], required: false },
@@ -242,21 +309,34 @@ const USER_PROFILE_INCLUDE = [
   { association: "employment", attributes: ["id", "dispName"], required: false }
 ];
 
+const USER_ACCESS_PROFILE_INCLUDE = [
+  { association: "accessRole" },
+  { association: "localBody" },
+  { association: "wardNumber" },
+  { association: "boothNumber" },
+  { association: "mlaConstituency" }
+];
+
+const USER_ACCESS_SCOPE_INCLUDE = [{ association: "accessRole" }];
+
 type UserPayloadRecord = Record<string, unknown>;
-type GeoEntity = "state" | "mp" | "mla" | "gp" | "village";
+type GeoEntity = "state" | "mp" | "mla" | "gp" | "village" | "localBody";
 
 const GEO_TABLE_CONFIG: Record<GeoEntity, { tableName: string }> = {
   state: { tableName: "tbl_meta_state" },
   mp: { tableName: "tbl_meta_mp_constituency" },
   mla: { tableName: "tbl_meta_mla_constituency" },
   gp: { tableName: "tbl_meta_gram_panchayat" },
-  village: { tableName: "tbl_meta_main_village" }
+  village: { tableName: "tbl_meta_main_village" },
+  localBody: { tableName: "tbl_meta_local_body" }
 };
 
-const GOVERNING_BODY_LABELS: Record<"GBA" | "TMC" | "CMC" | "GP", string> = {
+const GOVERNING_BODY_LABELS: Record<"GBA" | "CC" | "CMC" | "TMC" | "TP" | "GP", string> = {
   GBA: "GBA",
+  CC: "CC",
   TMC: "TMC",
   CMC: "CMC",
+  TP: "TP",
   GP: "GP"
 };
 
@@ -434,7 +514,8 @@ const collectGeoIds = (userData: UserPayloadRecord): Record<GeoEntity, number[]>
     mp: new Set<number>(),
     mla: new Set<number>(),
     gp: new Set<number>(),
-    village: new Set<number>()
+    village: new Set<number>(),
+    localBody: new Set<number>()
   };
 
   const collectFromRecord = (record: unknown) => {
@@ -458,6 +539,9 @@ const collectGeoIds = (userData: UserPayloadRecord): Record<GeoEntity, number[]>
     if (isPositiveInteger(source.mainVillageId)) {
       ids.village.add(source.mainVillageId);
     }
+    if (isPositiveInteger(source.localBodyId)) {
+      ids.localBody.add(source.localBodyId);
+    }
   };
 
   collectFromRecord(userData.profile);
@@ -472,18 +556,20 @@ const collectGeoIds = (userData: UserPayloadRecord): Record<GeoEntity, number[]>
     mp: Array.from(ids.mp),
     mla: Array.from(ids.mla),
     gp: Array.from(ids.gp),
-    village: Array.from(ids.village)
+    village: Array.from(ids.village),
+    localBody: Array.from(ids.localBody)
   };
 };
 
 const enrichGeoObjectFields = async (userData: UserPayloadRecord): Promise<UserPayloadRecord> => {
   const ids = collectGeoIds(userData);
-  const [stateMap, mpMap, mlaMap, gpMap, villageMap] = await Promise.all([
+  const [stateMap, mpMap, mlaMap, gpMap, villageMap, localBodyMap] = await Promise.all([
     buildGeoLookupMap(GEO_TABLE_CONFIG.state.tableName, ids.state),
     buildGeoLookupMap(GEO_TABLE_CONFIG.mp.tableName, ids.mp),
     buildGeoLookupMap(GEO_TABLE_CONFIG.mla.tableName, ids.mla),
     buildGeoLookupMap(GEO_TABLE_CONFIG.gp.tableName, ids.gp),
-    buildGeoLookupMap(GEO_TABLE_CONFIG.village.tableName, ids.village)
+    buildGeoLookupMap(GEO_TABLE_CONFIG.village.tableName, ids.village),
+    buildGeoLookupMap(GEO_TABLE_CONFIG.localBody.tableName, ids.localBody)
   ]);
 
   const applyGeoObjects = (record: unknown) => {
@@ -497,6 +583,7 @@ const enrichGeoObjectFields = async (userData: UserPayloadRecord): Promise<UserP
     target.mla = toIdDisplayName(target.mlaConstituencyId, mlaMap);
     target.gp = toIdDisplayName(target.gramPanchayatId, gpMap);
     target.village = toIdDisplayName(target.mainVillageId, villageMap);
+    target.localBody = toIdDisplayName(target.localBodyId, localBodyMap);
     target.governingBodyObj = toGoverningBodyObject(target.governingBody);
   };
 
@@ -843,6 +930,16 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const userWhere =
     whereClauses.length > 1 ? { [Op.and]: whereClauses } : (whereClauses[0] ?? undefined);
+  const profileWhereClauses = [
+    profileFiltersApplied ? profileFilters : null,
+    accessibilityFilter
+  ].filter((value): value is Record<string, unknown> => Boolean(value));
+  const profileWhere =
+    profileWhereClauses.length === 0
+      ? undefined
+      : profileWhereClauses.length === 1
+        ? profileWhereClauses[0]
+        : { [Op.and]: profileWhereClauses };
 
   const { rows, count } = await User.findAndCountAll({
     where: userWhere,
@@ -851,8 +948,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
       {
         model: UserProfile,
         as: "profile",
-        ...(profileFiltersApplied && { where: profileFilters, required: true }),
-        ...(accessibilityFilter && { where: accessibilityFilter, required: true }),
+        ...(profileWhere && { where: profileWhere, required: true }),
         include: USER_PROFILE_INCLUDE
       },
       {
@@ -860,12 +956,13 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
         as: "accessProfiles",
         where: { status: 1 },
         required: false,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
+        include: USER_ACCESS_PROFILE_INCLUDE
+      },
+      {
+        association: "accessScopes",
+        where: { status: 1 },
+        required: false,
+        include: USER_ACCESS_SCOPE_INCLUDE
       },
       {
         association: "roles",
@@ -950,12 +1047,13 @@ export const listUsersPendingApproval = asyncHandler(
           as: "accessProfiles",
           where: { status: 1 },
           required: false,
-          include: [
-            { association: "accessRole" },
-            { association: "wardNumber" },
-            { association: "boothNumber" },
-            { association: "mlaConstituency" }
-          ]
+          include: USER_ACCESS_PROFILE_INCLUDE
+        },
+        {
+          association: "accessScopes",
+          where: { status: 1 },
+          required: false,
+          include: USER_ACCESS_SCOPE_INCLUDE
         },
         {
           association: "roles",
@@ -1026,6 +1124,10 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     const profileAttributes = buildProfileAttributes(profile);
     if (Object.keys(profileAttributes).length > 0) {
       await validateProfileForeignKeys(profileAttributes as Record<string, unknown>);
+      const resolvedGeoUnitId = await resolveProfileGeoUnitId(profileAttributes);
+      if (resolvedGeoUnitId !== undefined) {
+        profileAttributes.geoUnitId = resolvedGeoUnitId as never;
+      }
       // wardNumberId and boothNumberId are optional in profile
       // they can be provided separately in the accessible array
       const profileData: Record<string, unknown> = {
@@ -1047,6 +1149,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     // Use the first role as access role, or public role if no roles provided
     const accessRoleId = parsedRoleIds?.[0] ?? publicRole.id;
     await createUserAccessProfiles(user.id, accessRoleId, validatedAccessibles, actorId);
+    await createUserAccessScopes(user.id, accessRoleId, validatedAccessibles, actorId);
   }
 
   const actorId = (req as AuthenticatedRequest).user?.id;
@@ -1064,12 +1167,13 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
         as: "accessProfiles",
         where: { status: 1 },
         required: false,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
+        include: USER_ACCESS_PROFILE_INCLUDE
+      },
+      {
+        association: "accessScopes",
+        where: { status: 1 },
+        required: false,
+        include: USER_ACCESS_SCOPE_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
@@ -1108,12 +1212,14 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
         where: { status: 1 },
         required: false,
         separate: true,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
+        include: USER_ACCESS_PROFILE_INCLUDE
+      },
+      {
+        association: "accessScopes",
+        where: { status: 1 },
+        required: false,
+        separate: true,
+        include: USER_ACCESS_SCOPE_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
@@ -1141,27 +1247,7 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     let canAccess = false;
     if (user.status === 2) {
       const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
-      if (!accessibilityFilter) {
-        canAccess = true;
-      } else {
-        const conditions =
-          (Reflect.get(accessibilityFilter, Op.or) as Array<Record<string, number>> | undefined) ??
-          [];
-        const profile = user.profile as
-          | { wardNumberId?: number | null; boothNumberId?: number | null }
-          | null;
-
-        canAccess =
-          !!profile &&
-          conditions.some((condition) => {
-            const wardMatches =
-              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
-            const boothMatches =
-              condition.boothNumberId === undefined ||
-              condition.boothNumberId === profile.boothNumberId;
-            return wardMatches && boothMatches;
-          });
-      }
+      canAccess = profileMatchesAccessibilityFilter(user.profile as ProfileAccessibilityShape | null, accessibilityFilter);
     } else {
       canAccess = await canManageUser(
         loggedInUser.id,
@@ -1212,12 +1298,14 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
         where: { status: 1 },
         required: false,
         separate: true,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
+        include: USER_ACCESS_PROFILE_INCLUDE
+      },
+      {
+        association: "accessScopes",
+        where: { status: 1 },
+        required: false,
+        separate: true,
+        include: USER_ACCESS_SCOPE_INCLUDE
       },
       { association: "roles" }
     ]
@@ -1245,27 +1333,7 @@ export const getUserByMobileNumber = asyncHandler(async (req: Request, res: Resp
 
     if (user.status === 2) {
       const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
-      if (!accessibilityFilter) {
-        canAccess = true;
-      } else {
-        const conditions =
-          (Reflect.get(accessibilityFilter, Op.or) as Array<Record<string, number>> | undefined) ??
-          [];
-        const profile = user.profile as
-          | { wardNumberId?: number | null; boothNumberId?: number | null }
-          | null;
-
-        canAccess =
-          !!profile &&
-          conditions.some((condition) => {
-            const wardMatches =
-              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
-            const boothMatches =
-              condition.boothNumberId === undefined ||
-              condition.boothNumberId === profile.boothNumberId;
-            return wardMatches && boothMatches;
-          });
-      }
+      canAccess = profileMatchesAccessibilityFilter(user.profile as ProfileAccessibilityShape | null, accessibilityFilter);
     } else {
       canAccess = await canManageUser(
         loggedInUser.id,
@@ -1322,25 +1390,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
 
     if (user.status === 2) {
       const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
-      if (!accessibilityFilter) {
-        canAccess = true;
-      } else {
-        const conditions = getWardBoothConditions(accessibilityFilter);
-        const profile = user.profile as
-          | { wardNumberId?: number | null; boothNumberId?: number | null }
-          | null;
-
-        canAccess =
-          !!profile &&
-          conditions.some((condition) => {
-            const wardMatches =
-              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
-            const boothMatches =
-              condition.boothNumberId === undefined ||
-              condition.boothNumberId === profile.boothNumberId;
-            return wardMatches && boothMatches;
-          });
-      }
+      canAccess = profileMatchesAccessibilityFilter(user.profile as ProfileAccessibilityShape | null, accessibilityFilter);
     } else {
       canAccess = await canManageUser(
         loggedInUser.id,
@@ -1403,6 +1453,13 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
     const profileAttributes = buildProfileAttributes(profileInput, user.profile ?? undefined);
     if (Object.keys(profileAttributes).length > 0) {
       await validateProfileForeignKeys(profileAttributes as Record<string, unknown>);
+      const resolvedGeoUnitId = await resolveProfileGeoUnitId(
+        profileAttributes,
+        user.profile ?? undefined
+      );
+      if (resolvedGeoUnitId !== undefined) {
+        profileAttributes.geoUnitId = resolvedGeoUnitId as never;
+      }
       if (user.profile) {
         await user.profile.update(profileAttributes);
       } else {
@@ -1430,6 +1487,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
       throw new ApiError("Cannot determine access role for user", 500);
     }
     await updateUserAccessProfiles(user.id, accessRoleId, validatedAccessibles, actorId);
+    await updateUserAccessScopes(user.id, accessRoleId, validatedAccessibles, actorId);
   }
 
   const actorId = (req as AuthenticatedRequest).user?.id;
@@ -1447,12 +1505,13 @@ export const updateUser = asyncHandler(async (req: Request, res: Response) => {
         as: "accessProfiles",
         where: { status: 1 },
         required: false,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
+        include: USER_ACCESS_PROFILE_INCLUDE
+      },
+      {
+        association: "accessScopes",
+        where: { status: 1 },
+        required: false,
+        include: USER_ACCESS_SCOPE_INCLUDE
       },
       { association: "roles", include: [{ association: "permissions" }] }
     ]
@@ -1499,25 +1558,7 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
 
     if (user.status === 2) {
       const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
-      if (!accessibilityFilter) {
-        canAccess = true;
-      } else {
-        const conditions = getWardBoothConditions(accessibilityFilter);
-        const profile = user.profile as
-          | { wardNumberId?: number | null; boothNumberId?: number | null }
-          | null;
-
-        canAccess =
-          !!profile &&
-          conditions.some((condition) => {
-            const wardMatches =
-              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
-            const boothMatches =
-              condition.boothNumberId === undefined ||
-              condition.boothNumberId === profile.boothNumberId;
-            return wardMatches && boothMatches;
-          });
-      }
+      canAccess = profileMatchesAccessibilityFilter(user.profile as ProfileAccessibilityShape | null, accessibilityFilter);
     } else {
       canAccess = await canManageUser(
         loggedInUser.id,
@@ -1554,12 +1595,13 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
           as: "accessProfiles",
           where: { status: 1 },
           required: false,
-          include: [
-            { association: "accessRole" },
-            { association: "wardNumber" },
-            { association: "boothNumber" },
-            { association: "mlaConstituency" }
-          ]
+          include: USER_ACCESS_PROFILE_INCLUDE
+        },
+        {
+          association: "accessScopes",
+          where: { status: 1 },
+          required: false,
+          include: USER_ACCESS_SCOPE_INCLUDE
         }
       ]
     });
@@ -1597,12 +1639,13 @@ export const updateUserStatus = asyncHandler(async (req: Request, res: Response)
         as: "accessProfiles",
         where: { status: 1 },
         required: false,
-        include: [
-          { association: "accessRole" },
-          { association: "wardNumber" },
-          { association: "boothNumber" },
-          { association: "mlaConstituency" }
-        ]
+        include: USER_ACCESS_PROFILE_INCLUDE
+      },
+      {
+        association: "accessScopes",
+        where: { status: 1 },
+        required: false,
+        include: USER_ACCESS_SCOPE_INCLUDE
       }
     ]
   });
@@ -1651,25 +1694,7 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
 
     if (user.status === 2) {
       const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
-      if (!accessibilityFilter) {
-        canAccess = true;
-      } else {
-        const conditions = getWardBoothConditions(accessibilityFilter);
-        const profile = user.profile as
-          | { wardNumberId?: number | null; boothNumberId?: number | null }
-          | null;
-
-        canAccess =
-          !!profile &&
-          conditions.some((condition) => {
-            const wardMatches =
-              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
-            const boothMatches =
-              condition.boothNumberId === undefined ||
-              condition.boothNumberId === profile.boothNumberId;
-            return wardMatches && boothMatches;
-          });
-      }
+      canAccess = profileMatchesAccessibilityFilter(user.profile as ProfileAccessibilityShape | null, accessibilityFilter);
     } else {
       canAccess = await canManageUser(
         loggedInUser.id,
@@ -1706,12 +1731,13 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
           as: "accessProfiles",
           where: { status: 1 },
           required: false,
-          include: [
-            { association: "accessRole" },
-            { association: "wardNumber" },
-            { association: "boothNumber" },
-            { association: "mlaConstituency" }
-          ]
+          include: USER_ACCESS_PROFILE_INCLUDE
+        },
+        {
+          association: "accessScopes",
+          where: { status: 1 },
+          required: false,
+          include: USER_ACCESS_SCOPE_INCLUDE
         }
       ]
     });
@@ -1722,17 +1748,20 @@ export const updateUserPostsBlockStatus = asyncHandler(async (req: Request, res:
       return sendSuccess(res, hydrated, "User posts are already unblocked");
     }
 
-    // When creating profile for post blocking, ward and booth numbers are still required
-    // You may want to get these from request body or user data
-    const { wardNumberId, boothNumberId } = req.body;
-    if (!wardNumberId || !boothNumberId) {
-      throw new ApiError("wardNumberId and boothNumberId are required to create user profile", 400);
+    const profileAttributes = buildProfileAttributes(req.body);
+    const resolvedGeoUnitId = await resolveProfileGeoUnitId(profileAttributes);
+
+    if (!resolvedGeoUnitId) {
+      throw new ApiError(
+        "Geo fields that resolve to a valid geoUnit are required to create user profile",
+        400
+      );
     }
 
     await UserProfile.create({
       userId: user.id,
-      wardNumberId,
-      boothNumberId,
+      ...profileAttributes,
+      geoUnitId: resolvedGeoUnitId,
       postsBlocked: true,
       createdBy: actorId,
       updatedBy: actorId
@@ -1798,25 +1827,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
     let canAccess = false;
     if (user.status === 2) {
       const accessibilityFilter = await buildUserListingAccessibilityFilter(loggedInUser.id);
-      if (!accessibilityFilter) {
-        canAccess = true;
-      } else {
-        const conditions = getWardBoothConditions(accessibilityFilter);
-        const profile = user.profile as
-          | { wardNumberId?: number | null; boothNumberId?: number | null }
-          | null;
-
-        canAccess =
-          !!profile &&
-          conditions.some((condition) => {
-            const wardMatches =
-              condition.wardNumberId === undefined || condition.wardNumberId === profile.wardNumberId;
-            const boothMatches =
-              condition.boothNumberId === undefined ||
-              condition.boothNumberId === profile.boothNumberId;
-            return wardMatches && boothMatches;
-          });
-      }
+      canAccess = profileMatchesAccessibilityFilter(user.profile as ProfileAccessibilityShape | null, accessibilityFilter);
     } else {
       canAccess = await canManageUser(
         loggedInUser.id,

@@ -36,6 +36,13 @@ import {
 import { buildQueryAttributes, shouldIncludeAuditFields } from "../utils/queryAttributes";
 import { assertNoRestrictedFields } from "../utils/payloadValidation";
 import { emitEvent, AppEvent } from "../events/eventBus";
+import {
+  assertUserCanAccessGeoUnit,
+  buildGeoUnitAccessWhere,
+  buildGeoUnitIncludeFilterFromSource,
+  resolveGeoUnitRecordFromSource,
+  serializeGeoUnit
+} from "../services/geoUnitService";
 
 type NormalizedMediaInput = {
   mediaType: MediaType;
@@ -820,6 +827,7 @@ const buildRegistrationResponse = (
     ...plainRegistration,
     registeredAt,
     isGuest,
+    geo: serializeGeoUnit(plainRegistration.geoUnit, plainRegistration.geoUnitId ?? null),
     ...(includeDetails
       ? {
           designation: plainRegistration.designation
@@ -851,6 +859,7 @@ const buildRegistrationResponse = (
 
 export const listEventRegistrations = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
+    const { id: userId, roles } = requireAuthenticatedUser(req);
     const eventId = Number.parseInt(req.params.id, 10);
     if (Number.isNaN(eventId)) {
       throw new ApiError("Invalid event id", 400);
@@ -884,9 +893,18 @@ export const listEventRegistrations = asyncHandler(
     const where: WhereOptions = {
       eventId
     };
+    const normalizedRoles = roles.map((role) => role.toLowerCase());
+    const isAdminUser = normalizedRoles.includes(ADMIN_ROLE_NAME.toLowerCase());
+    const geoAccessWhere = isAdminUser ? null : await buildGeoUnitAccessWhere(userId);
+    const geoUnitIncludeWhere = buildGeoUnitIncludeFilterFromSource(
+      (req.query ?? {}) as Record<string, unknown>
+    );
 
     if (!includeUnregistered) {
       where.status = 1;
+    }
+    if (geoAccessWhere) {
+      Object.assign(where, geoAccessWhere);
     }
 
     const { rows, count } = await EventRegistration.findAndCountAll({
@@ -909,6 +927,29 @@ export const listEventRegistrations = asyncHandler(
               ]
             }
           ]
+        },
+        {
+          association: "geoUnit",
+          attributes: [
+            "id",
+            "stateId",
+            "districtId",
+            "talukId",
+            "mpConstituencyId",
+            "mlaConstituencyId",
+            "settlementType",
+            "governingBody",
+            "localBodyId",
+            "hobaliId",
+            "gramPanchayatId",
+            "mainVillageId",
+            "subVillageId",
+            "wardNumberId",
+            "pollingStationId",
+            "boothNumberId"
+          ],
+          required: Boolean(geoUnitIncludeWhere),
+          ...(geoUnitIncludeWhere ? { where: geoUnitIncludeWhere } : {})
         },
         { association: "designation", attributes: ["id", "dispName"], required: false },
         { association: "wardNumber", attributes: ["id", "dispName"], required: false },
@@ -1348,6 +1389,11 @@ export const uploadEventRegistrations = asyncHandler(
           const parsedDateOfBirth = parseOptionalDateOnly(dateOnly, "dateOfBirth");
 
           const parsedAge = parseOptionalNumber(rawAge, "age");
+          const resolvedGeoUnit = await resolveGeoUnitRecordFromSource({
+            wardNumberId: parsedWardNumberId ?? null,
+            boothNumberId: parsedBoothNumberId ?? null
+          });
+          await assertUserCanAccessGeoUnit(loggedInUserId, resolvedGeoUnit?.id);
 
           let existingRegistration = null;
 
@@ -1369,8 +1415,9 @@ export const uploadEventRegistrations = asyncHandler(
             email: parsedEmail,
             registeredBy: parsedRegisteredBy,
             fullAddress: parsedFullAddress,
-            wardNumberId: parsedWardNumberId,
-            boothNumberId: parsedBoothNumberId,
+            geoUnitId: resolvedGeoUnit?.id ?? null,
+            wardNumberId: resolvedGeoUnit?.wardNumberId ?? parsedWardNumberId,
+            boothNumberId: resolvedGeoUnit?.boothNumberId ?? parsedBoothNumberId,
             designationId: parsedDesignationId,
             dateOfBirth: parsedDateOfBirth ? new Date(parsedDateOfBirth) : null,
             age: parsedAge,
@@ -1442,6 +1489,10 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
   const parsedDesignationId = parseOptionalNumber(req.body.designationId, "designationId");
   const parsedDateOfBirth = parseOptionalDateOnly(req.body.dateOfBirth, "dateOfBirth");
   const parsedAge = parseOptionalNumber(req.body.age, "age");
+  const resolvedGeoUnit = await resolveGeoUnitRecordFromSource(
+    (req.body ?? {}) as Record<string, unknown>
+  );
+  await assertUserCanAccessGeoUnit(loggedInUserId, resolvedGeoUnit?.id);
 
   // Check for existing registration - uniqueness by eventId + userId OR eventId + contactNumber
   let existingRegistration = null;
@@ -1473,8 +1524,9 @@ export const registerForEvent = asyncHandler(async (req: AuthenticatedRequest, r
     email: parsedEmail,
     registeredBy: parsedRegisteredBy,
     fullAddress: parsedFullAddress,
-    wardNumberId: parsedWardNumberId,
-    boothNumberId: parsedBoothNumberId,
+    geoUnitId: resolvedGeoUnit?.id ?? null,
+    wardNumberId: resolvedGeoUnit?.wardNumberId ?? parsedWardNumberId,
+    boothNumberId: resolvedGeoUnit?.boothNumberId ?? parsedBoothNumberId,
     designationId: parsedDesignationId,
     dateOfBirth: parsedDateOfBirth ? new Date(parsedDateOfBirth) : null,
     age: parsedAge,

@@ -42,6 +42,13 @@ const buildSidebarWhereClause = (req: Request): WhereOptions<Attributes<Sidebar>
   return filters.length ? { [Op.and]: filters } : undefined;
 };
 
+const serializeBigIntFields = <T>(value: T): T =>
+  JSON.parse(
+    JSON.stringify(value, (_key, currentValue) =>
+      typeof currentValue === "bigint" ? Number(currentValue) : currentValue
+    )
+  ) as T;
+
 export const listSidebarItems = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
@@ -200,7 +207,11 @@ export const assignRoleToSidebar = asyncHandler(
     });
 
     if (existing) {
-      return sendSuccess(res, existing, "Role already assigned to sidebar");
+      return sendSuccess(
+        res,
+        serializeBigIntFields(existing.toJSON()),
+        "Role already assigned to sidebar"
+      );
     }
 
     const roleSidebar = await RoleSidebar.create({
@@ -211,7 +222,11 @@ export const assignRoleToSidebar = asyncHandler(
       updatedBy: BigInt(userId)
     });
 
-    return sendCreated(res, roleSidebar, "Role assigned to sidebar successfully");
+    return sendCreated(
+      res,
+      serializeBigIntFields(roleSidebar.toJSON()),
+      "Role assigned to sidebar successfully"
+    );
   }
 );
 
@@ -260,7 +275,11 @@ export const assignPermissionGroupToSidebar = asyncHandler(
     });
 
     if (existing) {
-      return sendSuccess(res, existing, "Permission group already assigned to sidebar");
+      return sendSuccess(
+        res,
+        serializeBigIntFields(existing.toJSON()),
+        "Permission group already assigned to sidebar"
+      );
     }
 
     const pgSidebar = await PermissionGroupSidebar.create({
@@ -271,7 +290,11 @@ export const assignPermissionGroupToSidebar = asyncHandler(
       updatedBy: BigInt(userId)
     });
 
-    return sendCreated(res, pgSidebar, "Permission group assigned to sidebar successfully");
+    return sendCreated(
+      res,
+      serializeBigIntFields(pgSidebar.toJSON()),
+      "Permission group assigned to sidebar successfully"
+    );
   }
 );
 

@@ -1,0 +1,12 @@
+{
+  "runId": "geo-api-test-bed-2026-03-28T17-28-26-278Z",
+  "baseUrl": "http://127.0.0.1:8081/api",
+  "startedAt": "2026-03-28T17:28:26.279Z",
+  "finishedAt": "2026-03-28T17:28:26.639Z",
+  "summary": {
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0
+  },
+  "scenarios": []
+}

@@ -19,6 +19,7 @@ import type MetaGenderOption from "./MetaGenderOption";
 import type MetaWidowStatus from "./MetaWidowStatus";
 import type MetaDisabilityStatus from "./MetaDisabilityStatus";
 import type MetaEmploymentStatus from "./MetaEmploymentStatus";
+import type GeoPolitical from "./GeoPolitical";
 
 import sequelize from "../config/database";
 import { normalizeOptionalPhoneNumber, normalizePhoneNumber } from "../utils/phoneNumber";
@@ -39,6 +40,7 @@ class UserSchemeApplication extends Model<
   declare mobileAlternate: CreationOptional<string | null>;
   declare email: CreationOptional<string | null>;
   declare addressLine: string;
+  declare geoUnitId: CreationOptional<number | null>;
   declare wardNumberId: CreationOptional<number | null>;
   declare boothNumberId: CreationOptional<number | null>;
   declare doorNumber: CreationOptional<string | null>;
@@ -74,6 +76,7 @@ class UserSchemeApplication extends Model<
   declare scheme?: NonAttribute<Scheme>;
   declare applicant?: NonAttribute<User | null>;
   declare reviewer?: NonAttribute<User | null>;
+  declare geoUnit?: NonAttribute<GeoPolitical | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
   declare governmentLevel?: NonAttribute<MetaGovernmentLevel | null>;
@@ -140,6 +143,11 @@ UserSchemeApplication.init(
       field: "address_line",
       type: DataTypes.STRING(255),
       allowNull: false
+    },
+    geoUnitId: {
+      field: "geo_unit_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     wardNumberId: {
       field: "ward_number_id",

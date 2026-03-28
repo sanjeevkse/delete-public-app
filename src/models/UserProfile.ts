@@ -8,6 +8,9 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
+import type { LocalBodyType, SettlementType } from "../types/geo";
+import type GeoPolitical from "./GeoPolitical";
+import type MetaLocalBody from "./MetaLocalBody";
 import { normalizeOptionalPhoneNumber } from "../utils/phoneNumber";
 import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaDisabilityStatus from "./MetaDisabilityStatus";
@@ -88,18 +91,26 @@ class UserProfile extends Model<
   declare city: CreationOptional<string | null>;
   declare postalCode: CreationOptional<string | null>;
   declare country: CreationOptional<string | null>;
+  declare geoUnitId: CreationOptional<number | null>;
   declare stateId: CreationOptional<number | null>;
+  declare districtId: CreationOptional<number | null>;
+  declare talukId: CreationOptional<number | null>;
   declare mpConstituencyId: CreationOptional<number | null>;
   declare mlaConstituencyId: CreationOptional<number | null>;
-  declare governingBody: CreationOptional<"GBA" | "TMC" | "CMC" | "GP" | null>;
+  declare settlementType: CreationOptional<SettlementType | null>;
+  declare governingBody: CreationOptional<LocalBodyType | null>;
+  declare localBodyId: CreationOptional<number | null>;
+  declare hobaliId: CreationOptional<number | null>;
   declare gramPanchayatId: CreationOptional<number | null>;
   declare mainVillageId: CreationOptional<number | null>;
+  declare subVillageId: CreationOptional<number | null>;
   declare voterListBoothNo: CreationOptional<string | null>;
   declare voterListSlNo: CreationOptional<string | null>;
   declare mapBoothNo: CreationOptional<string | null>;
   declare mapSlNo: CreationOptional<string | null>;
   declare mapSubSlNo: CreationOptional<string | null>;
   declare wardNumberId: number | null;
+  declare pollingStationId: CreationOptional<number | null>;
   declare boothNumberId: number | null;
   declare sectorId: CreationOptional<number | null>;
   declare isRegistrationAgreed: CreationOptional<number>;
@@ -133,6 +144,8 @@ class UserProfile extends Model<
   declare floor?: NonAttribute<MetaFloor | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber | null>;
   declare boothNumber?: NonAttribute<MetaBoothNumber | null>;
+  declare geoUnit?: NonAttribute<GeoPolitical | null>;
+  declare localBody?: NonAttribute<MetaLocalBody | null>;
   declare sector?: NonAttribute<MetaComplaintDepartment | null>;
 }
 
@@ -407,8 +420,23 @@ UserProfile.init(
       type: DataTypes.STRING(120),
       allowNull: true
     },
+    geoUnitId: {
+      field: "geo_unit_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
     stateId: {
       field: "state_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    districtId: {
+      field: "district_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    talukId: {
+      field: "taluk_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
@@ -422,9 +450,24 @@ UserProfile.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
+    settlementType: {
+      field: "settlement_type",
+      type: DataTypes.ENUM("URBAN", "RURAL"),
+      allowNull: true
+    },
     governingBody: {
       field: "governing_body",
-      type: DataTypes.ENUM("GBA", "TMC", "CMC", "GP"),
+      type: DataTypes.ENUM("GBA", "CC", "CMC", "TMC", "TP", "GP"),
+      allowNull: true
+    },
+    localBodyId: {
+      field: "local_body_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    hobaliId: {
+      field: "hobali_id",
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
     gramPanchayatId: {
@@ -434,6 +477,11 @@ UserProfile.init(
     },
     mainVillageId: {
       field: "main_village_id",
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true
+    },
+    subVillageId: {
+      field: "sub_village_id",
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: true
     },
@@ -464,6 +512,11 @@ UserProfile.init(
     },
     wardNumberId: {
       field: "ward_number_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
+    },
+    pollingStationId: {
+      field: "polling_station_id",
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: true
     },

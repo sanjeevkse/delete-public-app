@@ -2111,10 +2111,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"1234567890\",\n  \"email\": \"john@example.com\",\n  \"fullAddress\": \"123 Main Street\",\n  \"wardNumberId\": 5,\n  \"boothNumberId\": 10,\n  \"designationId\": 2,\n  \"dateOfBirth\": \"1990-01-01\",\n  \"age\": 34,\n  \"registeredBy\": \"Self\"\n}"
+              "raw": "{\n  \"userId\": 1,\n  \"fullName\": \"John Doe\",\n  \"contactNumber\": \"1234567890\",\n  \"email\": \"john@example.com\",\n  \"fullAddress\": \"123 Main Street\",\n  \"settlementType\": \"URBAN\",\n  \"governingBody\": \"GBA\",\n  \"localBodyId\": 23,\n  \"wardNumberId\": 5,\n  \"boothNumberId\": 10,\n  \"designationId\": 2,\n  \"dateOfBirth\": \"1990-01-01\",\n  \"age\": 34,\n  \"registeredBy\": \"Self\"\n}"
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/register",
-            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, designationId (MetaDesignation id), and other fields are optional. When userId is provided, only one active registration is allowed per (eventId, userId); duplicate active attempts return HTTP 409."
+            "description": "Registers a user for the event. Requires fullName and contactNumber (mandatory). userId, email, designationId (MetaDesignation id), and other fields are optional. You may send wardNumberId/boothNumberId or a fuller geo leaf selection; backend derives geoUnitId. When userId is provided, only one active registration is allowed per (eventId, userId); duplicate active attempts return HTTP 409."
           },
           "response": []
         },
@@ -2158,10 +2158,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Jane Guest\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"jane@example.com\",\n  \"fullAddress\": \"456 Oak Avenue\",\n  \"wardNumberId\": 3,\n  \"boothNumberId\": 8,\n  \"designationId\": 4,\n  \"dateOfBirth\": \"1985-05-15\",\n  \"age\": 39,\n  \"registeredBy\": \"John Doe\"\n}"
+              "raw": "{\n  \"fullName\": \"Jane Guest\",\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"jane@example.com\",\n  \"fullAddress\": \"456 Oak Avenue\",\n  \"settlementType\": \"RURAL\",\n  \"governingBody\": \"GP\",\n  \"gramPanchayatId\": 50,\n  \"mainVillageId\": 90,\n  \"boothNumberId\": 8,\n  \"designationId\": 4,\n  \"dateOfBirth\": \"1985-05-15\",\n  \"age\": 39,\n  \"registeredBy\": \"John Doe\"\n}"
             },
             "url": "{{baseUrl}}/api/events/{{eventId}}/register",
-            "description": "Registers a guest (non-user) for an event. Requires fullName and contactNumber (mandatory). Do not send userId for guest registration. designationId (MetaDesignation id) is optional."
+            "description": "Registers a guest (non-user) for an event. Requires fullName and contactNumber (mandatory). Do not send userId for guest registration. designationId (MetaDesignation id) is optional. You may send wardNumberId/boothNumberId or a fuller geo leaf selection; backend derives geoUnitId."
           },
           "response": []
         },
@@ -2319,7 +2319,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20&sortBy=registeredAt&sort=DESC",
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/registrations?includeUnregistered=false&page=1&limit=20&sortBy=registeredAt&sort=DESC&stateId=&districtId=&talukId=&mpConstituencyId=&mlaConstituencyId=&settlementType=&governingBody=&localBodyId=&hobaliId=&gramPanchayatId=&mainVillageId=&subVillageId=&pollingStationId=&wardNumberId=&boothNumberId=",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2357,7 +2357,7 @@
                 }
               ]
             },
-            "description": "Lists registrations for a specific event, including both user and guest registrations. Each registration includes all registration columns (including designationId), plus designation (id, dispName), isGuest and registeredAt. User registrations have user details, guest registrations have guestDetails. Use includeUnregistered=true to include soft-unregistered entries. Use sortBy=registeredAt and sort=ASC|DSC to control ordering."
+            "description": "Lists registrations for a specific event with normalized geo accessibility applied. Supports partial geo filters in addition to ward/booth. Each registration includes designation, isGuest, registeredAt, geoUnitId, and geo (resolved geo leaf ids)."
           },
           "response": []
         },
@@ -3724,10 +3724,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Mysuru\",\n    \"ration_card_type_id\": 1,\n    \"is_voter\": true,\n    \"native_lat\": 12.97160000,\n    \"native_long\": 77.59460000,\n    \"familyGodId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"contactNumber\": \"9876543210\",\n  \"email\": \"user1@example.com\",\n  \"fullName\": \"User One\",\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"profile\": {\n    \"displayName\": \"User1\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"bio\": \"Software developer\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"citizenAge\": 34,\n    \"genderId\": 1,\n    \"educationalDetailId\": 2,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2020-01-01\",\n    \"maritalStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Mysuru\",\n    \"ration_card_type_id\": 1,\n    \"is_voter\": true,\n    \"native_lat\": 12.9716,\n    \"native_long\": 77.5946,\n    \"familyGodId\": 1,\n    \"relationshipTypeId\": 1,\n    \"relationshipName\": \"Parent\",\n    \"doorNumber\": \"12/4\",\n    \"floorId\": 1,\n    \"serviceConservancyRoad\": \"Service Road\",\n    \"mainRoad\": \"Outer Ring Road\",\n    \"crossRoad\": \"1st Cross\",\n    \"locationArea\": \"Rajajinagar\",\n    \"landmark\": \"Near Metro Station\",\n    \"occupation\": \"Software Engineer\",\n    \"profileImageUrl\": \"https://example.com/image.jpg\",\n    \"referredBy\": \"John Smith\",\n    \"fullAddress\": \"123 Main St, Bangalore, Karnataka 560001, India\",\n    \"addressLine1\": \"123 Main Street\",\n    \"addressLine2\": \"Apartment 4B\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560001\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"districtId\": 1,\n    \"talukId\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"settlementType\": \"RURAL\",\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"subVillageId\": 1,\n    \"pollingStationId\": 12,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"boothNumberId\": 5040,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"instagram\": \"user_one\",\n      \"twitter\": \"@userone\",\n      \"facebook\": \"user.one\"\n    },\n    \"preferencesJson\": {\n      \"notificationPreference\": \"email\",\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"districtId\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"talukId\": 1,\n      \"settlementType\": \"RURAL\",\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": -1\n    },\n    {\n      \"stateId\": 1,\n      \"districtId\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"talukId\": 1,\n      \"settlementType\": \"URBAN\",\n      \"governingBody\": \"CMC\",\n      \"localBodyId\": 23,\n      \"wardNumberId\": -1\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users",
-            "description": "Creates a new user. crfId/crf_id is generated by the server in sequential order and cannot be set in the request body."
+            "description": "Creates a new user. The backend derives the exact profile geo leaf from the supplied profile geo fields; frontend should not send `profile.geoUnitId`. `accessibles` accepts `-1` as an API wildcard and the backend compiles that into normalized `accessScopes`; legacy `accessProfiles` are still returned for compatibility."
           },
           "response": []
         },
@@ -4101,7 +4101,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
-            "description": "Returns user details by ID with `accessProfiles` (no `accessibility` alias). Geo fields are enriched in both profile and access profiles as objects `{ id, displayName }` under `state`, `mp`, `mla`, `gp`, `village`, and `governingBodyObj`."
+            "description": "Returns user details by ID with both compatibility `accessProfiles` and normalized `accessScopes`. Exact user location lives on `profile.geoUnitId`; geo objects are still enriched for `state`, `mp`, `mla`, `gp`, `village`, `localBody`, and `governingBodyObj`."
           },
           "response": []
         },
@@ -4117,10 +4117,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Tumakuru\",\n    \"ration_card_type_id\": 1,\n    \"is_voter\": true,\n    \"native_lat\": 12.97160000,\n    \"native_long\": 77.59460000,\n    \"familyGodId\": 1,\n    \"employmentStatusId\": 1,\n    \"disabilityStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"state_id\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"governingBody\": \"GP\",\n    \"gramPanchayatId\": 1,\n    \"mainVillageId\": 1,\n    \"voterListBoothNo\": \"5040\",\n    \"voterListSlNo\": \"221\",\n    \"mapBoothNo\": \"5040\",\n    \"mapSlNo\": \"221\",\n    \"mapSubSlNo\": \"1\",\n    \"wardNumberId\": 142,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [{{roleId}}],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"state_id\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": 5040\n    }\n  ]\n}"
+              "raw": "{\n  \"fullName\": \"Updated User\",\n  \"email\": \"updated.user@example.com\",\n  \"status\": 1,\n  \"profile\": {\n    \"displayName\": \"Updated User\",\n    \"alernativeContactNumber\": \"9876543211\",\n    \"emergencyContactNumber\": \"9876543212\",\n    \"aadhaarNumber\": \"123456789012\",\n    \"panNumber\": \"ABCDE1234F\",\n    \"bio\": \"Updated bio\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"citizenAge\": 35,\n    \"genderId\": 1,\n    \"educationalDetailId\": 3,\n    \"educationalDetailGroupId\": 1,\n    \"dateOfJoining\": \"2025-01-12\",\n    \"maritalStatusId\": 1,\n    \"residenceTypeId\": 1,\n    \"nativePlace\": \"Tumakuru\",\n    \"ration_card_type_id\": 1,\n    \"is_voter\": true,\n    \"native_lat\": 12.9716,\n    \"native_long\": 77.5946,\n    \"familyGodId\": 1,\n    \"employmentStatusId\": 1,\n    \"disabilityStatusId\": 1,\n    \"motherTongueId\": 1,\n    \"religionId\": 1,\n    \"mainCasteId\": 1,\n    \"subCasteId\": 1,\n    \"voterIdNumber\": \"ABC1234567\",\n    \"voterIdPhoto\": \"/uploads/voter-id.jpg\",\n    \"aadhaarPhoto\": \"/uploads/aadhaar.jpg\",\n    \"rationCardNo\": \"RC123456789\",\n    \"rationCardPhoto\": \"/uploads/ration-card.jpg\",\n    \"employmentGroupId\": 1,\n    \"employmentId\": 1,\n    \"relationshipTypeId\": 2,\n    \"relationshipName\": \"Guardian\",\n    \"doorNumber\": \"100\",\n    \"floorId\": 3,\n    \"serviceConservancyRoad\": \"Service Lane\",\n    \"mainRoad\": \"Main Street\",\n    \"crossRoad\": \"2nd Cross\",\n    \"locationArea\": \"Vijayanagar\",\n    \"landmark\": \"Near Circle\",\n    \"occupation\": \"Senior Engineer\",\n    \"profileImageUrl\": \"/uploads/profile.jpg\",\n    \"referredBy\": \"Referral Name\",\n    \"fullAddress\": \"100 Updated Street, Bangalore\",\n    \"addressLine1\": \"100 Updated Street\",\n    \"addressLine2\": \"Near Circle\",\n    \"city\": \"Bangalore\",\n    \"postalCode\": \"560002\",\n    \"country\": \"India\",\n    \"stateId\": 1,\n    \"districtId\": 1,\n    \"talukId\": 1,\n    \"mpConstituencyId\": 1,\n    \"mlaConstituencyId\": 1,\n    \"settlementType\": \"URBAN\",\n    \"governingBody\": \"CMC\",\n    \"localBodyId\": 23,\n    \"wardNumberId\": 142,\n    \"pollingStationId\": 20,\n    \"boothNumberId\": 5040,\n    \"sectorId\": 1,\n    \"isRegistrationAgreed\": 1,\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946,\n    \"socialLinksJson\": {\n      \"twitter\": \"@updated_user\",\n      \"instagram\": \"updated.user\",\n      \"facebook\": \"updated.user\"\n    },\n    \"preferencesJson\": {\n      \"notifications\": true,\n      \"language\": \"en\"\n    },\n    \"postsBlocked\": false,\n    \"status\": 1\n  },\n  \"roleIds\": [\n    {{roleId}}\n  ],\n  \"accessibles\": [\n    {\n      \"stateId\": 1,\n      \"districtId\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"talukId\": 1,\n      \"settlementType\": \"URBAN\",\n      \"governingBody\": \"CMC\",\n      \"localBodyId\": 23,\n      \"wardNumberId\": 142,\n      \"boothNumberId\": -1\n    },\n    {\n      \"stateId\": 1,\n      \"districtId\": 1,\n      \"mpConstituencyId\": 1,\n      \"mlaConstituencyId\": 1,\n      \"talukId\": 1,\n      \"settlementType\": \"RURAL\",\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 1,\n      \"mainVillageId\": 1,\n      \"subVillageId\": -1\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/admin/users/{{userId}}",
-            "description": "Updates user information including profile, roles, accessibility profiles, and approval status (0=inactive, 1=approved/active, 2=pending approval). All fields are optional - only provided fields will be updated."
+            "description": "Updates user information including exact profile geo, roles, compatibility `accessProfiles`, and normalized `accessScopes`. The backend derives `profile.geoUnitId` from the profile geo fields; frontend should not send it. In `accessibles`, `-1` means all descendants under the last fixed level and is normalized server-side."
           },
           "response": []
         },
@@ -5872,7 +5872,25 @@
                 {
                   "key": "boothNumberId",
                   "value": "5",
-                  "description": "Optional - References tbl_meta_booth_number",
+                  "description": "Optional legacy leaf key. Backend can also derive geoUnitId from fuller geo fields.",
+                  "type": "text"
+                },
+                {
+                  "key": "settlementType",
+                  "value": "URBAN",
+                  "description": "Optional exact geo leaf input",
+                  "type": "text"
+                },
+                {
+                  "key": "governingBody",
+                  "value": "GBA",
+                  "description": "Optional exact geo leaf input",
+                  "type": "text"
+                },
+                {
+                  "key": "localBodyId",
+                  "value": "23",
+                  "description": "Optional exact geo leaf input for urban bodies",
                   "type": "text"
                 },
                 {
@@ -5949,7 +5967,8 @@
                 }
               ]
             },
-            "url": "{{baseUrl}}/api/complaints"
+            "url": "{{baseUrl}}/api/complaints",
+            "description": "Creates a complaint. You may send wardNumberId/boothNumberId or a fuller geo leaf selection; backend derives geoUnitId and stores it alongside the legacy leaf ids."
           },
           "response": []
         },
@@ -6883,13 +6902,29 @@
                   "type": "text"
                 },
                 {
+                  "key": "settlementType",
+                  "value": "URBAN",
+                  "type": "text"
+                },
+                {
+                  "key": "governingBody",
+                  "value": "GBA",
+                  "type": "text"
+                },
+                {
+                  "key": "localBodyId",
+                  "value": "23",
+                  "type": "text"
+                },
+                {
                   "key": "media",
                   "type": "file",
                   "src": "/path/to/local/image.jpg"
                 }
               ]
             },
-            "url": "{{baseUrl}}/api/schedule-events"
+            "url": "{{baseUrl}}/api/schedule-events",
+            "description": "Creates a schedule event. You may send wardNumberId/boothNumberId or a fuller geo leaf selection; backend derives geoUnitId and stores it alongside the legacy leaf ids."
           },
           "response": []
         },
@@ -6905,7 +6940,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventTypeId=&colorId=&eventSubName=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
+              "raw": "{{baseUrl}}/api/schedule-events?search=&title=&eventTypeId=&colorId=&eventSubName=&eventAddress=&eventReferralPersonName=&referralContactNumber=&contactPersonRelationship=&priority=&locationText=&allDay=&stateId=&districtId=&talukId=&mpConstituencyId=&mlaConstituencyId=&settlementType=&governingBody=&localBodyId=&hobaliId=&gramPanchayatId=&mainVillageId=&subVillageId=&pollingStationId=&wardNumberId=&boothNumberId=&latitude=&longitude=&startFrom=&startTo=&endFrom=&endTo=&sort=ASC&sortColumn=start",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -7025,7 +7060,8 @@
                   "description": "Sort by: start, end, title, createdAt, updatedAt, priority, eventTypeId, colorId"
                 }
               ]
-            }
+            },
+            "description": "Lists schedule events with normalized geo accessibility. Supports partial geo filters; response rows include geoUnitId and geo for the resolved geo leaf."
           },
           "description": "List schedule events. Response data is an array of { id, title, color, start, end } where start/end are ISO strings and color is the color dispName or null.",
           "response": []
@@ -8698,7 +8734,7 @@
               "raw": "{\n  \"formId\": 1,\n  \"title\": \"Ward Volunteer Signup\",\n  \"description\": \"Collect volunteer information for Ward 12\",\n  \"startDate\": \"2024-12-10\",\n  \"endDate\": \"2024-12-20\",\n  \"accessibility\": [\n    {\n      \"stateId\": 1,\n      \"mpConstituencyId\": 2,\n      \"mlaConstituencyId\": 3,\n      \"gramPanchayatId\": 4,\n      \"mainVillageId\": 5,\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    },\n    {\n      \"stateId\": 1,\n      \"mpConstituencyId\": 2,\n      \"mlaConstituencyId\": 3,\n      \"gramPanchayatId\": 4,\n      \"mainVillageId\": 6,\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 102,\n      \"userRoleId\": 4\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/form-events",
-            "description": "Creates a form event for a specific form template and seeds one or more accessibility entries. Include geo dimensions (`stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, `mainVillageId`) for boundary-aware workflows; `wardNumberId` and `boothNumberId` remain the primary event-mapping keys."
+            "description": "Creates a form event for a specific form template and seeds one or more accessibility entries. Accessibility may include a fuller exact geo leaf selection; backend resolves and stores the exact ward/booth leaf when uniquely identifiable. Wildcard form-event accessibility is still stored in legacy ward/booth form."
           },
           "response": []
         },
@@ -8723,7 +8759,7 @@
               "raw": "{\n  \"title\": \"Ward Volunteer Signup (Evening Batch)\",\n  \"description\": \"Updated session window\",\n  \"startDate\": \"2024-12-12\",\n  \"endDate\": \"2024-12-22\",\n  \"status\": 1,\n  \"accessibility\": [\n    {\n      \"stateId\": 1,\n      \"mpConstituencyId\": 2,\n      \"mlaConstituencyId\": 3,\n      \"gramPanchayatId\": 4,\n      \"mainVillageId\": 5,\n      \"wardNumberId\": 12,\n      \"boothNumberId\": 101,\n      \"userRoleId\": 3\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/api/form-events/{{formEventId}}",
-            "description": "Updates event metadata and replaces the accessibility matrix. Include geo dimensions (`stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, `mainVillageId`) for boundary-aware workflows; `wardNumberId` and `boothNumberId` remain the primary event-mapping keys."
+            "description": "Updates event metadata and replaces the accessibility matrix. Accessibility may include a fuller exact geo leaf selection; backend resolves and stores the exact ward/booth leaf when uniquely identifiable. Wildcard form-event accessibility is still stored in legacy ward/booth form."
           },
           "response": []
         },
@@ -9430,7 +9466,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/reports/users?page=1&limit=25&search=&status=&roleId=&stateId=&mpConstituencyId=&mlaConstituencyId=&gramPanchayatId=&mainVillageId=&governingBody=&wardNumberId=&boothNumberId=",
+              "raw": "{{baseUrl}}/api/reports/users?page=1&limit=25&search=&status=&roleId=&stateId=&districtId=&talukId=&mpConstituencyId=&mlaConstituencyId=&settlementType=&governingBody=&localBodyId=&hobaliId=&gramPanchayatId=&mainVillageId=&subVillageId=&pollingStationId=&wardNumberId=&boothNumberId=",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -9507,7 +9543,7 @@
                 }
               ]
             },
-            "description": "Get users report with pagination and user/profile filters, including geo filters (state/mp/mla/gp/village). This endpoint intentionally does not apply accessibility or role-hierarchy access-control filters."
+            "description": "Get users report with pagination, profile filters, normalized geo accessibility, and optional geo-leaf filtering through the rebuilt geoUnit hierarchy. You can filter by partial geo path (state/mp/mla/taluk/localBody/gp/village/ward/booth). The profile payload now includes geoUnit-backed geo data through profile.geoUnit."
           },
           "response": []
         },
@@ -9523,7 +9559,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/reports/posts?wardNumberId=&boothNumberId=&days=7",
+              "raw": "{{baseUrl}}/api/reports/posts?stateId=&districtId=&talukId=&mpConstituencyId=&mlaConstituencyId=&settlementType=&governingBody=&localBodyId=&hobaliId=&gramPanchayatId=&mainVillageId=&subVillageId=&pollingStationId=&wardNumberId=&boothNumberId=&days=7",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -9562,7 +9598,7 @@
                 }
               ]
             },
-            "description": "Get posts report (stats, last days, reactions). Enforces accessibility; out-of-scope filters return 403."
+            "description": "Get posts report (stats, last days, reactions). Enforces normalized geo accessibility through author profile geoUnit coverage. Supports partial geo filters in addition to ward/booth."
           },
           "response": []
         },
@@ -9626,7 +9662,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/reports/public-events?eventId=&wardNumberId=&boothNumberId=",
+              "raw": "{{baseUrl}}/api/reports/public-events?eventId=&stateId=&districtId=&talukId=&mpConstituencyId=&mlaConstituencyId=&settlementType=&governingBody=&localBodyId=&hobaliId=&gramPanchayatId=&mainVillageId=&subVillageId=&pollingStationId=&wardNumberId=&boothNumberId=",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -9653,7 +9689,7 @@
                 }
               ]
             },
-            "description": "Get public events report with metrics and tabular registration data. Event filter is mandatory."
+            "description": "Get public events report with metrics, tabular registration data, normalized geo accessibility enforcement, and optional partial geo filters. Response includes each registration with geoUnitId and a geo object containing the resolved geo leaf ids."
           },
           "response": []
         },
@@ -9734,7 +9770,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/scheme-applications?status=1&applicantType=SELF&page=1&limit=20",
+              "raw": "{{baseUrl}}/api/scheme-applications?status=1&applicantType=SELF&page=1&limit=20&stateId=&districtId=&talukId=&mpConstituencyId=&mlaConstituencyId=&settlementType=&governingBody=&localBodyId=&hobaliId=&gramPanchayatId=&mainVillageId=&subVillageId=&pollingStationId=&wardNumberId=&boothNumberId=",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -9789,7 +9825,7 @@
                 }
               ]
             },
-            "description": "Lists user scheme applications with pagination, meta-table filters, and fuzzy search. Each record returns both the foreign key ids and expanded metadata objects (scheme, ward, booth, governmentLevel, sector, schemeType, ownershipType, genderOption, widowStatus, disabilityStatus, employmentStatus)."
+            "description": "Lists user scheme applications with normalized geo accessibility, partial geo filters, and fuzzy search. Each record returns geoUnitId plus geo, along with expanded metadata objects."
           },
           "response": []
         },
@@ -9829,7 +9865,7 @@
               }
             ],
             "url": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
-            "description": "Retrieves a single active application. The response includes related metadata objects for scheme, ward, booth, governmentLevel, sector, schemeType, ownershipType, genderOption, widowStatus, disabilityStatus, employmentStatus, plus reviewer/applicant summaries."
+            "description": "Retrieves a single active application. Response includes geoUnitId, geo, and related metadata objects for scheme, ward, booth, governmentLevel, sector, schemeType, ownershipType, genderOption, widowStatus, disabilityStatus, employmentStatus, plus reviewer/applicant summaries."
           },
           "response": []
         },
@@ -9922,6 +9958,21 @@
                   "disabled": true
                 },
                 {
+                  "key": "settlementType",
+                  "value": "URBAN",
+                  "type": "text"
+                },
+                {
+                  "key": "governingBody",
+                  "value": "GBA",
+                  "type": "text"
+                },
+                {
+                  "key": "localBodyId",
+                  "value": "23",
+                  "type": "text"
+                },
+                {
                   "key": "governmentLevelId",
                   "value": "1",
                   "type": "text"
@@ -9985,7 +10036,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/scheme-applications",
-            "description": "Submits a new scheme application with the mandatory document upload. Provide the ids from the relevant meta tables (governmentLevel, sector, schemeTypeLookup, etc.)."
+            "description": "Submits a new scheme application with the mandatory document upload. Provide the ids from the relevant meta tables (governmentLevel, sector, schemeTypeLookup, etc.). You may send wardNumberId/boothNumberId or a fuller geo leaf selection; backend derives geoUnitId."
           },
           "response": []
         },
@@ -10062,7 +10113,7 @@
               ]
             },
             "url": "{{baseUrl}}/api/scheme-applications/{{schemeApplicationId}}",
-            "description": "Updates mutable fields on an application. Status/audit columns remain server managed. Attach a new document to replace the existing file."
+            "description": "Updates mutable fields on an application. Status/audit columns remain server managed. You may send wardNumberId/boothNumberId or a fuller geo leaf selection; backend derives geoUnitId and stores the resolved leaf."
           },
           "response": []
         },
@@ -10123,7 +10174,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"Ward Meeting Update\",\n  \"body\": \"Important meeting scheduled for your booth\",\n  \"roleId\": 2,\n  \"data\": {\n    \"type\": \"ward_meeting\",\n    \"priority\": \"high\",\n    \"meetingDate\": \"2026-01-10\"\n  }\n}",
+          "raw": "{\n  \"title\": \"Ward Meeting Update\",\n  \"body\": \"Important meeting scheduled for your booth\",\n  \"roleId\": 2,\n  \"accesses\": [\n    {\n      \"settlementType\": \"URBAN\",\n      \"governingBody\": \"GBA\",\n      \"localBodyId\": 23,\n      \"wardNumberId\": 25,\n      \"boothNumberId\": -1\n    },\n    {\n      \"settlementType\": \"RURAL\",\n      \"governingBody\": \"GP\",\n      \"gramPanchayatId\": 50,\n      \"mainVillageId\": -1\n    }\n  ],\n  \"data\": {\n    \"type\": \"ward_meeting\",\n    \"priority\": \"high\",\n    \"meetingDate\": \"2026-01-10\"\n  }\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -10131,7 +10182,7 @@
           }
         },
         "url": "{{baseUrl}}/api/notifications/send/targeted",
-        "description": "Send notification to users matching specific ward/booth access combinations and role. `roleId` is required. `accesses` is optional; if omitted or empty, the sender's access list (wardNumberId/boothNumberId) is used. When `accesses` is provided, it must be within the sender's access scope; out-of-scope values are rejected. Use -1 in the body to target all within the sender's access. Single notification log entry created with all combinations stored."
+        "description": "Send notification to users matching normalized geo coverage and role. `roleId` is required. `accesses` is optional; if omitted, the sender's full geo access is used. Each access object may contain a partial geo path (state/mp/mla/taluk/localBody/gp/village/ward/booth); backend expands that to geo units and rejects values outside the sender's scope."
       },
       "response": []
     },
@@ -10182,13 +10233,18 @@
               "query": [
                 {
                   "key": "request_entity",
-                  "value": "mp_constituency",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "value": "local_body",
+                  "description": "Required. Allowed: district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, sub_village, ward, polling_station, booth."
                 },
                 {
                   "key": "stateId",
                   "value": "1",
-                  "description": "Optional. Filter by state ID."
+                  "description": "Optional. Numeric geo filters accept positive IDs or -1 for ALL."
+                },
+                {
+                  "key": "districtId",
+                  "value": "",
+                  "description": "Optional. Filter by district ID."
                 },
                 {
                   "key": "mpConstituencyId",
@@ -10201,19 +10257,54 @@
                   "description": "Optional. Filter by MLA constituency ID."
                 },
                 {
+                  "key": "talukId",
+                  "value": "",
+                  "description": "Optional. Filter by taluk ID."
+                },
+                {
+                  "key": "settlementType",
+                  "value": "",
+                  "description": "Optional. `URBAN` or `RURAL`."
+                },
+                {
+                  "key": "localBodyType",
+                  "value": "",
+                  "description": "Optional. `GBA`, `CC`, `CMC`, `TMC`, `TP`, or `GP`."
+                },
+                {
+                  "key": "localBodyId",
+                  "value": "",
+                  "description": "Optional. Filter by local body ID."
+                },
+                {
+                  "key": "hobaliId",
+                  "value": "",
+                  "description": "Optional. Filter by hobali ID."
+                },
+                {
                   "key": "gramPanchayatId",
                   "value": "",
                   "description": "Optional. Filter by gram panchayat ID."
                 },
                 {
-                  "key": "wardNumberId",
+                  "key": "mainVillageId",
                   "value": "",
-                  "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                  "description": "Optional. Filter by main village ID."
                 },
                 {
-                  "key": "governing_body",
+                  "key": "subVillageId",
                   "value": "",
-                  "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                  "description": "Optional. Filter by sub village ID."
+                },
+                {
+                  "key": "wardNumberId",
+                  "value": "",
+                  "description": "Optional. Filter by ward number ID."
+                },
+                {
+                  "key": "pollingStationId",
+                  "value": "",
+                  "description": "Optional. Filter by polling station ID."
                 },
                 {
                   "key": "page",
@@ -10243,11 +10334,11 @@
                 {
                   "key": "need_all",
                   "value": "0",
-                  "description": "Optional. Use 1 to prepend `-ALL-` option."
+                  "description": "Optional. Use 1 to prepend `-ALL-`."
                 }
               ]
             },
-            "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n- `stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, and `wardNumberId` accept `-1` for ALL.\n- If any upstream selector is `-1`, downstream dropdown lookup returns only `{ id: -1, dispName: \"-ALL-\" }`.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+            "description": "Returns distinct dropdown options from `tbl_geo_political` using the rebuilt geo-unit model. Supported `request_entity` values: `district`, `mp_constituency`, `mla_constituency`, `taluk`, `local_body`, `hobali`, `gram_panchayat`, `village`, `sub_village`, `ward`, `polling_station`, `booth`. Numeric upstream selectors accept `-1` and collapse downstream results to only `{ id: -1, dispName: \"-ALL-\" }`. Use `settlementType` and `localBodyType` to separate urban and rural flows."
           },
           "response": [
             {
@@ -10267,13 +10358,18 @@
                   "query": [
                     {
                       "key": "request_entity",
-                      "value": "mp_constituency",
-                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                      "value": "local_body",
+                      "description": "Required. Allowed: district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, sub_village, ward, polling_station, booth."
                     },
                     {
                       "key": "stateId",
                       "value": "1",
-                      "description": "Optional. Filter by state ID."
+                      "description": "Optional. Numeric geo filters accept positive IDs or -1 for ALL."
+                    },
+                    {
+                      "key": "districtId",
+                      "value": "",
+                      "description": "Optional. Filter by district ID."
                     },
                     {
                       "key": "mpConstituencyId",
@@ -10286,19 +10382,54 @@
                       "description": "Optional. Filter by MLA constituency ID."
                     },
                     {
+                      "key": "talukId",
+                      "value": "",
+                      "description": "Optional. Filter by taluk ID."
+                    },
+                    {
+                      "key": "settlementType",
+                      "value": "",
+                      "description": "Optional. `URBAN` or `RURAL`."
+                    },
+                    {
+                      "key": "localBodyType",
+                      "value": "",
+                      "description": "Optional. `GBA`, `CC`, `CMC`, `TMC`, `TP`, or `GP`."
+                    },
+                    {
+                      "key": "localBodyId",
+                      "value": "",
+                      "description": "Optional. Filter by local body ID."
+                    },
+                    {
+                      "key": "hobaliId",
+                      "value": "",
+                      "description": "Optional. Filter by hobali ID."
+                    },
+                    {
                       "key": "gramPanchayatId",
                       "value": "",
                       "description": "Optional. Filter by gram panchayat ID."
                     },
                     {
-                      "key": "wardNumberId",
+                      "key": "mainVillageId",
                       "value": "",
-                      "description": "Optional. Filter by ward number ID (primarily for booth lookups)."
+                      "description": "Optional. Filter by main village ID."
                     },
                     {
-                      "key": "governing_body",
+                      "key": "subVillageId",
                       "value": "",
-                      "description": "Optional. Governing body context. Allowed: GBA, TMC, CMC, GP."
+                      "description": "Optional. Filter by sub village ID."
+                    },
+                    {
+                      "key": "wardNumberId",
+                      "value": "",
+                      "description": "Optional. Filter by ward number ID."
+                    },
+                    {
+                      "key": "pollingStationId",
+                      "value": "",
+                      "description": "Optional. Filter by polling station ID."
                     },
                     {
                       "key": "page",
@@ -10328,11 +10459,11 @@
                     {
                       "key": "need_all",
                       "value": "0",
-                      "description": "Optional. Use 1 to prepend `-ALL-` option."
+                      "description": "Optional. Use 1 to prepend `-ALL-`."
                     }
                   ]
                 },
-                "description": "Returns distinct dropdown options sourced from `tbl_geo_political` for the requested entity.\n\nSupported `request_entity` values:\n- `mp_constituency`\n- `mla_constituency`\n- `gram_panchayat`\n- `village`\n- `ward`\n- `booth`\n\nFilter behavior:\n- All filters are optional (except `request_entity`).\n- Any provided filter narrows results; omitted filters broaden results.\n- No hard-required dependency chain between filters.\n- `stateId`, `mpConstituencyId`, `mlaConstituencyId`, `gramPanchayatId`, and `wardNumberId` accept `-1` for ALL.\n- If any upstream selector is `-1`, downstream dropdown lookup returns only `{ id: -1, dispName: \"-ALL-\" }`.\n\n`governing_body` rules:\n- Allowed values: `GBA`, `TMC`, `CMC`, `GP`.\n- Use with `gramPanchayatId` when querying GP-context dropdown flows.\n\nPagination/search/sort:\n- `page` (default backend value), `limit` (default backend value)\n- `search` applies on `dispName`\n- `sort` default `ASC`\n- `sortColumn` default `dispName`, allowed: `id`, `dispName`\n- `need_all=1` prepends `{ id: -1, dispName: \"-ALL-\" }`\n\nResponse item shape:\n- `{ id, dispName }`\n\nAlias policy:\n- Unless backend explicitly adds aliases, use camelCase query keys shown below."
+                "description": "Returns distinct dropdown options from `tbl_geo_political` using the rebuilt geo-unit model. Supported `request_entity` values: `district`, `mp_constituency`, `mla_constituency`, `taluk`, `local_body`, `hobali`, `gram_panchayat`, `village`, `sub_village`, `ward`, `polling_station`, `booth`. Numeric upstream selectors accept `-1` and collapse downstream results to only `{ id: -1, dispName: \"-ALL-\" }`. Use `settlementType` and `localBodyType` to separate urban and rural flows."
               },
               "status": "OK",
               "code": 200,

@@ -29,6 +29,7 @@ import {
   type AccessibilityPayload
 } from "../services/accessibilityService";
 import { buildAccessibilityFilter } from "../services/userHierarchyService";
+import GeoPolitical from "../models/GeoPolitical";
 
 const DEFAULT_SORT_COLUMNS = ["startDate", "endDate", "createdAt", "title"];
 const DROPDOWN_FIELD_TYPES = new Set(["select", "dropdown"]);
@@ -347,18 +348,53 @@ const replaceAccessibility = async (
   });
 
   await FormEventAccessibility.bulkCreate(
-    payload.map((item) => ({
-      formEventId,
-      wardNumberId: item.wardNumberId,
-      boothNumberId: item.boothNumberId,
-      userRoleId: item.userRoleId,
-      status: 1,
-      createdBy: userId,
-      updatedBy: userId
-    })),
+    (
+      await Promise.all(
+        payload.map(async (item) => ({
+          formEventId,
+          geoUnitId: await resolveFormEventAccessibilityGeoUnitId(item),
+          wardNumberId: item.wardNumberId,
+          boothNumberId: item.boothNumberId,
+          userRoleId: item.userRoleId,
+          status: 1,
+          createdBy: userId,
+          updatedBy: userId
+        }))
+      )
+    ),
     { transaction }
   );
 };
+
+const resolveFormEventAccessibilityGeoUnitId = async (
+  item: AccessibilityPayload
+): Promise<number | null> => {
+  if (item.wardNumberId === -1 || item.boothNumberId === -1) {
+    return null;
+  }
+
+  const where: Record<string, number> = {};
+  if (item.wardNumberId > 0) {
+    where.wardNumberId = item.wardNumberId;
+  }
+  if (item.boothNumberId > 0) {
+    where.boothNumberId = item.boothNumberId;
+  }
+
+  if (Object.keys(where).length === 0) {
+    return null;
+  }
+
+  const matches = await GeoPolitical.findAll({
+    where,
+    attributes: ["id"],
+    limit: 2,
+    raw: true
+  });
+
+  return matches.length === 1 ? Number(matches[0].id) : null;
+};
+
 
 const extractMetaTable = (field: any): string | null => {
   if (!field) {
@@ -553,10 +589,23 @@ export const listFormEvents = asyncHandler(async (req: AuthenticatedRequest, res
 });
 
 export const getFormEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { id: userId, roles } = requireAuthenticatedUser(req);
+  const normalizedRoles = (roles ?? []).map((role) => String(role).toLowerCase());
+  const isAdmin = normalizedRoles.includes("admin");
   const { id } = req.params;
 
+  const includes = getBaseIncludes();
+  if (!isAdmin) {
+    const accessibilityFilter = await buildAccessibilityFilter(userId);
+    if (accessibilityFilter) {
+      const accessibilityInclude = includes[0] as any;
+      accessibilityInclude.where = accessibilityFilter;
+      accessibilityInclude.required = true;
+    }
+  }
+
   const event = await FormEvent.findByPk(id, {
-    include: getBaseIncludes()
+    include: includes
   });
 
   if (!event) {
@@ -610,15 +659,18 @@ export const createFormEvent = asyncHandler(async (req: AuthenticatedRequest, re
     );
 
     await FormEventAccessibility.bulkCreate(
-      accessibilityPayload.map((item) => ({
-        formEventId: event.id,
-        wardNumberId: item.wardNumberId,
-        boothNumberId: item.boothNumberId,
-        userRoleId: item.userRoleId,
-        status: 1,
-        createdBy: userId,
-        updatedBy: userId
-      })),
+      await Promise.all(
+        accessibilityPayload.map(async (item) => ({
+          formEventId: event.id,
+          geoUnitId: await resolveFormEventAccessibilityGeoUnitId(item),
+          wardNumberId: item.wardNumberId,
+          boothNumberId: item.boothNumberId,
+          userRoleId: item.userRoleId,
+          status: 1,
+          createdBy: userId,
+          updatedBy: userId
+        }))
+      ),
       { transaction }
     );
 

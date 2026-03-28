@@ -1,0 +1,134 @@
+{
+  "runId": "crud-api-test-bed-2026-03-28T18-33-14-471Z",
+  "baseUrl": "http://127.0.0.1:8081/api",
+  "startedAt": "2026-03-28T18:33:14.472Z",
+  "finishedAt": "2026-03-28T18:33:17.496Z",
+  "summary": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "scenarios": [
+    {
+      "name": "Permission group lifecycle",
+      "method": "CRUD",
+      "path": "/admin/permission-groups",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:14.708Z",
+      "finishedAt": "2026-03-28T18:33:14.797Z",
+      "details": {
+        "id": 16
+      }
+    },
+    {
+      "name": "Role lifecycle with permission assignment",
+      "method": "CRUD",
+      "path": "/roles",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:14.797Z",
+      "finishedAt": "2026-03-28T18:33:14.928Z",
+      "details": {
+        "id": 22
+      }
+    },
+    {
+      "name": "Scheme category lifecycle",
+      "method": "CRUD",
+      "path": "/scheme-categories",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:14.928Z",
+      "finishedAt": "2026-03-28T18:33:14.967Z",
+      "details": {
+        "id": 9
+      }
+    },
+    {
+      "name": "Scheme sector lifecycle",
+      "method": "CRUD",
+      "path": "/scheme-sectors",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:14.967Z",
+      "finishedAt": "2026-03-28T18:33:15.004Z",
+      "details": {
+        "id": 9
+      }
+    },
+    {
+      "name": "Ward number lifecycle",
+      "method": "CRUD",
+      "path": "/ward-numbers",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:15.004Z",
+      "finishedAt": "2026-03-28T18:33:15.053Z",
+      "details": {
+        "id": 2680
+      }
+    },
+    {
+      "name": "Booth number lifecycle",
+      "method": "CRUD",
+      "path": "/booth-numbers",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:15.053Z",
+      "finishedAt": "2026-03-28T18:33:15.181Z",
+      "details": {
+        "id": 20425
+      }
+    },
+    {
+      "name": "Complaint sector lifecycle",
+      "method": "CRUD",
+      "path": "/complaint-sectors",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:15.181Z",
+      "finishedAt": "2026-03-28T18:33:15.216Z",
+      "details": {
+        "id": 12
+      }
+    },
+    {
+      "name": "Complaint department lifecycle",
+      "method": "CRUD",
+      "path": "/complaint-departments",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:15.216Z",
+      "finishedAt": "2026-03-28T18:33:15.266Z",
+      "details": {
+        "id": 8,
+        "sectorId": 13
+      }
+    },
+    {
+      "name": "Complaint type lifecycle",
+      "method": "CRUD",
+      "path": "/complaint-types",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:15.266Z",
+      "finishedAt": "2026-03-28T18:33:15.386Z",
+      "details": {
+        "id": 20,
+        "departmentId": 9,
+        "sectorId": 14
+      }
+    },
+    {
+      "name": "Geo lookup urban and rural reads",
+      "method": "GET",
+      "path": "/geo-lookup",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:33:15.386Z",
+      "finishedAt": "2026-03-28T18:33:17.496Z",
+      "details": null
+    }
+  ]
+}

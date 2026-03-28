@@ -1,17 +1,96 @@
 import type { Transaction } from "sequelize";
 import UserAccess from "../models/UserAccess";
 import { ApiError } from "../middlewares/errorHandler";
+import { parseLocalBodyType, parseSettlementType, type LocalBodyType, type SettlementType } from "../types/geo";
 
 export interface AccessibleArea {
   stateId?: number;
+  districtId?: number;
+  talukId?: number;
+  settlementType?: SettlementType;
   mainVillageId?: number;
-  governingBody?: "GBA" | "TMC" | "CMC" | "GP";
+  subVillageId?: number;
+  governingBody?: LocalBodyType;
+  localBodyType?: LocalBodyType;
+  localBodyId?: number;
   gramPanchayatId?: number;
-  wardNumberId: number;
-  boothNumberId: number;
+  hobaliId?: number;
+  wardNumberId?: number;
+  pollingStationId?: number;
+  boothNumberId?: number;
   mlaConstituencyId?: number;
   mpConstituencyId?: number;
 }
+
+const ACCESS_NUMERIC_FIELDS = [
+  "stateId",
+  "districtId",
+  "talukId",
+  "mpConstituencyId",
+  "mlaConstituencyId",
+  "localBodyId",
+  "hobaliId",
+  "gramPanchayatId",
+  "mainVillageId",
+  "subVillageId",
+  "wardNumberId",
+  "pollingStationId",
+  "boothNumberId"
+] as const;
+
+const parseScopedNumber = (
+  value: unknown,
+  fieldName: string,
+  allowWildcard: boolean
+): number | undefined => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  const minimum = allowWildcard ? -1 : 1;
+  if (
+    !Number.isInteger(parsed) ||
+    parsed === 0 ||
+    parsed < minimum ||
+    (!allowWildcard && parsed < 1)
+  ) {
+    throw new ApiError(
+      `${fieldName} must be a positive integer${allowWildcard ? " or -1" : ""}`,
+      400
+    );
+  }
+
+  return parsed;
+};
+
+const mapAccessToLegacyRow = (
+  userId: number,
+  accessRoleId: number,
+  accessible: AccessibleArea,
+  actorId: number
+) => ({
+  userId,
+  accessRoleId,
+  stateId: accessible.stateId ?? null,
+  districtId: accessible.districtId ?? null,
+  talukId: accessible.talukId ?? null,
+  settlementType: accessible.settlementType ?? null,
+  mainVillageId: accessible.mainVillageId ?? null,
+  subVillageId: accessible.subVillageId ?? null,
+  governingBody: accessible.governingBody ?? accessible.localBodyType ?? null,
+  localBodyId: accessible.localBodyId ?? null,
+  gramPanchayatId: accessible.gramPanchayatId ?? null,
+  hobaliId: accessible.hobaliId ?? null,
+  wardNumberId: accessible.wardNumberId ?? null,
+  pollingStationId: accessible.pollingStationId ?? null,
+  boothNumberId: accessible.boothNumberId ?? null,
+  mlaConstituencyId: accessible.mlaConstituencyId ?? null,
+  mpConstituencyId: accessible.mpConstituencyId ?? null,
+  createdBy: actorId,
+  updatedBy: actorId,
+  status: 1
+});
 
 /**
  * Create user access entries for the given user
@@ -27,21 +106,9 @@ export const createUserAccessProfiles = async (
     return [];
   }
 
-  const accessData = accessibles.map((accessible) => ({
-    userId,
-    accessRoleId,
-    stateId: accessible.stateId ?? null,
-    mainVillageId: accessible.mainVillageId ?? null,
-    governingBody: accessible.governingBody ?? null,
-    gramPanchayatId: accessible.gramPanchayatId ?? null,
-    wardNumberId: accessible.wardNumberId,
-    boothNumberId: accessible.boothNumberId,
-    mlaConstituencyId: accessible.mlaConstituencyId ?? null,
-    mpConstituencyId: accessible.mpConstituencyId ?? null,
-    createdBy,
-    updatedBy: createdBy,
-    status: 1
-  }));
+  const accessData = accessibles.map((accessible) =>
+    mapAccessToLegacyRow(userId, accessRoleId, accessible, createdBy)
+  );
 
   const created = await UserAccess.bulkCreate(accessData, {
     transaction: options?.transaction
@@ -53,9 +120,7 @@ export const createUserAccessProfiles = async (
 /**
  * Update user access entries:
  * 1. Set all existing access entries to status=0
- * 2. For each accessible, check if it exists (same ward + booth):
- *    - If exists: set status=1
- *    - If not exists: create new entry
+ * 2. Recreate the compatibility rows from the latest request payload
  */
 export const updateUserAccessProfiles = async (
   userId: number,
@@ -77,55 +142,12 @@ export const updateUserAccessProfiles = async (
     return;
   }
 
-  // Step 2: For each accessible, check if it exists or create new
-  for (const accessible of accessibles) {
-    const existing = await UserAccess.findOne({
-      where: {
-        userId,
-        wardNumberId: accessible.wardNumberId,
-        boothNumberId: accessible.boothNumberId
-      },
+  await UserAccess.bulkCreate(
+    accessibles.map((accessible) => mapAccessToLegacyRow(userId, accessRoleId, accessible, updatedBy)),
+    {
       transaction: options?.transaction
-    });
-
-    if (existing) {
-      // Reactivate existing entry and update fields
-      await existing.update(
-        {
-          status: 1,
-          accessRoleId,
-          stateId: accessible.stateId ?? null,
-          mainVillageId: accessible.mainVillageId ?? null,
-          governingBody: accessible.governingBody ?? null,
-          gramPanchayatId: accessible.gramPanchayatId ?? null,
-          mlaConstituencyId: accessible.mlaConstituencyId ?? null,
-          mpConstituencyId: accessible.mpConstituencyId ?? null,
-          updatedBy
-        },
-        { transaction: options?.transaction }
-      );
-    } else {
-      // Create new entry
-      await UserAccess.create(
-        {
-          userId,
-          accessRoleId,
-          stateId: accessible.stateId ?? null,
-          mainVillageId: accessible.mainVillageId ?? null,
-          governingBody: accessible.governingBody ?? null,
-          gramPanchayatId: accessible.gramPanchayatId ?? null,
-          wardNumberId: accessible.wardNumberId,
-          boothNumberId: accessible.boothNumberId,
-          mlaConstituencyId: accessible.mlaConstituencyId ?? null,
-          mpConstituencyId: accessible.mpConstituencyId ?? null,
-          createdBy: updatedBy,
-          updatedBy,
-          status: 1
-        },
-        { transaction: options?.transaction }
-      );
     }
-  }
+  );
 };
 
 /**
@@ -136,6 +158,7 @@ export const getUserAccessProfiles = async (userId: number): Promise<UserAccess[
     where: { userId, status: 1 },
     include: [
       { association: "accessRole" },
+      { association: "localBody" },
       { association: "wardNumber" },
       { association: "boothNumber" },
       { association: "mlaConstituency" }
@@ -160,94 +183,67 @@ export const validateAccessibles = (accessibles: unknown): AccessibleArea[] => {
       throw new ApiError(`accessibles[${index}] must be an object`, 400);
     }
 
-    const { wardNumberId, boothNumberId, mlaConstituencyId, mpConstituencyId } = item as Record<
-      string,
-      unknown
-    >;
-    const { stateId, mainVillageId, governingBody, gramPanchayatId } = item as Record<
-      string,
-      unknown
-    >;
+    const source = item as Record<string, unknown>;
+    const result: AccessibleArea = {};
+
+    ACCESS_NUMERIC_FIELDS.forEach((fieldName) => {
+      const value = parseScopedNumber(source[fieldName], `accessibles[${index}].${fieldName}`, true);
+      if (value !== undefined) {
+        result[fieldName] = value as never;
+      }
+    });
+
+    const settlementType = parseSettlementType(source["settlementType"]);
+    if (source["settlementType"] !== undefined && !settlementType) {
+      throw new ApiError(`accessibles[${index}].settlementType must be URBAN or RURAL`, 400);
+    }
+    if (settlementType) {
+      result.settlementType = settlementType;
+    }
+
+    const governingBodyRaw =
+      source["governingBody"] !== undefined ? source["governingBody"] : source["localBodyType"];
+    const localBodyType = parseLocalBodyType(governingBodyRaw);
+    if (governingBodyRaw !== undefined && !localBodyType) {
+      throw new ApiError(
+        `accessibles[${index}].governingBody must be one of GBA, CC, CMC, TMC, TP, GP`,
+        400
+      );
+    }
+    if (localBodyType) {
+      result.governingBody = localBodyType;
+      result.localBodyType = localBodyType;
+    }
 
     if (
-      !wardNumberId ||
-      typeof wardNumberId !== "number" ||
-      (wardNumberId !== -1 && wardNumberId <= 0)
+      result.settlementType === "RURAL" &&
+      result.governingBody !== undefined &&
+      result.governingBody !== "GP"
     ) {
+      throw new ApiError(`accessibles[${index}] with settlementType=RURAL must use GP`, 400);
+    }
+
+    if (result.governingBody === "GP" && result.localBodyId && result.localBodyId !== -1) {
       throw new ApiError(
-        `accessibles[${index}].wardNumberId must be a positive number or -1 for all wards`,
+        `accessibles[${index}].localBodyId is not valid when governingBody is GP`,
         400
       );
     }
 
     if (
-      !boothNumberId ||
-      typeof boothNumberId !== "number" ||
-      (boothNumberId !== -1 && boothNumberId <= 0)
+      result.governingBody === "GP" &&
+      result.gramPanchayatId === undefined &&
+      result.mainVillageId !== undefined
     ) {
       throw new ApiError(
-        `accessibles[${index}].boothNumberId must be a positive number or -1 for all booths`,
+        `accessibles[${index}].gramPanchayatId is required before mainVillageId in GP flow`,
         400
       );
     }
 
-    const result: AccessibleArea = {
-      wardNumberId,
-      boothNumberId
-    };
-
-    if (stateId !== undefined && stateId !== null) {
-      if (typeof stateId !== "number" || stateId <= 0) {
-        throw new ApiError(`accessibles[${index}].stateId must be a positive number`, 400);
-      }
-      result.stateId = stateId;
-    }
-
-    if (mainVillageId !== undefined && mainVillageId !== null) {
-      if (typeof mainVillageId !== "number" || mainVillageId <= 0) {
-        throw new ApiError(`accessibles[${index}].mainVillageId must be a positive number`, 400);
-      }
-      result.mainVillageId = mainVillageId;
-    }
-
-    // Optional fields
-    if (mlaConstituencyId !== undefined && mlaConstituencyId !== null) {
-      if (typeof mlaConstituencyId !== "number" || mlaConstituencyId <= 0) {
-        throw new ApiError(
-          `accessibles[${index}].mlaConstituencyId must be a positive number`,
-          400
-        );
-      }
-      result.mlaConstituencyId = mlaConstituencyId;
-    }
-
-    if (mpConstituencyId !== undefined && mpConstituencyId !== null) {
-      if (typeof mpConstituencyId !== "number" || mpConstituencyId <= 0) {
-        throw new ApiError(`accessibles[${index}].mpConstituencyId must be a positive number`, 400);
-      }
-      result.mpConstituencyId = mpConstituencyId;
-    }
-
-    if (governingBody !== undefined && governingBody !== null && governingBody !== "") {
-      if (typeof governingBody !== "string" || !["GBA", "TMC", "CMC", "GP"].includes(governingBody)) {
-        throw new ApiError(
-          `accessibles[${index}].governingBody must be one of GBA, TMC, CMC, GP`,
-          400
-        );
-      }
-      result.governingBody = governingBody as AccessibleArea["governingBody"];
-    }
-
-    if (gramPanchayatId !== undefined && gramPanchayatId !== null) {
-      if (typeof gramPanchayatId !== "number" || gramPanchayatId <= 0) {
-        throw new ApiError(`accessibles[${index}].gramPanchayatId must be a positive number`, 400);
-      }
-      result.gramPanchayatId = gramPanchayatId;
-    }
-
-    if (result.governingBody === "GP" && !result.gramPanchayatId) {
+    if (ACCESS_NUMERIC_FIELDS.every((fieldName) => result[fieldName] === undefined)) {
       throw new ApiError(
-        `accessibles[${index}].gramPanchayatId is required when governingBody is GP`,
+        `accessibles[${index}] must include at least one numeric geo scope field`,
         400
       );
     }

@@ -12,6 +12,7 @@ import type FormEvent from "./FormEvent";
 import type MetaWardNumber from "./MetaWardNumber";
 import type MetaBoothNumber from "./MetaBoothNumber";
 import type MetaUserRole from "./MetaUserRole";
+import type GeoPolitical from "./GeoPolitical";
 
 class FormEventAccessibility extends Model<
   InferAttributes<
@@ -22,6 +23,7 @@ class FormEventAccessibility extends Model<
 > {
   declare id: CreationOptional<number>;
   declare formEventId: number;
+  declare geoUnitId: CreationOptional<number | null>;
   declare wardNumberId: number;
   declare boothNumberId: number;
   declare userRoleId: number;
@@ -32,6 +34,7 @@ class FormEventAccessibility extends Model<
   declare updatedAt: CreationOptional<Date>;
 
   declare formEvent?: NonAttribute<FormEvent>;
+  declare geoUnit?: NonAttribute<GeoPolitical | null>;
   declare wardNumber?: NonAttribute<MetaWardNumber>;
   declare boothNumber?: NonAttribute<MetaBoothNumber>;
   declare userRole?: NonAttribute<MetaUserRole>;
@@ -48,6 +51,11 @@ FormEventAccessibility.init(
       field: "form_event_id",
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false
+    },
+    geoUnitId: {
+      field: "geo_unit_id",
+      type: DataTypes.BIGINT.UNSIGNED,
+      allowNull: true
     },
     wardNumberId: {
       field: "ward_number_id",

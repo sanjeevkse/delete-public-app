@@ -1,0 +1,150 @@
+{
+  "runId": "crud-api-test-bed-2026-03-28T18-23-49-537Z",
+  "baseUrl": "http://127.0.0.1:8081/api",
+  "startedAt": "2026-03-28T18:23:49.538Z",
+  "finishedAt": "2026-03-28T18:23:50.473Z",
+  "summary": {
+    "passed": 6,
+    "failed": 4,
+    "skipped": 0
+  },
+  "scenarios": [
+    {
+      "name": "Permission group lifecycle",
+      "method": "CRUD",
+      "path": "/admin/permission-groups",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:49.835Z",
+      "finishedAt": "2026-03-28T18:23:49.929Z",
+      "details": {
+        "id": 13
+      }
+    },
+    {
+      "name": "Role lifecycle with permission assignment",
+      "method": "CRUD",
+      "path": "/roles",
+      "status": "failed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:49.929Z",
+      "finishedAt": "2026-03-28T18:23:50.042Z",
+      "error": "Expected [204] for DELETE /roles/19, got 200",
+      "details": {
+        "success": true,
+        "data": {},
+        "message": "Successful operation"
+      }
+    },
+    {
+      "name": "Scheme category lifecycle",
+      "method": "CRUD",
+      "path": "/scheme-categories",
+      "status": "failed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.042Z",
+      "finishedAt": "2026-03-28T18:23:50.082Z",
+      "error": "Expected [204] for DELETE /scheme-categories/6, got 200",
+      "details": {
+        "success": true,
+        "data": {},
+        "message": "Successful operation"
+      }
+    },
+    {
+      "name": "Scheme sector lifecycle",
+      "method": "CRUD",
+      "path": "/scheme-sectors",
+      "status": "failed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.082Z",
+      "finishedAt": "2026-03-28T18:23:50.117Z",
+      "error": "Expected [204] for DELETE /scheme-sectors/6, got 200",
+      "details": {
+        "success": true,
+        "data": {},
+        "message": "Successful operation"
+      }
+    },
+    {
+      "name": "Ward number lifecycle",
+      "method": "CRUD",
+      "path": "/ward-numbers",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.117Z",
+      "finishedAt": "2026-03-28T18:23:50.166Z",
+      "details": {
+        "id": 2677
+      }
+    },
+    {
+      "name": "Booth number lifecycle",
+      "method": "CRUD",
+      "path": "/booth-numbers",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.166Z",
+      "finishedAt": "2026-03-28T18:23:50.275Z",
+      "details": {
+        "id": 20422
+      }
+    },
+    {
+      "name": "Complaint sector lifecycle",
+      "method": "CRUD",
+      "path": "/complaint-sectors",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.275Z",
+      "finishedAt": "2026-03-28T18:23:50.311Z",
+      "details": {
+        "id": 3
+      }
+    },
+    {
+      "name": "Complaint department lifecycle",
+      "method": "CRUD",
+      "path": "/complaint-departments",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.311Z",
+      "finishedAt": "2026-03-28T18:23:50.357Z",
+      "details": {
+        "id": 2,
+        "sectorId": 4
+      }
+    },
+    {
+      "name": "Complaint type lifecycle",
+      "method": "CRUD",
+      "path": "/complaint-types",
+      "status": "passed",
+      "httpStatus": 200,
+      "startedAt": "2026-03-28T18:23:50.357Z",
+      "finishedAt": "2026-03-28T18:23:50.465Z",
+      "details": {
+        "id": 17,
+        "departmentId": 3,
+        "sectorId": 5
+      }
+    },
+    {
+      "name": "Geo lookup urban and rural reads",
+      "method": "GET",
+      "path": "/geo-lookup",
+      "status": "failed",
+      "httpStatus": 400,
+      "startedAt": "2026-03-28T18:23:50.465Z",
+      "finishedAt": "2026-03-28T18:23:50.472Z",
+      "error": "Expected [200] for GET /geo-lookup?entity=mpConstituency, got 400",
+      "details": {
+        "success": false,
+        "error": {
+          "code": "BAD_REQUEST",
+          "message": "request_entity is required"
+        }
+      }
+    }
+  ]
+}

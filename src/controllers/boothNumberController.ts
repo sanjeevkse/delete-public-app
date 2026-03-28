@@ -19,10 +19,9 @@ import {
 import {
   applyAccessibilityFilterToList,
   validateItemAccess,
-  userHasAccessibilityConfigured,
-  combineAccessibilityFilters
+  userHasAccessibilityConfigured
 } from "../utils/accessibilityControllerHelper";
-import { getUserAccessList } from "../services/userAccessibilityService";
+import { getEffectiveWardBoothAccess } from "../services/userAccessibilityService";
 
 export const createBoothNumber = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   assertNoRestrictedFields(req.body);
@@ -83,7 +82,8 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
 
   // Apply accessibility filter - restrict to booths in user's accessible zones
   if (req.user?.id) {
-    const userAccessList = await getUserAccessList(req.user.id);
+    const effectiveAccess = await getEffectiveWardBoothAccess(req.user.id);
+    const userAccessList = effectiveAccess.unrestricted ? [] : effectiveAccess.rows;
 
     const hasAccess = applyAccessibilityFilterToList(whereClause, userAccessList, "boothNumberId");
     if (!hasAccess) {
@@ -94,15 +94,8 @@ export const listBoothNumbers = asyncHandler(async (req: AuthenticatedRequest, r
 
     // If no ward filter provided, also filter by accessible wards
     if (!wardNumberId && userAccessList.length > 0) {
-      // Get accessible ward IDs
-      const accessibleWards = userAccessList
-        .map((access) => access.wardNumberId)
-        .filter((id): id is number => id !== null && id !== undefined && id !== -1);
-
-      // If user has -1 (all wards), no need to filter by ward
-      const hasAllWards = userAccessList.some((access) => access.wardNumberId === -1);
-
-      if (!hasAllWards && accessibleWards.length > 0) {
+      const accessibleWards = effectiveAccess.wardIds;
+      if (accessibleWards.length > 0) {
         // Get all booths in accessible wards
         const geoPoliticals = await GeoPolitical.findAll({
           where: { wardNumberId: { [Op.in]: accessibleWards } },
@@ -246,7 +239,8 @@ export const getBoothNumberById = asyncHandler(async (req: AuthenticatedRequest,
 
   // Check accessibility - user must have access to this booth
   if (req.user?.id) {
-    const userAccessList = await getUserAccessList(req.user.id);
+    const effectiveAccess = await getEffectiveWardBoothAccess(req.user.id);
+    const userAccessList = effectiveAccess.unrestricted ? [] : effectiveAccess.rows;
 
     if (userHasAccessibilityConfigured(userAccessList)) {
       if (!validateItemAccess(userAccessList, Number(id), "boothNumberId")) {

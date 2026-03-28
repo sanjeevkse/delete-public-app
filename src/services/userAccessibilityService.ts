@@ -1,5 +1,20 @@
 import { Op } from "sequelize";
 import UserAccess from "../models/UserAccess";
+import GeoPolitical from "../models/GeoPolitical";
+import { resolveUserGeoUnitAccess } from "./userAccessScopeService";
+
+export type WardBoothAccessRow = {
+  wardNumberId: number | null;
+  boothNumberId: number | null;
+};
+
+export type EffectiveWardBoothAccess = {
+  source: "scope" | "legacy" | "none";
+  unrestricted: boolean;
+  rows: WardBoothAccessRow[];
+  wardIds: number[];
+  boothIds: number[];
+};
 
 /**
  * Check if a value represents "all" (i.e., -1)
@@ -181,6 +196,102 @@ export const getUserAccessList = async (userId: number): Promise<any[]> => {
     ],
     raw: true
   });
+};
+
+export const getEffectiveWardBoothAccess = async (
+  userId: number
+): Promise<EffectiveWardBoothAccess> => {
+  const scopedAccess = await resolveUserGeoUnitAccess(userId);
+  if (scopedAccess.hasScopeRows) {
+    if (scopedAccess.unrestricted) {
+      return {
+        source: "scope",
+        unrestricted: true,
+        rows: [],
+        wardIds: [],
+        boothIds: []
+      };
+    }
+
+    if (scopedAccess.geoUnitIds.length === 0) {
+      return {
+        source: "scope",
+        unrestricted: false,
+        rows: [],
+        wardIds: [],
+        boothIds: []
+      };
+    }
+
+    const geoRows = await GeoPolitical.findAll({
+      where: { id: { [Op.in]: scopedAccess.geoUnitIds } },
+      attributes: ["wardNumberId", "boothNumberId"],
+      raw: true
+    });
+
+    const pairMap = new Map<string, WardBoothAccessRow>();
+    const wardIds = new Set<number>();
+    const boothIds = new Set<number>();
+
+    for (const row of geoRows) {
+      const wardNumberId =
+        typeof row.wardNumberId === "number" && row.wardNumberId > 0 ? row.wardNumberId : null;
+      const boothNumberId =
+        typeof row.boothNumberId === "number" && row.boothNumberId > 0 ? row.boothNumberId : null;
+
+      if (wardNumberId) {
+        wardIds.add(wardNumberId);
+      }
+      if (boothNumberId) {
+        boothIds.add(boothNumberId);
+      }
+
+      const key = `${wardNumberId ?? "null"}:${boothNumberId ?? "null"}`;
+      if (!pairMap.has(key)) {
+        pairMap.set(key, { wardNumberId, boothNumberId });
+      }
+    }
+
+    return {
+      source: "scope",
+      unrestricted: false,
+      rows: Array.from(pairMap.values()),
+      wardIds: Array.from(wardIds),
+      boothIds: Array.from(boothIds)
+    };
+  }
+
+  const legacyRows = await getUserAccessList(userId);
+  const rows = legacyRows.map((access) => ({
+    wardNumberId:
+      typeof access.wardNumberId === "number" ? access.wardNumberId : (access.wardNumberId ?? null),
+    boothNumberId:
+      typeof access.boothNumberId === "number"
+        ? access.boothNumberId
+        : (access.boothNumberId ?? null)
+  }));
+
+  return {
+    source: legacyRows.length > 0 ? "legacy" : "none",
+    unrestricted: legacyRows.some(
+      (access) => access.wardNumberId === -1 && access.boothNumberId === -1
+    ),
+    rows,
+    wardIds: Array.from(
+      new Set(
+        legacyRows
+          .map((access) => access.wardNumberId)
+          .filter((id): id is number => typeof id === "number" && id > 0)
+      )
+    ),
+    boothIds: Array.from(
+      new Set(
+        legacyRows
+          .map((access) => access.boothNumberId)
+          .filter((id): id is number => typeof id === "number" && id > 0)
+      )
+    )
+  };
 };
 
 /**

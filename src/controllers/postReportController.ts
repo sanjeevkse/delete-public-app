@@ -11,8 +11,11 @@ import PostReaction from "../models/PostReaction";
 import UserProfile from "../models/UserProfile";
 import { MediaType, PostReactionType } from "../types/enums";
 import asyncHandler from "../utils/asyncHandler";
-import { sendForbidden, sendSuccess } from "../utils/apiResponse";
-import { getUserAccessList } from "../services/userAccessibilityService";
+import { sendSuccess } from "../utils/apiResponse";
+import {
+  buildGeoUnitAccessWhere,
+  buildGeoUnitIncludeFilterFromSource
+} from "../services/geoUnitService";
 
 const pickQueryValue = (
   query: Record<string, unknown>,
@@ -83,75 +86,10 @@ const buildLastNDates = (days: number): string[] => {
   return dates;
 };
 
-const hasGlobalAccess = (userAccessList: any[]): boolean => {
-  if (userAccessList.length === 0) return true;
-  return userAccessList.some(
-    (access) => access.wardNumberId === -1 && access.boothNumberId === -1
-  );
-};
-
-const canAccessRequested = (
-  userAccessList: any[],
-  wardNumberId?: number,
-  boothNumberId?: number
-): boolean => {
-  if (userAccessList.length === 0) return true;
-
-  return userAccessList.some((access) => {
-    const wardOk =
-      wardNumberId === undefined ||
-      access.wardNumberId === -1 ||
-      access.wardNumberId === wardNumberId;
-    const boothOk =
-      boothNumberId === undefined ||
-      access.boothNumberId === -1 ||
-      access.boothNumberId === boothNumberId;
-    return wardOk && boothOk;
-  });
-};
-
-const buildProfileWhereFromAccess = (userAccessList: any[]): Record<string, any> | null => {
-  if (userAccessList.length === 0) {
-    return null;
-  }
-
-  const conditions: Array<Record<string, any>> = [];
-
-  for (const access of userAccessList) {
-    const ward = access.wardNumberId ?? null;
-    const booth = access.boothNumberId ?? null;
-
-    if (ward === -1 && booth === -1) {
-      return null;
-    }
-
-    if (ward !== null && ward !== -1 && (booth === null || booth === -1)) {
-      conditions.push({ wardNumberId: ward });
-      continue;
-    }
-
-    if (ward !== null && ward !== -1 && booth !== null && booth !== -1) {
-      conditions.push({ wardNumberId: ward, boothNumberId: booth });
-      continue;
-    }
-
-    if ((ward === null || ward === -1) && booth !== null && booth !== -1) {
-      conditions.push({ boothNumberId: booth });
-    }
-  }
-
-  if (conditions.length === 0) {
-    return { id: { [Op.in]: [] } };
-  }
-
-  if (conditions.length === 1) {
-    return conditions[0];
-  }
-
-  return { [Op.or]: conditions };
-};
-
-const buildAuthorProfileInclude = (profileWhere?: Record<string, any>) => {
+const buildAuthorProfileInclude = (
+  profileWhere?: Record<string, any>,
+  profileGeoUnitWhere?: Record<string, unknown> | null
+) => {
   if (!profileWhere) return undefined;
   return [
     {
@@ -163,14 +101,29 @@ const buildAuthorProfileInclude = (profileWhere?: Record<string, any>) => {
           association: "profile",
           attributes: [],
           required: true,
-          where: profileWhere
+          where: profileWhere,
+          ...(profileGeoUnitWhere
+            ? {
+                include: [
+                  {
+                    association: "geoUnit",
+                    attributes: [],
+                    required: true,
+                    where: profileGeoUnitWhere
+                  }
+                ]
+              }
+            : {})
         }
       ]
     }
   ];
 };
 
-const buildPostIncludeForMedia = (profileWhere?: Record<string, any>) => {
+const buildPostIncludeForMedia = (
+  profileWhere?: Record<string, any>,
+  profileGeoUnitWhere?: Record<string, unknown> | null
+) => {
   const include: any = [
     {
       association: "post",
@@ -191,7 +144,19 @@ const buildPostIncludeForMedia = (profileWhere?: Record<string, any>) => {
             association: "profile",
             attributes: [],
             required: true,
-            where: profileWhere
+            where: profileWhere,
+            ...(profileGeoUnitWhere
+              ? {
+                  include: [
+                    {
+                      association: "geoUnit",
+                      attributes: [],
+                      required: true,
+                      where: profileGeoUnitWhere
+                    }
+                  ]
+                }
+              : {})
           }
         ]
       }
@@ -223,29 +188,32 @@ export const getPostsReport = asyncHandler(async (req: AuthenticatedRequest, res
   const requestedBooth =
     boothNumberId !== undefined && boothNumberId !== -1 ? boothNumberId : undefined;
 
-  const userAccessList = await getUserAccessList(userId);
-  const canAccessAll = hasGlobalAccess(userAccessList);
-
-  if ((requestedWard !== undefined || requestedBooth !== undefined) && !canAccessAll) {
-    const allowed = canAccessRequested(userAccessList, requestedWard, requestedBooth);
-    if (!allowed) {
-      return sendForbidden(res, "You don't have access to the requested ward/booth");
-    }
+  const profileWhere: Record<string, any> = {};
+  const profileGeoAccessWhere = await buildGeoUnitAccessWhere(userId, "geoUnitId");
+  if (profileGeoAccessWhere) {
+    Object.assign(profileWhere, profileGeoAccessWhere);
   }
-
-  let profileWhere: Record<string, any> | null = null;
-  if (requestedWard !== undefined || requestedBooth !== undefined) {
-    profileWhere = {
-      ...(requestedWard !== undefined ? { wardNumberId: requestedWard } : {}),
-      ...(requestedBooth !== undefined ? { boothNumberId: requestedBooth } : {})
-    };
-  } else if (!canAccessAll) {
-    profileWhere = buildProfileWhereFromAccess(userAccessList);
+  if (requestedWard !== undefined) {
+    profileWhere.wardNumberId = requestedWard;
   }
+  if (requestedBooth !== undefined) {
+    profileWhere.boothNumberId = requestedBooth;
+  }
+  const profileGeoUnitWhere = buildGeoUnitIncludeFilterFromSource(queryParams);
+  const effectiveProfileWhere = Object.keys(profileWhere).length > 0 ? profileWhere : undefined;
 
-  const authorProfileInclude = buildAuthorProfileInclude(profileWhere ?? undefined);
-  const postIncludeForMedia = buildPostIncludeForMedia(profileWhere ?? undefined);
-  const postIncludeForReactions = buildPostIncludeForReactions(profileWhere ?? undefined);
+  const authorProfileInclude = buildAuthorProfileInclude(
+    effectiveProfileWhere,
+    profileGeoUnitWhere
+  );
+  const postIncludeForMedia = buildPostIncludeForMedia(
+    effectiveProfileWhere,
+    profileGeoUnitWhere
+  );
+  const postIncludeForReactions = buildPostIncludeForReactions(
+    effectiveProfileWhere,
+    profileGeoUnitWhere
+  );
 
   const buildReactionUserInclude = (profileFilter?: Record<string, any>) => {
     if (!profileFilter) return undefined;

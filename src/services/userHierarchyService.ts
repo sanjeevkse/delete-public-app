@@ -1,13 +1,16 @@
 import { Op } from "sequelize";
 import MetaUserRole from "../models/MetaUserRole";
 import UserAccess from "../models/UserAccess";
+import UserProfile from "../models/UserProfile";
 import UserRole from "../models/UserRole";
 import { ApiError } from "../middlewares/errorHandler";
 import {
   buildAccessibilityORConditions,
   buildAccessibilityFilterWithFlag,
+  getEffectiveWardBoothAccess,
   getUserAccessList
 } from "./userAccessibilityService";
+import { resolveUserGeoUnitAccess } from "./userAccessScopeService";
 
 /**
  * Get all descendant role IDs for a given role using depthPath
@@ -107,6 +110,11 @@ export const getDescendantRoleIdsForRoles = async (roleIds: number[]): Promise<n
 export const getAccessibilityConstraints = async (
   loggedInUserId: number
 ): Promise<Record<string, any>> => {
+  const scopedAccess = await resolveUserGeoUnitAccess(loggedInUserId);
+  if (scopedAccess.hasScopeRows) {
+    return scopedAccess.unrestricted ? {} : { geoUnitId: { [Op.in]: scopedAccess.geoUnitIds } };
+  }
+
   const loggedInAccess = await getUserAccessList(loggedInUserId);
 
   if (loggedInAccess.length === 0) {
@@ -149,10 +157,20 @@ export const canManageUser = async (
   }
 
   // Check accessibility constraints
-  const accessibilityConstraints = await getAccessibilityConstraints(loggedInUserId);
+  const normalizedAccess = await resolveUserGeoUnitAccess(loggedInUserId);
+  if (normalizedAccess.hasScopeRows) {
+    if (normalizedAccess.unrestricted) {
+      return true;
+    }
 
-  if (Object.keys(accessibilityConstraints).length === 0) {
-    return true; // No accessibility constraints, role check passed
+    const targetProfile = await UserProfile.findOne({
+      where: { userId: targetUserId },
+      attributes: ["geoUnitId"],
+      raw: true
+    });
+
+    const targetGeoUnitId = Number(targetProfile?.geoUnitId ?? 0);
+    return Number.isInteger(targetGeoUnitId) && normalizedAccess.geoUnitIds.includes(targetGeoUnitId);
   }
 
   // Get target user's accessibility
@@ -223,10 +241,9 @@ export const canManageUser = async (
 export const buildAccessibilityFilter = async (
   loggedInUserId: number
 ): Promise<Record<string, any> | null> => {
-  const loggedInAccess = await getUserAccessList(loggedInUserId);
-
-  if (loggedInAccess.length === 0) {
-    return null; // No accessibility constraints
+  const effectiveAccess = await getEffectiveWardBoothAccess(loggedInUserId);
+  if (effectiveAccess.unrestricted || effectiveAccess.source === "none") {
+    return null;
   }
 
   // Form event accessibility table only stores ward/booth dimensions.
@@ -234,7 +251,7 @@ export const buildAccessibilityFilter = async (
   const conditions: Array<Record<string, any>> = [];
   const seen = new Set<string>();
 
-  for (const access of loggedInAccess) {
+  for (const access of effectiveAccess.rows) {
     const condition: Record<string, any> = {};
 
     if (
@@ -255,7 +272,7 @@ export const buildAccessibilityFilter = async (
 
     // -1 + -1 means all wards/booths.
     if (Object.keys(condition).length === 0) {
-      return null;
+      continue;
     }
 
     const key = JSON.stringify(condition);
@@ -266,7 +283,7 @@ export const buildAccessibilityFilter = async (
   }
 
   if (conditions.length === 0) {
-    return null;
+    return { id: { [Op.in]: [] } };
   }
 
   return { [Op.or]: conditions };
@@ -279,6 +296,11 @@ export const buildAccessibilityFilter = async (
 export const buildUserListingAccessibilityFilter = async (
   loggedInUserId: number
 ): Promise<Record<string, any> | null> => {
+  const scopedAccess = await resolveUserGeoUnitAccess(loggedInUserId);
+  if (scopedAccess.hasScopeRows) {
+    return scopedAccess.unrestricted ? null : { geoUnitId: { [Op.in]: scopedAccess.geoUnitIds } };
+  }
+
   const loggedInAccess = await getUserAccessList(loggedInUserId);
 
   if (loggedInAccess.length === 0) {

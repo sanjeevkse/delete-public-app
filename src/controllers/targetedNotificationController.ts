@@ -2,10 +2,15 @@ import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import asyncHandler from "../utils/asyncHandler";
 import notificationService from "../services/notificationService";
-import { getUserAccessList } from "../services/userAccessibilityService";
+import { validateAccessibles } from "../services/userAccessService";
+import {
+  resolveGeoUnitIdsForAccessibles,
+  resolveUserGeoUnitAccess
+} from "../services/userAccessScopeService";
+import { ApiError } from "../middlewares/errorHandler";
 
 /**
- * Send notification to users targeted by ward/booth access combinations and role
+ * Send notification to users targeted by normalized geo access and role
  */
 export const sendTargetedNotification = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -30,7 +35,7 @@ export const sendTargetedNotification = asyncHandler(
     if (accesses !== undefined && !Array.isArray(accesses)) {
       res.status(400).json({
         success: false,
-        message: "accesses must be an array of {wardNumberId, boothNumberId} objects when provided"
+        message: "accesses must be an array of geo access objects when provided"
       });
       return;
     }
@@ -43,133 +48,77 @@ export const sendTargetedNotification = asyncHandler(
       return;
     }
 
-    const userAccessList = await getUserAccessList(userId);
-    console.log("User access list:", JSON.stringify(userAccessList, null, 2));
-    const senderAccesses = userAccessList
-      .map((access) => ({
-        wardNumberId: access.wardNumberId ?? null,
-        boothNumberId: access.boothNumberId ?? null
-      }))
-      .filter(
-        (access) =>
-          (access.wardNumberId !== null && access.wardNumberId !== undefined) ||
-          (access.boothNumberId !== null && access.boothNumberId !== undefined)
-      );
+    const senderGeoAccess = await resolveUserGeoUnitAccess(userId);
+    const senderGeoUnitIds =
+      !senderGeoAccess.hasScopeRows || senderGeoAccess.unrestricted
+        ? null
+        : senderGeoAccess.geoUnitIds;
 
-    const normalizedSenderAccesses =
-      senderAccesses.length > 0 ? senderAccesses : [{ wardNumberId: -1, boothNumberId: -1 }];
-    console.log("Normalized sender accesses:", JSON.stringify(normalizedSenderAccesses, null, 2));
-
-    let effectiveAccesses = accesses;
+    let targetGeoUnitIds: number[] | null = senderGeoUnitIds ? [...senderGeoUnitIds] : null;
     const providedAccesses = Array.isArray(accesses) ? accesses : [];
     const sanitizedAccesses = providedAccesses.filter(
-      (access: any) =>
-        (access?.wardNumberId !== null && access?.wardNumberId !== undefined) ||
-        (access?.boothNumberId !== null && access?.boothNumberId !== undefined)
+      (access: any) => access && typeof access === "object" && Object.keys(access).length > 0
     );
-    const hasProvidedAccesses = sanitizedAccesses.length > 0;
 
-    if (!hasProvidedAccesses) {
-      effectiveAccesses = normalizedSenderAccesses;
-    } else {
-      const isSpecific = (value: number | null | undefined): boolean =>
-        value !== null && value !== undefined && value !== -1;
+    if (sanitizedAccesses.length > 0) {
+      const validatedAccesses = validateAccessibles(sanitizedAccesses);
+      const requestedGeoAccess = await resolveGeoUnitIdsForAccessibles(validatedAccesses);
 
-      const intersection: Array<{ wardNumberId?: number | null; boothNumberId?: number | null }> =
-        [];
-
-      for (const requested of sanitizedAccesses) {
-        console.log("Requested access:", JSON.stringify(requested, null, 2));
-        const requestedWard = requested?.wardNumberId ?? null;
-        const requestedBooth = requested?.boothNumberId ?? null;
-
-        const matches = normalizedSenderAccesses.filter((access) => {
-          const wardMatch =
-            !isSpecific(requestedWard) ||
-            access.wardNumberId === -1 ||
-            access.wardNumberId === requestedWard;
-          const boothMatch =
-            !isSpecific(requestedBooth) ||
-            access.boothNumberId === -1 ||
-            access.boothNumberId === requestedBooth;
-          return wardMatch && boothMatch;
+      if (!requestedGeoAccess.unrestricted && requestedGeoAccess.geoUnitIds.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: "One or more accesses do not resolve to any geo units"
         });
-        console.log("Matched sender accesses:", JSON.stringify(matches, null, 2));
+        return;
+      }
 
-        if (matches.length === 0) {
-          res.status(400).json({
-            success: false,
-            message: "accesses contain values outside your access scope"
-          });
-          return;
+      if (requestedGeoAccess.unrestricted) {
+        targetGeoUnitIds = senderGeoUnitIds ? [...senderGeoUnitIds] : null;
+      } else {
+        targetGeoUnitIds = senderGeoUnitIds
+          ? requestedGeoAccess.geoUnitIds.filter((id) => senderGeoUnitIds.includes(id))
+          : requestedGeoAccess.geoUnitIds;
+      }
+
+      if (targetGeoUnitIds && targetGeoUnitIds.length === 0) {
+        res.status(400).json({
+          success: false,
+          message: "accesses contain values outside your access scope"
+        });
+        return;
+      }
+    }
+
+    try {
+      const response = await notificationService.sendToTargetedUsers(
+        {
+          title,
+          body,
+          data: data || {}
+        },
+        {
+          geoUnitIds: targetGeoUnitIds,
+          roleId,
+          triggeredBy: userId
         }
+      );
 
-        for (const match of matches) {
-          const wardNumberId = isSpecific(requestedWard) ? requestedWard : match.wardNumberId;
-          const boothNumberId = isSpecific(requestedBooth) ? requestedBooth : match.boothNumberId;
-          intersection.push({ wardNumberId, boothNumberId });
+      res.status(200).json({
+        success: true,
+        message: "Targeted notification sent successfully",
+        data: {
+          successCount: response.successCount,
+          failureCount: response.failureCount,
+          totalSent: response.successCount + response.failureCount
         }
-      }
-
-      const unique = new Map<
-        string,
-        { wardNumberId?: number | null; boothNumberId?: number | null }
-      >();
-      for (const access of intersection) {
-        const key = `${access.wardNumberId ?? "null"}:${access.boothNumberId ?? "null"}`;
-        unique.set(key, access);
-      }
-
-      effectiveAccesses = Array.from(unique.values());
-    }
-    console.log("Effective accesses:", JSON.stringify(effectiveAccesses, null, 2));
-
-    if (!effectiveAccesses || !Array.isArray(effectiveAccesses) || effectiveAccesses.length === 0) {
-      res.status(400).json({
-        success: false,
-        message:
-          "accesses must be provided or derived from user access list and contain at least one entry"
       });
-      return;
-    }
-
-    // Validate each access object has at least one field
-    const validAccesses = effectiveAccesses.every(
-      (access: any) =>
-        (access.wardNumberId !== null && access.wardNumberId !== undefined) ||
-        (access.boothNumberId !== null && access.boothNumberId !== undefined)
-    );
-
-    if (!validAccesses) {
-      res.status(400).json({
-        success: false,
-        message: "Each access object must have either wardNumberId or boothNumberId (or both)"
-      });
-      return;
-    }
-
-    const response = await notificationService.sendToTargetedUsers(
-      {
-        title,
-        body,
-        data: data || {}
-      },
-      {
-        accesses: effectiveAccesses,
-        roleId,
-        triggeredBy: userId
+    } catch (error) {
+      if (error instanceof ApiError) {
+        res.status(error.status).json({ success: false, message: error.message });
+        return;
       }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Targeted notification sent successfully",
-      data: {
-        successCount: response.successCount,
-        failureCount: response.failureCount,
-        totalSent: response.successCount + response.failureCount
-      }
-    });
+      throw error;
+    }
   }
 );
 

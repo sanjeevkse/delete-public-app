@@ -25,7 +25,7 @@ import {
 } from "../services/rbacService";
 import { sendLoginOtp } from "../services/otpDeliveryService";
 import { createUserWithGeneratedCrfId } from "../services/userCrfIdService";
-import { buildProfileAttributes } from "../services/userProfileService";
+import { buildProfileAttributes, resolveProfileGeoUnitId } from "../services/userProfileService";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessToken, generateNumericOtp } from "../utils/auth";
 import { sendSuccess } from "../utils/apiResponse";
@@ -58,6 +58,11 @@ const upsertUserProfile = async (userId: number, profileInput?: Record<string, u
 
   if (Object.keys(profileAttributes).length === 0) {
     return;
+  }
+
+  const resolvedGeoUnitId = await resolveProfileGeoUnitId(profileAttributes, existingProfile ?? undefined);
+  if (resolvedGeoUnitId !== undefined) {
+    profileAttributes.geoUnitId = resolvedGeoUnitId as never;
   }
 
   if (existingProfile) {
