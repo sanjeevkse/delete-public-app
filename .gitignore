@@ -42,3 +42,4 @@ AGENTS.override.md
 tasks.md
 project/
 sql/prod_dump.sql
+artifacts/

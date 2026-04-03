@@ -14,7 +14,28 @@ import {
 } from "../utils/apiResponse";
 import { parseLocalBodyType, parseSettlementType } from "../types/geo";
 
+type QueryEntity =
+  | "state"
+  | "district"
+  | "mp_constituency"
+  | "mla_constituency"
+  | "taluk"
+  | "local_body"
+  | "hobali"
+  | "gram_panchayat"
+  | "village"
+  | "main_village"
+  | "sub_village"
+  | "ward"
+  | "ward_number"
+  | "polling_station"
+  | "booth"
+  | "booth_number"
+  | "settlement_type"
+  | "local_body_type";
+
 type RequestEntity =
+  | "state"
   | "district"
   | "mp_constituency"
   | "mla_constituency"
@@ -26,7 +47,9 @@ type RequestEntity =
   | "sub_village"
   | "ward"
   | "polling_station"
-  | "booth";
+  | "booth"
+  | "settlement_type"
+  | "local_body_type";
 
 interface EntityConfig {
   tableName: string;
@@ -34,7 +57,33 @@ interface EntityConfig {
   labelColumn: string;
 }
 
-const ENTITY_CONFIG: Record<RequestEntity, EntityConfig> = {
+const ENTITY_ALIASES: Record<QueryEntity, RequestEntity> = {
+  state: "state",
+  district: "district",
+  mp_constituency: "mp_constituency",
+  mla_constituency: "mla_constituency",
+  taluk: "taluk",
+  local_body: "local_body",
+  hobali: "hobali",
+  gram_panchayat: "gram_panchayat",
+  village: "village",
+  main_village: "village",
+  sub_village: "sub_village",
+  ward: "ward",
+  ward_number: "ward",
+  polling_station: "polling_station",
+  booth: "booth",
+  booth_number: "booth",
+  settlement_type: "settlement_type",
+  local_body_type: "local_body_type"
+};
+
+const ENTITY_CONFIG: Record<Exclude<RequestEntity, "settlement_type" | "local_body_type">, EntityConfig> = {
+  state: {
+    tableName: "tbl_meta_state",
+    idColumn: "state_id",
+    labelColumn: "disp_name"
+  },
   district: {
     tableName: "tbl_meta_district",
     idColumn: "district_id",
@@ -112,6 +161,7 @@ type NumericFilterKey =
   | "pollingStationId";
 
 const UPSTREAM_FILTERS: Record<RequestEntity, NumericFilterKey[]> = {
+  state: [],
   district: ["stateId"],
   mp_constituency: ["stateId"],
   mla_constituency: ["stateId", "mpConstituencyId"],
@@ -174,8 +224,27 @@ const UPSTREAM_FILTERS: Record<RequestEntity, NumericFilterKey[]> = {
     "subVillageId",
     "wardNumberId",
     "pollingStationId"
+  ],
+  settlement_type: [],
+  local_body_type: []
+};
+
+const STATIC_ENTITY_VALUES: Record<Extract<RequestEntity, "settlement_type" | "local_body_type">, Array<{ id: string; dispName: string }>> = {
+  settlement_type: [
+    { id: "URBAN", dispName: "URBAN" },
+    { id: "RURAL", dispName: "RURAL" }
+  ],
+  local_body_type: [
+    { id: "GBA", dispName: "GBA" },
+    { id: "CC", dispName: "CC" },
+    { id: "CMC", dispName: "CMC" },
+    { id: "TMC", dispName: "TMC" },
+    { id: "TP", dispName: "TP" },
+    { id: "GP", dispName: "GP" }
   ]
 };
+
+const ALLOWED_REQUEST_ENTITIES = Object.keys(ENTITY_ALIASES).join(", ");
 
 const parseOptionalPositiveIntOrAll = (value: unknown, field: string): number | undefined => {
   if (value === undefined || value === null || value === "") {
@@ -220,15 +289,13 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
     throw new ApiError("request_entity is required", 400);
   }
 
-  if (!(requestEntityRaw in ENTITY_CONFIG)) {
+  const requestEntity = ENTITY_ALIASES[requestEntityRaw as QueryEntity];
+  if (!requestEntity) {
     throw new ApiError(
-      "request_entity is invalid. Allowed: district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, sub_village, ward, polling_station, booth",
+      `request_entity is invalid. Allowed: ${ALLOWED_REQUEST_ENTITIES}`,
       400
     );
   }
-
-  const requestEntity = requestEntityRaw as RequestEntity;
-  const entityConfig = ENTITY_CONFIG[requestEntity];
 
   const { page, limit, offset } = parsePaginationParams(
     req.query.page as string,
@@ -321,6 +388,53 @@ export const getGeoLookup = asyncHandler(async (req: AuthenticatedRequest, res: 
     );
   }
 
+  if (requestEntity === "settlement_type" || requestEntity === "local_body_type") {
+    let rows = STATIC_ENTITY_VALUES[requestEntity];
+
+    if (requestEntity === "settlement_type" && search) {
+      rows = rows.filter((row) => row.dispName.includes(search.toUpperCase()));
+    }
+
+    if (requestEntity === "local_body_type") {
+      if (settlementType === "URBAN") {
+        rows = rows.filter((row) => row.id !== "GP");
+      } else if (settlementType === "RURAL") {
+        rows = rows.filter((row) => row.id === "GP");
+      }
+
+      if (search) {
+        rows = rows.filter((row) => row.dispName.includes(search.toUpperCase()));
+      }
+    }
+
+    const sortedRows = [...rows].sort((left, right) => {
+      const leftValue = sortColumn === "id" ? left.id : left.dispName;
+      const rightValue = sortColumn === "id" ? right.id : right.dispName;
+      return sortDirection === "ASC"
+        ? String(leftValue).localeCompare(String(rightValue))
+        : String(rightValue).localeCompare(String(leftValue));
+    });
+
+    const total = sortedRows.length;
+    const pageRows = sortedRows.slice(offset, offset + limit);
+    let responseData: Array<{ id: number | string; dispName: string }> = pageRows;
+    let responseTotal = total;
+
+    if (req.query.need_all === "1") {
+      responseData = [{ id: -1, dispName: "-ALL-" }, ...pageRows];
+      responseTotal += 1;
+    }
+
+    const pagination = calculatePagination(responseTotal, page, limit);
+    return sendSuccessWithPagination(
+      res,
+      responseData,
+      pagination,
+      "Geo lookup data retrieved successfully"
+    );
+  }
+
+  const entityConfig = ENTITY_CONFIG[requestEntity];
   const whereClauses: string[] = ["meta.status = 1", "gp.status = 1"];
   const replacements: Record<string, number | string> = {
     limit,

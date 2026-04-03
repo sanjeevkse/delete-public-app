@@ -169,6 +169,9 @@ LEFT JOIN tbl_meta_polling_station AS ps
      LOWER(TRIM(s.polling_station_name)) COLLATE utf8mb4_unicode_ci
 LEFT JOIN tbl_meta_booth_number AS bn
   ON bn.disp_name = CAST(s.booth_number AS CHAR)
+  AND bn.status = 1
+  AND (mla.id IS NULL OR bn.mla_constituency_id = mla.id)
+  AND (ps.id IS NULL OR bn.polling_station_id = ps.id)
 WHERE st.id IS NOT NULL;
 
 DELETE FROM tbl_geo_unit_scope;

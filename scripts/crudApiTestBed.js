@@ -642,8 +642,17 @@ async function main() {
       method: "GET",
       path: "/geo-lookup",
       run: async () => {
+        await expectStatus(adminClient, "GET", "/geo-lookup?request_entity=state", {}, [200]);
         await expectStatus(adminClient, "GET", "/geo-lookup?request_entity=mp_constituency", {}, [200]);
         await expectStatus(adminClient, "GET", "/geo-lookup?request_entity=mla_constituency", {}, [200]);
+        await expectStatus(adminClient, "GET", "/geo-lookup?request_entity=settlement_type", {}, [200]);
+        await expectStatus(
+          adminClient,
+          "GET",
+          "/geo-lookup?request_entity=local_body_type&settlementType=URBAN",
+          {},
+          [200]
+        );
         await expectStatus(adminClient, "GET", "/geo-lookup?request_entity=ward&need_all=1", {}, [200]);
         const rural = await expectStatus(adminClient, "GET", "/geo-lookup?request_entity=gram_panchayat&need_all=1", {}, [200]);
         return { httpStatus: rural.response.status };

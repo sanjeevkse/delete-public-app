@@ -10234,7 +10234,7 @@
                 {
                   "key": "request_entity",
                   "value": "local_body",
-                  "description": "Required. Allowed: district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, sub_village, ward, polling_station, booth."
+                  "description": "Required. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -10338,7 +10338,7 @@
                 }
               ]
             },
-            "description": "Returns distinct dropdown options from `tbl_geo_political` using the rebuilt geo-unit model. Supported `request_entity` values: `district`, `mp_constituency`, `mla_constituency`, `taluk`, `local_body`, `hobali`, `gram_panchayat`, `village`, `sub_village`, `ward`, `polling_station`, `booth`. Numeric upstream selectors accept `-1` and collapse downstream results to only `{ id: -1, dispName: \"-ALL-\" }`. Use `settlementType` and `localBodyType` to separate urban and rural flows."
+            "description": "Returns distinct dropdown options from `tbl_geo_political` using the rebuilt geo-unit model. Supported `request_entity` values: `state`, `district`, `mp_constituency`, `mla_constituency`, `taluk`, `local_body`, `hobali`, `gram_panchayat`, `village`, `main_village`, `sub_village`, `ward`, `ward_number`, `polling_station`, `booth`, `booth_number`, `settlement_type`, `local_body_type`. Numeric upstream selectors accept `-1` and collapse downstream results to only `{ id: -1, dispName: \"-ALL-\" }`. Use `settlementType` and `localBodyType` to separate urban and rural flows."
           },
           "response": [
             {
@@ -10359,7 +10359,7 @@
                     {
                       "key": "request_entity",
                       "value": "local_body",
-                      "description": "Required. Allowed: district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, sub_village, ward, polling_station, booth."
+                      "description": "Required. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                     },
                     {
                       "key": "stateId",
@@ -10463,7 +10463,7 @@
                     }
                   ]
                 },
-                "description": "Returns distinct dropdown options from `tbl_geo_political` using the rebuilt geo-unit model. Supported `request_entity` values: `district`, `mp_constituency`, `mla_constituency`, `taluk`, `local_body`, `hobali`, `gram_panchayat`, `village`, `sub_village`, `ward`, `polling_station`, `booth`. Numeric upstream selectors accept `-1` and collapse downstream results to only `{ id: -1, dispName: \"-ALL-\" }`. Use `settlementType` and `localBodyType` to separate urban and rural flows."
+                "description": "Returns distinct dropdown options from `tbl_geo_political` using the rebuilt geo-unit model. Supported `request_entity` values: `state`, `district`, `mp_constituency`, `mla_constituency`, `taluk`, `local_body`, `hobali`, `gram_panchayat`, `village`, `main_village`, `sub_village`, `ward`, `ward_number`, `polling_station`, `booth`, `booth_number`, `settlement_type`, `local_body_type`. Numeric upstream selectors accept `-1` and collapse downstream results to only `{ id: -1, dispName: \"-ALL-\" }`. Use `settlementType` and `localBodyType` to separate urban and rural flows."
               },
               "status": "OK",
               "code": 200,
@@ -10494,7 +10494,7 @@
                     {
                       "key": "request_entity",
                       "value": "mp_constituency",
-                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                      "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                     },
                     {
                       "key": "stateId",
@@ -10589,7 +10589,7 @@
                     {
                       "key": "request_entity",
                       "value": "mp_constituency",
-                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                      "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                     },
                     {
                       "key": "stateId",
@@ -10684,7 +10684,7 @@
                     {
                       "key": "request_entity",
                       "value": "mp_constituency",
-                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                      "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                     },
                     {
                       "key": "stateId",
@@ -10779,7 +10779,7 @@
                     {
                       "key": "request_entity",
                       "value": "mp_constituency",
-                      "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                      "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                     },
                     {
                       "key": "stateId",
@@ -10876,7 +10876,7 @@
                 {
                   "key": "request_entity",
                   "value": "mp_constituency",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -10962,7 +10962,7 @@
                 {
                   "key": "request_entity",
                   "value": "mla_constituency",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -11048,7 +11048,7 @@
                 {
                   "key": "request_entity",
                   "value": "gram_panchayat",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -11134,7 +11134,7 @@
                 {
                   "key": "request_entity",
                   "value": "village",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -11220,7 +11220,7 @@
                 {
                   "key": "request_entity",
                   "value": "ward",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -11306,7 +11306,7 @@
                 {
                   "key": "request_entity",
                   "value": "booth",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
@@ -11392,7 +11392,7 @@
                 {
                   "key": "request_entity",
                   "value": "village",
-                  "description": "Required. Target lookup entity. Allowed: mp_constituency, mla_constituency, gram_panchayat, village, ward, booth."
+                  "description": "Required. Target lookup entity. Allowed: state, district, mp_constituency, mla_constituency, taluk, local_body, hobali, gram_panchayat, village, main_village, sub_village, ward, ward_number, polling_station, booth, booth_number, settlement_type, local_body_type."
                 },
                 {
                   "key": "stateId",
