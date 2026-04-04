@@ -616,7 +616,9 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
   const userFullNameFilter = parseStringFilter(
     pickQueryValue(queryParams, ["fullName", "full_name"])
   );
-  const userStatusFilters = parseNumberListFilter(queryParams.status);
+  const rawStatusFilter = parseStringFilter(pickQueryValue(queryParams, ["status"]));
+  const isPendingOnlyFilter = rawStatusFilter === "2";
+  const effectiveStatusFilter = isPendingOnlyFilter ? 2 : 1;
 
   const dateOfBirthStart = parseDateFilter(
     pickQueryValue(queryParams, ["dateOfBirthStart", "date_of_birth_start"])
@@ -757,14 +759,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     if (userFullNameFilter) {
       userFilters.fullName = { [Op.like]: `%${userFullNameFilter}%` };
     }
-    if (userStatusFilters && userStatusFilters.length > 0) {
-      userFilters.status =
-        userStatusFilters.length === 1 ? userStatusFilters[0] : { [Op.in]: userStatusFilters };
-    }
+    userFilters.status = effectiveStatusFilter;
   }
-
-  const isPendingOnlyFilter =
-    Array.isArray(userStatusFilters) && userStatusFilters.length === 1 && userStatusFilters[0] === 2;
 
   const profileFilters: Record<string, unknown> = {};
   applyRangeFilter(profileFilters, "dateOfBirth", dateOfBirthStart, dateOfBirthEnd);
@@ -881,7 +877,7 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
   const profileFiltersApplied = Object.keys(profileFilters).length > 0;
 
-  const whereClauses: Record<string, unknown>[] = [{ status: { [Op.gt]: -1 } }];
+  const whereClauses: Record<string, unknown>[] = [];
   if (Object.keys(userFilters).length > 0) {
     whereClauses.push(userFilters);
   }

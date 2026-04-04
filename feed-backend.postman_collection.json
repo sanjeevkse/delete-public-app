@@ -935,7 +935,7 @@
                 {
                   "key": "status",
                   "value": "1",
-                  "description": "Filter by status (comma-separated to match multiple statuses; e.g., 1,2). If omitted, defaults to 0,1 (pending status 2 excluded).",
+                  "description": "Optional status filter. Default behavior returns only status=1 users. Pass status=2 to list pending approval users.",
                   "disabled": true
                 },
                 {
@@ -3733,7 +3733,7 @@
         },
         {
           "name": "List Users",
-          "description": "Returns users with status from tbl_user (1=active, 0=inactive, 2=pending approval). Soft-deleted users (status=-1) are excluded.",
+          "description": "Returns active users by default (tbl_user.status=1). To fetch pending approval users, pass status=2. Soft-deleted users (status=-1) are excluded.",
           "request": {
             "auth": {
               "type": "bearer",
@@ -3806,7 +3806,7 @@
                 {
                   "key": "status",
                   "value": "1",
-                  "description": "Filter by status (comma-separated to match multiple statuses; e.g., 1,2)",
+                  "description": "Optional status filter. Default behavior returns only status=1 users. Pass status=2 to list pending approval users.",
                   "disabled": true
                 },
                 {
